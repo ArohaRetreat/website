@@ -4,7 +4,7 @@ The public Aroha Retreat website, Google-authenticated host studio and Firebase 
 
 Template version: **1.9.0** · [template changelog](docs/template-changelog.md) · [licence boundaries](THIRD-PARTY-NOTICES.md)
 
-Website version **0.10.1** connects the shared nature menu with leaf-shaped page transitions and a consistent photographic footer to the public retreat and Living Map pages. See [public navigation](docs/website-navigation.md) for the page registry, motion and accessibility behavior. The production site is https://aroharetreat.com. See [repository separation](docs/repository-separation.md), [source provenance](docs/repository-import.json) and [open acceptance work](https://github.com/ArohaRetreat/website/issues/2).
+Website version **0.11.0** adds a persistent sunset atmosphere to the retreat and Living Map, with forest-green cards, warm readable text and a shared daylight/sunset control. It retains leaf-shaped page transitions and the consistent photographic footer to the public retreat and Living Map pages. See [public navigation](docs/website-navigation.md) for the page registry, motion and accessibility behavior. The production site is https://aroharetreat.com. See [repository separation](docs/repository-separation.md), [source provenance](docs/repository-import.json) and [open acceptance work](https://github.com/ArohaRetreat/website/issues/2).
 
 ## Develop and verify
 

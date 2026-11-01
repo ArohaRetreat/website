@@ -1,3 +1,9 @@
+# 0.11.0
+
+- Make After sunset a persistent public-site atmosphere, with forest-green pricing/gallery/map surfaces, warm ivory text, gold actions and dark enquiry/privacy controls.
+- Restore the atmosphere before paint on both public routes; add a daylight/sunset switch to the shared menu and retain the actual evening hero photograph across CMS repaints.
+- Preserve race/disposal guards and keep sunset colours available when the evening photograph cannot load. Keep daylight restoration, reduced motion, native page transitions, CMS and protected applications unchanged.
+
 # 0.10.1
 
 - Connect public page navigation with a 500 ms native leaf-aperture reveal, preserving native URLs, fragments, Back/Forward, new tabs and browser fallbacks.

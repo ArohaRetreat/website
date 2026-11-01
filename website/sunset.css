@@ -1,0 +1,134 @@
+/* Explicit guest-selected atmosphere. Original photography keeps its real colours. */
+html[data-atmosphere="sunset"] {
+  color-scheme: dark;
+  --dusk-ground: #0c2119;
+  --dusk-card: #173b2d;
+  --dusk-raised: #204836;
+  --dusk-ink: #f4efdf;
+  --dusk-muted: #c1cdbb;
+  --dusk-accent: #e1cd98;
+  --dusk-line: #55715c;
+  --muted: #c1cdbb;
+  --bronze: #e1cd98;
+}
+html[data-atmosphere="sunset"] body {
+  background: var(--dusk-ground);
+  color: var(--dusk-ink);
+}
+html[data-atmosphere="sunset"] :is(.field-section, .nature-story, .tour-simple-stops, .field-journal) {
+  background: var(--dusk-ground);
+  color: var(--dusk-ink);
+}
+html[data-atmosphere="sunset"] :is(.field-section, .nature-story, .map-narrative, .dialog-copy) :is(h2, h3, p, li, summary, label) {
+  color: var(--dusk-ink);
+}
+html[data-atmosphere="sunset"] :is(.field-intro [lang="kn"], .field-intro-copy > span, .nature-fact-number, .field-heading > .eyebrow, .map-calligraphy, .map-place-kicker, .map-chapter-heading > .eyebrow) {
+  color: var(--dusk-accent);
+}
+html[data-atmosphere="sunset"] .field-package-grid article,
+html[data-atmosphere="sunset"] .field-package-grid article:last-child {
+  background: var(--dusk-card);
+  color: var(--dusk-ink);
+  border-color: var(--dusk-line);
+  box-shadow: 0 24px 52px -20px #0009, 0 3px 10px #0003, inset 0 1px 0 #9eb48b21;
+}
+html[data-atmosphere="sunset"] .field-package-grid article:nth-child(2) { background: #284330; }
+html[data-atmosphere="sunset"] .field-package-grid article:last-child { background: #204536; }
+html[data-atmosphere="sunset"] .field-package-grid article:before {
+  background: #b9c69d12;
+  border-color: #a1ba7c44;
+}
+html[data-atmosphere="sunset"] :is(.field-price, .field-faqs details, .field-package-grid details, .album-controls) {
+  border-color: var(--dusk-line);
+}
+html[data-atmosphere="sunset"] :is(.field-price span, .field-stay-grid article > p, .album-toolbar > p, .nature-facts p, .field-visit-policy, .form-note, .story-window figcaption) {
+  color: var(--dusk-muted);
+}
+html[data-atmosphere="sunset"] :is(.button, .field-package-grid .button) {
+  background: var(--dusk-accent);
+  border-color: var(--dusk-accent);
+  color: #173425;
+}
+html[data-atmosphere="sunset"] :is(.text-link, .field-text-link, .field-stay button, .field-package-grid summary, .field-faqs summary) {
+  color: var(--dusk-ink);
+}
+html[data-atmosphere="sunset"] .album-print {
+  background: var(--dusk-card);
+  border-color: var(--dusk-line);
+  box-shadow: 0 16px 36px -16px #000b, inset 0 1px 0 #a8bb9620;
+}
+html[data-atmosphere="sunset"] .album-print figcaption { color: var(--dusk-ink); }
+html[data-atmosphere="sunset"] .album-toolbar .album-filters {
+  background: var(--dusk-card);
+  border-color: var(--dusk-line);
+}
+html[data-atmosphere="sunset"] .album-toolbar .album-filters button { color: var(--dusk-muted); }
+html[data-atmosphere="sunset"] .album-toolbar .album-filters [aria-pressed="true"] {
+  background: var(--dusk-accent);
+  color: #173425;
+}
+html[data-atmosphere="sunset"] .album-controls button {
+  background: var(--dusk-raised);
+  color: var(--dusk-ink);
+  border-color: var(--dusk-line);
+}
+html[data-atmosphere="sunset"] :is(#album-range, #album-page) { color: var(--dusk-muted); }
+html[data-atmosphere="sunset"] :is(.map-introduction, .map-stories-heading, .map-chapter, .map-ending) {
+  background: var(--dusk-card);
+  color: var(--dusk-ink);
+  border-color: var(--dusk-line);
+  box-shadow: 0 24px 60px -20px #0009, 0 3px 10px #0003, inset 0 1px 0 #a8bb9620;
+}
+html[data-atmosphere="sunset"] :is(.map-introduction, .map-stories-heading, .map-chapter, .map-ending)::before {
+  opacity: .13;
+  border-color: #c3d099;
+  background: linear-gradient(135deg, transparent 49.4%, #b6c88c 49.7%, #b6c88c 50.3%, transparent 50.6%), #9eb47b;
+}
+html[data-atmosphere="sunset"] :is(.map-follow, .map-tools, .map-tools select, .map-tools button) {
+  background: var(--dusk-card);
+  color: var(--dusk-ink);
+  border-color: var(--dusk-line);
+}
+html[data-atmosphere="sunset"] :is(.map-tools button[aria-pressed="true"]) {
+  background: var(--dusk-accent);
+  color: #173425;
+}
+html[data-atmosphere="sunset"] :is(.details-dialog, .dialog-close) {
+  background: var(--dusk-card);
+  color: var(--dusk-ink);
+}
+html[data-atmosphere="sunset"] :is(.enquiry-form input, .enquiry-form select, .enquiry-form textarea) {
+  background: var(--dusk-ground);
+  color: var(--dusk-ink);
+  border-color: var(--dusk-line);
+}
+html[data-atmosphere="sunset"] .dialog-copy .form-error { color: #ffc4ae; }
+html[data-atmosphere="sunset"] :focus-visible { outline-color: var(--dusk-accent); }
+html[data-atmosphere="sunset"] .nature-menu { background: #10281e; }
+html[data-atmosphere="sunset"] .map-header { background: var(--dusk-ground); }
+html[data-atmosphere="sunset"] :is(.chapter-places a, .map-place-controls button) {
+  background: var(--dusk-card);
+  color: var(--dusk-ink);
+  border-color: var(--dusk-line);
+}
+html[data-atmosphere="sunset"] .chapter-places a[aria-current] {
+  background: var(--dusk-accent);
+  color: #173425;
+  border-color: var(--dusk-accent);
+}
+html[data-atmosphere="sunset"] :is(.map-place-controls, .story-window figcaption) { color: var(--dusk-muted); }
+html[data-atmosphere="sunset"] :is(.map-kannada, .story-heading > .eyebrow, .map-chapter > header h2, .field-aside-note > [lang="kn"]) { color: var(--dusk-accent); }
+html[data-atmosphere="sunset"] .farm-map-layout nav button { color: var(--dusk-ink); }
+html[data-atmosphere="sunset"] .map-tools a { color: var(--dusk-ink); }
+html[data-atmosphere="sunset"] :is(.field-aside-note, .field-experience-list details, .story-facts, .story-window figcaption) { border-color: var(--dusk-line); }
+/* Preserve the continuous leaf aperture when a returning guest arrives at dusk. */
+html[data-atmosphere="sunset"] .aroha-welcome { color: var(--dusk-ink); }
+html[data-atmosphere="sunset"] .welcome-paper { fill: var(--dusk-ground); }
+html[data-atmosphere="sunset"] .welcome-orbit { border-color: #a1b58b22; }
+html[data-atmosphere="sunset"] .aroha-welcome > [lang="kn"] { color: var(--dusk-accent); }
+html[data-atmosphere="sunset"] #welcome-skip { color: var(--dusk-ink); border-color: var(--dusk-line); }
+html[data-atmosphere="sunset"] #welcome-skip { background: var(--dusk-card); }
+html[data-atmosphere="sunset"] .welcome-botany :is(.seed-root, .seed-shoot) { stroke: #bdcda2; }
+html[data-atmosphere="sunset"] .album-toolbar { background: var(--dusk-ground); }
+
+html[data-atmosphere="sunset"] .nature-art-caption { color: var(--dusk-muted); }
