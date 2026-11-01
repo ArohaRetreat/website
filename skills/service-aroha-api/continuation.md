@@ -1,5 +1,10 @@
 # Aroha API continuation
 
+## Verified current deployment
+
+Website 0.8.3 is live at https://aroharetreat.com from 9b4ca2f9cec559369e5db095cb1d4f91eeaff208, Hosting 71855ca361752379. API 0.1.1 is ACTIVE as arohaapi-00003-yah with its existing owner/secret configuration. Real owner sign-in/draft read and backend log/span/metric searchability are verified; publication/restore/uploads and native RUM linkage remain separate. Natura 0.6.1 profile downloads are retained. Read release-evidence/aroha-0.8.3 and issues #5/#8. Living Map #4 is next in milestone 0.9.0; it is not implemented in this release.
+
+
 ## Custom-domain production release
 
 Website 0.8.2 / API 0.1.1 is prepared for issue #5: exact canonical API origin, canonical invite/SEO URLs, current optional content validation/video rules and guarded shared Hosting. Preserve the existing owner configuration and Secret Manager binding. Verify deployment facts from the issue/release evidence; this preparation note does not certify deployment. Living Map issue #4 is the separate next enhancement.
