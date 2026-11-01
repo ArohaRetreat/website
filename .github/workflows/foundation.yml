@@ -29,5 +29,6 @@ jobs:
         with:
           name: delivery-reports-foundation-${{ github.run_attempt }}
           path: .delivery-reports/*.jsonl
+          include-hidden-files: true
           retention-days: 14
           if-no-files-found: warn

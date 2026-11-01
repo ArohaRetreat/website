@@ -7,6 +7,7 @@ import {
   event,
   parseReport,
   validateRun,
+  completionTime,
   id,
 } from "../scripts/delivery/contract.mjs";
 import { runEvents, collectRun } from "../scripts/delivery/github.mjs";
@@ -346,4 +347,11 @@ test("native Node failed/skipped case reports preserve actual outcomes without p
   } finally {
     await rm(folder, { recursive: true, force: true });
   }
+});
+
+test("workflow occurrence time follows original completed jobs instead of later API metadata updates", () => {
+  assert.equal(
+    completionTime({ ...run, updated_at: "2026-11-03T00:00:00Z" }, [job]),
+    "2026-11-02T00:01:00.000Z",
+  );
 });

@@ -9,6 +9,7 @@ import {
   event,
   parseReport,
   status,
+  completionTime,
 } from "./contract.mjs";
 export async function github(
   path,
@@ -108,6 +109,7 @@ export async function collectRun(runId, attempt, token, { get = github } = {}) {
 }
 export function runEvents({ run, jobs, reports }, reportingAttempt) {
   validateRun(run);
+  const completedAt = completionTime(run, jobs);
   const base = {
     "sdlc.source": "github-api",
     "sdlc.authority": "github-confirmed",
@@ -126,7 +128,7 @@ export function runEvents({ run, jobs, reports }, reportingAttempt) {
     event(
       "sdlc.workflow.completed",
       [run.id, run.run_attempt, "workflow"],
-      run.updated_at,
+      completedAt,
       { ...base, "sdlc.status": run.conclusion },
     ),
   ];
@@ -184,7 +186,7 @@ export function runEvents({ run, jobs, reports }, reportingAttempt) {
         event(
           "sdlc.test.report",
           [run.id, run.run_attempt, "report", name],
-          run.updated_at,
+          completedAt,
           { ...base, "test.suite": name, "sdlc.status": "missing" },
         ),
       );
@@ -194,7 +196,7 @@ export function runEvents({ run, jobs, reports }, reportingAttempt) {
       event(
         "sdlc.test.report",
         [run.id, run.run_attempt, "report", name],
-        run.updated_at,
+        completedAt,
         {
           ...base,
           "test.suite": name,
@@ -209,10 +211,13 @@ export function runEvents({ run, jobs, reports }, reportingAttempt) {
         event(
           "sdlc.test.completed",
           [run.id, run.run_attempt, "test", name, test.id],
-          run.updated_at,
+          test.completedAt || completedAt,
           {
             ...base,
             "test.suite": name,
+            "test.completion.time.kind": test.completedAt
+              ? "runner-clock"
+              : "workflow-end",
             "test.case.id": test.id,
             "test.case.ordinal": test.ordinal,
             "sdlc.authority": "runner-reported",

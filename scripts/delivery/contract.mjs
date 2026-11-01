@@ -94,6 +94,7 @@ export function parseReport(text, name) {
       status: x.status,
       durationMs: x.durationMs,
       ordinal: x.ordinal,
+      ...(x.completedAt ? { completedAt: timestamp(x.completedAt) } : {}),
     };
   });
 }
@@ -115,4 +116,13 @@ export function validateRun(run) {
   revision(run.head_sha);
   status(run.conclusion);
   return run;
+}
+
+export function completionTime(run, jobs) {
+  const times = jobs
+    .filter((j) => j.completed_at)
+    .map((j) => Date.parse(timestamp(j.completed_at)));
+  return times.length
+    ? new Date(Math.max(...times)).toISOString()
+    : timestamp(run.updated_at);
 }

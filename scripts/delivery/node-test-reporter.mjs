@@ -20,6 +20,7 @@ export default async function* report(source) {
       kind: "test",
       id: caseId,
       ordinal: ordinal++,
+      completedAt: new Date().toISOString(),
       status:
         data.skip || data.todo
           ? "skipped"

@@ -1,5 +1,6 @@
 """Actual unittest case outcomes, without names, messages, stdout or fixture data."""
 import hashlib, json, time, unittest
+from datetime import datetime, timezone
 from pathlib import Path
 class Result(unittest.TextTestResult):
     records=[]
@@ -14,7 +15,7 @@ class Result(unittest.TextTestResult):
         if err: self.outcome='failed'
         super().addSubTest(test,subtest,err)
     def stopTest(self,test):
-        self.records.append(dict(schema=1,kind='test',id=hashlib.sha256(test.id().encode()).hexdigest(),ordinal=len(self.records),status=self.outcome,durationMs=(time.monotonic()-self.started)*1000)); super().stopTest(test)
+        self.records.append(dict(schema=1,kind='test',id=hashlib.sha256(test.id().encode()).hexdigest(),ordinal=len(self.records),completedAt=datetime.now(timezone.utc).isoformat(),status=self.outcome,durationMs=(time.monotonic()-self.started)*1000)); super().stopTest(test)
 suite=unittest.defaultTestLoader.discover('tests')
 result=unittest.TextTestRunner(verbosity=2,resultclass=Result).run(suite)
 Path('.delivery-reports').mkdir(exist_ok=True)

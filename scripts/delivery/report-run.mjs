@@ -1,6 +1,7 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { completionTime } from "./contract.mjs";
 import { collectRun, runEvents } from "./github.mjs";
 import { telemetry } from "./otlp.mjs";
 import { exportDelivery } from "./transport.mjs";
@@ -14,7 +15,7 @@ export function instrumentRun(snapshot, events, reportingAttempt) {
     "github.workflow",
     { ...rootEvent, "workflow.reporting.attempt": Number(reportingAttempt) },
     run.run_started_at || run.created_at,
-    run.updated_at,
+    completionTime(run, jobs),
   );
   const jobContexts = new Map();
   for (const job of jobs) {
