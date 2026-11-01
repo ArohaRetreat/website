@@ -32,7 +32,7 @@ function initialize() {
   const resource = resourceFromAttributes({
     "service.name": "aroha-api",
     "service.namespace": "aroha-retreat",
-    "service.version": "0.1.0",
+    "service.version": "0.1.1",
     "deployment.environment.name": process.env.FUNCTIONS_EMULATOR
       ? "emulator"
       : "production",
@@ -73,7 +73,7 @@ function initialize() {
   context.setGlobalContextManager(manager);
   trace.setGlobalTracerProvider(tp);
   propagation.setGlobalPropagator(new W3CTraceContextPropagator());
-  tracer = tp.getTracer("aroha-api", "0.1.0");
+  tracer = tp.getTracer("aroha-api", "0.1.1");
   const lp = new LoggerProvider({
     resource,
     processors: [
@@ -83,7 +83,7 @@ function initialize() {
       }),
     ],
   });
-  logger = lp.getLogger("aroha-api", "0.1.0");
+  logger = lp.getLogger("aroha-api", "0.1.1");
   const mp = new MeterProvider({
     resource,
     readers: [
@@ -97,7 +97,7 @@ function initialize() {
       }),
     ],
   });
-  const meter = mp.getMeter("aroha-api", "0.1.0");
+  const meter = mp.getMeter("aroha-api", "0.1.1");
   counter = meter.createCounter("aroha.api.requests", {
     description: "Completed API requests",
   });

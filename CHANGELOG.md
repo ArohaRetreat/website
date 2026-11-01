@@ -1,5 +1,13 @@
 # Aroha Retreat website changelog
 
+## [0.8.2] — 2026-11-01
+
+- Promote the reviewed website to the custom domain with canonical SEO/sitemap URLs.
+- API 0.1.1 admits the exact apex origin while preserving legacy origins and access rules; invitations point to the canonical host.
+- Roll out the already-tested optional tour/nature/evening validation and immutable video-upload rules before Hosting. Preserve owner configuration and the existing telemetry secret binding.
+- Keep the Living Map in the next enhancement, issue #4, outside this release.
+
+
 ## [0.8.1] — 2026-11-01
 
 - Separate website, Firebase host studio/API, media, tests and documentation into the public ArohaRetreat/website repository.

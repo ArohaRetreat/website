@@ -59,11 +59,12 @@ async function google(email, verified = true) {
   assert.ok(r.ok, JSON.stringify(data));
   return data;
 }
-async function call(token, path, method = "GET", body) {
+async function call(token, path, method = "GET", body, origin) {
   const r = await fetch(base + path, {
     method,
     headers: {
       "Content-Type": "application/json",
+      ...(origin ? { Origin: origin } : {}),
       ...(token ? { Authorization: "Bearer " + token } : {}),
     },
     ...(body ? { body: JSON.stringify(body) } : {}),
@@ -93,6 +94,8 @@ test("complete content and membership lifecycle with independent rule denials", 
   });
   try {
     await env.clearFirestore();
+    assert.equal((await call(null, "/draft", "GET", undefined, "https://aroharetreat.com")).status, 401);
+    assert.equal((await call(null, "/draft", "GET", undefined, "https://aroharetreat.com.evil.test")).status, 403);
     assert.equal((await call(null, "/draft")).status, 401);
     const outsider = await google("outsider@example.test");
     assert.equal(
@@ -108,6 +111,7 @@ test("complete content and membership lifecycle with independent rule denials", 
       role: "editor",
     });
     assert.equal(invite.status, 200);
+    assert.equal(invite.inviteUrl, "https://aroharetreat.com/admin/");
     const wrongEmail = await google("wrong@example.test");
     assert.equal(
       (await call(wrongEmail.idToken, "/session", "POST", {})).status,

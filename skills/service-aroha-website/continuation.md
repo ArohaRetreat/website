@@ -1,5 +1,10 @@
 # Aroha website continuation
 
+## Custom-domain production release
+
+Website 0.8.2 / API 0.1.1 is prepared for issue #5: exact canonical API origin, canonical invite/SEO URLs, current optional content validation/video rules and guarded shared Hosting. Preserve the existing owner configuration and Secret Manager binding. Verify deployment facts from the issue/release evidence; this preparation note does not certify deployment. Living Map issue #4 is the separate next enhancement.
+
+
 ## Current repository ownership
 
 Source now lives in ArohaRetreat/website. Import issue #1; remaining acceptance issue #2. Historical references to issue #16 and PR #17 below refer to ArohaRetreat/natura, where tracking is superseded by the repository separation. Read docs/repository-separation.md. Website build is independent; shared Hosting requires an explicit pinned Natura export and deployment guard. No deployment is part of this source move. Existing production secrets/owner settings remain outside this repo.

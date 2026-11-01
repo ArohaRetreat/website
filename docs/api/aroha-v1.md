@@ -39,3 +39,7 @@ Optional `tour.nature` has `enabled` (default true: hero botanical composition a
 Published nature content replaces the public page after Firebase metadata loads. The first paint, document-entry welcome and social tags use the build seed and change with a Hosting rebuild. Motion is additionally constrained by each visitor’s Simple View/reduced-motion preference; visibility of content does not depend on animation completion. No network response is required to release the welcome.
 
 Website 0.7 adds optional `tour.nature.heroEveningImage` and `heroEveningAlt` (250 characters). The image follows the existing local/project Storage media policy. The studio merges these defaults into older nature settings; validation remains backward compatible. The chosen photograph is fetched only when the visitor selects After sunset. No permissions, business events, guest records or booking behavior change. As with previous optional tour fields, the reviewed backend validator must be rolled out before production CMS saves can include them.
+
+## Canonical production host (website 0.8.2 / API 0.1.1)
+
+The canonical host is https://aroharetreat.com. Exact apex and the two original Firebase origins are admitted; lookalike/suffix/HTTP origins remain denied. www is a Hosting redirect and is not an API origin. No-Origin requests still require verified authentication/membership. Invitation URLs use the canonical host. Emulator origins stay emulator-only.
