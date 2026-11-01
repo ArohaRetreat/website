@@ -1,0 +1,72 @@
+{
+  "repository": "ArohaRetreat/natura",
+  "revision": "6da2b8c8e1a5d80f8fbe732eb9f24faf15970af9",
+  "version": "0.6.0",
+  "files": [
+    {
+      "source": "src/nature-scenes.js",
+      "path": "runtime/nature-scenes.js",
+      "sha256": "2c61f9989b5f778cf8c2fd2bf2e77c52ad5e8b9998767130c270b0647a4f6165"
+    },
+    {
+      "source": "src/additional-scenes.js",
+      "path": "runtime/additional-scenes.js",
+      "sha256": "609174899cee8422f956ef286b090564500efce17d282b6bbe532c305bc2c923"
+    },
+    {
+      "source": "public/assets/logos/english/aroha-horizontal-white.svg",
+      "path": "brand/logo-white.svg",
+      "sha256": "9628cf781d71cbfeb018172f862b325b09a54ebb9a59a3fa250ea7f8d04af024"
+    },
+    {
+      "source": "public/assets/logos/english/aroha-horizontal-forest.svg",
+      "path": "brand/logo-forest.svg",
+      "sha256": "707f5b8ff307999de30712a754c237061c598b4d4d7340eeb96e9a2d3b38b307"
+    },
+    {
+      "source": "public/assets/icons/full-aroha-icon-forest.svg",
+      "path": "brand/icon.svg",
+      "sha256": "b02fdefe5d311bd404a720171e339dc4458e766ed66374e5214fe1ba0a6b6222"
+    },
+    {
+      "source": "public/assets/fonts/Lora/Lora-Variable.woff2",
+      "path": "fonts/Lora/Lora-Variable.woff2",
+      "sha256": "9516be2b8f1a6b205c1c47037f7f75ead194ef3e43c28afadb6e148ec010cd82"
+    },
+    {
+      "source": "public/assets/fonts/Lora/OFL.txt",
+      "path": "fonts/Lora/OFL.txt",
+      "sha256": "1d9a970809ac804b582a6ce7f0ebc4e7fefcbfd7ff6299cad35ee656a21be716"
+    },
+    {
+      "source": "public/assets/fonts/Allura/Allura-Regular.woff2",
+      "path": "fonts/Allura/Allura-Regular.woff2",
+      "sha256": "c68bdfd324379807f35be8ca9c5768bebdfd645297f79cf471a42a0fd21f24e9"
+    },
+    {
+      "source": "public/assets/fonts/Allura/OFL.txt",
+      "path": "fonts/Allura/OFL.txt",
+      "sha256": "c8cb4c94a558b6cb82ac5dc981a73a0b8aee35a5c52c8a7832fc0280c289ad49"
+    },
+    {
+      "source": "public/assets/fonts/SourceSans3/SourceSans3-Variable.woff2",
+      "path": "fonts/SourceSans3/SourceSans3-Variable.woff2",
+      "sha256": "5759e239bbd2142a538cd6e717a78d5eb862a372645e0f5e8069c74b851e6ee1"
+    },
+    {
+      "source": "public/assets/fonts/SourceSans3/OFL.txt",
+      "path": "fonts/SourceSans3/OFL.txt",
+      "sha256": "09746787287a289323b0ec3cff4d1a4a801331b82b7207c1e186f5d26619a392"
+    },
+    {
+      "source": "public/assets/fonts/NotoSansKannada/NotoSansKannada-Variable.woff2",
+      "path": "fonts/NotoSansKannada/NotoSansKannada-Variable.woff2",
+      "sha256": "a954293d118fc3b75512af0ce36194ccdda7d80a1a143c858eab9c6fdfd55f92"
+    },
+    {
+      "source": "public/assets/fonts/NotoSansKannada/OFL.txt",
+      "path": "fonts/NotoSansKannada/OFL.txt",
+      "sha256": "9d49a4e56df9b36403b139f48bf07fd87cc5e716cb3203c54b04b674adb16238"
+    }
+  ]
+}

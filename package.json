@@ -1,0 +1,30 @@
+{
+  "name": "aroha-retreat-website",
+  "version": "0.8.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-website.mjs",
+    "build:website": "node scripts/build-website.mjs",
+    "build:hosting": "node scripts/compose-hosting.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "test:website": "node --test tests/website.test.mjs tests/field-tour.test.mjs tests/living-motion.test.mjs tests/hero-atmosphere.test.mjs tests/album.test.mjs",
+    "test:integration": "node --test functions/tests/integration.mjs",
+    "dev": "python3 -m http.server 8770 --directory dist",
+    "deploy": "node scripts/deploy-website.mjs"
+  },
+  "dependencies": {
+    "firebase": "13.1.0",
+    "three": "0.187.0"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "6.0.0",
+    "esbuild": "0.28.2"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "1.14.7"
+  }
+}

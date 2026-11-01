@@ -1,0 +1,38 @@
+{
+  "preview": "https://aroha-retreat--illustrated-farm-wf11a688.web.app",
+  "revision": "60725fd481a286959354817f700c58793dc9b36e",
+  "checks": {
+    "/": {
+      "status": 200,
+      "bytes": 22942,
+      "sha256": "ddfecc681a158c4be170109f1dc567e4139fa4e2d6780ba3f944931821cba629"
+    },
+    "/website-release.json": {
+      "status": 200,
+      "bytes": 98,
+      "sha256": "f0dc2001f46b4f57e574aa50029b9ad6eeca932129fac59abec3a29d843d3257"
+    },
+    "/assets/retreat/art-world-dawn-v1.webp": {
+      "status": 200,
+      "bytes": 715736,
+      "sha256": "2af28c1e22532f8f926204e403eb59b7f3954cf1b83ea6c0dbcd7bc7fdc7231d"
+    },
+    "/assets/retreat/art-world-dusk-v1.webp": {
+      "status": 200,
+      "bytes": 566172,
+      "sha256": "a8c7c8f681e043a70ade32c8ad96994222c64b678a2f28f1eec151091c5f6962"
+    },
+    "/design/": {
+      "status": 200,
+      "bytes": 2110,
+      "sha256": "681de9be82dee68d31a439c860725df805ee03e9f1cb648778b7b7ea8229bb29"
+    },
+    "production_release": {
+      "name": "Aroha Retreat",
+      "version": "0.1.0",
+      "contentSchema": 1,
+      "admin": "/admin/",
+      "design": "/design/"
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "preview": "https://aroha-retreat--spatial-farm-t6fxytuu.web.app",
+  "revision": "20ec44db79650841be548158fbe1641509f82fe0",
+  "hostingVersion": "f471146700cabd0b",
+  "checks": {
+    "/": {
+      "status": 200,
+      "bytes": 26024,
+      "sha256": "097295a8f2decad6cf57de020ed566e85eaa1702252daeb8c688095a3a73ae8d"
+    },
+    "/website-release.json": {
+      "status": 200,
+      "bytes": 98,
+      "sha256": "27e72d6bfcc25f8b69f865e75df2ed74e3d8b59a32f9b55349a5d40e603b9ce0"
+    },
+    "/assets/site.js": {
+      "status": 200,
+      "bytes": 14737,
+      "sha256": "36ea9efa87371f240bc863ffb9cc01c4c0642c3cf35f01bba6a7b428a311cbb3"
+    },
+    "scene_chunks": [
+      "./chunks/chunk-ZHBPDDQ2.js",
+      "./chunks/chunk-4BWA43LH.js",
+      "./chunks/spatial-HMK3NAIV.js"
+    ],
+    "/assets/retreat/palm-crown-v1.webp": {
+      "status": 200,
+      "bytes": 691020,
+      "sha256": "4cb8c4a4d3e723a39ab90dbdd4275f6bbad87c43e4dafaeb90da31db64cf433a"
+    },
+    "/assets/retreat/ground-moss-v1.webp": {
+      "status": 200,
+      "bytes": 720348,
+      "sha256": "2c6053306b52ddf336f6a79c32693cd833f1acbe1a9f0d49493f8cd5112e8e79"
+    },
+    "/design/": {
+      "status": 200,
+      "bytes": 2110,
+      "sha256": "681de9be82dee68d31a439c860725df805ee03e9f1cb648778b7b7ea8229bb29"
+    },
+    "production_release": {
+      "name": "Aroha Retreat",
+      "version": "0.1.0",
+      "contentSchema": 1,
+      "admin": "/admin/",
+      "design": "/design/"
+    }
+  }
+}

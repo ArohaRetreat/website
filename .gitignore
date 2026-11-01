@@ -1,17 +1,14 @@
-# Secrets and local evidence
-.env
-.env.*
-!.env.example
-qa/raw/
-qa/local/
-*.pem
-*.key
-# OS and runtimes
-.DS_Store
-._*
-__pycache__/
-*.py[cod]
-.venv/
-node_modules/
-coverage/
 dist/
+node_modules/
+functions/node_modules/
+.env*
+functions/.env*
+config/website-runtime.json
+.DS_Store
+.firebase/
+*debug*.log
+*.log
+__pycache__/
+.dependency-staging/
+release/
+tmp/

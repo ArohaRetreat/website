@@ -1,0 +1,11 @@
+{
+  "naturaVersion": "0.5.1",
+  "kitVersion": "0.2.1",
+  "issue": "https://github.com/ArohaRetreat/natura/issues/9",
+  "identity": "hrudhi-original-v1",
+  "originalSourceRevision": "3f4884e522e98ce9dd731918b4deb71416a509b5",
+  "restoration": {"originalReferenceFilesMatched": 30, "originalRigSourceMatched": true, "originalSvgStudiesMatched": 265, "newFaceGeneration": false},
+  "localChecks": {"applicationTestsPassed": 44, "foundationTestsPassed": 21, "hrudhiAssetsVerified": 841, "farmAssetsVerified": 669, "videoAlphaPairsDecoded": 5, "pdfPagesRenderedAndInspected": 8, "zipCrcAndOriginalMasterHashes": "passed"},
+  "browserVerification": "Mounted DOM checks passed with animation API mocked. Native browser layout and playback inspection remains unavailable; no broader acceptance is claimed.",
+  "status": "Original source restored; all character art remains draft pending family review. Source/CI/deployment evidence recorded separately on issue #9 after completion."
+}

@@ -1,42 +1,42 @@
 {
   "$schema": "schemas/project.schema.json",
   "schemaVersion": 1,
-  "name": null,
+  "name": "Aroha Retreat Website",
   "template": {
     "repository": "theharithsa/app-launchpad-template",
-    "revision": null,
+    "revision": "f04c042a9e000f606982863518fa7bb9cfbb7d85",
     "version": "1.9.0"
   },
   "decisions": {
     "product": {
-      "status": "needs-user-input",
-      "value": null,
-      "approval": null
+      "status": "approved",
+      "value": "Independent enquiry-led Aroha Retreat website, host content/access studio and Firebase API; Natura is maintained in a separate repository.",
+      "approval": "User instructed separate repository and milestone closure on 2026-11-01; explicitly selected public visibility."
     },
     "stack": {
-      "status": "needs-user-input",
-      "value": null,
-      "approval": null
+      "status": "approved",
+      "value": "Static pre-rendered HTML/ES modules with Firebase browser SDK, esbuild, Firestore content, Google Auth, Storage media and a Node 22 Firebase Functions v2 API.",
+      "approval": "User website/admin/access instructions and Blaze activation, 2026-11-01; Natura identity and existing deployment preserved."
     },
     "hosting": {
-      "status": "needs-user-input",
-      "value": null,
-      "approval": null
+      "status": "approved",
+      "value": "Existing Firebase aroha-retreat project. Website owns shared Hosting composition; a pinned Natura design export is composed for /design/. Repository migration does not deploy.",
+      "approval": "User website/admin/access instructions and Blaze activation, 2026-11-01; Natura identity and existing deployment preserved."
     },
     "privacy": {
-      "status": "needs-user-input",
-      "value": null,
-      "approval": null
+      "status": "approved",
+      "value": "Public retreat content and approved photographs; private admin drafts/membership, verified Google invitation access, WhatsApp enquiries without database storage. Optional monitoring consent; no Analytics or session replay.",
+      "approval": "User website/admin/access instructions and Blaze activation, 2026-11-01; Natura identity and existing deployment preserved."
     },
     "observability": {
-      "status": "needs-user-input",
-      "value": null,
-      "approval": null
+      "status": "approved",
+      "value": "Existing Dynatrace configuration and consent-controlled RUM hooks are preserved; no private token is copied. Historical verified signals and remaining linkage gates are recorded in release evidence.",
+      "approval": "User website/admin/access instructions and Blaze activation, 2026-11-01; Natura identity and existing deployment preserved."
     },
     "license": {
-      "status": "needs-user-input",
-      "value": null,
-      "approval": null
+      "status": "approved",
+      "value": "Aroha Retreat Restricted Use License for custom code/assets; MIT/OFL third-party exceptions retained.",
+      "approval": "User request and visibility/location reply, 2026-10-31; existing static-app and Firebase decisions retained."
     }
   }
 }

@@ -1,46 +1,45 @@
-# App Launchpad Template
+# Aroha Retreat Website
 
-Template version: **1.9.0** · [changelog](docs/template-changelog.md) · [MIT license](LICENSE)
+The public Aroha Retreat website, Google-authenticated host studio and Firebase content/access API. This is the authoritative website repository. [Natura](https://github.com/ArohaRetreat/natura) owns the separate design standards, character and farm-atlas tooling.
 
-A stack-neutral, **Dynatrace-opinionated** foundation for building and enhancing apps. Choose each product's stack and hosting deliberately; Dynatrace is the chosen observability platform. No tenant or application deployment is preconfigured.
+Template version: **1.9.0** · [template changelog](docs/template-changelog.md) · [licence boundaries](THIRD-PARTY-NOTICES.md)
 
-## Create a project
+Website version **0.8.1** imports the reviewed 0.8.0 experience without changing its appearance, content or live deployment. See [repository separation](docs/repository-separation.md), [source provenance](docs/repository-import.json) and [open acceptance work](https://github.com/ArohaRetreat/website/issues/2).
 
-Confirm the new owner, name, visibility and empty local destination, then use **Use this template → Create a new repository**, or:
+## Develop and verify
+
+Use Node 22+ and Python 3; emulator integration also requires Java 21 and Firebase CLI 15.34.1.
 
 ```sh
-gh repo create OWNER/PROJECT --template theharithsa/app-launchpad-template --private --clone
-cd PROJECT
+npm ci
+npm ci --prefix functions
+npm test
+npm run build
 sh scripts/check.sh
+npm run dev
 ```
 
-Use public visibility only when approved. Follow [getting started](docs/getting-started.md): record source template version/revision, complete discovery decisions and register each actual service before implementation. Then run the discovery gate:
+The build works from this repository alone: `dist/` contains `/`, `/admin/`, the public runtime configuration and website media. It verifies the pinned fonts, logos and nature runtime in `vendor/natura/`. It does not build the Natura studio or require a sibling checkout. Original photograph masters, credentials and machine-specific runtime overrides are excluded.
+
+For the isolated Firebase lifecycle, use only the synthetic project and temporary owner configuration documented in [testing](docs/website-testing.md). Never deploy emulator owner settings. The existing [API](docs/api/aroha-v1.md), [host guide](docs/website-host-guide.md), [observability](docs/website-observability.md) and [design direction](docs/website-living-direction.md) remain authoritative within their scopes.
+
+## Hosting ownership
+
+The existing Firebase project/site is still `aroha-retreat`. Because its root website and `/design/` share one Hosting release, a standalone website build must not be deployed directly. The website repository owns composition and the deployment guard; Natura supplies a pinned design export.
 
 ```sh
-python3 scripts/check_foundation.py --ready --json
+AROHA_BUILD_REVISION=$(git rev-parse HEAD) npm run build
+npm run build:hosting -- --design-dir /absolute/path/to/natura/dist/design
+npm run deploy -- --channel real-farm
 ```
 
-The gate checks decisions, not application/release readiness. Add real stack-specific build, test and deployment checks for the selected app.
+Build the design export from the Natura revision in [config/natura-hosting.json](config/natura-hosting.json). Composition checks its release identity and refuses symbolic links, then records SHA-256 hashes of every Hosting file. Deployment verifies both apps, exact website revision and all hashes before invoking Firebase. Production requires the explicit `--production` option and separate release authorization. Do not bypass the guard with a raw partial Firebase Hosting deploy. No new Firebase project, backend, data or auth domain is created by this repository split.
 
-## What is included
+## Source and delivery
 
-- [Agent entrypoint](AGENTS.md), tool-specific pointer files and [policy ownership map](docs/policy-map.md).
-- [Visible skills catalog](skills/README.md): design, implementation, tests, deployment, Dynatrace observability, documentation and handoff.
-- Per-service skills/continuation, safe registration tooling and [JSON Schemas](schemas/README.md).
-- [Synthetic worked examples](examples/README.md) for decisions, execution evidence, continuation and a service skill.
-- Issue/agent-brief forms, PR checklist, CI, CODEOWNERS and an opt-in [repository ruleset procedure](docs/repository-ruleset.md).
-- [Ian Xiaohei Illustrations](skills/ian-xiaohei-illustrations/SKILL.md) for useful explanatory images under the [illustration policy](docs/illustrations.md).
+- [Website service](skills/service-aroha-website/SKILL.md): public journey, media, accessibility, motion and host UI.
+- [API service](skills/service-aroha-api/SKILL.md): content, publication, membership, media policy and observability.
+- [Migration issue](https://github.com/ArohaRetreat/website/issues/1) and [remaining acceptance](https://github.com/ArohaRetreat/website/issues/2).
+- [Historical Natura issue](https://github.com/ArohaRetreat/natura/issues/16) and [unmerged original PR](https://github.com/ArohaRetreat/natura/pull/17).
 
-## Checks and maintenance
-
-Run **`sh scripts/check.sh`** locally and in CI: metadata validation, local Markdown links and safety/contract tests. For machine-readable diagnostics use `python3 scripts/check_foundation.py --json`; `--ready` adds discovery checks. Foundation success does not certify an application's behavior, deployment or tenant signals.
-
-GitHub template generation copies files, not repository settings or future updates. Adopt upgrades through reviewed PRs and retain project-specific choices. See [versioning and migration](docs/versioning.md), [delivery](docs/delivery.md) and [service inventory](docs/services.md). The partial planning bootstrap was removed; use GitHub template generation or record adoption pending.
-
-## Licensing
-
-The template is MIT-licensed by Vishruth Harithsa. Bundled Ian Xiaohei Illustrations retains its own [MIT license](skills/ian-xiaohei-illustrations/LICENSE) and [attribution](skills/ian-xiaohei-illustrations/NOTICE.md).
-
-A generated application's license is a separate `needs-user-input` decision. Preserve the template and third-party copyright/license notices for inherited material; when selecting the app's license, retain those notices (for example under `LICENSES/`) and document the app's chosen terms separately. Copying the template does not record an approved license choice for new application code.
-
-[GitHub template documentation](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-template-repository)
+`release-evidence/aroha-*` records historical builds/deployments from the old source revisions. Those files do not claim that a new-repository commit is deployed. The source split itself does not promote the preview or alter production. Runtime secrets stay in the existing server-side secret store; private tokens never enter this repository or browser bundles.

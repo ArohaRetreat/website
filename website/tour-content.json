@@ -1,0 +1,720 @@
+{
+  "eyebrow": "A WALK THROUGH AROHA",
+  "title": "Follow a quieter path.",
+  "description": "Explore the real farm, one unhurried moment at a time.",
+  "mapNote": "Route follows the hosts’ description. Positions are indicative, not surveyed or to scale.",
+  "stops": [
+    {
+      "id": "arrival",
+      "name": "Arrival",
+      "title": "The world can wait.",
+      "description": "A gate. A slower pace. A farm that feels like your own.",
+      "detail": "Enter along the central road, with trees and lawn on your left. A right-hand branch leads to parking, roughly a hundred steps from the entrance. Your hosts welcome you into a working farm—not a fixed timetable.",
+      "image": "/assets/retreat/DSC_3916.webp",
+      "imageAlt": "Arrival at Aroha Retreat",
+      "film": "v-114109",
+      "mapX": 48,
+      "mapY": 90,
+      "nearby": [
+        "pond",
+        "parking"
+      ],
+      "target": "visit"
+    },
+    {
+      "id": "parking",
+      "name": "Parking",
+      "title": "Arrive. Then exhale.",
+      "description": "A right-hand branch from the entrance leads to parking.",
+      "detail": "Parking is roughly a hundred steps to the right of the gate, above the pond and arrival area. From here, return to the central path and follow the curve beside the water. Distances are approximate, based on the hosts’ description.",
+      "image": "/assets/retreat/DSC_3768.webp",
+      "imageAlt": "The farm approach path in the evening",
+      "film": "",
+      "mapX": 81,
+      "mapY": 82,
+      "nearby": [
+        "arrival",
+        "pond"
+      ],
+      "target": "visit"
+    },
+    {
+      "id": "pond",
+      "name": "The pond",
+      "title": "Follow the water.",
+      "description": "The road softens into an S. The pond stays on your right.",
+      "detail": "A large pond, described by the hosts as almost half an acre, opens near the beginning of the path. Parking is above this arrival area. Follow the curved road beside the water toward the main house.",
+      "image": "/assets/retreat/DSC_3788.webp",
+      "imageAlt": "The pond at Aroha Retreat",
+      "film": "v-092325",
+      "mapX": 62,
+      "mapY": 72,
+      "nearby": [
+        "house",
+        "arrival"
+      ],
+      "target": "experiences"
+    },
+    {
+      "id": "house",
+      "name": "Main house",
+      "title": "At the heart of it all.",
+      "description": "Stone terraces. A welcoming verandah. A place to gather.",
+      "detail": "The main house sits at the far end of the pond. The library is beside it, and the guest-use kitchen is in front. To the right, stairs lead up to the two tree houses.",
+      "image": "/assets/retreat/DSC_3915.webp",
+      "imageAlt": "Main house at Aroha Retreat",
+      "film": "v-114045",
+      "mapX": 48,
+      "mapY": 52,
+      "nearby": [
+        "kitchen",
+        "library",
+        "treehouses"
+      ],
+      "target": "experiences"
+    },
+    {
+      "id": "kitchen",
+      "name": "Guest kitchen",
+      "title": "Make yourself at home.",
+      "description": "The kitchen is in front of the main house.",
+      "detail": "Guests can come together and cook their own meals here. Ask your hosts about kitchen access and arrangements before your visit. Aroha remains strictly vegetarian and alcohol-free.",
+      "image": "/assets/retreat/DSC_3917.webp",
+      "imageAlt": "Stone terraces and steps at the main house",
+      "film": "",
+      "mapX": 40,
+      "mapY": 60,
+      "nearby": [
+        "house",
+        "library"
+      ],
+      "target": "experiences"
+    },
+    {
+      "id": "library",
+      "name": "The library",
+      "title": "A little room for a book.",
+      "description": "Beside the main house, another way to spend an unhurried afternoon.",
+      "detail": "Find the library beside the main house. Take a reading break between a walk, a meal and time outdoors.",
+      "image": "/assets/retreat/DSC_3892.webp",
+      "imageAlt": "The shaded verandah beside the main house",
+      "film": "",
+      "mapX": 32,
+      "mapY": 51,
+      "nearby": [
+        "house",
+        "kitchen"
+      ],
+      "target": "experiences"
+    },
+    {
+      "id": "treehouses",
+      "name": "Tree houses",
+      "title": "A room in the palms.",
+      "description": "Take the stairs to the right of the main house.",
+      "detail": "Two raised rooms sit among the coconut palms. Step onto a private verandah, look through the leaves and open the door to explore the actual interior in the films. Your hosts can advise which accommodation suits your stay.",
+      "image": "/assets/retreat/20261028_093817.webp",
+      "imageAlt": "Raised rooms seen through coconut palms at Aroha",
+      "film": "v-095746",
+      "mapX": 68,
+      "mapY": 43,
+      "nearby": [
+        "house",
+        "cottages"
+      ],
+      "target": "cottages",
+      "walk": [
+        {
+          "name": "Take the stairs",
+          "film": "v-095821"
+        },
+        {
+          "name": "Open the door",
+          "film": "v-100024"
+        },
+        {
+          "name": "Look around the room",
+          "film": "v-100051"
+        },
+        {
+          "name": "Back to the palms",
+          "film": "v-100134"
+        }
+      ]
+    },
+    {
+      "id": "cottages",
+      "name": "The cottages",
+      "title": "Stay close to the green.",
+      "description": "Behind the raised rooms, cottages settle into the greenery.",
+      "detail": "Discover the red-roofed A-frame cottages and the quieter corners behind the tree houses. Explore the accommodation styles below, then ask the hosts for a room recommendation. Farm Stay and Meditation & Wellness include overnight accommodation.",
+      "image": "/assets/retreat/DSC_3795.webp",
+      "imageAlt": "The cottages at Aroha Retreat",
+      "film": "",
+      "mapX": 55,
+      "mapY": 29,
+      "nearby": [
+        "treehouses",
+        "meditation"
+      ],
+      "target": "cottages"
+    },
+    {
+      "id": "meditation",
+      "name": "Meditation hall",
+      "title": "Leave a little space.",
+      "description": "At the upper end of the farm, a place for stillness.",
+      "detail": "The meditation hall is the final stop up the farm. Meditation & Wellness guests can join guided sessions, wellness activities and sunrise mountain meditation. Participation leaves room to follow your own rhythm. The swimming pool is toward the left.",
+      "image": "/assets/retreat/DSC_3912.webp",
+      "imageAlt": "Meditation hall at Aroha Retreat",
+      "film": "",
+      "mapX": 48,
+      "mapY": 13,
+      "nearby": [
+        "pool",
+        "cottages"
+      ],
+      "target": "packages"
+    },
+    {
+      "id": "pool",
+      "name": "Swimming pool",
+      "title": "And time to simply float.",
+      "description": "Toward the left of the meditation hall.",
+      "detail": "Swimming is included with all three visit packages. The pool is toward the left of the meditation hall. Ask the hosts about timings and supervision, and leave a little time for a swim between walks and meals.",
+      "image": "/assets/retreat/DSC_3890.webp",
+      "imageAlt": "Greenery around the farm",
+      "film": "",
+      "mapX": 22,
+      "mapY": 22,
+      "nearby": [
+        "meditation"
+      ],
+      "target": "packages"
+    },
+    {
+      "id": "farm",
+      "name": "Farm life",
+      "title": "Come as guests.",
+      "description": "Leave with a little earth on your shoes. And a few new friends.",
+      "detail": "Meet the oxen and sheep with your hosts, wander through coconut groves and orchards, taste seasonal fruit and share strictly vegetarian farm food. There are more than 9,800 trees across 94 species here. Take part in what interests you.",
+      "image": "/assets/retreat/DSC_3823.webp",
+      "imageAlt": "Farm life at Aroha Retreat",
+      "film": "",
+      "mapX": 22,
+      "mapY": 70,
+      "nearby": [
+        "house",
+        "arrival"
+      ],
+      "target": "experiences",
+      "onMap": false
+    }
+  ],
+  "media": [
+    {
+      "id": "p-dsc-3795",
+      "kind": "photo",
+      "name": "Red-roofed A-frame cottages among the palms",
+      "description": "Red-roofed A-frame cottages among the palms. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3795.webp",
+      "src": "",
+      "stop": "cottages"
+    },
+    {
+      "id": "p-dsc-3915",
+      "kind": "photo",
+      "name": "The main house and its stone terraces",
+      "description": "The main house and its stone terraces. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3915.webp",
+      "src": "",
+      "stop": "house"
+    },
+    {
+      "id": "p-20261028-093813",
+      "kind": "photo",
+      "name": "Raised rooms and private decks among the palms",
+      "description": "Raised rooms and private decks among the palms. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/20261028_093813.webp",
+      "src": "",
+      "stop": "treehouses"
+    },
+    {
+      "id": "p-dsc-3823",
+      "kind": "photo",
+      "name": "The farm oxen and bullock cart",
+      "description": "The farm oxen and bullock cart. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3823.webp",
+      "src": "",
+      "stop": "farm"
+    },
+    {
+      "id": "v-092325",
+      "kind": "video",
+      "name": "Along the pond and stone-lined path",
+      "description": "Along the pond and stone-lined path. A silent film recorded at the farm.",
+      "image": "/assets/retreat/20261028_092325-poster.webp",
+      "src": "/assets/retreat/20261028_092325.mp4",
+      "stop": "pond"
+    },
+    {
+      "id": "p-dsc-3766",
+      "kind": "photo",
+      "name": "Light along the pond after dark",
+      "description": "Light along the pond after dark. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3766.webp",
+      "src": "",
+      "stop": "pond"
+    },
+    {
+      "id": "p-dsc-3768",
+      "kind": "photo",
+      "name": "The farm path in the evening",
+      "description": "The farm path in the evening. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3768.webp",
+      "src": "",
+      "stop": "arrival"
+    },
+    {
+      "id": "p-dsc-3771",
+      "kind": "photo",
+      "name": "A quiet turn beside the water",
+      "description": "A quiet turn beside the water. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3771.webp",
+      "src": "",
+      "stop": "pond"
+    },
+    {
+      "id": "p-dsc-3774",
+      "kind": "photo",
+      "name": "The main house, glowing after sunset",
+      "description": "The main house, glowing after sunset. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3774.webp",
+      "src": "",
+      "stop": "house"
+    },
+    {
+      "id": "p-dsc-3776",
+      "kind": "photo",
+      "name": "Warm lights at the main house",
+      "description": "Warm lights at the main house. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3776.webp",
+      "src": "",
+      "stop": "house"
+    },
+    {
+      "id": "p-dsc-3779",
+      "kind": "photo",
+      "name": "The main house verandah at night",
+      "description": "The main house verandah at night. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3779.webp",
+      "src": "",
+      "stop": "house"
+    },
+    {
+      "id": "p-dsc-3780",
+      "kind": "photo",
+      "name": "A-frame cottages after dark",
+      "description": "A-frame cottages after dark. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3780.webp",
+      "src": "",
+      "stop": "cottages"
+    },
+    {
+      "id": "p-dsc-3788",
+      "kind": "photo",
+      "name": "The pond and its stone edge at night",
+      "description": "The pond and its stone edge at night. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3788.webp",
+      "src": "",
+      "stop": "pond"
+    },
+    {
+      "id": "p-dsc-3791",
+      "kind": "photo",
+      "name": "A lamp-lit path beside the pond",
+      "description": "A lamp-lit path beside the pond. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3791.webp",
+      "src": "",
+      "stop": "pond"
+    },
+    {
+      "id": "p-dsc-3809",
+      "kind": "photo",
+      "name": "The meditation hall and its broad steps",
+      "description": "The meditation hall and its broad steps. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3809.webp",
+      "src": "",
+      "stop": "meditation"
+    },
+    {
+      "id": "p-dsc-3815",
+      "kind": "photo",
+      "name": "Inside the meditation hall",
+      "description": "Inside the meditation hall. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3815.webp",
+      "src": "",
+      "stop": "meditation"
+    },
+    {
+      "id": "p-dsc-3835",
+      "kind": "photo",
+      "name": "Time with the oxen and farm hosts",
+      "description": "Time with the oxen and farm hosts. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3835.webp",
+      "src": "",
+      "stop": "farm"
+    },
+    {
+      "id": "p-dsc-3838",
+      "kind": "photo",
+      "name": "Caring for the farm oxen",
+      "description": "Caring for the farm oxen. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3838.webp",
+      "src": "",
+      "stop": "farm"
+    },
+    {
+      "id": "p-dsc-3843",
+      "kind": "photo",
+      "name": "A quiet moment with an ox",
+      "description": "A quiet moment with an ox. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3843.webp",
+      "src": "",
+      "stop": "farm"
+    },
+    {
+      "id": "p-dsc-3851",
+      "kind": "photo",
+      "name": "Tools of a working farm",
+      "description": "Tools of a working farm. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3851.webp",
+      "src": "",
+      "stop": "farm"
+    },
+    {
+      "id": "p-dsc-3859",
+      "kind": "photo",
+      "name": "Stone steps through the greenery",
+      "description": "Stone steps through the greenery. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3859.webp",
+      "src": "",
+      "stop": "cottages"
+    },
+    {
+      "id": "p-dsc-3863",
+      "kind": "photo",
+      "name": "The village road on the way to Aroha",
+      "description": "The village road on the way to Aroha. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3863.webp",
+      "src": "",
+      "stop": "arrival"
+    },
+    {
+      "id": "p-dsc-3865",
+      "kind": "photo",
+      "name": "A bend in the approach road",
+      "description": "A bend in the approach road. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3865.webp",
+      "src": "",
+      "stop": "arrival"
+    },
+    {
+      "id": "p-dsc-3878",
+      "kind": "photo",
+      "name": "Green fields near the farm",
+      "description": "Green fields near the farm. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3878.webp",
+      "src": "",
+      "stop": "farm"
+    },
+    {
+      "id": "p-dsc-3890",
+      "kind": "photo",
+      "name": "Fresh leaves in the coconut grove",
+      "description": "Fresh leaves in the coconut grove. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3890.webp",
+      "src": "",
+      "stop": "farm"
+    },
+    {
+      "id": "p-dsc-3892",
+      "kind": "photo",
+      "name": "Red tiles and the shaded verandah",
+      "description": "Red tiles and the shaded verandah. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3892.webp",
+      "src": "",
+      "stop": "house"
+    },
+    {
+      "id": "p-dsc-3894",
+      "kind": "photo",
+      "name": "Palm fronds over terracotta tiles",
+      "description": "Palm fronds over terracotta tiles. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3894.webp",
+      "src": "",
+      "stop": "house"
+    },
+    {
+      "id": "p-dsc-3897",
+      "kind": "photo",
+      "name": "The canopy in the afternoon light",
+      "description": "The canopy in the afternoon light. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3897.webp",
+      "src": "",
+      "stop": "farm"
+    },
+    {
+      "id": "p-dsc-3899",
+      "kind": "photo",
+      "name": "Walking among the trees",
+      "description": "Walking among the trees. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3899.webp",
+      "src": "",
+      "stop": "farm"
+    },
+    {
+      "id": "p-dsc-3912",
+      "kind": "photo",
+      "name": "The meditation hall in daylight",
+      "description": "The meditation hall in daylight. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3912.webp",
+      "src": "",
+      "stop": "meditation"
+    },
+    {
+      "id": "p-dsc-3916",
+      "kind": "photo",
+      "name": "The central path and stone walls",
+      "description": "The central path and stone walls. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3916.webp",
+      "src": "",
+      "stop": "arrival"
+    },
+    {
+      "id": "p-dsc-3917",
+      "kind": "photo",
+      "name": "Steps up to the main house",
+      "description": "Steps up to the main house. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/DSC_3917.webp",
+      "src": "",
+      "stop": "house"
+    },
+    {
+      "id": "p-20261028-093817",
+      "kind": "photo",
+      "name": "Raised rooms and private decks among the palms",
+      "description": "Raised rooms and private decks among the palms. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/20261028_093817.webp",
+      "src": "",
+      "stop": "treehouses"
+    },
+    {
+      "id": "p-20261028-093825",
+      "kind": "photo",
+      "name": "Raised rooms and private decks among the palms",
+      "description": "Raised rooms and private decks among the palms. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/20261028_093825.webp",
+      "src": "",
+      "stop": "treehouses"
+    },
+    {
+      "id": "p-20261028-093843",
+      "kind": "photo",
+      "name": "Raised rooms and private decks among the palms",
+      "description": "Raised rooms and private decks among the palms. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/20261028_093843.webp",
+      "src": "",
+      "stop": "treehouses"
+    },
+    {
+      "id": "p-20261028-093848",
+      "kind": "photo",
+      "name": "Raised rooms and private decks among the palms",
+      "description": "Raised rooms and private decks among the palms. Photograph from Aroha Retreat.",
+      "image": "/assets/retreat/20261028_093848.webp",
+      "src": "",
+      "stop": "treehouses"
+    },
+    {
+      "id": "v-093906",
+      "kind": "video",
+      "name": "The raised rooms among the coconut palms",
+      "description": "The raised rooms among the coconut palms. A silent film recorded at the farm.",
+      "image": "/assets/retreat/20261028_093906-poster.webp",
+      "src": "/assets/retreat/20261028_093906.mp4",
+      "stop": "treehouses"
+    },
+    {
+      "id": "v-093924",
+      "kind": "video",
+      "name": "Stone steps and the tree-house garden",
+      "description": "Stone steps and the tree-house garden. A silent film recorded at the farm.",
+      "image": "/assets/retreat/20261028_093924-poster.webp",
+      "src": "/assets/retreat/20261028_093924.mp4",
+      "stop": "treehouses"
+    },
+    {
+      "id": "v-094413",
+      "kind": "video",
+      "name": "A view from the verandah",
+      "description": "A view from the verandah. A silent film recorded at the farm.",
+      "image": "/assets/retreat/20261028_094413-poster.webp",
+      "src": "/assets/retreat/20261028_094413.mp4",
+      "stop": "treehouses"
+    },
+    {
+      "id": "v-094438",
+      "kind": "video",
+      "name": "Palms, lawn and stone terraces",
+      "description": "Palms, lawn and stone terraces. A silent film recorded at the farm.",
+      "image": "/assets/retreat/20261028_094438-poster.webp",
+      "src": "/assets/retreat/20261028_094438.mp4",
+      "stop": "treehouses"
+    },
+    {
+      "id": "v-095720",
+      "kind": "video",
+      "name": "Approaching the raised rooms",
+      "description": "Approaching the raised rooms. A silent film recorded at the farm.",
+      "image": "/assets/retreat/20261028_095720-poster.webp",
+      "src": "/assets/retreat/20261028_095720.mp4",
+      "stop": "treehouses"
+    },
+    {
+      "id": "v-095746",
+      "kind": "video",
+      "name": "Two quiet rooms in the palms",
+      "description": "Two quiet rooms in the palms. A silent film recorded at the farm.",
+      "image": "/assets/retreat/20261028_095746-poster.webp",
+      "src": "/assets/retreat/20261028_095746.mp4",
+      "stop": "treehouses"
+    },
+    {
+      "id": "v-095805",
+      "kind": "video",
+      "name": "At the foot of the tree-house stairs",
+      "description": "At the foot of the tree-house stairs. A silent film recorded at the farm.",
+      "image": "/assets/retreat/20261028_095805-poster.webp",
+      "src": "/assets/retreat/20261028_095805.mp4",
+      "stop": "treehouses"
+    },
+    {
+      "id": "v-095821",
+      "kind": "video",
+      "name": "Up the stairs to the verandah",
+      "description": "Up the stairs to the verandah. A silent film recorded at the farm.",
+      "image": "/assets/retreat/20261028_095821-poster.webp",
+      "src": "/assets/retreat/20261028_095821.mp4",
+      "stop": "treehouses"
+    },
+    {
+      "id": "v-095833",
+      "kind": "video",
+      "name": "Looking out from the private deck",
+      "description": "Looking out from the private deck. A silent film recorded at the farm.",
+      "image": "/assets/retreat/20261028_095833-poster.webp",
+      "src": "/assets/retreat/20261028_095833.mp4",
+      "stop": "treehouses"
+    },
+    {
+      "id": "v-100008",
+      "kind": "video",
+      "name": "A slow turn on the verandah",
+      "description": "A slow turn on the verandah. A silent film recorded at the farm.",
+      "image": "/assets/retreat/20261028_100008-poster.webp",
+      "src": "/assets/retreat/20261028_100008.mp4",
+      "stop": "treehouses"
+    },
+    {
+      "id": "v-100024",
+      "kind": "video",
+      "name": "Through the door into a raised room",
+      "description": "Through the door into a raised room. A silent film recorded at the farm.",
+      "image": "/assets/retreat/20261028_100024-poster.webp",
+      "src": "/assets/retreat/20261028_100024.mp4",
+      "stop": "treehouses"
+    },
+    {
+      "id": "v-100041",
+      "kind": "video",
+      "name": "Entering a room from the deck",
+      "description": "Entering a room from the deck. A silent film recorded at the farm.",
+      "image": "/assets/retreat/20261028_100041-poster.webp",
+      "src": "/assets/retreat/20261028_100041.mp4",
+      "stop": "treehouses"
+    },
+    {
+      "id": "v-100051",
+      "kind": "video",
+      "name": "Inside the raised room",
+      "description": "Inside the raised room. A silent film recorded at the farm.",
+      "image": "/assets/retreat/20261028_100051-poster.webp",
+      "src": "/assets/retreat/20261028_100051.mp4",
+      "stop": "treehouses"
+    },
+    {
+      "id": "v-100112",
+      "kind": "video",
+      "name": "The en-suite bathroom",
+      "description": "The en-suite bathroom. A silent film recorded at the farm.",
+      "image": "/assets/retreat/20261028_100112-poster.webp",
+      "src": "/assets/retreat/20261028_100112.mp4",
+      "stop": "treehouses"
+    },
+    {
+      "id": "v-100134",
+      "kind": "video",
+      "name": "From the room back to the garden",
+      "description": "From the room back to the garden. A silent film recorded at the farm.",
+      "image": "/assets/retreat/20261028_100134-poster.webp",
+      "src": "/assets/retreat/20261028_100134.mp4",
+      "stop": "treehouses"
+    },
+    {
+      "id": "v-100209",
+      "kind": "video",
+      "name": "Palms outside the window",
+      "description": "Palms outside the window. A silent film recorded at the farm.",
+      "image": "/assets/retreat/20261028_100209-poster.webp",
+      "src": "/assets/retreat/20261028_100209.mp4",
+      "stop": "treehouses"
+    },
+    {
+      "id": "v-113718",
+      "kind": "video",
+      "name": "Water and the path along its edge",
+      "description": "Water and the path along its edge. A silent film recorded at the farm.",
+      "image": "/assets/retreat/20261028_113718-poster.webp",
+      "src": "/assets/retreat/20261028_113718.mp4",
+      "stop": "pond"
+    },
+    {
+      "id": "v-113931",
+      "kind": "video",
+      "name": "The approach to the upper part of the farm",
+      "description": "The approach to the upper part of the farm. A silent film recorded at the farm.",
+      "image": "/assets/retreat/20261028_113931-poster.webp",
+      "src": "/assets/retreat/20261028_113931.mp4",
+      "stop": "meditation"
+    },
+    {
+      "id": "v-114045",
+      "kind": "video",
+      "name": "From the main-house path toward the pond",
+      "description": "From the main-house path toward the pond. A silent film recorded at the farm.",
+      "image": "/assets/retreat/20261028_114045-poster.webp",
+      "src": "/assets/retreat/20261028_114045.mp4",
+      "stop": "house"
+    },
+    {
+      "id": "v-114109",
+      "kind": "video",
+      "name": "The pond, central path and arrival gate",
+      "description": "The pond, central path and arrival gate. A silent film recorded at the farm.",
+      "image": "/assets/retreat/20261028_114109-poster.webp",
+      "src": "/assets/retreat/20261028_114109.mp4",
+      "stop": "arrival"
+    }
+  ]
+}

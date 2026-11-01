@@ -13,7 +13,7 @@ Read [catalog.json](catalog.json), choose relevant workflow/service skills, then
 | Resume/continue | [Handoff](project-handoff/SKILL.md) |
 | README/docs | [Documentation](project-documentation/SKILL.md) |
 | Useful explanatory images | [Ian Xiaohei](ian-xiaohei-illustrations/SKILL.md) |
-| This template's tooling module | [Foundation tooling](service-foundation-tooling/SKILL.md) |
+| Foundation tooling | [Foundation tooling](service-foundation-tooling/SKILL.md) |
 
 ## Register a service
 
@@ -30,3 +30,5 @@ Replace arguments with the actual architecture. The command creates a planned se
 - [Policy ownership map](../docs/policy-map.md) routes cross-cutting rules.
 - [Synthetic examples](../examples/README.md) demonstrate completed shapes; they are not registered services or actual evidence.
 - Run `sh scripts/check.sh`. See [checks](../docs/testing.md) and [inventory](../docs/services.md).
+
+Application services: [Website and host studio](service-aroha-website/SKILL.md), [Firebase API](service-aroha-api/SKILL.md). Natura is an external pinned asset dependency.

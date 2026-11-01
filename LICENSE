@@ -1,21 +1,14 @@
-MIT License
+Aroha Retreat Restricted Use License
+Copyright (c) 2026 Aroha Retreat. All rights reserved, except as stated below.
 
-Copyright (c) 2026 Vishruth Harithsa
+1. Scope. This license covers Aroha-specific application code, documentation, custom artwork, design tokens, logo and brand assets to the extent the copyright holder controls those rights. Public availability is for review and authorised Aroha work; it is not an open-source license.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+2. Permitted use. Aroha Retreat and people acting with its authorisation may use, copy, modify and deploy the covered material solely to develop, operate and maintain official Aroha Retreat websites, including their development, staging and production environments.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+3. Other use prohibited. No permission is granted to use the covered material to build, brand, operate or distribute unrelated public or private websites, products, design systems, templates or asset packs, or to sell, sublicense or redistribute it for those purposes. Other permission must be obtained in writing from Aroha Retreat.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+4. Third-party exceptions. Independently licensed fonts, libraries and inherited template/tooling material remain governed by their original licenses and copyright notices, retained alongside those files or in LICENSES/ and THIRD-PARTY-NOTICES.md. This license does not restrict rights those third-party licenses independently grant. No exclusive copyright in third-party material is claimed.
+
+5. Brand rights. No trademark or endorsement rights in the Aroha Retreat identity are granted beyond authorised official Aroha website work. Preserve applicable copyright and license notices in authorised copies.
+
+6. No warranty. The covered material is provided as is, without warranties, to the extent permitted by applicable law.

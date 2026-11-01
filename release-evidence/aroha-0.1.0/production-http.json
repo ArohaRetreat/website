@@ -1,0 +1,185 @@
+{
+  "revision": "3088054b04f52dc59d1271c6dcff8281a06eda90",
+  "fileChecks": [
+    {
+      "path": "runtime-config.json",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "index.html",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "website-release.json",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "robots.txt",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "admin/index.html",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "assets/admin.css",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "assets/site.css",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "assets/admin.js",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "assets/site.js",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "assets/retreat/hero-desktop.webp",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "assets/retreat/DSC_3892.webp",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "assets/retreat/DSC_3779.webp",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "assets/retreat/DSC_3780.webp",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "assets/retreat/DSC_3894.webp",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "assets/retreat/hero-mobile.webp",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "assets/retreat/DSC_3823.webp",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "assets/retreat/DSC_3878.webp",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "assets/retreat/DSC_3897.webp",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "assets/retreat/DSC_3890.webp",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "assets/retreat/DSC_3795.webp",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "assets/retreat/DSC_3916.webp",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "assets/brand/icon.svg",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "assets/brand/logo-forest.svg",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "assets/brand/logo-white.svg",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "assets/fonts/Kannada.woff2",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "assets/fonts/Lora.woff2",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "assets/fonts/Source.woff2",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "design/index.html",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "design/release.json",
+      "status": 200,
+      "sha256Matches": true
+    },
+    {
+      "path": "design/app.js",
+      "status": 200,
+      "sha256Matches": true
+    }
+  ],
+  "routeChecks": [
+    {
+      "path": "/",
+      "status": 200,
+      "cacheControl": "public,max-age=0,must-revalidate",
+      "requestId": null,
+      "errorCode": null
+    },
+    {
+      "path": "/admin/",
+      "status": 200,
+      "cacheControl": "public,max-age=0,must-revalidate",
+      "requestId": null,
+      "errorCode": null
+    },
+    {
+      "path": "/design/",
+      "status": 200,
+      "cacheControl": "public,max-age=0,must-revalidate",
+      "requestId": null,
+      "errorCode": null
+    },
+    {
+      "path": "/api/v1/draft/",
+      "status": 401,
+      "cacheControl": "no-store",
+      "requestId": "29bbe7c2-5f3d-4c08-9520-8f079a8a60bf",
+      "errorCode": "SIGN_IN_REQUIRED"
+    }
+  ]
+}

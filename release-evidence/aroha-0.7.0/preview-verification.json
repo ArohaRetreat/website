@@ -1,0 +1,580 @@
+{
+  "preview": "https://aroha-retreat--real-farm-048kl7ga.web.app",
+  "release": {
+    "name": "Aroha Retreat",
+    "version": "0.7.0",
+    "revision": "5bdd193875f9c385c0853b6fbaf2ad0c3b524cf8",
+    "contentSchema": 1,
+    "admin": "/admin/",
+    "design": "/design/"
+  },
+  "hostingVersion": "f10feb476e8f5f94",
+  "expires": "2026-11-08 15:30:37",
+  "verifiedAt": "2026-11-01T10:02:13.582Z",
+  "hashMatchedFiles": 110,
+  "checks": {
+    "/runtime-config.json": {
+      "status": 200,
+      "bytes": 21,
+      "sha256": "7e91a859ed012c5c9cc7513e645d545c524d22eaa94b65f90fc6646d924a93ac"
+    },
+    "/admin/": {
+      "status": 200,
+      "bytes": 729,
+      "sha256": "740e88ab317b69f1d1b8a59a64e07773a419b54b3bf4d625c76d296b2face987"
+    },
+    "/design/": {
+      "status": 200,
+      "bytes": 2110,
+      "sha256": "681de9be82dee68d31a439c860725df805ee03e9f1cb648778b7b7ea8229bb29"
+    },
+    "/website-release.json": {
+      "status": 200,
+      "bytes": 152,
+      "sha256": "feea7690cf49d8c7206dccc50f10a804b532949494c9f8f5106fa666b27197ad"
+    },
+    "/": {
+      "status": 200,
+      "bytes": 52447,
+      "sha256": "9f2fe858b27f9213082c1504c77225d1463ec91e9568f8f47cf431485eee2ba2"
+    },
+    "/assets/admin.js": {
+      "status": 200,
+      "bytes": 39644,
+      "sha256": "cf96e4056e116274352a6ed98ffbef3c1f14efcacae46a0db1daa4fb356dd0ad"
+    },
+    "/assets/living.css": {
+      "status": 200,
+      "bytes": 19130,
+      "sha256": "7fea030a21411642fa6c84622d0c0b0b8f7a3ea6d5be2f085ed174da32b2395f"
+    },
+    "/assets/field.css": {
+      "status": 200,
+      "bytes": 39053,
+      "sha256": "76cf1d3b3dcad3fffa79b03c23bcd33c2d614533cba262ae47143a3d6fda584c"
+    },
+    "/assets/site.css": {
+      "status": 200,
+      "bytes": 55574,
+      "sha256": "001852af304976bc05e64959d41046d8abf8d6d580e6caa7503111bec1b95e2d"
+    },
+    "/assets/arrival.css": {
+      "status": 200,
+      "bytes": 10283,
+      "sha256": "dfe447ad45fc5f5f0796ec1015aa613aeb8f850ac4cd3294c1d9624fc15490d0"
+    },
+    "/assets/fonts/Allura.woff2": {
+      "status": 200,
+      "bytes": 87156,
+      "sha256": "c68bdfd324379807f35be8ca9c5768bebdfd645297f79cf471a42a0fd21f24e9"
+    },
+    "/assets/fonts/Allura-OFL.txt": {
+      "status": 200,
+      "bytes": 4478,
+      "sha256": "c8cb4c94a558b6cb82ac5dc981a73a0b8aee35a5c52c8a7832fc0280c289ad49"
+    },
+    "/assets/admin.css": {
+      "status": 200,
+      "bytes": 7452,
+      "sha256": "5018fc4d009297a93c390cd66780fb768610cf142f1905749f82a6afe699a14e"
+    },
+    "/assets/fonts/Lora.woff2": {
+      "status": 200,
+      "bytes": 84748,
+      "sha256": "9516be2b8f1a6b205c1c47037f7f75ead194ef3e43c28afadb6e148ec010cd82"
+    },
+    "/assets/fonts/Source.woff2": {
+      "status": 200,
+      "bytes": 169468,
+      "sha256": "5759e239bbd2142a538cd6e717a78d5eb862a372645e0f5e8069c74b851e6ee1"
+    },
+    "/assets/site.js": {
+      "status": 200,
+      "bytes": 25916,
+      "sha256": "6279760033745df202d68b34852fe0dc1e2cdcaff03e685eeea4c4b5d552d5a6"
+    },
+    "/assets/fonts/Kannada.woff2": {
+      "status": 200,
+      "bytes": 232372,
+      "sha256": "a954293d118fc3b75512af0ce36194ccdda7d80a1a143c858eab9c6fdfd55f92"
+    },
+    "/assets/retreat/hero-mobile.webp": {
+      "status": 200,
+      "bytes": 425854,
+      "sha256": "49b52aa2b38a98f086b5a5f5063f90db15c2c320062570fa2c73a91f190b9165"
+    },
+    "/assets/retreat/hero-desktop.webp": {
+      "status": 200,
+      "bytes": 838912,
+      "sha256": "34d512c4bf692e5744934784527447ba3f1d3641ba968dbd205b7205a8717f59"
+    },
+    "/assets/retreat/art-world-dawn-v1.webp": {
+      "status": 200,
+      "bytes": 715736,
+      "sha256": "2af28c1e22532f8f926204e403eb59b7f3954cf1b83ea6c0dbcd7bc7fdc7231d"
+    },
+    "/assets/retreat/art-farm-vignette-v1.webp": {
+      "status": 200,
+      "bytes": 621364,
+      "sha256": "3f8603a2493847c27b8e91260e0ce874bed74883739c4b5d737289cecf19745f"
+    },
+    "/assets/retreat/art-world-dusk-v1.webp": {
+      "status": 200,
+      "bytes": 566172,
+      "sha256": "a8c7c8f681e043a70ade32c8ad96994222c64b678a2f28f1eec151091c5f6962"
+    },
+    "/assets/retreat/DSC_3890.webp": {
+      "status": 200,
+      "bytes": 533648,
+      "sha256": "e0b9a1c31d6f1a6b40bb44cd335fef6de06a044f2c9625fce34e0803e9d7cf33"
+    },
+    "/assets/retreat/art-stay-vignette-v1.webp": {
+      "status": 200,
+      "bytes": 607246,
+      "sha256": "5c3dc71702ff11a43fef6b25f07e59931d1448fdbfcb23da34f319f879600aea"
+    },
+    "/assets/retreat/art-palm-foreground-v1.webp": {
+      "status": 200,
+      "bytes": 526084,
+      "sha256": "8fbe9fb4c2d29048525adb0919cfb587a55aedcddf5972ec2e6d79514a0ecb7d"
+    },
+    "/assets/retreat/art-stillness-vignette-v1.webp": {
+      "status": 200,
+      "bytes": 712508,
+      "sha256": "089213597caaa6a5fdaf290e34ac9a925eacb752e38fae0949395d9791ebca6d"
+    },
+    "/assets/retreat/DSC_3795.webp": {
+      "status": 200,
+      "bytes": 1005808,
+      "sha256": "c808267334e8afb912b4f606845efad60901d9257ad9d3b3bd048f4b93b36780"
+    },
+    "/assets/retreat/DSC_3779.webp": {
+      "status": 200,
+      "bytes": 170096,
+      "sha256": "5441f07ceca980e12c0e3ecea1ad014f337d62bc5a41b45b29a64131a9aedd06"
+    },
+    "/assets/retreat/DSC_3894.webp": {
+      "status": 200,
+      "bytes": 518714,
+      "sha256": "a8e9d094f2382fe4d5fa9c2e763489a9e18a330ed9ef592fbf942390b9cd1952"
+    },
+    "/assets/retreat/DSC_3892.webp": {
+      "status": 200,
+      "bytes": 642908,
+      "sha256": "5bc374e42bc5c2293e5c0073be508cd46fb1453b930376004538ad58f3031ca3"
+    },
+    "/assets/retreat/DSC_3878.webp": {
+      "status": 200,
+      "bytes": 552058,
+      "sha256": "8d3530435a43cebc90269f6941ccba240d7575ead6e98cd6117cb7dcba3d7242"
+    },
+    "/assets/retreat/DSC_3897.webp": {
+      "status": 200,
+      "bytes": 542912,
+      "sha256": "2287ea1c49b04f910fafaaa9472bc29e71367db02cd8b9e9bde4ac2c96d92a1f"
+    },
+    "/assets/retreat/DSC_3916.webp": {
+      "status": 200,
+      "bytes": 1302982,
+      "sha256": "865fe90e6525065ca2840764c0f1f091457f4362e9f9f371efb7a1ddea708a43"
+    },
+    "/assets/retreat/DSC_3768.webp": {
+      "status": 200,
+      "bytes": 270468,
+      "sha256": "3f4ed32022e4ff1950b0b21f4ae884a834c1b11ae1fbb9cffa1bfa240fd9869c"
+    },
+    "/assets/retreat/DSC_3788.webp": {
+      "status": 200,
+      "bytes": 200286,
+      "sha256": "b6714cb0d76ed46f48e3ded4b74aeb21f589468105a77702d436de1965000a54"
+    },
+    "/assets/retreat/DSC_3917.webp": {
+      "status": 200,
+      "bytes": 933682,
+      "sha256": "67708c8b69c74aa953e9930376cbf2aeb7010ba34a260906c28ab63d8f18f5ad"
+    },
+    "/assets/retreat/DSC_3915.webp": {
+      "status": 200,
+      "bytes": 1173700,
+      "sha256": "ccc7a8add2aaf89e223bfbbc3cb7b0d63a8e06efa91fa246a88a480da0ebaf98"
+    },
+    "/assets/retreat/DSC_3912.webp": {
+      "status": 200,
+      "bytes": 741128,
+      "sha256": "14c705f7e8b64b8f6cb142fa18f393ceba2513584e5dbd5fd7af056057e06038"
+    },
+    "/assets/retreat/DSC_3766.webp": {
+      "status": 200,
+      "bytes": 159522,
+      "sha256": "82d157459eae3de0b4723baadc4485563580d0f705eb6edd138e8fbce39910c2"
+    },
+    "/assets/retreat/20261028_093817.webp": {
+      "status": 200,
+      "bytes": 1263804,
+      "sha256": "dbd9a4a1d1deaabf3b1b148b0bc31fb2757c874ca590d9c531ce9038aade8944"
+    },
+    "/assets/retreat/DSC_3776.webp": {
+      "status": 200,
+      "bytes": 78568,
+      "sha256": "409131dfe0b615c0394d52569e947e38c9bf98be626ede7c9a6e5e44a741be5b"
+    },
+    "/assets/retreat/DSC_3774.webp": {
+      "status": 200,
+      "bytes": 49166,
+      "sha256": "c41c2b856495bc51cea479ab95f25181ab57d2ad358aa700d51fac405bc85f3c"
+    },
+    "/assets/retreat/DSC_3823.webp": {
+      "status": 200,
+      "bytes": 948688,
+      "sha256": "98002e5ef0f7fae8e5f5b58847187337c6e3d823dd07ecce06d0fc9a68f3d017"
+    },
+    "/assets/retreat/DSC_3771.webp": {
+      "status": 200,
+      "bytes": 132132,
+      "sha256": "e599a10f5ed59918223e1b75321865781c9771691b17498e1533f47da72713c2"
+    },
+    "/assets/retreat/DSC_3791.webp": {
+      "status": 200,
+      "bytes": 79324,
+      "sha256": "fb2bff0467b62103aa713e8da0bf246e959a6e0002352ae8df197c611fde9567"
+    },
+    "/assets/retreat/DSC_3780.webp": {
+      "status": 200,
+      "bytes": 197204,
+      "sha256": "102af29b1c3e54c335f9f8dad4341db5c3d9bfa91bb0458420ade3fd03beb54a"
+    },
+    "/assets/retreat/DSC_3843.webp": {
+      "status": 200,
+      "bytes": 151692,
+      "sha256": "354993f367d1d3d7687824293e9db51e8d349d45e2e17ad738e25ecaf488f162"
+    },
+    "/assets/retreat/DSC_3815.webp": {
+      "status": 200,
+      "bytes": 209854,
+      "sha256": "f3e9be571e646cddea2625e1b5268bef7230572e00cff25ae0666ac2dfe96248"
+    },
+    "/assets/retreat/DSC_3835.webp": {
+      "status": 200,
+      "bytes": 235110,
+      "sha256": "e254c0a5135c6ee1203161d4068d066484e4c2e6d4ccf21fc62171cbe0e37494"
+    },
+    "/assets/retreat/DSC_3838.webp": {
+      "status": 200,
+      "bytes": 292622,
+      "sha256": "769747a24c110763a3c4f7413efd9713f6e7ce0323d77b7ccdab5ad40ee11009"
+    },
+    "/assets/retreat/DSC_3851.webp": {
+      "status": 200,
+      "bytes": 370242,
+      "sha256": "56f5d07b4c53b6d54caf69915de0338586ad18aa5941cabaca048e6728dc65b0"
+    },
+    "/assets/retreat/DSC_3809.webp": {
+      "status": 200,
+      "bytes": 485920,
+      "sha256": "394f8ef3986f9c0ec4461187a8700b498bad98e15c9b898c13040aabfa471509"
+    },
+    "/assets/retreat/DSC_3859.webp": {
+      "status": 200,
+      "bytes": 399296,
+      "sha256": "84b952f31d3aaec2535c6622bfac6fb146aa8b9f52fffc2132181bc1d8ef209c"
+    },
+    "/assets/retreat/DSC_3899.webp": {
+      "status": 200,
+      "bytes": 308870,
+      "sha256": "45795a02840a1e7872189d61369fa95e6c17657d863830f52da1948653748a63"
+    },
+    "/assets/retreat/DSC_3865.webp": {
+      "status": 200,
+      "bytes": 413352,
+      "sha256": "c00d3fc3ec08b59c09f84855294fcfeecf52e1a13fead28cdabad8aa53691b16"
+    },
+    "/assets/retreat/DSC_3863.webp": {
+      "status": 200,
+      "bytes": 387566,
+      "sha256": "069c38aaf94b9316fac527131d0c2edf45c763770385e10ccd79cb24ff7e8514"
+    },
+    "/assets/retreat/20261028_092325-poster.webp": {
+      "status": 200,
+      "bytes": 143668,
+      "sha256": "3685b7210a06b0629c576ae4c716b22d6d2abbd4452ca62d9fcfcd6610354d95"
+    },
+    "/assets/retreat/20261028_093813.webp": {
+      "status": 200,
+      "bytes": 669324,
+      "sha256": "98c008222fe5d67af9653c5e830d1bc38a1dc2f5eb11efa855baa75926219e84"
+    },
+    "/assets/retreat/20261028_093906-poster.webp": {
+      "status": 200,
+      "bytes": 232010,
+      "sha256": "88c678ef24404f230d17861a140eca48dd51ef31ba0bb60ee838494c2d4f43b1"
+    },
+    "/assets/retreat/20261028_093848.webp": {
+      "status": 200,
+      "bytes": 722848,
+      "sha256": "fe60308154627647849778efb7dc95a12a7937fac8aa5542834dd77ea14c52de"
+    },
+    "/assets/retreat/20261028_092325.mp4": {
+      "status": 200,
+      "bytes": 6072514,
+      "sha256": "df5cf5028c6a763a95c7a5c2e05c0a9c800623bc7a41b0fc38f13114d0e20501"
+    },
+    "/assets/retreat/20261028_093843.webp": {
+      "status": 200,
+      "bytes": 703260,
+      "sha256": "6041da4807d1f8eb6d0de98d1969524393829631c6e81504dfb4c5d87c95e7b6"
+    },
+    "/assets/retreat/20261028_093825.webp": {
+      "status": 200,
+      "bytes": 681096,
+      "sha256": "2c65c07ccf73fcd5e8e5249bc2e6d845ffed51ad3af29b21949c61ffdf571f32"
+    },
+    "/assets/retreat/20261028_093924-poster.webp": {
+      "status": 200,
+      "bytes": 219974,
+      "sha256": "91956ecc9593291f83e0d5fcee91f9c9b33d9953a3c0636d0bec15acecd0a0fe"
+    },
+    "/assets/retreat/20261028_094438-poster.webp": {
+      "status": 200,
+      "bytes": 262808,
+      "sha256": "8c8d04b9f5f66d045831b2dc54bdaca8ecd830338a1f6d11c0f517a511547e7c"
+    },
+    "/assets/retreat/20261028_094413-poster.webp": {
+      "status": 200,
+      "bytes": 208374,
+      "sha256": "209cb8fcff1b69dda39c0f18936fc303def65aadc88f5e7c6f0caebe9e5920c4"
+    },
+    "/assets/retreat/20261028_093906.mp4": {
+      "status": 200,
+      "bytes": 2651555,
+      "sha256": "1db59f783d70ac1a380cfef0c6dc90ba59a9cd1f8eb7add9336cc824e20815dd"
+    },
+    "/assets/retreat/20261028_094413.mp4": {
+      "status": 200,
+      "bytes": 2885838,
+      "sha256": "fa39947b139225e993833e0ba512b42e76fdfead8ba1a856db90276cc8b2591e"
+    },
+    "/assets/retreat/20261028_095720-poster.webp": {
+      "status": 200,
+      "bytes": 206644,
+      "sha256": "c502844acfb15e8d7f0ebb29c09aebbcabda545385c535878a71685f8d6f7c40"
+    },
+    "/assets/retreat/20261028_093924.mp4": {
+      "status": 200,
+      "bytes": 3767850,
+      "sha256": "fbbeee48c4737ecb09611a29dd0c5108ebc01d764f4c36c2b7c8876a90afdd97"
+    },
+    "/assets/retreat/20261028_094438.mp4": {
+      "status": 200,
+      "bytes": 2502813,
+      "sha256": "10e3c60ed3a54dbbb7238feded0c310f296f5964a54b3799fe120bee7abd19f4"
+    },
+    "/assets/retreat/20261028_095746-poster.webp": {
+      "status": 200,
+      "bytes": 226914,
+      "sha256": "0989f5e978d1e88fdac49d4a55a2b4422fcd326d63992c4f2911288d4fe6f821"
+    },
+    "/assets/retreat/20261028_095720.mp4": {
+      "status": 200,
+      "bytes": 2288536,
+      "sha256": "9cf0cab20400eeb181eb0d709be479dd854cefa0ba114650c9f8651634f253d2"
+    },
+    "/assets/retreat/20261028_095805-poster.webp": {
+      "status": 200,
+      "bytes": 139752,
+      "sha256": "e65399a40dd67decc7201bca89aa8e7aaf7ef51a1ef490f8de7fce9e2e7ec88f"
+    },
+    "/assets/retreat/20261028_095821-poster.webp": {
+      "status": 200,
+      "bytes": 140774,
+      "sha256": "1516dbdf98b053a368e6f9dea6a547e3b4b6f8dbf4958e8c2ba047db37533ccc"
+    },
+    "/assets/retreat/20261028_095746.mp4": {
+      "status": 200,
+      "bytes": 2065132,
+      "sha256": "2278d012e499a2d4fec504a0de312c7922ca1ea9b905e505cf68cdb5d9a838fd"
+    },
+    "/assets/retreat/20261028_095833-poster.webp": {
+      "status": 200,
+      "bytes": 105194,
+      "sha256": "532ae81935288ce136fb118cff67c6c1bfa71c9826ed2d58c5c8cd2048034568"
+    },
+    "/assets/retreat/20261028_095805.mp4": {
+      "status": 200,
+      "bytes": 760388,
+      "sha256": "d233a578f8a8ae6dda85b89f417183b4c95231bb83785918c35445a9e45b791b"
+    },
+    "/assets/retreat/20261028_095821.mp4": {
+      "status": 200,
+      "bytes": 1327804,
+      "sha256": "caf49c8abda0f1c3a211b8cbbf62e132c5fc60accec80c40c1c6bcc918e3b0a4"
+    },
+    "/assets/retreat/20261028_100008-poster.webp": {
+      "status": 200,
+      "bytes": 160482,
+      "sha256": "2abe5add03b14a99a73cbc3aa9bca51eaf2668e68dcb153eec0187f10f9cea69"
+    },
+    "/assets/retreat/20261028_100041-poster.webp": {
+      "status": 200,
+      "bytes": 54270,
+      "sha256": "60ba58b64940d9b59ec732589d9dbcc7cf7758a6eed51d61c0448e45a7552548"
+    },
+    "/assets/retreat/20261028_100024-poster.webp": {
+      "status": 200,
+      "bytes": 262794,
+      "sha256": "fd71e75181055276e0f650ec64d4ac89f2371dced62736916450437cf9401c0d"
+    },
+    "/assets/retreat/20261028_095833.mp4": {
+      "status": 200,
+      "bytes": 2098041,
+      "sha256": "63ae9cccde4b6ef21bbf0e3fd19864d6f4266e9a49dd876030a9661741df209c"
+    },
+    "/assets/retreat/20261028_100008.mp4": {
+      "status": 200,
+      "bytes": 2251383,
+      "sha256": "db24d8eb0bdf4761da5848d7b83ab0132960dd65e7f600dd57ee851d9a5ad62f"
+    },
+    "/assets/retreat/20261028_100112-poster.webp": {
+      "status": 200,
+      "bytes": 45734,
+      "sha256": "fd38a93a3fd18496407346e445bf921a7165d3f12f681f190d46fe0a2e3a517d"
+    },
+    "/assets/retreat/20261028_100051-poster.webp": {
+      "status": 200,
+      "bytes": 54988,
+      "sha256": "a2499a375d2a254cd6cde9c481a65910c20f9f426a5871475da2782fe7245804"
+    },
+    "/assets/retreat/20261028_100134-poster.webp": {
+      "status": 200,
+      "bytes": 9772,
+      "sha256": "4c3c9af6886a7255ccf12c46d4fc011bf0d0298eba775935c2bc310274cc4d7c"
+    },
+    "/assets/retreat/20261028_100024.mp4": {
+      "status": 200,
+      "bytes": 1933533,
+      "sha256": "20bee9d74a7a2c170a900d23dbdd7a1f3cddee41fe8e3344a7881fcf39c6325d"
+    },
+    "/assets/retreat/20261028_100041.mp4": {
+      "status": 200,
+      "bytes": 1257883,
+      "sha256": "f1874c59f5a08c55965d3d681d03b974687fdd1628baaeb4e2a4179a75615e12"
+    },
+    "/assets/retreat/20261028_100209-poster.webp": {
+      "status": 200,
+      "bytes": 25982,
+      "sha256": "b9b92e22302a52c7da07ec2871356be1585ed0ba4fbfba3032215b3d01b3e0e3"
+    },
+    "/assets/retreat/20261028_113718-poster.webp": {
+      "status": 200,
+      "bytes": 101928,
+      "sha256": "e9894b46cb582554f52264afb720e3eaf6693895367887714551e3722911490a"
+    },
+    "/assets/retreat/20261028_100112.mp4": {
+      "status": 200,
+      "bytes": 916436,
+      "sha256": "0f81f0c26249d09de598add050e3d387486550768264c634c8e16dc6e9ba91d1"
+    },
+    "/assets/retreat/20261028_100051.mp4": {
+      "status": 200,
+      "bytes": 3127086,
+      "sha256": "8c07fd44d56aab78ab209d5a0f5304597fb77b0f313fa1f76480552a4275faf0"
+    },
+    "/assets/retreat/20261028_100134.mp4": {
+      "status": 200,
+      "bytes": 4384548,
+      "sha256": "c5b0fc1cc74239b9660b402f6a5d5387d06fb829aef21fbbaef3c45857c12014"
+    },
+    "/assets/retreat/20261028_100209.mp4": {
+      "status": 200,
+      "bytes": 2125379,
+      "sha256": "e86da3e796c8947b3af27a7186b687025148a3666f23953433fae5df5023877f"
+    },
+    "/assets/retreat/20261028_113931-poster.webp": {
+      "status": 200,
+      "bytes": 140332,
+      "sha256": "fb21305647598b7fa8a5845e62ee78164faa07b5f25f61013327470f076c662d"
+    },
+    "/assets/retreat/20261028_113718.mp4": {
+      "status": 200,
+      "bytes": 1375829,
+      "sha256": "badb496e7afd417db056ebb74c3cf62106a3a93e1821a98ebe3049e4c3ebe4cc"
+    },
+    "/assets/retreat/20261028_114045-poster.webp": {
+      "status": 200,
+      "bytes": 168850,
+      "sha256": "c1f715cf7310b2eed0af34ce90493472c9310ea931abe0f52535432754252a78"
+    },
+    "/assets/retreat/20261028_114109-poster.webp": {
+      "status": 200,
+      "bytes": 121884,
+      "sha256": "6a4f22a55676c7cbdc262a8f71bebebb894e88bd717c986d468bf0b6fb89fee9"
+    },
+    "/assets/retreat/20261028_113931.mp4": {
+      "status": 200,
+      "bytes": 1173019,
+      "sha256": "e1eb60ddef0ab4d20122d0fb12b58f6b2045e86acf5493f94ee141d1eede2bd5"
+    },
+    "/assets/chunks/chunk-3ETJKGFO.js": {
+      "status": 200,
+      "bytes": 666698,
+      "sha256": "706fc1da50eed4e855b83dbc3d17bb6edb4b2c9b909c6c821025ff1f39316448"
+    },
+    "/assets/chunks/chunk-BMCCLAFW.js": {
+      "status": 200,
+      "bytes": 67387,
+      "sha256": "39511218e1d7c6d40edc1c242ff872c7e5c9a91132c5cefa29d676a7be7a8588"
+    },
+    "/assets/retreat/nature-frond-v1.webp": {
+      "status": 200,
+      "bytes": 457772,
+      "sha256": "0f53c67514b2f2ea18ec534b4451e649e5a01d6b7610f8ce2d609da7ac2d7ff1"
+    },
+    "/assets/retreat/nature-seedling-v1.webp": {
+      "status": 200,
+      "bytes": 341020,
+      "sha256": "a4cf44f6e6e8ae7bb9aa64063eab22f16558070239d470cef1100966e82ee774"
+    },
+    "/assets/chunks/firebase-LIISNCYK.js": {
+      "status": 200,
+      "bytes": 206,
+      "sha256": "f9fc29721733ab1e7992671047da32ee6caae0f7894445ef1afec9c52b9e1377"
+    },
+    "/assets/brand/icon.svg": {
+      "status": 200,
+      "bytes": 9955,
+      "sha256": "b02fdefe5d311bd404a720171e339dc4458e766ed66374e5214fe1ba0a6b6222"
+    },
+    "/assets/retreat/20261028_114045.mp4": {
+      "status": 200,
+      "bytes": 4397897,
+      "sha256": "2178bc9ae62b4646154f6d5b783d068929bdb288416d59f1a38650610b9ecd24"
+    },
+    "/assets/brand/logo-white.svg": {
+      "status": 200,
+      "bytes": 14594,
+      "sha256": "9628cf781d71cbfeb018172f862b325b09a54ebb9a59a3fa250ea7f8d04af024"
+    },
+    "/assets/brand/logo-forest.svg": {
+      "status": 200,
+      "bytes": 14594,
+      "sha256": "707f5b8ff307999de30712a754c237061c598b4d4d7340eeb96e9a2d3b38b307"
+    },
+    "/assets/retreat/20261028_114109.mp4": {
+      "status": 200,
+      "bytes": 9264697,
+      "sha256": "6b1ebe7ed01213fbb1801e16d472f41ed7069adaba320b8cbaa51503463b826f"
+    }
+  },
+  "videoRange": {
+    "src": "/assets/retreat/20261028_092325.mp4",
+    "status": 206,
+    "bytes": 1024,
+    "contentRange": "bytes 0-1023/6072514"
+  },
+  "production": {
+    "name": "Aroha Retreat",
+    "version": "0.1.0",
+    "contentSchema": 1,
+    "admin": "/admin/",
+    "design": "/design/"
+  }
+}

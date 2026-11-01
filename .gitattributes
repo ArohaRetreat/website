@@ -1,0 +1,2 @@
+# Preserve upstream font licence bytes and original spacing/line endings.
+vendor/natura/fonts/**/OFL.txt -text -whitespace
