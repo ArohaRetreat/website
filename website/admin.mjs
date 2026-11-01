@@ -152,6 +152,13 @@ function field(value, path, key) {
     return "";
   const label = key === "media" && !Array.isArray(value) ? "Tour media identifier (optional)" : title(key),
     disabled = can(session.role, "edit") ? "" : "disabled";
+  if (path.startsWith("storyMap.places.") && ["id", "chapter", "media"].includes(key)) {
+    const place = get(path.split(".").slice(0, -1).join("."));
+    const choices = key === "id" ? draft.tour.stops.map(s => [s.id, s.name]) :
+      key === "chapter" ? draft.storyMap.chapters.map(c => [c.id, c.title]) :
+      [["", "Use this place’s photograph"], ...draft.tour.media.filter(m => m.stop === place.id).map(m => [m.id, `${m.kind === "video" ? "Film" : "Photo"}: ${m.name}`])];
+    return `<label class="field">${key === "id" ? "Place" : key === "chapter" ? "Story chapter" : "Featured photo or film"}<select data-path="${esc(path)}" ${disabled}>${choices.map(([id, name]) => `<option value="${esc(id)}" ${value === id ? "selected" : ""}>${esc(name)}</option>`).join("")}</select></label>`;
+  }
   if (Array.isArray(value))
     return `<div class="editor-array"><div class="field-heading"><h3>${esc(label)}</h3>${disabled ? "" : `<button class="small-button" data-add="${esc(path)}">Add item +</button>`}</div>${value
       .map(
@@ -186,7 +193,7 @@ function field(value, path, key) {
       "heroEveningImage",
     ].includes(key) ||
     (path.startsWith("cottages.") && path.includes(".images."));
-  return `<label class="field">${esc(label)}${["description", "detail", "answer", "message", "note", "priceNote", "inclusions"].includes(key) || path.includes(".paragraphs.") || String(value).includes("\n") ? `<textarea rows="3" data-path="${esc(path)}" ${disabled}>${esc(value)}</textarea>` : `<input type="${typeof value === "number" ? "number" : key === "email" ? "email" : key === "mapUrl" ? "url" : "text"}" data-path="${esc(path)}" value="${esc(value)}" ${typeof value === "number" ? 'min="0" step="1"' : ""} ${disabled}>`}</label>${videoField ? `<div class="media-field">${value ? `<video controls muted playsinline preload="none" src="${esc(value)}"></video>` : ""}${disabled ? "" : `<label class="upload-button">Upload web video<input type="file" accept="video/mp4,video/webm" data-upload="${esc(path)}" data-media-type="video"></label>`}<small>Public immediately after upload. MP4 or WebM, under 40 MB. Upload an edited web version; originals stay on your device.</small></div>` : ""}${imageField ? `<div class="media-field">${value ? `<img src="${esc(value)}" alt="Selected photograph preview" loading="lazy">` : ""}${disabled ? "" : `<label class="upload-button">Upload photograph<input type="file" accept="image/jpeg,image/png,image/webp,image/avif" data-upload="${esc(path)}"></label>`}<small>Website media is public immediately after upload. JPEG, PNG, WebP or AVIF; under 10 MB. Originals stay on your device.</small></div>` : ""}`;
+  return `<label class="field">${esc(label)}${["description", "detail", "answer", "message", "note", "priceNote", "inclusions", "caption"].includes(key) || path.includes(".paragraphs.") || String(value).includes("\n") ? `<textarea rows="3" data-path="${esc(path)}" ${disabled}>${esc(value)}</textarea>` : `<input type="${typeof value === "number" ? "number" : key === "email" ? "email" : key === "mapUrl" ? "url" : "text"}" data-path="${esc(path)}" value="${esc(value)}" ${typeof value === "number" ? 'min="0" step="1"' : ""} ${disabled}>`}</label>${videoField ? `<div class="media-field">${value ? `<video controls muted playsinline preload="none" src="${esc(value)}"></video>` : ""}${disabled ? "" : `<label class="upload-button">Upload web video<input type="file" accept="video/mp4,video/webm" data-upload="${esc(path)}" data-media-type="video"></label>`}<small>Public immediately after upload. MP4 or WebM, under 40 MB. Upload an edited web version; originals stay on your device.</small></div>` : ""}${imageField ? `<div class="media-field">${value ? `<img src="${esc(value)}" alt="Selected photograph preview" loading="lazy">` : ""}${disabled ? "" : `<label class="upload-button">Upload photograph<input type="file" accept="image/jpeg,image/png,image/webp,image/avif" data-upload="${esc(path)}"></label>`}<small>Website media is public immediately after upload. JPEG, PNG, WebP or AVIF; under 10 MB. Originals stay on your device.</small></div>` : ""}`;
 }
 function shell() {
   root.innerHTML = `<aside class="studio-sidebar"><a href="/" class="studio-logo"><img src="/assets/brand/logo-forest.svg" alt="Aroha Retreat" width="190" height="65"></a><p class="eyebrow">HOST STUDIO</p><nav aria-label="Studio sections">${Object.entries(
@@ -294,6 +301,11 @@ function renderEditor() {
               ? Number(el.value)
               : el.value,
         );
+        if(el.dataset.path.startsWith("storyMap.places.")&&el.dataset.path.endsWith(".id")) {
+          const place=get(el.dataset.path.split(".").slice(0,-1).join("."));
+          place.media="";
+          renderEditor();
+        }
       }),
   );
   editor.querySelectorAll("[data-add]").forEach(

@@ -14,6 +14,7 @@ let content = initial,
   active = placeFromHash(location.hash, map.places) || map.places[0]?.id,
   reading =
     reduced.matches ||
+    new URLSearchParams(location.search).get("view")==="reading" ||
     !initial.theme.motion ||
     preference("aroha-map-view") === "reading",
   dispose = () => {},
