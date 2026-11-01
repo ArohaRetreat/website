@@ -1,6 +1,6 @@
-# Delivery observability — 0.12.0
+# Delivery observability — 0.12.0 verified
 
-Issue #22 adds a trusted Actions completion observer and production deployment/live-verification reporting. The website design, CMS, API 0.2.0 and Natura 0.6.1 are preserved. Read the delivery-observability service skill/contract for source identities, secret isolation, bounded artifacts, per-signal receipts and report-only replay. Source/CI/merge/deployment/tenant evidence must be read from issue #22 and actual receipts; this preparation note does not certify rollout.
+Production https://aroharetreat.com runs source 872393140f98c45af2f2e14d39dccfef2680ed30 (PR #23), Hosting 48c08d6816bf20f6, released 2026-11-01T22:32:56.521Z. Live verifier matched 22 files and draft denial 401. Main CI and both automatic observer workflows passed; delivery BizEvents, logs, traces, metrics and native deployment marker are tenant-searchable. Read the delivery-observability continuation and issue #22 for exact run/deployment identities. API 0.2.0, Natura 0.6.1, CMS and website design are unchanged. Native RUM linkage and host/device acceptance remain separate. Documentation-only follow-ups do not change the deployed revision.
 
 # Persistent sunset atmosphere — 0.11.0
 
