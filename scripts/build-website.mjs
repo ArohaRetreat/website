@@ -71,7 +71,7 @@ await copyFile(
 );
 // This directory is owned by the website bundler; retire stale hashed chunks.
 await rm(new URL("chunks/", assets), { recursive: true, force: true });
-await build({
+const bundle = await build({
   entryPoints: {
     site: new URL("website/site.mjs", root).pathname,
     admin: new URL("website/admin.mjs", root).pathname,
@@ -82,12 +82,32 @@ await build({
   chunkNames: "chunks/[name]-[hash]",
   outdir: assets.pathname,
   minify: true,
+  metafile: true,
   target: ["es2022"],
   legalComments: "eof",
   define: {
     __AROHA_EMULATORS__: process.env.AROHA_EMULATORS === "1" ? "true" : "false",
   },
 });
+// Guests need a public Firestore read, never the admin Auth/Storage implementations.
+const outputs = bundle.metafile.outputs;
+const publicEntry = Object.keys(outputs).find((name) => outputs[name].entryPoint?.endsWith("website/firebase-public.mjs"));
+if (!publicEntry) throw Error("Public Firebase entry missing from the build graph.");
+const visited = new Set();
+function visit(name) {
+  if (visited.has(name) || !outputs[name]) return;
+  visited.add(name);
+  for (const dependency of outputs[name].imports) if (!dependency.external) visit(dependency.path);
+}
+visit(publicEntry);
+const guestInputs = [...new Set([...visited].flatMap((name) => Object.keys(outputs[name].inputs)))];
+if (guestInputs.some((name) => /node_modules\/@firebase\/(auth|storage)\//.test(name)))
+  throw Error("Admin Auth/Storage leaked into the guest Firebase bundle.");
+await mkdir(new URL("local/", root), { recursive: true });
+await writeFile(new URL("local/guest-bundle-analysis.json", root), JSON.stringify({
+  entry: publicEntry, bytes: [...visited].reduce((n, name) => n + outputs[name].bytes, 0),
+  adminAuthStorageExcluded: true,
+}, null, 2));
 await writeFile(
   new URL("index.html", dist),
   `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="${content.theme.forest}"><meta name="description" content="${esc(content.seo.description)}"><link rel="canonical" href="${PUBLIC_ORIGIN}/"><meta property="og:url" content="${PUBLIC_ORIGIN}/"><meta property="og:title" content="${esc(content.seo.title)}"><meta property="og:description" content="${esc(content.seo.description)}"><meta property="og:image" content="${PUBLIC_ORIGIN}${esc(content.hero.image)}"><title>${esc(content.seo.title)}</title><link rel="icon" href="/assets/brand/icon.svg" type="image/svg+xml"><link rel="preload" href="/assets/fonts/Lora.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="/assets/site.css"><link rel="stylesheet" href="/assets/field.css"><link rel="stylesheet" href="/assets/living.css"><link rel="stylesheet" href="/assets/arrival.css"><link rel="stylesheet" href="/assets/collections.css"><link rel="preload" href="/assets/fonts/Allura.woff2" as="font" type="font/woff2" crossorigin></head><body>${welcomeMarkup(content, natureContent(tourContent(content)), esc)}<div id="site">${renderSite(content)}</div><noscript><style>#aroha-welcome{display:none!important}</style><p style="padding:20px">Interactive details require JavaScript. Call <a href="tel:+${content.visit.phone}">+${content.visit.phone}</a> to plan your visit.</p></noscript><script type="module" src="/assets/site.js"></script></body></html>`,

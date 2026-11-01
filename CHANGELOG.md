@@ -1,5 +1,12 @@
 # Aroha Retreat website changelog
 
+## [0.8.3] — 2026-11-01
+
+- Split public Firestore reads from admin Auth/Storage; the build checks that guest Firebase dependencies exclude those admin implementations.
+- Initialise Auth directly with session-only persistence and open Google immediately from the click, removing per-click persistence migration.
+- Show checking-access/loading-draft stages and preconnect the admin sign-in helpers. Preserve membership, publication and session scope.
+
+
 ## [0.8.2] — 2026-11-01
 
 - Promote the reviewed website to the custom domain with canonical SEO/sitemap URLs.

@@ -1,5 +1,10 @@
 # Aroha website continuation
 
+## Startup performance follow-up (0.8.3)
+
+Issue #8 follows the real production owner sign-in. Guest Firestore uses firebase-public.mjs / firebase-app.mjs and never imports admin Auth/Storage; build-website.mjs enforces this graph boundary. Admin Auth is initialised directly with browserSessionPersistence and its popup resolver. Preserve session-only behavior and distinct access/draft loading stages. Backend/API remains 0.1.1; user-observed Google/device/network delay is not certified fixed solely by source changes.
+
+
 ## Custom-domain production release
 
 Website 0.8.2 / API 0.1.1 is prepared for issue #5: exact canonical API origin, canonical invite/SEO URLs, current optional content validation/video rules and guarded shared Hosting. Preserve the existing owner configuration and Secret Manager binding. Verify deployment facts from the issue/release evidence; this preparation note does not certify deployment. Living Map issue #4 is the separate next enhancement.
