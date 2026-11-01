@@ -1,5 +1,10 @@
 # Aroha website continuation
 
+## Verified current deployment
+
+Website 0.8.3 is live at https://aroharetreat.com from 9b4ca2f9cec559369e5db095cb1d4f91eeaff208, Hosting 71855ca361752379. API 0.1.1 is ACTIVE as arohaapi-00003-yah with its existing owner/secret configuration. Real owner sign-in/draft read and backend log/span/metric searchability are verified; publication/restore/uploads and native RUM linkage remain separate. Natura 0.6.1 profile downloads are retained. Read release-evidence/aroha-0.8.3 and issues #5/#8. Living Map #4 is next in milestone 0.9.0; it is not implemented in this release.
+
+
 ## Startup performance follow-up (0.8.3)
 
 Issue #8 follows the real production owner sign-in. Guest Firestore uses firebase-public.mjs / firebase-app.mjs and never imports admin Auth/Storage; build-website.mjs enforces this graph boundary. Admin Auth is initialised directly with browserSessionPersistence and its popup resolver. Preserve session-only behavior and distinct access/draft loading stages. Backend/API remains 0.1.1; user-observed Google/device/network delay is not certified fixed solely by source changes.

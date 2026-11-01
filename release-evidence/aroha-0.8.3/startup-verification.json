@@ -1,0 +1,20 @@
+{
+  "version": "0.8.3",
+  "sourceRevision": "9b4ca2f9cec559369e5db095cb1d4f91eeaff208",
+  "mergeRevision": "2859d018d0096c28146d9052853ce96fc28a79c3",
+  "hostingVersion": "71855ca361752379",
+  "backendUnchanged": "arohaapi-00003-yah / API 0.1.1",
+  "guestBundle": {
+    "entry": "dist/assets/chunks/firebase-public-P5JYLAB2.js",
+    "bytes": 526553,
+    "adminAuthStorageExcluded": true
+  },
+  "ownerSignInVerified": true,
+  "draftReadVerified": true,
+  "returningStudioObservedMilliseconds": 3113,
+  "redirectSeconds": 0.260169,
+  "redirectAndFinalPageSeconds": 0.602715,
+  "endToEndGoogleSpeedupMeasured": false,
+  "inspectedBrowserErrors": [],
+  "existingEditorReloaded": false
+}
