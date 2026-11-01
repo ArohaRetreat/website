@@ -1,0 +1,14 @@
+{
+  "backendVersion":"0.2.0",
+  "runtimeRevision":"arohaapi-00004-yek",
+  "requestId":"f04ee185-708f-49e2-a292-02d58fcfc26d",
+  "traceId":"65170ff651fc1b8a98104722908829a9",
+  "spanId":"8593837f0834aaec",
+  "correlatedLogErrorType":"SIGN_IN_REQUIRED",
+  "requestMetricObservedIncrements":2,
+  "rumScriptCountBeforeConsent":0,
+  "rumScriptCountAfterConsent":1,
+  "rumScriptCountAfterWithdrawalReload":0,
+  "nativeRumSessionAndBackendLinkVerified":false,
+  "productionContentWritesPerformed":false
+}
