@@ -8,6 +8,16 @@ body.public-menu-open {
   align-items: center;
   gap: 24px;
 }
+.public-header .public-visit {
+  min-height: 44px;
+  padding: 9px 20px;
+  border: 1px solid #d5dfbc80;
+  border-radius: 40px;
+  background: transparent;
+  color: inherit;
+  font: 400 16px Source, sans-serif;
+  cursor: pointer;
+}
 .public-header .public-menu-toggle {
   display: inline-flex;
   align-items: center;
