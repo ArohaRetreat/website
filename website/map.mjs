@@ -1,7 +1,12 @@
 import initial from "./content.json";
 import { renderMap, mapContent } from "./map-render.mjs";
 import { tourContent } from "./field-render.mjs";
-import { placeFromHash, adjacentPlace, treeDescent } from "./map-state.mjs";
+import {
+  placeFromHash,
+  adjacentPlace,
+  treeDescent,
+  timelineProgress,
+} from "./map-state.mjs";
 import { validateContent } from "../functions/domain.mjs";
 import { preference, setPreference } from "./preferences.mjs";
 import { track, initializeMonitoring, reportError } from "./monitoring.mjs";
@@ -14,7 +19,7 @@ let content = initial,
   active = placeFromHash(location.hash, map.places) || map.places[0]?.id,
   reading =
     reduced.matches ||
-    new URLSearchParams(location.search).get("view")==="reading" ||
+    new URLSearchParams(location.search).get("view") === "reading" ||
     !initial.theme.motion ||
     preference("aroha-map-view") === "reading",
   dispose = () => {},
@@ -24,6 +29,7 @@ let content = initial,
   overview = location.hash === "#map-overview";
 const chapterSelection = new Map();
 function render() {
+  if (!content.theme.motion) reading = true;
   const scroll = scrollY,
     focus = document.activeElement?.dataset?.mapPlace;
   dispose();
@@ -151,9 +157,27 @@ function bind() {
   const camera = root.querySelector(".tree-camera"),
     intro = root.querySelector(".map-introduction"),
     descent = root.querySelector(".map-descent");
+  const connectors = [...root.querySelectorAll(".map-timeline")].map((el) => ({
+    el,
+    fill: el.querySelector(".timeline-growth"),
+  }));
   function draw() {
     frame = 0;
     document.body.classList.toggle("map-paused", document.hidden);
+    // Measure all gaps first; only composited transforms are written during scrolling.
+    const links = connectors.map(({ el, fill }) => ({
+      fill,
+      progress:
+        reading || reduced.matches || !content.theme.motion
+          ? 1
+          : timelineProgress(
+              el.getBoundingClientRect().top,
+              el.offsetHeight,
+              innerHeight,
+            ),
+    }));
+    for (const { fill, progress } of links)
+      fill.style.transform = `scaleY(${progress})`;
     if (reading) return;
     const introRect = intro.getBoundingClientRect();
     const progress = overview

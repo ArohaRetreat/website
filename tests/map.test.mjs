@@ -12,6 +12,7 @@ import {
   placeFromHash,
   adjacentPlace,
   treeDescent,
+  timelineProgress,
 } from "../website/map-state.mjs";
 const read = async (p) =>
   JSON.parse(await readFile(new URL(p, import.meta.url)));
@@ -115,4 +116,12 @@ test("physical map reuses homepage tour coordinates rather than placing destinat
   assert.ok(html.includes('class="farm-map-plane"'));
   assert.ok(!html.includes('class="root-marker"'));
   assert.ok(html.includes("Relative layout from the hosts"));
+});
+
+test("timeline connections fill in reading order, clamp and reverse with scrolling", () => {
+  assert.equal(timelineProgress(800, 100, 800), 0);
+  assert.equal(timelineProgress(550, 100, 800), 0.5);
+  assert.equal(timelineProgress(450, 100, 800), 1);
+  assert.ok(timelineProgress(580, 100, 800) < timelineProgress(530, 100, 800));
+  assert.equal(timelineProgress(500, 0, 800), 1);
 });

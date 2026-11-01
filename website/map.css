@@ -1572,3 +1572,233 @@ select:focus-visible {
     top: 50%;
   }
 }
+/* One forest canvas, with white botanical cards connected in reading order. */
+body {
+  background: #1c2c1f;
+  color: #eef0df;
+}
+.map-header {
+  background: #1c2c1f;
+  color: #f5f3e5;
+  border-bottom-color: #b8c8a52e;
+}
+.map-header [aria-current] {
+  border-bottom-color: #d4dfbd;
+}
+.map-header .map-visit-link {
+  border-color: #c5d3b46b;
+}
+.map-scene,
+.at-roots .map-scene,
+.map-reading .map-scene {
+  background: #1c2c1f;
+}
+.map-introduction,
+.map-stories-heading,
+.map-chapter,
+.map-ending,
+.map-reading .map-introduction,
+.map-reading .map-stories-heading,
+.map-reading .map-chapter,
+.map-reading .map-ending {
+  position: relative;
+  isolation: isolate;
+  background: #fffdf8;
+  color: #223d2d;
+  border: 1px solid #e7ebdc;
+  border-radius: 40px 16px 16px 16px;
+  box-shadow:
+    0 24px 60px -20px #08160bb3,
+    0 3px 10px #08160b24,
+    inset 0 1px 0 #fff;
+}
+.map-introduction::before,
+.map-stories-heading::before,
+.map-chapter::before,
+.map-ending::before {
+  content: "";
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  width: 140px;
+  height: 140px;
+  border-radius: 100% 0 100% 0;
+  border: 1px solid #5d7f50;
+  background:
+    linear-gradient(
+      135deg,
+      transparent 49.4%,
+      #5d7f50 49.7%,
+      #5d7f50 50.3%,
+      transparent 50.6%
+    ),
+    #91a36d;
+  opacity: 0.085;
+  transform: rotate(13deg);
+  z-index: -1;
+  pointer-events: none;
+}
+.map-introduction {
+  width: 36%;
+  max-width: 600px;
+  min-height: calc(100svh - 190px);
+  margin: 40px 3vw 72px auto;
+  padding: clamp(30px, 3vw, 56px);
+}
+.map-stories-heading,
+.map-chapter {
+  --map-card-gap: 95px;
+  margin-bottom: var(--map-card-gap);
+}
+.map-stories-heading,
+.map-ending {
+  width: 32%;
+  max-width: 540px;
+}
+.map-ending {
+  margin-bottom: 64px;
+}
+.map-descent,
+.map-descent .map-calligraphy {
+  color: #e6e7cd;
+}
+.map-descent .eyebrow {
+  color: #bfcda9;
+}
+.descent-line {
+  background: linear-gradient(#cfcea1, transparent);
+}
+.at-roots .scene-stage {
+  color: #d5dfc4;
+}
+.farm-key {
+  color: #e1e6cd;
+}
+.farm-key small {
+  color: #bdcbae;
+}
+.map-footer {
+  color: #e4ead5;
+  border-top-color: #b8c8a533;
+  background: #1c2c1f;
+}
+.map-privacy summary:focus-visible {
+  outline: 2px solid #d5d8aa;
+  outline-offset: 5px;
+}
+.map-timeline {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 2px;
+  height: var(--map-card-gap, 95px);
+  background: #b3c49b36;
+  pointer-events: none;
+  z-index: 0;
+}
+.timeline-growth {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #d3cb99;
+  transform-origin: 50% 0;
+  transform: scaleY(1);
+}
+.map-enhanced:not(.map-reading) .timeline-growth {
+  transform: scaleY(0);
+}
+.map-timeline::after {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: calc(50% - 6px);
+  width: 10px;
+  height: 16px;
+  border-radius: 100% 0 100% 0;
+  background: #819568;
+  border: 1px solid #b9c89d;
+  transform: rotate(25deg);
+}
+.map-reading .map-narrative {
+  padding: 24px 20px;
+}
+.map-reading .map-introduction,
+.map-reading .map-stories-heading,
+.map-reading .map-chapter,
+.map-reading .map-ending {
+  margin: 0 0 72px;
+  --map-card-gap: 72px;
+}
+@media (max-width: 1000px) and (min-width: 651px) {
+  .map-introduction {
+    width: 39%;
+    margin-right: 2vw;
+    padding: 30px;
+  }
+  .map-stories-heading,
+  .map-ending {
+    width: 39%;
+    max-width: 540px;
+  }
+}
+@media (max-width: 650px) {
+  .map-scene {
+    border-bottom-color: #7a92614d;
+  }
+  .map-introduction,
+  .map-stories-heading,
+  .map-chapter,
+  .map-ending,
+  .map-reading .map-introduction,
+  .map-reading .map-stories-heading,
+  .map-reading .map-chapter,
+  .map-reading .map-ending {
+    width: auto;
+    max-width: none;
+    margin: 20px 16px 72px;
+    padding: 30px 24px;
+    min-height: 0;
+    --map-card-gap: 72px;
+    border-radius: 30px 12px 12px 12px;
+  }
+  .map-stories-heading + .map-chapter,
+  .map-chapter + .map-chapter {
+    margin-top: 0;
+  }
+  .map-introduction::before,
+  .map-stories-heading::before,
+  .map-chapter::before,
+  .map-ending::before {
+    width: 105px;
+    height: 105px;
+    right: 20px;
+    top: 20px;
+  }
+  .map-introduction h1 {
+    font-size: clamp(38px, 12vw, 48px);
+  }
+  .map-descent,
+  .map-descent .map-calligraphy {
+    color: #e6e7cd;
+  }
+  .map-stories-heading {
+    margin-top: 0;
+  }
+  .map-ending {
+    margin-top: 0;
+  }
+  .map-reading .map-narrative {
+    padding: 10px 0;
+  }
+  .map-reading .map-introduction,
+  .map-reading .map-stories-heading,
+  .map-reading .map-chapter,
+  .map-reading .map-ending {
+    margin: 0 16px 72px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .timeline-growth {
+    transform: scaleY(1) !important;
+  }
+}

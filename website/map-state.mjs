@@ -21,3 +21,11 @@ export function treeDescent(top, height, viewport) {
     Math.min(1, (viewport * 0.45 - top) / Math.max(1, height)),
   );
 }
+
+// Fill a connection only as its gap enters the reading area; native reverse scroll unwinds it.
+export function timelineProgress(gapTop, gapHeight, viewportHeight) {
+  return Math.max(
+    0,
+    Math.min(1, (viewportHeight * 0.75 - gapTop) / Math.max(1, gapHeight)),
+  );
+}
