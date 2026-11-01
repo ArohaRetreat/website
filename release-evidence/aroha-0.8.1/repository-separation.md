@@ -10,6 +10,6 @@ Local checks:
 - Shared Hosting composition consumes the export built from Natura main `699788a726e0ddd2fd011a6c63dd4a1a3cd45e05`; 1,324 files are composed, including both applications and font notices. Missing, modified, incomplete, wrong-revision, self-copy and symlink cases are rejected by boundary tests.
 - Separate Natura checkout: 52 application tests and 21 foundation tests pass. Its independent design export build passes. The design-only deploy entry point is disabled to protect the shared site.
 
-GitHub import/handoff PR checks and merge identities are recorded in the migration issues after those transitions occur. The emulator and synthetic OTLP outcomes are recorded there after their current run completes; older receipts are not used as a claim of execution from this repository.
+The isolated Auth/Functions/Firestore/Storage lifecycle passes from this repository, as does the synthetic OTLP protobuf trace/log/metric collector test. The temporary synthetic owner file was removed after execution. GitHub import/handoff PR checks and merge identities are recorded in the migration issues after those transitions occur; no older receipt is used as a claim of current execution.
 
 No deployment, secret/owner environment copy, backend/rules mutation, new Firebase project, billing or auth-domain change was performed. Historical release-evidence files retain their original deployed revision facts. The existing production/preview versions are not relabelled as new-repository releases. Unfinished acceptance criteria remain in website issue #2.
