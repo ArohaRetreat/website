@@ -1,0 +1,11 @@
+{
+  "name": "projects/aroha-retreat/locations/asia-south2/functions/arohaApi",
+  "state": "ACTIVE",
+  "updateTime": "2026-11-01T02:27:34.432738942Z",
+  "revision": "arohaapi-00002-cel",
+  "maxInstances": 3,
+  "secretNames": [
+    "DYNATRACE_PLATFORM_TOKEN"
+  ],
+  "exportEnabled": true
+}

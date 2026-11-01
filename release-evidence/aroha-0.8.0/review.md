@@ -1,0 +1,16 @@
+# Compact album and pricing review — 1 November 2026
+
+Issue #16 / PR #17. Website 0.8 replaces the long gallery wall with a five-print album and refines pricing surfaces. No tariff, inclusion, enquiry, API, access or monitoring contract changes are introduced.
+
+## Behavior and checks
+
+- All 35 photos and 21 films remain in the gallery data and HTML. Five entries appear per spread, with All/Photos/Films filters, Previous/Next boundaries and a live range counter. The fallback seed starts with representative views; explicit published CMS order stays authoritative. The full-screen viewer receives the filtered collection, rather than switching unexpectedly from photos into clips.
+- Gallery state persists across Simple View/CMS repaints; the controller can reveal the original media before restoring modal focus after a publication. Hidden pages do not create a page-long wall. A noscript stylesheet provides the full static collection. No gallery film is loaded until selected.
+- The pager was moved above the prints during phone review: below-photo navigation required scrolling past the next image. The toolbar now stays within reach while browsing the gallery. Filter buttons measured equal 44px heights and approximately 123.3px widths in the reviewed desktop viewport; Previous/Next and viewer controls have consistent dimensions too.
+- Chrome verified page 2 (6–10/56), filter reset (1–5/35), photo modal navigation (2/35), a single selected video source, return to the album, the final single-film page and Simple View state retention. Local 320/390 iframe review verified controls, keyboard focus, the main print/thumbnail arrangement and no horizontal overflow (305/305 CSS pixels at the nominal 320 viewport).
+- Pricing uses three separate ivory/warm/sage paper surfaces, soft shadows, a decorative leaf corner, perforated price bands and rounded actions. Supporting browsers use subgrid to align comparison rows; measured desktop price-band tops matched. Native group/child details and package enquiries remain. Phones stack the cards. No popularity or discount claim is invented.
+- Page-change motion is a bounded 220ms opacity/rise transition with disposal. Hover movement is gated by fine pointer, reduced-motion preference and the enabled-motion root class; Simple View remains static. The inspected Chrome console contained no errors/warnings.
+
+92 application tests pass, including page/filter coverage of every media ID, empty/invalid/last pages, escaped SSR captions, no video markup/preload, state restoration, original-media reveal and listener disposal. The website subset includes these tests. Full shared build and foundation checks pass; all 30 immutable Hrudhi reference masters are verified and Natura `/design/` is preserved. Firebase emulator/OTLP outcomes and immutable deployment identity are recorded in deployment evidence after verification.
+
+Screenshots are actual browser captures. Phone images are iframe emulation rather than physical devices. No physical-device FPS, Safari certification, production owner OAuth/publication, complete RUM linkage or visual acceptance is implied. The pre-existing production optional tour/nature schema/video-rule rollout remains separate; this revision adds no new server fields. Preview monitoring remains disabled via the ignored runtime override.

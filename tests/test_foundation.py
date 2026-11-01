@@ -29,6 +29,20 @@ class FoundationTests(unittest.TestCase):
         for name in ('scripts', 'skills', '.agents', 'schemas', 'docs'):
             shutil.copytree(ROOT / name, root / name, dirs_exist_ok=True,
                             ignore=shutil.ignore_patterns('__pycache__'))
+        # Copy declared consumer paths without importing large media/dependencies.
+        catalog = json.loads((ROOT / 'skills/catalog.json').read_text())
+        for service in catalog.get('services', []):
+            for name in (*service.get('contracts', []), *service.get('entrypoints', [])):
+                source, target = ROOT / name, root / name
+                if source.is_file() and not target.exists():
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copyfile(source, target)
+        project = json.loads((root / 'project.json').read_text())
+        project['name'] = None
+        project['template']['revision'] = None
+        for key in project['decisions']:
+            project['decisions'][key] = {'status': 'needs-user-input', 'value': None, 'approval': None}
+        (root / 'project.json').write_text(json.dumps(project))
         return root
 
     def test_discovery_gate_requires_decisions_and_provenance(self):
@@ -88,7 +102,8 @@ class FoundationTests(unittest.TestCase):
             self.assertIsNone(re.fullmatch(SEMVER_PATTERN, bad), bad)
 
     def test_json_output_and_failure_exit_status(self):
-        command = [sys.executable, str(ROOT/'scripts/check_foundation.py'), '--root', str(ROOT), '--json']
+        root = self.fixture()
+        command = [sys.executable, str(ROOT/'scripts/check_foundation.py'), '--root', str(root), '--json']
         result = subprocess.run(command, capture_output=True, text=True)
         payload = json.loads(result.stdout)
         self.assertEqual(result.returncode, 0, result.stdout)

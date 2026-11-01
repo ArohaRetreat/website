@@ -1,0 +1,25 @@
+{
+  "naturaVersion": "0.5.0",
+  "hrudhiKitVersion": "0.2.0",
+  "farmAtlasVersion": "0.1.0",
+  "issue": "https://github.com/ArohaRetreat/natura/issues/7",
+  "characterStatus": "draft-family-review-pending",
+  "localChecks": {
+    "applicationTestsPassed": 43,
+    "foundationTestsPassed": 21,
+    "readiness": "passed",
+    "hrudhiAssetsVerified": 840,
+    "farmAssetsVerified": 669,
+    "transparentFarmRasterFiles": 440,
+    "videoPairsDecoded": 5,
+    "videoFormat": "1280x720 H.264 MP4 at 24 fps plus isolated VP9 WebM with decoded alpha",
+    "pdf": "Seven updated pages rendered with Poppler and visually inspected",
+    "zip": "Both complete generated download ZIPs passed CRC validation",
+    "privateSourcePhotograph": "Excluded from public source and build"
+  },
+  "mountedDomChecks": "Passed under jsdom with animation API mocked: gallery counts/pagination, guide load, native media controls/exclusivity, animal search/selection, OS reduced-motion control state and teardown.",
+  "browserVerification": "Not performed; browser inspection/interaction tooling unavailable. DOM mocks, CPU rendering and decoded media do not certify browser layout, native WAAPI playback or device compatibility.",
+  "painterlyVideoGeneration": "Not performed; provider connection requires reauthentication. Actual delivered films are authored vector animation.",
+  "connectedBackends": {"ai": false, "superAdmin": false, "voice": false, "liveWeather": false, "treeInventory": false, "telemetry": false},
+  "publicationState": "Prepared for PR checks. Actual merge/deployment/HTTP evidence will be recorded separately after completion."
+}

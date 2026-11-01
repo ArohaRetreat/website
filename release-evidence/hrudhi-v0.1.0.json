@@ -1,0 +1,18 @@
+{
+  "naturaVersion": "0.4.0",
+  "kitVersion": "0.1.0",
+  "issue": "https://github.com/ArohaRetreat/natura/issues/5",
+  "assetStatus": "draft-family-review-pending",
+  "localChecks": {
+    "applicationTests": {"passed": 33},
+    "foundationTests": {"passed": 21},
+    "readiness": "passed",
+    "decodedAssetVerification": "805 hashed assets, SVG XML, transparent alpha, 120 animated WebP previews, five draft review bundles",
+    "midpointPoseBounds": "120 of 120 stay within artboard",
+    "pdf": "Seven pages rendered with Poppler and visually inspected after final font/layout/export changes",
+    "zip": "Built and CRC verified by the standard-library packaging script"
+  },
+  "browserVerification": "Not performed this turn; browser tooling unavailable. CPU frame and policy tests do not certify browser layout or native WAAPI behavior.",
+  "connectedServices": {"ai": false, "adminBackend": false, "voice": false, "liveWeather": false, "telemetry": false},
+  "releaseState": "Prepared for PR checks; merge and deployment are recorded separately after actual completion."
+}

@@ -1,0 +1,8 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // All administration goes through the validated, authenticated API.
+    match /aroha_public/site { allow get: if true; allow list, write: if false; }
+    match /{document=**} { allow read, write: if false; }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "hosting": {
+    "site": "aroha-retreat",
+    "public": "dist",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/api/v1/**",
+        "function": {"functionId":"arohaApi","region":"asia-south2"}
+      },
+      {
+        "source": "/admin/**",
+        "destination": "/admin/index.html"
+      },
+      {
+        "source": "/design/**",
+        "destination": "/design/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source":"/**",
+        "headers":[
+          {"key":"Cache-Control","value":"public,max-age=0,must-revalidate"},
+          {"key":"X-Content-Type-Options","value":"nosniff"},
+          {"key":"Referrer-Policy","value":"strict-origin-when-cross-origin"},
+          {"key":"X-Frame-Options","value":"SAMEORIGIN"},
+          {"key":"Permissions-Policy","value":"camera=(), microphone=(), geolocation=()"}
+        ]
+      },
+      {
+        "source": "/design/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public,max-age=0,must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/design/**",
+        "headers": [
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "strict-origin-when-cross-origin"
+          }
+        ]
+      }
+    ],
+    "trailingSlash": true
+  },
+  "functions":[{"source":"functions","codebase":"aroha-website","ignore":["node_modules",".env*","*.log"]}],
+  "firestore":{"rules":"firestore.rules"},
+  "storage":{"rules":"storage.rules"},
+  "emulators":{"auth":{"port":9099},"firestore":{"port":8080},"functions":{"port":5001},"hosting":{"port":8770},"storage":{"port":9199},"ui":{"enabled":false},"singleProjectMode":true}
+}

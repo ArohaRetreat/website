@@ -92,6 +92,30 @@
         "app-launchpad",
         "ian-xiaohei-illustrations"
       ]
+    },
+    {
+      "id": "service-aroha-website",
+      "kind": "service",
+      "path": "skills/service-aroha-website/SKILL.md",
+      "description": "Maintain the aroha-website service; read its implementation and continuation context.",
+      "dependsOn": [
+        "project-implementation",
+        "project-testing",
+        "project-deployment",
+        "project-observability"
+      ]
+    },
+    {
+      "id": "service-aroha-api",
+      "kind": "service",
+      "path": "skills/service-aroha-api/SKILL.md",
+      "description": "Maintain the aroha-api service; read its implementation and continuation context.",
+      "dependsOn": [
+        "project-implementation",
+        "project-testing",
+        "project-deployment",
+        "project-observability"
+      ]
     }
   ],
   "services": [
@@ -119,6 +143,60 @@
       ],
       "continuation": "skills/service-foundation-tooling/continuation.md",
       "lastReviewedRevision": "953717c787dd37d1500c04767f818f4e0a0faffd"
+    },
+    {
+      "id": "aroha-website",
+      "skillId": "service-aroha-website",
+      "sourcePaths": [
+        "website"
+      ],
+      "entrypoints": [
+        "website/site.mjs",
+        "website/admin.mjs",
+        "scripts/build-website.mjs"
+      ],
+      "owner": "ArohaRetreat",
+      "status": "active",
+      "dependsOn": [],
+      "contracts": [
+        "functions/domain.mjs",
+        "website/content.json",
+        "docs/website-plan.md"
+      ],
+      "testCommands": [
+        "npm run test:website",
+        "npm run build:website"
+      ],
+      "continuation": "skills/service-aroha-website/continuation.md",
+      "lastReviewedRevision": null
+    },
+    {
+      "id": "aroha-api",
+      "skillId": "service-aroha-api",
+      "sourcePaths": [
+        "functions"
+      ],
+      "entrypoints": [
+        "functions/index.mjs",
+        "functions/domain.mjs",
+        "functions/telemetry.mjs"
+      ],
+      "owner": "ArohaRetreat",
+      "status": "active",
+      "dependsOn": [],
+      "contracts": [
+        "functions/domain.mjs",
+        "firestore.rules",
+        "storage.rules",
+        "docs/api/aroha-v1.md"
+      ],
+      "testCommands": [
+        "npm run test:website",
+        "npm run test:integration",
+        "node --test functions/tests/telemetry.mjs"
+      ],
+      "continuation": "skills/service-aroha-api/continuation.md",
+      "lastReviewedRevision": null
     }
   ]
 }

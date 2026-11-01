@@ -1,0 +1,95 @@
+{
+  "naturaVersion": "0.5.2",
+  "kitVersion": "0.2.2",
+  "issue": "https://github.com/ArohaRetreat/natura/issues/11",
+  "identity": "hrudhi-original-v1",
+  "changes": [
+    "Fixed safe-area mobile header and independently scrolling drawer through 900 CSS px",
+    "Restores scroll on close, traps focus, dismisses on route/resize/backdrop/Escape",
+    "All five MP4s embed immutable original PNGs; only nature moves",
+    "Alpha WebM files are still original-art overlays; technical SVG schematic labelled separately"
+  ],
+  "localChecks": {
+    "applicationTestsPassed": 47,
+    "foundationTestsPassed": 21,
+    "hrudhiAssetsVerified": 842,
+    "farmAssetsVerified": 669,
+    "decodedOriginalArtworkFilms": 5,
+    "pdfPagesRenderedAndInspected": 8
+  },
+  "browser": {
+    "browser": "156.0.8078.79",
+    "results": [
+      {
+        "baseline": {
+          "headerTopAfterScroll": -1000
+        }
+      },
+      {
+        "width": 320,
+        "height": 568,
+        "headerStable": true,
+        "drawer": "scroll/close/backdrop/Escape/focus/route passed",
+        "noHorizontalOverflow": true
+      },
+      {
+        "width": 390,
+        "height": 844,
+        "headerStable": true,
+        "drawer": "scroll/close/backdrop/Escape/focus/route passed",
+        "noHorizontalOverflow": true
+      },
+      {
+        "width": 844,
+        "height": 390,
+        "headerStable": true,
+        "drawer": "scroll/close/backdrop/Escape/focus/route passed",
+        "noHorizontalOverflow": true
+      },
+      {
+        "width": 900,
+        "height": 650,
+        "headerStable": true,
+        "drawer": "scroll/close/backdrop/Escape/focus/route passed",
+        "noHorizontalOverflow": true
+      },
+      {
+        "width": 1280,
+        "height": 800,
+        "headerStable": true,
+        "drawer": "desktop sidebar retained",
+        "noHorizontalOverflow": true
+      }
+    ],
+    "resizeScrollUnlock": true,
+    "limitations": "Headless Chrome mobile emulation. No physical iOS/Android hardware acceptance is claimed."
+  },
+  "routeAndMediaChecks": {
+    "width": 320,
+    "routes": [
+      "overview",
+      "logos",
+      "illustrations",
+      "icons",
+      "type",
+      "colors",
+      "seasons",
+      "farm",
+      "hrudhi",
+      "motion",
+      "components",
+      "builder",
+      "downloads"
+    ],
+    "noHorizontalOverflow": true,
+    "mp4Playback": true,
+    "pageErrors": []
+  },
+  "limits": [
+    "Headless isolated Chrome touch emulation; physical iOS/Android hardware unverified",
+    "Character performance animation needs a layered original-art rig",
+    "All character art draft pending family review",
+    "No live weather, AI/admin backend or telemetry configured"
+  ],
+  "delivery": "PR, exact-head CI, merge and deployment evidence recorded separately on issue #11 after execution"
+}

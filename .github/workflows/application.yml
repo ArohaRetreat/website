@@ -1,0 +1,50 @@
+name: Website application checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  application:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - name: Install website build dependencies
+        run: npm ci
+      - name: Test and build independent website
+        run: |
+          npm test
+          npm run build
+  website-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install frontend and API dependencies
+        run: |
+          npm ci
+          npm ci --prefix functions
+      - name: Verify isolated API, rules and OTLP contracts
+        run: |
+          node --test functions/tests/telemetry.mjs
+          node -e "require('node:fs').writeFileSync('functions/.env.local','SUPER_ADMIN_EMAILS=owner@example.test\n')"
+          npx --yes firebase-tools@15.34.1 emulators:exec --project demo-aroha --only auth,firestore,functions,storage 'node --test functions/tests/integration.mjs'
+      - name: Remove synthetic owner configuration
+        if: always()
+        run: node -e "require('node:fs').rmSync('functions/.env.local',{force:true})"

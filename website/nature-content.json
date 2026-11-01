@@ -1,0 +1,30 @@
+{
+  "enabled": true,
+  "welcome": true,
+  "welcomeTitle": "A little room to grow.",
+  "welcomeLabel": "WELCOME TO AROHA",
+  "leafImage": "/assets/retreat/nature-frond-v1.webp",
+  "plantImage": "/assets/retreat/nature-seedling-v1.webp",
+  "eyebrow": "ROOTED IN SOMETHING REAL",
+  "title": "A whole world,\nin a single farm.",
+  "description": "Look a little closer. From the roots beneath your feet to the canopy above, a working farm offers more than a place to stay. It offers a different rhythm.",
+  "items": [
+    {
+      "value": "9,800+",
+      "name": "Trees to slow down beneath",
+      "description": "Coconut groves, orchards and quiet green corners. Follow a farm walk, or find a little shade of your own."
+    },
+    {
+      "value": "94",
+      "name": "Species. A living landscape.",
+      "description": "Different leaves, textures and seasons to notice as you walk. The tree count and diversity are shared by the farm hosts."
+    },
+    {
+      "value": "One",
+      "name": "Farm to feel part of",
+      "description": "Meet the animals with your hosts, taste seasonal fruit and reconnect with the everyday life of the land."
+    }
+  ],
+  "heroEveningImage": "/assets/retreat/DSC_3780.webp",
+  "heroEveningAlt": "A-frame cottages after dark at Aroha"
+}

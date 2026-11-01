@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "originalsPreserved": true,
+  "artwork": [
+    {
+      "id": "nature-frond-v1",
+      "mode": "built-in imagegen",
+      "masterSha256": "d4d573fe3fb60eeb2989383a293d2cc1c0e6f1a57f9f17388455a17c362e28e2",
+      "output": "website/assets/retreat/nature-frond-v1.webp",
+      "outputSha256": "0f53c67514b2f2ea18ec534b4451e649e5a01d6b7610f8ce2d609da7ac2d7ff1",
+      "bytes": 457772,
+      "transparent": true,
+      "brief": "docs/website-living-direction.md"
+    },
+    {
+      "id": "nature-seedling-v1",
+      "mode": "built-in imagegen",
+      "masterSha256": "29e4ce5a72b85db06188d1c76a539d950a3a46ee4559756dbabdcf6ee83e214c",
+      "output": "website/assets/retreat/nature-seedling-v1.webp",
+      "outputSha256": "a4cf44f6e6e8ae7bb9aa64063eab22f16558070239d470cef1100966e82ee774",
+      "bytes": 341020,
+      "transparent": true,
+      "brief": "docs/website-living-direction.md"
+    }
+  ]
+}
