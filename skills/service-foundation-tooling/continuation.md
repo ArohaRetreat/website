@@ -1,6 +1,6 @@
-# Optional CI test reporting
+# Verified CI test reporting
 
-Issue #22 preserves `sh scripts/check.sh` as the foundation entrypoint and its fail-fast checks. With AROHA_TEST_REPORTS=1 it runs the structured unittest result adapter and retains bounded JSONL outcomes for the trusted delivery observer; without the flag the original unittest invocation remains. The entrypoint contract test covers both paths and early link-check failure. Delivery module ownership is separate in skills/catalog.json.
+Issue #22 preserves `sh scripts/check.sh` as the foundation entrypoint and its fail-fast checks. With AROHA_TEST_REPORTS=1 it runs the structured unittest result adapter and retains bounded JSONL outcomes for the trusted delivery observer; without the flag the original unittest invocation remains. The entrypoint contract test covers both paths and early link-check failure. Main run 41357543032 passed all 21 cases; automatic trusted observer 41357567140 reported its actual outcomes, with tenant-searchable BizEvents and OTLP signals. Delivery module ownership is separate in skills/catalog.json. Historical template observations below are retained as historical context.
 
 # Foundation tooling continuation
 

@@ -68,3 +68,18 @@ timeseries outcomes=sum(aroha.delivery.outcomes), from:now()-24h, by:{kind,statu
 ```
 
 Check exact run/attempt, event IDs, source SHA, Hosting version and native marker independently before declaring end-to-end delivery coverage. HTTP acceptance alone is not tenant searchability. Full RUM session visibility/browser-to-API linkage and server-confirmed business outcomes remain explicitly separate.
+
+## Verified production rollout
+
+PR #23 merged as `872393140f98c45af2f2e14d39dccfef2680ed30`. Website `0.12.0`, Hosting `48c08d6816bf20f6`, release `2026-11-01T22:32:56.521Z`, deployment `d49f9c54-caf2-4462-a7cf-55dab92202fa`. The live verifier matched 22 files and confirmed draft access denial (401). API 0.2.0 and Natura 0.6.1 were preserved.
+
+Main source runs [foundation](https://github.com/ArohaRetreat/website/actions/runs/41357543032) and [application/integration](https://github.com/ArohaRetreat/website/actions/runs/41357543036) passed. Their automatic observers [foundation](https://github.com/ArohaRetreat/website/actions/runs/41357567140) and [application](https://github.com/ArohaRetreat/website/actions/runs/41357643060) succeeded, reporting 32 and 107 events respectively. All BizEvents/OTLP receipts were accepted; each OTLP rejected count was zero. Actual records and all three signals were subsequently queried in India CS, including the deployment/verification records and native marker. This is operational delivery evidence; original browser linkage and authenticated business-write gates remain separate.
+
+The classic Events API normalizes the native marker provider to `EVENTS_REST_API_INGEST`; locate it by exact title, Hosting version and commit rather than filtering its provider as `aroha.sdlc`:
+
+```dql
+fetch dt.davis.events.snapshots, from:now()-24h
+| filter event.type == "CUSTOM_DEPLOYMENT"
+| filter event.name == "Aroha website 0.12.0"
+| fields timestamp,event.id,event.name,hosting.version,git.commit.sha,verification.status
+```
