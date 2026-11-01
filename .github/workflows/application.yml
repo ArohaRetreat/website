@@ -16,12 +16,22 @@ jobs:
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: '24'
-      - name: Install website build dependencies
-        run: npm ci
+      - name: Install website and delivery-test dependencies
+        run: |
+          npm ci
+          npm ci --prefix functions --ignore-scripts
       - name: Test and build independent website
         run: |
-          npm test
+          node scripts/delivery/run-node-tests.mjs application
           npm run build
+      - name: Retain bounded application test reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: delivery-reports-application-${{ github.run_attempt }}
+          path: .delivery-reports/*.jsonl
+          retention-days: 14
+          if-no-files-found: warn
   website-integration:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -42,9 +52,17 @@ jobs:
           npm ci --prefix functions
       - name: Verify isolated API, rules and OTLP contracts
         run: |
-          node --test functions/tests/telemetry.mjs
+          node scripts/delivery/run-node-tests.mjs api-telemetry
           node -e "require('node:fs').writeFileSync('functions/.env.local','SUPER_ADMIN_EMAILS=owner@example.test\n')"
-          npx --yes firebase-tools@15.34.1 emulators:exec --project demo-aroha --only auth,firestore,functions,storage 'node --test functions/tests/integration.mjs'
+          npx --yes firebase-tools@15.34.1 emulators:exec --project demo-aroha --only auth,firestore,functions,storage 'node scripts/delivery/run-node-tests.mjs api-integration'
       - name: Remove synthetic owner configuration
         if: always()
         run: node -e "require('node:fs').rmSync('functions/.env.local',{force:true})"
+      - name: Retain bounded API test reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: delivery-reports-website-integration-${{ github.run_attempt }}
+          path: .delivery-reports/*.jsonl
+          retention-days: 14
+          if-no-files-found: warn

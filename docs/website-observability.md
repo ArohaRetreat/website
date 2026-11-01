@@ -1,8 +1,14 @@
+# Current observability state
+
+Runtime API service is `aroha-api` 0.2.0. A live audit found its logs/spans/request metrics in India CS, including 401/403 verification probes; successful business writes and native RUM linkage need independent evidence. The service is discoverable as SERVICE-5A23B67949B609D6. Browser business events were found, but this does not certify full RUM session coverage. The original setup notes below preserve historical observations rather than certifying current state.
+
+Delivery observability source 0.12.0 adds `aroha-ci-observer` and `aroha-delivery`, provider `aroha.sdlc`, structured runner reports, trusted completion observation, provider-confirmed Hosting outcomes, live verification and native deployment markers. Read [the versioned contract](delivery-observability.md). Source tests, deployment, each endpoint receipt and exact tenant records are separate gates; issue #22 and local release receipts record the achieved state. Firestore business audits and full browser-to-backend linkage remain separate scope.
+
 # Aroha observability
 
 India CS was verified through the connected Dynatrace tool as environment `bos01241` at `https://indiacs.apps.dynatrace.com`. User-selected ingestion alias: `https://indiacs.live.dynatrace.com`. No Aroha entity was found during initial read-only discovery. Hooks are not ingestion evidence.
 
-The API always emits safe structured runtime logs with operation/status/duration/request ID. Mutation transactions create durable `aroha_audit` records. Audits remain in Firestore: automatic BizEvent delivery/replay and GitHub/Actions lifecycle export are not configured in this release.
+The API always emits safe structured runtime logs with operation/status/duration/request ID. Mutation transactions create durable `aroha_audit` records. Audits remain in Firestore: automatic application-business audit delivery/replay is still separate. GitHub execution and production deployment reporting are implemented in [the delivery contract](delivery-observability.md); issue #22 and release receipts own actual operational verification.
 
 `functions/telemetry.mjs` optionally exports real request and semantic Firestore transaction spans, correlated logs, request counters and duration histograms using HTTP/protobuf. Resource: aroha-api, namespace aroha-retreat, version 0.1.0, production/emulator environment, asia-south2, actual runtime revision. W3C trace context is extracted without baggage. This does not establish browser linkage or visibility inside Google's managed database.
 

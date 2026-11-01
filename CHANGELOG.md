@@ -1,3 +1,10 @@
+# 0.12.0
+
+- Add a trusted after-completion Actions observer for workflow/job/step and structured actual test outcomes. Keep export credentials out of source PR checks and parse artifacts with strict privacy/size/path limits.
+- Export separate CI/delivery traces, correlated logs, bounded metrics and stable-ID lifecycle BizEvents with original execution attempts and report-only recovery.
+- Observe production Hosting releases through provider state, verify live immutable files/access denial, emit successful native deployment markers, and retain independent verification/reporting outcomes without redeploying to repair telemetry.
+- Preserve API 0.2.0, public behavior, RUM consent, CMS permissions and pinned Natura 0.6.1. Actual operational verification is tracked in issue #22.
+
 # 0.11.0
 
 - Make After sunset a persistent public-site atmosphere, with forest-green pricing/gallery/map surfaces, warm ivory text, gold actions and dark enquiry/privacy controls.
