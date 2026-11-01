@@ -1,5 +1,12 @@
 # 0.12.0
 
+## 0.12.1
+
+- Repace the forest menu with a staged 800 ms aperture, reversible close and native focus/Escape handling. Same-page shortcuts wait for the fold; cross-page links keep native history and snapshots.
+- Extend public page reveals to 1000 ms with a correctly bounded aperture; soften gallery changes and native details-dialog entry/exit. Reading/Simple View, keyboard menu operation and reduced motion retain immediate alternatives.
+- Preserve verified delivery reporting, API 0.2.0 and Natura 0.6.1.
+
+
 - Add a trusted after-completion Actions observer for workflow/job/step and structured actual test outcomes. Keep export credentials out of source PR checks and parse artifacts with strict privacy/size/path limits.
 - Export separate CI/delivery traces, correlated logs, bounded metrics and stable-ID lifecycle BizEvents with original execution attempts and report-only recovery.
 - Observe production Hosting releases through provider state, verify live immutable files/access denial, emit successful native deployment markers, and retain independent verification/reporting outcomes without redeploying to repair telemetry.

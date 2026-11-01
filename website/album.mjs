@@ -69,6 +69,13 @@ export function createAlbum(root, media, { resume, motion = false } = {}) {
     listeners.push(() => el.removeEventListener("click", fn));
   };
   function paint(animate = false) {
+    // A quick second page/filter change continues from the visible frame.
+    // Sample before changing the spread; never reset a running fade to its start.
+    let from = { opacity: 0.35, transform: "translateY(8px)" };
+    if (animate && motion && animation?.playState === "running") {
+      const current = getComputedStyle(grid);
+      from = { opacity: current.opacity, transform: current.transform };
+    }
     const slots = new Map(state.items.map((m, i) => [m.id, i]));
     prints.forEach((p) => {
       p.hidden = !slots.has(p.dataset.albumId);
@@ -92,29 +99,29 @@ export function createAlbum(root, media, { resume, motion = false } = {}) {
     if (animate && motion) {
       animation = grid.animate(
         [
-          { opacity: 0.55, transform: "translateY(5px)" },
+          from,
           { opacity: 1, transform: "translateY(0)" },
         ],
-        { duration: 220, easing: "cubic-bezier(.23,1,.32,1)" },
+        { duration: 420, easing: "cubic-bezier(.32,.72,0,1)" },
       );
     }
   }
   filters.forEach((b) =>
-    listen(b, () => {
+    listen(b, event => {
       state = albumPage(media, b.dataset.albumFilter, 0);
-      paint(true);
+      paint(event?.detail > 0);
     }),
   );
-  listen(previous, () => {
+  listen(previous, event => {
     if (state.page > 0) {
       state = albumPage(media, state.filter, state.page - 1);
-      paint(true);
+      paint(event?.detail > 0);
     }
   });
-  listen(next, () => {
+  listen(next, event => {
     if (state.page < state.pages - 1) {
       state = albumPage(media, state.filter, state.page + 1);
-      paint(true);
+      paint(event?.detail > 0);
     }
   });
   paint();
