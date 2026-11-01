@@ -122,13 +122,13 @@ export function createPublicMenu(
       close(() => location.assign(to.href), e.detail === 0);
     } else if (!publicDestination(link.href, location.href) || modified) close(undefined, e.detail === 0);
   });
-  listen(dialog.querySelector("[data-menu-enquire]"), "click", () =>
-    close(() => root.querySelector("#footer-enquire")?.click()),
+  listen(dialog.querySelector("[data-menu-enquire]"), "click", e =>
+    close(() => root.querySelector("#footer-enquire")?.click(), e.detail === 0),
   );
   const modeButton = dialog.querySelector(
     "[data-menu-simple],[data-menu-reading]",
   );
-  listen(modeButton, "click", () =>
+  listen(modeButton, "click", e =>
     close(() =>
       root
         .querySelector(
@@ -137,6 +137,7 @@ export function createPublicMenu(
             : "[data-reading]",
         )
         ?.click(),
+      e.detail === 0,
     ),
   );
   return {

@@ -68,6 +68,8 @@ html[data-route-motion="off"]::view-transition-new(root) {
     .details-dialog[open]::backdrop { opacity: 0; }
   }
 }
+html[data-motion-input="keyboard"] .details-dialog,
+html[data-motion-input="keyboard"] .details-dialog::backdrop,
 html[data-route-motion="off"] .details-dialog,
 html[data-route-motion="off"] .details-dialog::backdrop {
   transition: none;

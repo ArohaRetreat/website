@@ -100,21 +100,21 @@ export function createAlbum(root, media, { resume, motion = false } = {}) {
     }
   }
   filters.forEach((b) =>
-    listen(b, () => {
+    listen(b, event => {
       state = albumPage(media, b.dataset.albumFilter, 0);
-      paint(true);
+      paint(event?.detail > 0);
     }),
   );
-  listen(previous, () => {
+  listen(previous, event => {
     if (state.page > 0) {
       state = albumPage(media, state.filter, state.page - 1);
-      paint(true);
+      paint(event?.detail > 0);
     }
   });
-  listen(next, () => {
+  listen(next, event => {
     if (state.page < state.pages - 1) {
       state = albumPage(media, state.filter, state.page + 1);
-      paint(true);
+      paint(event?.detail > 0);
     }
   });
   paint();

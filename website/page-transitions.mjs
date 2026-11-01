@@ -61,7 +61,10 @@ export function installPageTransitions(initialMotion = true) {
   }, { capture: true });
   // A visitor can interrupt the reveal immediately to use the new page.
   for (const type of ['pointerdown', 'keydown'])
-    window.addEventListener(type, () => activeTransition?.skipTransition(), { capture: true });
+    window.addEventListener(type, () => {
+      html.dataset.motionInput = type === 'keydown' ? 'keyboard' : 'pointer';
+      activeTransition?.skipTransition();
+    }, { capture: true });
   window.addEventListener('pageswap', (event) => {
     if (reduced.matches || html.dataset.routeMotion === 'off') event.viewTransition?.skipTransition();
   });
