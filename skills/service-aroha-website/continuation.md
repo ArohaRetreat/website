@@ -1,3 +1,7 @@
+# Transition refinement — 0.12.1 preparation
+
+Issue #25 addresses the too-fast menu and page reveal. `menu-motion.mjs` owns finite reversible menu effects and interruption/disposal; navigation.mjs retains native modal focus and menu-to-fragment/enquiry handoff. Shared tokens pace menu/content/route scenes; native discrete CSS adds details-dialog transitions and gallery changes settle over 420 ms. Reduced/static/keyboard alternatives are preserved. Read docs/website-navigation.md. Current source/CI/preview/deployment evidence belongs to issue #25; this preparation note is not a production claim. API 0.2.0, Natura 0.6.1 and verified delivery reporting remain unchanged.
+
 # Delivery observability — 0.12.0 verified
 
 Production https://aroharetreat.com runs source 872393140f98c45af2f2e14d39dccfef2680ed30 (PR #23), Hosting 48c08d6816bf20f6, released 2026-11-01T22:32:56.521Z. Live verifier matched 22 files and draft denial 401. Main CI and both automatic observer workflows passed; delivery BizEvents, logs, traces, metrics and native deployment marker are tenant-searchable. Read the delivery-observability continuation and issue #22 for exact run/deployment identities. API 0.2.0, Natura 0.6.1, CMS and website design are unchanged. Native RUM linkage and host/device acceptance remain separate. Documentation-only follow-ups do not change the deployed revision.

@@ -1,3 +1,4 @@
+import { createMenuMotion } from './menu-motion.mjs';
 import { atmospherePreference, setAtmosphere, watchAtmosphere } from './atmosphere.mjs';
 import { publicDestination } from "./page-transitions.mjs";
 
@@ -49,8 +50,8 @@ export function createPublicMenu(
     toggle = root.querySelector("#public-menu-toggle");
   if (!dialog || !toggle) return { destroy() {} };
   const reduced = matchMedia("(prefers-reduced-motion: reduce)");
-  const listeners = [],
-    animations = [];
+  const listeners = [];
+  const scene = createMenuMotion(dialog, {enabled: () => motion && !reduced.matches && !dialog.classList.contains("menu-still")});
   let opener, afterClose;
   const atmosphereButton = dialog.querySelector('[data-menu-atmosphere]');
   function syncAtmosphere(value) {
@@ -63,11 +64,12 @@ export function createPublicMenu(
     el.addEventListener(type, fn);
     listeners.push(() => el.removeEventListener(type, fn));
   };
-  function close(action) {
+  function close(action, immediate = false) {
+    if (!dialog.open || dialog.dataset.menuPhase === "closing") return;
     afterClose = action;
-    if (dialog.open) dialog.close();
+    scene.exit(() => { if (dialog.open) dialog.close(); }, immediate);
   }
-  function open() {
+  function open(event) {
     if (dialog.open) return;
     opener = document.activeElement;
     toggle.setAttribute("aria-expanded", "true");
@@ -83,31 +85,23 @@ export function createPublicMenu(
       "[data-menu-simple],[data-menu-reading]",
     );
     if (view && modeButton) modeButton.textContent = view.textContent;
-    dialog.classList.toggle("menu-still", !motion || reduced.matches);
+    dialog.classList.toggle("menu-still", !motion || reduced.matches || event?.detail === 0);
     dialog.showModal();
     document.body.classList.add("public-menu-open");
     root.querySelectorAll("video").forEach((v) => v.pause());
     onOpen();
     dialog.querySelector(".nature-menu-close").focus({ preventScroll: true });
-    if (motion && !reduced.matches) {
-      animations.push(
-        dialog.animate(
-          [
-            { clipPath: "ellipse(8% 10% at 94% 5%)", opacity: 0.6 },
-            { clipPath: "ellipse(150% 160% at 50% 50%)", opacity: 1 },
-          ],
-          { duration: 280, easing: "cubic-bezier(0.23, 1, 0.32, 1)" },
-        ),
-      );
-    }
+    scene.enter();
   }
+  listen(reduced, "change", () => { if (reduced.matches) scene.finish(); });
+  listen(dialog, "cancel", e => { e.preventDefault(); close(undefined, true); });
   listen(toggle, "click", open);
   listen(atmosphereButton, 'click', () => setAtmosphere(atmospherePreference() === 'evening' ? 'day' : 'evening'));
-  listen(dialog.querySelector(".nature-menu-close"), "click", () => close());
+  listen(dialog.querySelector(".nature-menu-close"), "click", e => close(undefined, e.detail === 0));
   listen(dialog, "close", () => {
     toggle.setAttribute("aria-expanded", "false");
     document.body.classList.remove("public-menu-open");
-    animations.splice(0).forEach((a) => a.cancel());
+    scene.reset();
     onClose();
     if (opener?.isConnected) opener.focus({ preventScroll: true });
     const action = afterClose;
@@ -118,7 +112,15 @@ export function createPublicMenu(
     const link = e.target.closest("a[href]");
     // Keep the forest scene in the outgoing native snapshot. Back/forward restore
     // recreates the controllers and closes the stale dialog through the renderer.
-    if (link && (!publicDestination(link.href, location.href) || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)) close();
+    if (!link || e.defaultPrevented) return;
+    const modified = e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0 || link.target === "_blank" || link.hasAttribute("download");
+    const to = new URL(link.href, location.href);
+    // A local fragment moves only after the menu has folded away. Different
+    // public documents remain native links and retain the forest snapshot.
+    if (!modified && to.origin === location.origin && to.pathname === location.pathname && to.search === location.search && to.hash) {
+      e.preventDefault();
+      close(() => location.assign(to.href), e.detail === 0);
+    } else if (!publicDestination(link.href, location.href) || modified) close(undefined, e.detail === 0);
   });
   listen(dialog.querySelector("[data-menu-enquire]"), "click", () =>
     close(() => root.querySelector("#footer-enquire")?.click()),
@@ -141,7 +143,7 @@ export function createPublicMenu(
     destroy() {
       unwatchAtmosphere();
       listeners.forEach((fn) => fn());
-      animations.splice(0).forEach((a) => a.cancel());
+      scene.destroy();
       document.body.classList.remove("public-menu-open");
     },
   };

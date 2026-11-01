@@ -574,3 +574,8 @@ body.public-menu-open {
 .nature-menu.menu-still .menu-droplet:after {
   transition: none;
 }
+
+/* Stop ambient work as the scene folds; controls never drift while reading. */
+.nature-menu[data-menu-phase="closing"] .menu-botanical,
+.nature-menu[data-menu-phase="closing"] .menu-water i,
+.nature-menu[data-menu-phase="closing"] .water-drop { animation-play-state: paused; }

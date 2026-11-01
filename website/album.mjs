@@ -92,10 +92,10 @@ export function createAlbum(root, media, { resume, motion = false } = {}) {
     if (animate && motion) {
       animation = grid.animate(
         [
-          { opacity: 0.55, transform: "translateY(5px)" },
+          { opacity: 0.35, transform: "translateY(8px)" },
           { opacity: 1, transform: "translateY(0)" },
         ],
-        { duration: 220, easing: "cubic-bezier(.23,1,.32,1)" },
+        { duration: 420, easing: "cubic-bezier(.32,.72,0,1)" },
       );
     }
   }

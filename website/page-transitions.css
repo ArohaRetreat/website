@@ -1,3 +1,11 @@
+/* Shared public motion tokens: deliberately paced scenes, responsive controls. */
+:root {
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --motion-menu: 800ms;
+  --motion-content: 520ms;
+  --motion-route: 1000ms;
+}
 /* Browser-owned cross-document snapshots preserve real links and history. */
 @view-transition {
   navigation: auto;
@@ -9,24 +17,24 @@ html[data-route-arrival="true"] #aroha-welcome {
   display: none !important;
 }
 ::view-transition-group(root) {
-  animation-duration: 500ms;
+  animation-duration: var(--motion-route);
 }
 ::view-transition-old(root),
 ::view-transition-new(root) {
   mix-blend-mode: normal;
 }
 ::view-transition-old(root) {
-  animation: route-settle 500ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  animation: route-settle var(--motion-route) var(--ease-in-out) both;
 }
 ::view-transition-new(root) {
-  animation: route-unfurl 500ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  animation: route-unfurl var(--motion-route) var(--ease-in-out) both;
 }
 @keyframes route-unfurl {
   from { clip-path: ellipse(0% 0% at 85% 15%); }
-  to { clip-path: ellipse(150% 160% at 50% 50%); }
+  to { clip-path: ellipse(75% 75% at 50% 50%); }
 }
 @keyframes route-settle {
-  to { opacity: 0.65; transform: scale(0.98); }
+  to { opacity: 0.78; transform: scale(0.985); }
 }
 html[data-route-motion="off"]::view-transition-group(root),
 html[data-route-motion="off"]::view-transition-old(root),
@@ -38,4 +46,32 @@ html[data-route-motion="off"]::view-transition-new(root) {
   ::view-transition-group(root), ::view-transition-old(root), ::view-transition-new(root) {
     animation: none;
   }
+}
+
+/* Native top-layer lifecycle keeps focus/Escape semantics and compositor motion. */
+@supports (transition-behavior: allow-discrete) and (overlay: auto) {
+  .details-dialog {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+    transition: opacity 280ms var(--ease), transform 420ms var(--ease-drawer),
+      display 420ms allow-discrete, overlay 420ms allow-discrete;
+  }
+  .details-dialog[open] { opacity: 1; transform: translateY(0) scale(1); }
+  .details-dialog:not([open]), .details-dialog:not([open])::backdrop { pointer-events: none; }
+  .details-dialog::backdrop {
+    opacity: 0;
+    transition: opacity 280ms var(--ease), display 420ms allow-discrete, overlay 420ms allow-discrete;
+  }
+  .details-dialog[open]::backdrop { opacity: 1; }
+  @starting-style {
+    .details-dialog[open] { opacity: 0; transform: translateY(16px) scale(0.98); }
+    .details-dialog[open]::backdrop { opacity: 0; }
+  }
+}
+html[data-route-motion="off"] .details-dialog,
+html[data-route-motion="off"] .details-dialog::backdrop {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .details-dialog, .details-dialog::backdrop { transition: none; }
 }
