@@ -1,3 +1,9 @@
+# Shared public navigation and footer — 0.10.0
+
+Issue #14 adds the shared forest menu, real palm frond, leaf reveal and bounded falling-drop/ripple animation to `/` and `/map/`. PUBLIC_PAGES in navigation.mjs is the route registry; section links respect CMS visibility. Native dialogs own modal focus/Escape; both controllers defer CMS replacement while any dialog is open, pause background films, and apply pending content on close. Shared guest-dialogs.mjs retains enquiry validation, guest-reviewed WhatsApp preparation and consent controls. The map footer now uses the identical photographic home footer and hides floating map controls when it is visible. See docs/website-navigation.md.
+
+Prepared checks: 60 application tests and website build pass. Desktop Chrome review covers Escape/focus, menu enquiry handoff and footer privacy; responsive review uses 320/390 iframe viewports, not physical devices. API 0.2.0 and Natura 0.6.1 remain unchanged. Read issue #14 and current PR/release receipts for the actual merge/deployment state; this source note does not certify publication, physical devices or native RUM linkage.
+
 # Map forest canvas and timeline — 0.9.2
 
 Issue #4 follow-up: continuous forest-green background, white explanation cards with pricing-style faint leaf/vein motifs, and five scroll-driven connections between the story heading, four chapter cards and closing card. Native scrolling controls reversible line scale; reading/reduced/disabled-motion use a steady connection. The physical route and API0.2.0 are unchanged. Deployment/version evidence is recorded in issue #4 and local release receipts; this source note alone is not deployment proof.
