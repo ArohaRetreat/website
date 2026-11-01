@@ -1,4 +1,6 @@
 import natureDefaults from "./nature-content.json";
+import mapDefaults from "./map-content.json";
+import { mapContent } from "./map-render.mjs";
 import { tourContent } from "./field-render.mjs";
 import defaultTour from "./tour-content.json";
 import defaults from "./content.json";
@@ -27,6 +29,7 @@ const tabs = {
   story: ["Brand & welcome", ["brand", "hero", "intro", "seo"]],
   sections: ["Page layout", ["sections"]],
   tour: ["Farm tour & films", ["tour"]],
+  map: ["Living Map stories", ["storyMap"]],
   cottages: ["Cottages", ["cottages"]],
   experiences: ["Experiences", ["experiences"]],
   packages: ["Visit packages", ["packages"]],
@@ -39,6 +42,12 @@ const tabs = {
 const labels = {
   schemaVersion: "Schema version",
   tour: "Farm tour and journal",
+  storyMap: "Living Map",
+  rootTitle: "Map story heading",
+  paragraphs: "Story paragraphs",
+  facts: "Practical facts",
+  chapter: "Chapter identifier",
+  media: "Media",
   mapX: "Map position from left (%)",
   mapY: "Map position from top (%)",
   film: "Featured film identifier (optional)",
@@ -141,7 +150,7 @@ function field(value, path, key) {
     ["worldImage", "eveningImage", "foregroundImage"].includes(key)
   )
     return "";
-  const label = title(key),
+  const label = key === "media" && !Array.isArray(value) ? "Tour media identifier (optional)" : title(key),
     disabled = can(session.role, "edit") ? "" : "disabled";
   if (Array.isArray(value))
     return `<div class="editor-array"><div class="field-heading"><h3>${esc(label)}</h3>${disabled ? "" : `<button class="small-button" data-add="${esc(path)}">Add item +</button>`}</div>${value
@@ -177,7 +186,7 @@ function field(value, path, key) {
       "heroEveningImage",
     ].includes(key) ||
     (path.startsWith("cottages.") && path.includes(".images."));
-  return `<label class="field">${esc(label)}${["description", "detail", "answer", "message", "note", "priceNote", "inclusions"].includes(key) || String(value).includes("\n") ? `<textarea rows="3" data-path="${esc(path)}" ${disabled}>${esc(value)}</textarea>` : `<input type="${typeof value === "number" ? "number" : key === "email" ? "email" : key === "mapUrl" ? "url" : "text"}" data-path="${esc(path)}" value="${esc(value)}" ${typeof value === "number" ? 'min="0" step="1"' : ""} ${disabled}>`}</label>${videoField ? `<div class="media-field">${value ? `<video controls muted playsinline preload="none" src="${esc(value)}"></video>` : ""}${disabled ? "" : `<label class="upload-button">Upload web video<input type="file" accept="video/mp4,video/webm" data-upload="${esc(path)}" data-media-type="video"></label>`}<small>Public immediately after upload. MP4 or WebM, under 40 MB. Upload an edited web version; originals stay on your device.</small></div>` : ""}${imageField ? `<div class="media-field">${value ? `<img src="${esc(value)}" alt="Selected photograph preview" loading="lazy">` : ""}${disabled ? "" : `<label class="upload-button">Upload photograph<input type="file" accept="image/jpeg,image/png,image/webp,image/avif" data-upload="${esc(path)}"></label>`}<small>Website media is public immediately after upload. JPEG, PNG, WebP or AVIF; under 10 MB. Originals stay on your device.</small></div>` : ""}`;
+  return `<label class="field">${esc(label)}${["description", "detail", "answer", "message", "note", "priceNote", "inclusions"].includes(key) || path.includes(".paragraphs.") || String(value).includes("\n") ? `<textarea rows="3" data-path="${esc(path)}" ${disabled}>${esc(value)}</textarea>` : `<input type="${typeof value === "number" ? "number" : key === "email" ? "email" : key === "mapUrl" ? "url" : "text"}" data-path="${esc(path)}" value="${esc(value)}" ${typeof value === "number" ? 'min="0" step="1"' : ""} ${disabled}>`}</label>${videoField ? `<div class="media-field">${value ? `<video controls muted playsinline preload="none" src="${esc(value)}"></video>` : ""}${disabled ? "" : `<label class="upload-button">Upload web video<input type="file" accept="video/mp4,video/webm" data-upload="${esc(path)}" data-media-type="video"></label>`}<small>Public immediately after upload. MP4 or WebM, under 40 MB. Upload an edited web version; originals stay on your device.</small></div>` : ""}${imageField ? `<div class="media-field">${value ? `<img src="${esc(value)}" alt="Selected photograph preview" loading="lazy">` : ""}${disabled ? "" : `<label class="upload-button">Upload photograph<input type="file" accept="image/jpeg,image/png,image/webp,image/avif" data-upload="${esc(path)}"></label>`}<small>Website media is public immediately after upload. JPEG, PNG, WebP or AVIF; under 10 MB. Originals stay on your device.</small></div>` : ""}`;
 }
 function shell() {
   root.innerHTML = `<aside class="studio-sidebar"><a href="/" class="studio-logo"><img src="/assets/brand/logo-forest.svg" alt="Aroha Retreat" width="190" height="65"></a><p class="eyebrow">HOST STUDIO</p><nav aria-label="Studio sections">${Object.entries(
@@ -249,7 +258,7 @@ function shell() {
           location.origin,
         );
       d.showModal();
-      frame.src = "/?preview=1";
+      frame.src = tab === "map" ? "/map/?preview=1" : "/?preview=1";
     } catch (e) {
       notice(message(e.message), true);
     }
@@ -294,7 +303,7 @@ function renderEditor() {
           sample =
             a[0] ??
             (() => {
-              const templates = { ...defaults, tour: defaultTour };
+              const templates = { ...defaults, tour: defaultTour, storyMap: mapDefaults };
               const value = b.dataset.add
                 .split(".")
                 .reduce((v, k) => v?.[k], templates);
@@ -384,6 +393,7 @@ function renderEditor() {
       if (!file || file.size > 200000) throw Error("INVALID_BACKUP");
       draft = validateContent(JSON.parse(await file.text()));
       draft.hero = { ...defaults.hero, ...draft.hero };
+      if (!draft.storyMap) draft.storyMap = structuredClone(mapContent(draft));
       if (!draft.tour) draft.tour = structuredClone(tourContent(draft));
       draft.tour.nature = {
         ...structuredClone(natureDefaults),
@@ -437,6 +447,7 @@ async function load() {
   const r = await api("/draft");
   draft = structuredClone(r.draft?.content || defaults);
   if (!draft.tour) draft.tour = structuredClone(tourContent(draft));
+  if (!draft.storyMap) draft.storyMap = structuredClone(mapContent(draft));
   draft.tour.nature = {
     ...structuredClone(natureDefaults),
     ...draft.tour.nature,

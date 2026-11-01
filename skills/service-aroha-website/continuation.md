@@ -1,3 +1,7 @@
+# Living Map implementation — 0.9.0 / API 0.2.0
+
+Issue #4. Read docs/website-map-direction.md. The separate map uses map-render.mjs/map.mjs/map-state.mjs/map.css and an optional validated storyMap object. The studio materializes legacy fallback stories privately and previews /map/?preview=1. Deploy API before Hosting; preserve stored content and existing roles. Current verification/deployment is recorded in the issue and release evidence; this preparation note is not deployment proof.
+
 # Aroha website continuation
 
 ## Verified current deployment

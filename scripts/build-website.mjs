@@ -2,6 +2,7 @@ import { welcomeMarkup, natureContent } from "../website/nature-render.mjs";
 import { tourContent } from "../website/field-render.mjs";
 import { build } from "esbuild";
 import { PUBLIC_ORIGIN } from "../functions/origins.mjs";
+import { renderMap, mapDefaults } from "../website/map-render.mjs";
 import { verifyNaturaAssets } from "./natura-assets.mjs";
 import { mkdir, cp, readFile, writeFile, copyFile, rm } from "node:fs/promises";
 import { renderSite, esc } from "../website/render.mjs";
@@ -9,6 +10,7 @@ import {
   validateContent,
   validateTour,
   validateNature,
+  validateStoryMap,
 } from "../functions/domain.mjs";
 const root = new URL("../", import.meta.url),
   dist = new URL("dist/", root),
@@ -27,6 +29,8 @@ validateTour(
   ),
 );
 validateNature(natureContent(tourContent(content)));
+validateStoryMap(mapDefaults, tourContent(content));
+await mkdir(new URL("map/", dist), { recursive: true });
 await cp(new URL("website/assets/", root), assets, { recursive: true });
 await mkdir(new URL("brand/", assets), { recursive: true });
 await mkdir(new URL("fonts/", assets), { recursive: true });
@@ -63,6 +67,7 @@ for (const file of [
   "living.css",
   "arrival.css",
   "collections.css",
+  "map.css",
 ])
   await copyFile(new URL("website/" + file, root), new URL(file, assets));
 await copyFile(
@@ -75,6 +80,7 @@ const bundle = await build({
   entryPoints: {
     site: new URL("website/site.mjs", root).pathname,
     admin: new URL("website/admin.mjs", root).pathname,
+    map: new URL("website/map.mjs", root).pathname,
   },
   bundle: true,
   format: "esm",
@@ -103,15 +109,21 @@ visit(publicEntry);
 const guestInputs = [...new Set([...visited].flatMap((name) => Object.keys(outputs[name].inputs)))];
 if (guestInputs.some((name) => /node_modules\/@firebase\/(auth|storage)\//.test(name)))
   throw Error("Admin Auth/Storage leaked into the guest Firebase bundle.");
+const guestBytes=[...visited].reduce((n,name)=>n+outputs[name].bytes,0);
+const homeEntry=Object.keys(outputs).find(name=>outputs[name].entryPoint?.endsWith('website/site.mjs'));
+visited.clear();visit(homeEntry);
+const homeInputs=[...visited].flatMap(name=>Object.keys(outputs[name].inputs));
+if(homeInputs.some(name=>/website\/map(?:[.-])/.test(name)))throw Error('Living Map code or artwork content leaked into the homepage.');
 await mkdir(new URL("local/", root), { recursive: true });
 await writeFile(new URL("local/guest-bundle-analysis.json", root), JSON.stringify({
-  entry: publicEntry, bytes: [...visited].reduce((n, name) => n + outputs[name].bytes, 0),
+  entry: publicEntry, bytes: guestBytes,
   adminAuthStorageExcluded: true,
 }, null, 2));
 await writeFile(
   new URL("index.html", dist),
   `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="${content.theme.forest}"><meta name="description" content="${esc(content.seo.description)}"><link rel="canonical" href="${PUBLIC_ORIGIN}/"><meta property="og:url" content="${PUBLIC_ORIGIN}/"><meta property="og:title" content="${esc(content.seo.title)}"><meta property="og:description" content="${esc(content.seo.description)}"><meta property="og:image" content="${PUBLIC_ORIGIN}${esc(content.hero.image)}"><title>${esc(content.seo.title)}</title><link rel="icon" href="/assets/brand/icon.svg" type="image/svg+xml"><link rel="preload" href="/assets/fonts/Lora.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="/assets/site.css"><link rel="stylesheet" href="/assets/field.css"><link rel="stylesheet" href="/assets/living.css"><link rel="stylesheet" href="/assets/arrival.css"><link rel="stylesheet" href="/assets/collections.css"><link rel="preload" href="/assets/fonts/Allura.woff2" as="font" type="font/woff2" crossorigin></head><body>${welcomeMarkup(content, natureContent(tourContent(content)), esc)}<div id="site">${renderSite(content)}</div><noscript><style>#aroha-welcome{display:none!important}</style><p style="padding:20px">Interactive details require JavaScript. Call <a href="tel:+${content.visit.phone}">+${content.visit.phone}</a> to plan your visit.</p></noscript><script type="module" src="/assets/site.js"></script></body></html>`,
 );
+await writeFile(new URL("map/index.html", dist), `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1c2c1f"><title>The Living Map — Aroha Retreat</title><meta name="description" content="Explore an illustrated farm route and eleven connected places at Aroha Retreat. Explore real farm films and the stories behind your stay."><link rel="canonical" href="${PUBLIC_ORIGIN}/map/"><meta property="og:url" content="${PUBLIC_ORIGIN}/map/"><meta property="og:title" content="The Living Map — Aroha Retreat"><meta property="og:image" content="${PUBLIC_ORIGIN}/assets/retreat/living-tree-v1.webp"><link rel="icon" href="/assets/brand/icon.svg" type="image/svg+xml"><link rel="preload" href="/assets/fonts/Lora.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="/assets/fonts/Allura.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="/assets/site.css"><link rel="stylesheet" href="/assets/map.css"></head><body><div id="living-map">${renderMap(content)}</div><noscript><style>.map-tools{display:none}.map-scene{position:relative;height:400px;min-height:0;background:#edf0df}.physical-map{opacity:1;visibility:visible}.farm-map-plane{left:50%;width:380px;transform:translate(-50%,-50%)}.tree-camera,.farm-marker{display:none}.map-narrative{margin:0 auto;max-width:850px;width:auto;pointer-events:auto}.map-introduction,.map-chapter,.map-stories-heading,.map-ending{width:auto;max-width:none;margin:0;padding:35px;background:transparent;border:0;box-shadow:none;min-height:0}.map-descent{display:none}</style></noscript><script type="module" src="/assets/map.js"></script></body></html>`);
 // Optional public RUM tag is configured independently; no ingestion credential belongs here.
 let runtime = JSON.parse(
   await readFile(new URL("config/website-runtime.public.json", root), "utf8"),
@@ -133,6 +145,7 @@ await writeFile(
     contentSchema: 1,
     admin: "/admin/",
     design: "/design/",
+    map: "/map/",
   }),
 );
 await writeFile(
@@ -141,4 +154,4 @@ await writeFile(
 );
 console.log("Built independent Aroha website and host studio. Compose a pinned Natura export before shared Hosting deployment.");
 
-await writeFile(new URL("sitemap.xml", dist), `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${PUBLIC_ORIGIN}/</loc></url></urlset>`);
+await writeFile(new URL("sitemap.xml", dist), `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${PUBLIC_ORIGIN}/</loc></url><url><loc>${PUBLIC_ORIGIN}/map/</loc></url></urlset>`);

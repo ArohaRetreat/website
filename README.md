@@ -4,7 +4,7 @@ The public Aroha Retreat website, Google-authenticated host studio and Firebase 
 
 Template version: **1.9.0** · [template changelog](docs/template-changelog.md) · [licence boundaries](THIRD-PARTY-NOTICES.md)
 
-Website version **0.8.3** improves guest bundle loading and session-only Google sign-in startup on the production site at https://aroharetreat.com. See [repository separation](docs/repository-separation.md), [source provenance](docs/repository-import.json) and [open acceptance work](https://github.com/ArohaRetreat/website/issues/2).
+Website version **0.9.0** improves guest bundle loading and session-only Google sign-in startup on the production site at https://aroharetreat.com. See [repository separation](docs/repository-separation.md), [source provenance](docs/repository-import.json) and [open acceptance work](https://github.com/ArohaRetreat/website/issues/2).
 
 ## Develop and verify
 
@@ -43,3 +43,5 @@ Build the design export from the Natura revision in [config/natura-hosting.json]
 - [Historical Natura issue](https://github.com/ArohaRetreat/natura/issues/16) and [unmerged original PR](https://github.com/ArohaRetreat/natura/pull/17).
 
 `release-evidence/aroha-*` records historical builds/deployments from the old source revisions. Those files do not claim that a new-repository commit is deployed. The source split itself does not promote the preview or alter production. Runtime secrets stay in the existing server-side secret store; private tokens never enter this repository or browser bundles.
+
+The Living Map is a separate `/map/` journey. See [direction and CMS contract](docs/website-map-direction.md).
