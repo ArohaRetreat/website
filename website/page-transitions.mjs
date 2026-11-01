@@ -1,3 +1,4 @@
+import { restoreAtmosphere } from './atmosphere.mjs';
 import { PUBLIC_PAGES } from './public-pages.mjs';
 
 const ARRIVAL_KEY = 'aroha-route-arrival';
@@ -19,6 +20,8 @@ export function validArrival(record, current, now) {
 // Runs in a tiny classic head script, before either document can paint.
 // Links remain native: no fetch router, navigation delay or blocking overlay.
 export function installPageTransitions(initialMotion = true) {
+  restoreAtmosphere();
+  window.addEventListener('pageshow', event => { if (event.persisted) restoreAtmosphere(); });
   const html = document.documentElement;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   let arrival, activeTransition, firstReveal = true;

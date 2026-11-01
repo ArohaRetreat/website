@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHeroAtmosphere } from "../website/hero-atmosphere.mjs";
-function fixture() {
+function fixture(options) {
   const attr = () => ({
     values: new Map(),
     setAttribute(k, v) {
@@ -64,7 +64,7 @@ function fixture() {
       return buttons;
     },
   };
-  const control = createHeroAtmosphere(root);
+  const control = createHeroAtmosphere(root, options);
   return {
     buttons,
     classes,
@@ -112,4 +112,24 @@ test("failed or disposed photo requests retain a working day view without stale 
   await next;
   assert.equal(f.classes.has("is-dusk"), false);
   assert.equal(f.buttons[1].click, undefined);
+});
+
+test("saved sunset restores the photograph without republishing preference and follows shared theme changes", async () => {
+  let notify, disposed = false;
+  const changes = [];
+  const f = fixture({initial: "evening", onChange: value => changes.push(value), subscribe: fn => {notify = fn; return () => {disposed = true;};}});
+  f.loaded();
+  await Promise.resolve();
+  assert.ok(f.classes.has("is-dusk"));
+  assert.deepEqual(changes, []);
+  notify("day");
+  assert.equal(f.classes.has("is-dusk"), false);
+  const pending = f.buttons[1].click();
+  f.failed();
+  await pending;
+  assert.deepEqual(changes, ["evening"]);
+  assert.equal(f.buttons[1].getAttribute("aria-pressed"), "true");
+  assert.match(f.status.textContent, /Sunset colours are still on/);
+  f.control.destroy();
+  assert.ok(disposed);
 });

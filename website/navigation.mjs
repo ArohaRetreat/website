@@ -1,3 +1,4 @@
+import { atmospherePreference, setAtmosphere, watchAtmosphere } from './atmosphere.mjs';
 import { publicDestination } from "./page-transitions.mjs";
 
 import { PUBLIC_PAGES } from "./public-pages.mjs";
@@ -38,7 +39,7 @@ export function renderPublicMenu(
     )
     .join(
       "",
-    )}</nav><div class="menu-visit"><button data-menu-enquire>Let’s plan your visit <span aria-hidden="true">↗</span></button><a href="tel:+${esc(c.visit.phone)}">+${esc(c.visit.phone)}</a></div></div></div><div class="menu-bottom"><span>${esc(c.brand.tagline)}</span><button ${mode === "home" ? "data-menu-simple" : "data-menu-reading"}>${mode === "home" ? "Simple view" : "Reading view"}</button><a href="/admin/">Host studio ↗</a></div></dialog>`;
+    )}</nav><div class="menu-visit"><button data-menu-enquire>Let’s plan your visit <span aria-hidden="true">↗</span></button><a href="tel:+${esc(c.visit.phone)}">+${esc(c.visit.phone)}</a></div></div></div><div class="menu-bottom"><span>${esc(c.brand.tagline)}</span><button ${mode === "home" ? "data-menu-simple" : "data-menu-reading"}>${mode === "home" ? "Simple view" : "Reading view"}</button><button data-menu-atmosphere aria-pressed="false">☾ After sunset</button><a href="/admin/">Host studio ↗</a></div></dialog>`;
 }
 export function createPublicMenu(
   root,
@@ -51,6 +52,13 @@ export function createPublicMenu(
   const listeners = [],
     animations = [];
   let opener, afterClose;
+  const atmosphereButton = dialog.querySelector('[data-menu-atmosphere]');
+  function syncAtmosphere(value) {
+    atmosphereButton.setAttribute('aria-pressed', String(value === 'evening'));
+    atmosphereButton.textContent = value === 'evening' ? '☼ Return to daylight' : '☾ After sunset';
+  }
+  syncAtmosphere(atmospherePreference());
+  const unwatchAtmosphere = watchAtmosphere(syncAtmosphere);
   const listen = (el, type, fn) => {
     el.addEventListener(type, fn);
     listeners.push(() => el.removeEventListener(type, fn));
@@ -94,6 +102,7 @@ export function createPublicMenu(
     }
   }
   listen(toggle, "click", open);
+  listen(atmosphereButton, 'click', () => setAtmosphere(atmospherePreference() === 'evening' ? 'day' : 'evening'));
   listen(dialog.querySelector(".nature-menu-close"), "click", () => close());
   listen(dialog, "close", () => {
     toggle.setAttribute("aria-expanded", "false");
@@ -130,6 +139,7 @@ export function createPublicMenu(
   );
   return {
     destroy() {
+      unwatchAtmosphere();
       listeners.forEach((fn) => fn());
       animations.splice(0).forEach((a) => a.cancel());
       document.body.classList.remove("public-menu-open");
