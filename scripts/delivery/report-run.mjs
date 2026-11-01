@@ -87,7 +87,8 @@ async function main() {
   }
   const snapshot = await collectRun(runId, attempt, ghToken);
   const reportingAttempt = process.env.GITHUB_RUN_ATTEMPT || "1";
-  const events = runEvents(snapshot, reportingAttempt);
+  const reportingRunId = process.env.GITHUB_RUN_ID || "local";
+  const events = runEvents(snapshot, reportingAttempt, reportingRunId);
   const directory = root + "local/delivery-outbox";
   await mkdir(directory, { recursive: true });
   const filename = `${directory}/github-${snapshot.run.id}-${snapshot.run.run_attempt}.json`;
@@ -96,6 +97,7 @@ async function main() {
     sourceRun: String(snapshot.run.id),
     executionAttempt: snapshot.run.run_attempt,
     reportingAttempt: Number(reportingAttempt),
+    reportingRunId,
     events,
   };
   await writeFile(filename, JSON.stringify(outbox, null, 2));
@@ -123,7 +125,7 @@ async function main() {
 if (process.argv[1] === fileURLToPath(import.meta.url))
   main().catch(() => {
     console.error(
-      "Delivery reporting failed; source workflow state is unchanged. Inspect the bounded outbox receipt.",
+      "Delivery reporting failed; source workflow state is unchanged. Inspect the outbox receipt when present.",
     );
     process.exitCode = 2;
   });

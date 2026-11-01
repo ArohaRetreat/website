@@ -107,7 +107,11 @@ export async function collectRun(runId, attempt, token, { get = github } = {}) {
   }
   return { run, jobs, reports };
 }
-export function runEvents({ run, jobs, reports }, reportingAttempt) {
+export function runEvents(
+  { run, jobs, reports },
+  reportingAttempt,
+  reportingRunId = "local",
+) {
   validateRun(run);
   const completedAt = completionTime(run, jobs);
   const base = {
@@ -117,6 +121,8 @@ export function runEvents({ run, jobs, reports }, reportingAttempt) {
     "workflow.run.id": integer(run.id),
     "workflow.execution.attempt": Number(integer(run.run_attempt)),
     "workflow.reporting.attempt": Number(integer(reportingAttempt)),
+    "workflow.reporting.run.id":
+      reportingRunId === "local" ? "local" : integer(reportingRunId),
     "git.commit.sha": run.head_sha,
     "workflow.run.url": `https://github.com/${REPOSITORY}/actions/runs/${run.id}`,
     "ci.observation.kind": "retrospective",

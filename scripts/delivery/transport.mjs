@@ -34,7 +34,20 @@ export async function request(
       await sleep(attempt * 1000);
       continue;
     }
-    const bytes = new Uint8Array(await response.arrayBuffer());
+    let bytes;
+    try {
+      bytes = new Uint8Array(await response.arrayBuffer());
+    } catch {
+      if (attempt === 3)
+        return {
+          accepted: false,
+          status: response.status,
+          attempts: attempt,
+          reason: "RESPONSE_READ_FAILED",
+        };
+      await sleep(attempt * 1000);
+      continue;
+    }
     if (bytes.length > 1024 * 1024)
       return {
         accepted: false,
