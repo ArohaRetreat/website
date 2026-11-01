@@ -41,6 +41,7 @@ function render() {
   root.innerHTML = renderMap(content);
   document.body.classList.add("map-enhanced");
   document.body.classList.toggle("map-reading", reading);
+  document.documentElement.dataset.routeMotion = reading || !content.theme.motion || reduced.matches ? "off" : "on";
   document.body.classList.toggle("map-overview-mode", overview);
   root.querySelector(".map-narrative").inert = overview;
   root.querySelector("[data-map-resume]").hidden = !overview;

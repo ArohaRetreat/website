@@ -1,16 +1,8 @@
-// Register future public pages here; both headers and the full menu consume this list.
-export const PUBLIC_PAGES = Object.freeze([
-  {
-    href: "/",
-    label: "The retreat",
-    description: "Come in. Leave the hurry behind.",
-  },
-  {
-    href: "/map/",
-    label: "The Living Map",
-    description: "Follow the paths. Discover the stories.",
-  },
-]);
+import { publicDestination } from "./page-transitions.mjs";
+
+import { PUBLIC_PAGES } from "./public-pages.mjs";
+export { PUBLIC_PAGES } from "./public-pages.mjs";
+
 export function sectionLinks(content) {
   return [
     ["journey", "The farm"],
@@ -114,7 +106,10 @@ export function createPublicMenu(
     if (action) requestAnimationFrame(action);
   });
   listen(dialog, "click", (e) => {
-    if (e.target.closest("a[href]")) close();
+    const link = e.target.closest("a[href]");
+    // Keep the forest scene in the outgoing native snapshot. Back/forward restore
+    // recreates the controllers and closes the stale dialog through the renderer.
+    if (link && (!publicDestination(link.href, location.href) || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)) close();
   });
   listen(dialog.querySelector("[data-menu-enquire]"), "click", () =>
     close(() => root.querySelector("#footer-enquire")?.click()),

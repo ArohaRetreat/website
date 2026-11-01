@@ -32,6 +32,7 @@ function render() {
   for (const key of ["forest", "ivory", "leaf", "bronze"])
     document.documentElement.style.setProperty("--" + key, content.theme[key]);
   document.body.classList.toggle("simple", simple || !content.theme.motion);
+  document.documentElement.dataset.routeMotion = simple || !content.theme.motion || motion.matches ? "off" : "on";
   document.title = content.seo.title;
   document
     .querySelector('meta[name="description"]')
@@ -264,8 +265,9 @@ function bind() {
 }
 render();
 const finishWelcome = startWelcome(root, natureContent(tourContent(content)), {
-  enabled: !simple && content.theme.motion && !preview,
+  enabled: !simple && content.theme.motion && !preview && !document.documentElement.dataset.routeArrival,
 });
+window.addEventListener("aroha:route-arrival", finishWelcome, { once: true });
 initializeMonitoring();
 motion.addEventListener("change", (e) => {
   if (e.matches) {
