@@ -1,3 +1,8 @@
+# 0.9.2
+
+- Keep the Living Map on a continuous forest-green canvas with white cards and faint botanical leaf watermarks.
+- Connect chapter cards with reversible, scroll-driven timeline lines; keep steady connections in Reading View and reduced motion.
+
 # 0.9.1
 
 - Reserve space for map controls so the entrance marker remains visible when opening the whole-farm overview directly.

@@ -1,3 +1,7 @@
+# Map forest canvas and timeline — 0.9.2
+
+Issue #4 follow-up: continuous forest-green background, white explanation cards with pricing-style faint leaf/vein motifs, and five scroll-driven connections between the story heading, four chapter cards and closing card. Native scrolling controls reversible line scale; reading/reduced/disabled-motion use a steady connection. The physical route and API0.2.0 are unchanged. Deployment/version evidence is recorded in issue #4 and local release receipts; this source note alone is not deployment proof.
+
 # Living Map implementation — 0.9.0 / API 0.2.0
 
 Issue #4. Read docs/website-map-direction.md. The separate map uses map-render.mjs/map.mjs/map-state.mjs/map.css and an optional validated storyMap object. The studio materializes legacy fallback stories privately and previews /map/?preview=1. Deploy API before Hosting; preserve stored content and existing roles. Current verification/deployment is recorded in the issue and release evidence; this preparation note is not deployment proof.

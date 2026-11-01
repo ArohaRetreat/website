@@ -21,3 +21,7 @@ Built-in imagegen produced the entrance botanical plate: a complete mature India
 ## Verification
 
 Run unit/foundation/OTLP tests, emulator save/publish/rules integration, graph guards and pinned shared Hosting composition. Browser checks cover desktop descent/locations/overview, 320/390-width layouts, reading, direct fragments/history, rapid selection, reverse scrolling, keyboard/focus and film play/pause. Physical-device behavior, final host copy/geometry acceptance and native RUM session/API linkage need separate evidence. Source/CI, preview, production and tenant visibility remain distinct.
+
+## Forest canvas and connected cards (0.9.2)
+
+The map keeps the opening forest green throughout its header, scene, reading backdrop and footer. Explanations float in opaque white cards, with a low-opacity CSS leaf/vein watermark matching the homepage pricing-card treatment. No new raster art is needed. Five decorative connectors link the story heading and successive chapter cards to the closing invitation. The existing native-scroll RAF measures their gaps and writes only `scaleY` on each line; growing lines reverse with scrolling and adapt when story height changes. Reading View, reduced motion and globally disabled motion use steady connections. Decorations are noninteractive and hidden from assistive technology. Route coordinates, media, permissions and API0.2.0 are unchanged.
