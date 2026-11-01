@@ -1,3 +1,7 @@
+# Public page transitions — 0.10.1
+
+Issue #18 connects the public documents through native cross-document snapshots and a 500 ms leaf aperture. Page registry moved to public-pages.mjs (re-exported by navigation.mjs). A tiny classic head script registers pagereveal/pageswap before paint; pointer/keyboard interruption cancels active reveals, and keyboard/Reading/Simple/disabled/reduced motion skip them. Exact-destination session markers expire after 15 seconds; same-origin public referrer is a storage-denied welcome fallback. Menu stays in outgoing snapshot; restored renderers close stale modals. Initial direct arrivals preserve the sprout welcome, internal arrivals bypass it. No router, network fetch interception, overlay delay, schema/API or Natura changes. See issue/PR receipts for actual release state; responsive desktop review is not physical-device certification.
+
 # Shared public navigation and footer — 0.10.0
 
 Issue #14 adds the shared forest menu, real palm frond, leaf reveal and bounded falling-drop/ripple animation to `/` and `/map/`. PUBLIC_PAGES in navigation.mjs is the route registry; section links respect CMS visibility. Native dialogs own modal focus/Escape; both controllers defer CMS replacement while any dialog is open, pause background films, and apply pending content on close. Shared guest-dialogs.mjs retains enquiry validation, guest-reviewed WhatsApp preparation and consent controls. The map footer now uses the identical photographic home footer and hides floating map controls when it is visible. See docs/website-navigation.md.
