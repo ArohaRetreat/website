@@ -116,6 +116,18 @@
         "project-deployment",
         "project-observability"
       ]
+    },
+    {
+      "id": "service-delivery-observability",
+      "kind": "service",
+      "path": "skills/service-delivery-observability/SKILL.md",
+      "description": "Maintain the delivery-observability service; read its implementation and continuation context.",
+      "dependsOn": [
+        "project-implementation",
+        "project-testing",
+        "project-deployment",
+        "project-observability"
+      ]
     }
   ],
   "services": [
@@ -197,6 +209,33 @@
         "node --test functions/tests/telemetry.mjs"
       ],
       "continuation": "skills/service-aroha-api/continuation.md",
+      "lastReviewedRevision": null
+    },
+    {
+      "id": "delivery-observability",
+      "skillId": "service-delivery-observability",
+      "sourcePaths": [
+        "scripts/delivery"
+      ],
+      "entrypoints": [
+        "scripts/delivery/report-run.mjs",
+        "scripts/delivery/deployment.mjs"
+      ],
+      "owner": "ArohaRetreat",
+      "status": "active",
+      "dependsOn": [
+        "foundation-tooling",
+        "aroha-api"
+      ],
+      "contracts": [
+        "docs/delivery-observability.md"
+      ],
+      "testCommands": [
+        "node --test tests/delivery-observability.test.mjs",
+        "npm test",
+        "AROHA_TEST_REPORTS=1 sh scripts/check.sh"
+      ],
+      "continuation": "skills/service-delivery-observability/continuation.md",
       "lastReviewedRevision": null
     }
   ]

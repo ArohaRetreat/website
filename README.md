@@ -4,7 +4,7 @@ The public Aroha Retreat website, Google-authenticated host studio and Firebase 
 
 Template version: **1.9.0** · [template changelog](docs/template-changelog.md) · [licence boundaries](THIRD-PARTY-NOTICES.md)
 
-Website version **0.11.0** adds a persistent sunset atmosphere to the retreat and Living Map, with forest-green cards, warm readable text and a shared daylight/sunset control. It retains leaf-shaped page transitions and the consistent photographic footer to the public retreat and Living Map pages. See [public navigation](docs/website-navigation.md) for the page registry, motion and accessibility behavior. The production site is https://aroharetreat.com. See [repository separation](docs/repository-separation.md), [source provenance](docs/repository-import.json) and [open acceptance work](https://github.com/ArohaRetreat/website/issues/2).
+Website version **0.12.0** adds automatic trusted Actions reporting and observed production Hosting releases, preserving the public design and sunset experience. Read the [delivery observability contract](docs/delivery-observability.md). See [repository separation](docs/repository-separation.md), [source provenance](docs/repository-import.json) and [open acceptance work](https://github.com/ArohaRetreat/website/issues/2).
 
 ## Develop and verify
 
@@ -45,3 +45,5 @@ Build the design export from the Natura revision in [config/natura-hosting.json]
 `release-evidence/aroha-*` records historical builds/deployments from the old source revisions. Those files do not claim that a new-repository commit is deployed. The source split itself does not promote the preview or alter production. Runtime secrets stay in the existing server-side secret store; private tokens never enter this repository or browser bundles.
 
 The Living Map is a separate `/map/` journey. See [direction and CMS contract](docs/website-map-direction.md).
+
+Production deployment now requires installed functions dependencies and `FIREBASE_CLI_PATH` for authenticated Firebase/Secret Manager access. `npm run deploy -- --production` records provider release, live verification and separate telemetry receipts. A reporting failure returns exit code 2 without repeating or rolling back an already successful release. Repair it using the report-only commands in the delivery contract.

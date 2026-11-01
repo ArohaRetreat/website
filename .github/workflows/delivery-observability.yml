@@ -1,0 +1,52 @@
+name: Delivery observability
+on:
+  workflow_run:
+    workflows: [Website application checks, Foundation checks]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Source workflow run ID to report without rerunning tests or deployment
+        required: true
+        type: string
+      execution_attempt:
+        description: Original execution attempt
+        required: true
+        default: '1'
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: delivery-observer-${{ github.event.workflow_run.id || inputs.run_id }}-${{ github.event.workflow_run.run_attempt || inputs.execution_attempt }}
+  cancel-in-progress: false
+jobs:
+  report:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      # Never check out the source run/PR revision. Only trusted default-branch code gets secrets.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+      - name: Install pinned observer dependencies without lifecycle scripts
+        run: npm ci --prefix functions --ignore-scripts
+      - name: Report completed source execution
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DT_DELIVERY_TOKEN: ${{ secrets.DT_DELIVERY_TOKEN }}
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id || inputs.run_id }}
+          SOURCE_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt || inputs.execution_attempt }}
+        run: node scripts/delivery/report-run.mjs
+      - name: Retain bounded reporting receipts
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: delivery-observer-receipt-${{ github.run_id }}-${{ github.run_attempt }}
+          path: local/delivery-outbox/*.json
+          retention-days: 14
+          if-no-files-found: warn

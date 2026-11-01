@@ -13,3 +13,6 @@ __pycache__/
 .dependency-staging/
 release/
 tmp/
+
+# Bounded CI reports are retained as Actions artifacts, not source.
+.delivery-reports/

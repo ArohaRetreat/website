@@ -1,3 +1,7 @@
+# Delivery observability — 0.12.0
+
+Issue #22 adds a trusted Actions completion observer and production deployment/live-verification reporting. The website design, CMS, API 0.2.0 and Natura 0.6.1 are preserved. Read the delivery-observability service skill/contract for source identities, secret isolation, bounded artifacts, per-signal receipts and report-only replay. Source/CI/merge/deployment/tenant evidence must be read from issue #22 and actual receipts; this preparation note does not certify rollout.
+
 # Persistent sunset atmosphere — 0.11.0
 
 Issue #20 makes the existing After sunset choice affect both public pages. atmosphere.mjs restores an explicit day/evening preference before paint via the transition bootstrap; the menu provides a reversible control from either page. sunset.css styles dark pricing/gallery/map/dialog surfaces with warm ivory text, subdued borders, retained leaf motifs and gold actions. The real evening hero photo restores on render; failure keeps sunset colours and a labelled day-photo fallback. Shared event listeners and decode requests are disposed safely. Theme is local to the visitor, not a CMS change; admin/design/API are unchanged. Tests include palette contrast, preference normalization, restore/synchronization and image-failure behavior. Read issue #20/current PR and local release receipts for actual CI/deployment/browser state; physical-device and native RUM linkage are not implied.
