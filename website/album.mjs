@@ -69,6 +69,13 @@ export function createAlbum(root, media, { resume, motion = false } = {}) {
     listeners.push(() => el.removeEventListener("click", fn));
   };
   function paint(animate = false) {
+    // A quick second page/filter change continues from the visible frame.
+    // Sample before changing the spread; never reset a running fade to its start.
+    let from = { opacity: 0.35, transform: "translateY(8px)" };
+    if (animate && motion && animation?.playState === "running") {
+      const current = getComputedStyle(grid);
+      from = { opacity: current.opacity, transform: current.transform };
+    }
     const slots = new Map(state.items.map((m, i) => [m.id, i]));
     prints.forEach((p) => {
       p.hidden = !slots.has(p.dataset.albumId);
@@ -92,7 +99,7 @@ export function createAlbum(root, media, { resume, motion = false } = {}) {
     if (animate && motion) {
       animation = grid.animate(
         [
-          { opacity: 0.35, transform: "translateY(8px)" },
+          from,
           { opacity: 1, transform: "translateY(0)" },
         ],
         { duration: 420, easing: "cubic-bezier(.32,.72,0,1)" },
