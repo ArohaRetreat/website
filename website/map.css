@@ -1544,3 +1544,31 @@ select:focus-visible {
 .map-reading .map-introduction {
   background: transparent;
 }
+/* Keep the gate and its label clear of the fixed controls, including direct overview entry. */
+.farm-map-plane {
+  width: min(64vw, calc(100svh - 160px));
+  top: 46%;
+}
+.map-overview-mode .farm-map-plane {
+  width: min(85vw, calc(100svh - 200px));
+  top: 46%;
+}
+@media (max-width: 1000px) and (min-width: 651px) {
+  .farm-map-plane {
+    width: min(58vw, calc(100svh - 160px));
+  }
+}
+@media (max-width: 650px) {
+  .farm-map-plane {
+    width: 640px;
+    top: 48%;
+  }
+  .map-overview-mode .farm-map-plane {
+    width: calc(100vw - 20px);
+    top: 43%;
+  }
+  .map-reading .farm-map-plane {
+    width: 280px;
+    top: 50%;
+  }
+}

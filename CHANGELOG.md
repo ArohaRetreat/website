@@ -1,3 +1,7 @@
+# 0.9.1
+
+- Reserve space for map controls so the entrance marker remains visible when opening the whole-farm overview directly.
+
 # 0.9.0
 
 - Add The Living Map at /map/: a tree entrance and full-view illustrated farm journey with eleven farm stories, real media, chapter navigation and Reading View.

@@ -4,7 +4,7 @@ The public Aroha Retreat website, Google-authenticated host studio and Firebase 
 
 Template version: **1.9.0** · [template changelog](docs/template-changelog.md) · [licence boundaries](THIRD-PARTY-NOTICES.md)
 
-Website version **0.9.0** improves guest bundle loading and session-only Google sign-in startup on the production site at https://aroharetreat.com. See [repository separation](docs/repository-separation.md), [source provenance](docs/repository-import.json) and [open acceptance work](https://github.com/ArohaRetreat/website/issues/2).
+Website version **0.9.1** improves guest bundle loading and session-only Google sign-in startup on the production site at https://aroharetreat.com. See [repository separation](docs/repository-separation.md), [source provenance](docs/repository-import.json) and [open acceptance work](https://github.com/ArohaRetreat/website/issues/2).
 
 ## Develop and verify
 
