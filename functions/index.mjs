@@ -1,4 +1,5 @@
 import { traceRequest, recordSummary, domainSpan } from "./telemetry.mjs";
+import { PUBLIC_ORIGIN, isAllowedOrigin } from "./origins.mjs";
 import { defineSecret } from "firebase-functions/params";
 import { onRequest } from "firebase-functions/v2/https";
 import { initializeApp } from "firebase-admin/app";
@@ -143,16 +144,7 @@ export const arohaApi = onRequest(
       res.set("Cache-Control", "no-store");
       res.set("X-Content-Type-Options", "nosniff");
       try {
-        if (
-          req.get("origin") &&
-          ![
-            "https://aroha-retreat.web.app",
-            "https://aroha-retreat.firebaseapp.com",
-            ...(process.env.FUNCTIONS_EMULATOR
-              ? ["http://127.0.0.1:8770", "http://localhost:8770"]
-              : []),
-          ].includes(req.get("origin"))
-        )
+        if (!isAllowedOrigin(req.get("origin"), !!process.env.FUNCTIONS_EMULATOR))
           throw new DomainError("ORIGIN_DENIED", 403);
         if (req.rawBody?.length > 220000)
           throw new DomainError("PAYLOAD_TOO_LARGE", 413);
@@ -343,7 +335,7 @@ export const arohaApi = onRequest(
             audit(tx, actor, operation, hash(email));
           });
           return ({
-            inviteUrl: "https://aroha-retreat.web.app/admin/",
+            inviteUrl: `${PUBLIC_ORIGIN}/admin/`,
             expiresInDays: 7,
             requestId,
           });
@@ -405,7 +397,7 @@ export const arohaApi = onRequest(
           JSON.stringify({
             severity: status >= 500 ? "ERROR" : "INFO",
             service: "aroha-api",
-            version: "0.1.0",
+            version: "0.1.1",
             operation,
             status,
             durationMs: Date.now() - started,
