@@ -25,6 +25,7 @@ export function createFieldJourney(
     frame = section?.querySelector(".tour-film-frame"),
     status = section?.querySelector("#tour-status");
   const dialog = root.querySelector("#details-dialog");
+  const dialogOpen = () => !!root.querySelector("dialog[open]");
   let current = -1,
     progress = resumeAt,
     paused = false,
@@ -102,20 +103,20 @@ export function createFieldJourney(
     });
   }
   function playback() {
-    botanical.paused(document.hidden || dialog.open);
+    botanical.paused(document.hidden || dialogOpen());
     if (!film?.getAttribute("src")) return;
     const play =
       !paused &&
       !offscreen &&
       !document.hidden &&
-      !dialog.open &&
+      !dialogOpen() &&
       motion &&
       !lowData;
     if (play && film.paused)
       film
         .play()
         .then(() => {
-          if (dead || paused || offscreen || document.hidden || dialog.open)
+          if (dead || paused || offscreen || document.hidden || dialogOpen())
             film.pause();
         })
         .catch(() => {
@@ -339,7 +340,9 @@ export function createFieldJourney(
     .forEach((b) => listen(b, "click", () => go(Number(b.dataset.tourStop))));
   if (dialog) {
     observer = new MutationObserver(playback);
-    observer.observe(dialog, { attributes: true, attributeFilter: ["open"] });
+    root.querySelectorAll("dialog").forEach((d) =>
+      observer.observe(d, { attributes: true, attributeFilter: ["open"] }),
+    );
   }
   if ("IntersectionObserver" in window) {
     mediaObserver = new IntersectionObserver(

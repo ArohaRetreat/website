@@ -1,3 +1,5 @@
+import { createPublicMenu } from "./navigation.mjs";
+import { openEnquiry, openPrivacy } from "./guest-dialogs.mjs";
 import initial from "./content.json";
 import { renderMap, mapContent } from "./map-render.mjs";
 import { tourContent } from "./field-render.mjs";
@@ -26,6 +28,7 @@ let content = initial,
   unsubscribe,
   scrollingTo = null,
   subscriptionGeneration = 0,
+  pendingContent,
   overview = location.hash === "#map-overview";
 const chapterSelection = new Map();
 function render() {
@@ -147,11 +150,70 @@ function navigate(
   if (changed) track("map.place-opened", { section: id, outcome: "selected" });
 }
 function bind() {
+  const menu = createPublicMenu(root, {
+    motion: !reading && content.theme.motion && !reduced.matches,
+    onOpen: () => document.body.classList.add("map-paused"),
+    onClose: () => {
+      if (pendingContent) {
+        content = pendingContent;
+        pendingContent = null;
+        render();
+        root
+          .querySelector("#public-menu-toggle")
+          ?.focus({ preventScroll: true });
+      } else schedule();
+    },
+  });
   const removals = [],
     listen = (el, type, fn, opts) => {
       el.addEventListener(type, fn, opts);
       removals.push(() => el.removeEventListener(type, fn, opts));
     };
+  let lastFocus;
+  const dialog = root.querySelector("#details-dialog");
+  function show(markup) {
+    lastFocus = document.activeElement;
+    root.querySelectorAll("video").forEach((v) => v.pause());
+    document.body.classList.add("map-paused");
+    root.querySelector("#dialog-content").innerHTML = markup;
+    dialog.showModal();
+    root.querySelector(".dialog-close").focus({ preventScroll: true });
+  }
+  root
+    .querySelectorAll("[data-enquire]")
+    .forEach((b) =>
+      listen(b, "click", () => openEnquiry(content, show, b.dataset.enquire)),
+    );
+  listen(root.querySelector("#privacy-settings"), "click", () =>
+    openPrivacy(show),
+  );
+  listen(root.querySelector(".dialog-close"), "click", () => dialog.close());
+  listen(dialog, "close", () => {
+    if (pendingContent) {
+      const id = lastFocus?.id;
+      content = pendingContent;
+      pendingContent = null;
+      render();
+      if (id)
+        root
+          .querySelector("#" + CSS.escape(id))
+          ?.focus({ preventScroll: true });
+    } else {
+      if (lastFocus?.isConnected) lastFocus.focus({ preventScroll: true });
+      schedule();
+    }
+  });
+  listen(dialog, "click", (e) => {
+    if (e.target !== dialog) return;
+    const r = dialog.getBoundingClientRect();
+    if (
+      e.clientX < r.left ||
+      e.clientX > r.right ||
+      e.clientY < r.top ||
+      e.clientY > r.bottom
+    )
+      dialog.close();
+  });
   let frame = 0,
     observer;
   const camera = root.querySelector(".tree-camera"),
@@ -163,7 +225,13 @@ function bind() {
   }));
   function draw() {
     frame = 0;
-    document.body.classList.toggle("map-paused", document.hidden);
+    document.body.classList.toggle(
+      "map-paused",
+      document.hidden || !!root.querySelector("dialog[open]"),
+    );
+    root.querySelector(".map-tools").hidden =
+      root.querySelector(".field-footer").getBoundingClientRect().top <
+      innerHeight;
     // Measure all gaps first; only composited transforms are written during scrolling.
     const links = connectors.map(({ el, fill }) => ({
       fill,
@@ -200,7 +268,10 @@ function bind() {
     const scene = root.querySelector(".map-scene").getBoundingClientRect();
     document.body.classList.toggle(
       "map-paused",
-      document.hidden || scene.bottom < 0 || scene.top > innerHeight,
+      document.hidden ||
+        !!root.querySelector("dialog[open]") ||
+        scene.bottom < 0 ||
+        scene.top > innerHeight,
     );
     const stop = tourContent(content).stops.find((s) => s.id === active);
     const plane = root.querySelector(".farm-map-plane");
@@ -255,6 +326,7 @@ function bind() {
       window,
       event,
       (event) => {
+        if (root.querySelector("dialog[open]")) return;
         if (
           event.type === "keydown" &&
           ![
@@ -388,13 +460,6 @@ function bind() {
       v.play().catch(() => {});
     }),
   );
-  root.querySelectorAll("[data-monitoring]").forEach((b) =>
-    listen(b, "click", () => {
-      setPreference("aroha-monitoring", b.dataset.monitoring);
-      if (b.dataset.monitoring === "allowed") initializeMonitoring();
-      else location.reload();
-    }),
-  );
   const image = root.querySelector(".living-tree");
   listen(image, "error", () => {
     root.querySelector(".map-scene").classList.add("art-unavailable");
@@ -424,6 +489,7 @@ function bind() {
   );
   schedule();
   return () => {
+    menu.destroy();
     removals.forEach((fn) => fn());
     cancelAnimationFrame(frame);
     observer.disconnect();
@@ -484,6 +550,10 @@ function watchContent() {
           try {
             const next = validateContent(data.content);
             if (JSON.stringify(content) !== JSON.stringify(next)) {
+              if (root.querySelector("dialog[open]")) {
+                pendingContent = next;
+                return;
+              }
               content = next;
               render();
             }

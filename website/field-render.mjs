@@ -1,3 +1,5 @@
+import {renderPublicHeader,renderPublicMenu} from "./navigation.mjs";
+import { renderFooter, guestDialogMarkup } from "./footer.mjs";
 import { renderAlbum } from "./album.mjs";
 import {
   natureContent,
@@ -64,22 +66,12 @@ export function renderFieldSite(c, { esc, lines, picture, money }) {
     visit: () =>
       `<section class="field-section field-visit" id="visit">${title("visit")}<div class="field-visit-grid"><div><p class="field-visit-lede">${esc(c.visit.description)}</p><button class="button" data-enquire="">${esc(c.visit.enquiryLabel)} ${arrow}</button><a class="field-text-link" href="${esc(c.visit.mapUrl)}" target="_blank" rel="noopener noreferrer">Find your way ${arrow}</a><p class="field-visit-policy">${esc(c.visit.note)}</p><a href="tel:+${esc(c.visit.phone)}">+${esc(c.visit.phone)}</a><br><a href="mailto:${esc(c.visit.email)}">${esc(c.visit.email)}</a></div><div class="field-faqs">${c.faqs.map((x) => `<details><summary>${esc(x.question)}<span aria-hidden="true">+</span></summary><p>${esc(x.answer)}</p></details>`).join("")}</div></div></section>`,
   };
-  return `<a class="skip-link" href="#main">Skip to content</a><header class="field-header"><a href="#home" class="field-brand" aria-label="${esc(c.brand.name)} home"><img src="/assets/brand/logo-white.svg" width="190" height="65" alt="${esc(c.brand.name)}"></a><nav aria-label="Main navigation">${[
-    ["journey", "The farm"],
-    ["cottages", "Stay"],
-    ["experiences", "Experience"],
-    ["packages", "Visit"],
-  ]
-    .filter(([id]) => sections.has(id))
-    .map(([id, label]) => `<a href="#${id}">${label}</a>`)
-    .join(
-      "",
-    )}<a href="/map/">Living Map</a></nav><div><button id="view-toggle" aria-pressed="false">Simple view</button><button class="field-header-enquire" data-enquire="">Plan a visit ${arrow}</button></div></header><main id="main"><section id="home" class="field-hero"><div class="field-hero-visual hero-day">${picture(hero.image, hero.imageAlt, "", true, hero.mobileImage)}</div>${heroEvening(nature, esc)}<div class="field-hero-shade" aria-hidden="true"></div>${heroGarden(c, nature, { esc, picture })}<div class="field-hero-content"><p class="eyebrow">${esc(hero.eyebrow)}</p><h1>${heroTitle(hero.title, esc)}</h1><p>${esc(hero.description)}</p><a href="${sections.has("journey") ? "#journey" : "#intro"}" id="start-journey" class="field-enter"><span class="enter-orbit" aria-hidden="true">↗</span>${esc(hero.primaryLabel)}</a></div>${heroMoments(nature)}<div class="field-hero-foot"><span lang="kn">${esc(c.brand.welcomeKannada)}</span><span>${esc(c.brand.tagline)}</span><a href="#intro">SCROLL TO SLOW DOWN <span aria-hidden="true">↓</span></a></div></section><section id="intro" class="field-section field-intro"><div><p class="eyebrow">${esc(c.intro.eyebrow)}</p><span lang="kn">${esc(c.brand.kannada)}</span>${picture(c.intro.image, c.intro.imageAlt, "field-intro-photo")}</div><h2>${lines(c.intro.title)}</h2><div class="field-intro-copy"><p>${esc(c.intro.description)}</p><span>${esc(c.brand.welcome)}</span></div></section>${natureStory(nature, { esc, lines, picture })}${c.sections
+  return `<a class="skip-link" href="#main">Skip to content</a>${renderPublicHeader(c,{esc,mode:"home"})}${renderPublicMenu(c,{esc,mode:"home"})}<main id="main"><section id="home" class="field-hero"><div class="field-hero-visual hero-day">${picture(hero.image, hero.imageAlt, "", true, hero.mobileImage)}</div>${heroEvening(nature, esc)}<div class="field-hero-shade" aria-hidden="true"></div>${heroGarden(c, nature, { esc, picture })}<div class="field-hero-content"><p class="eyebrow">${esc(hero.eyebrow)}</p><h1>${heroTitle(hero.title, esc)}</h1><p>${esc(hero.description)}</p><a href="${sections.has("journey") ? "#journey" : "#intro"}" id="start-journey" class="field-enter"><span class="enter-orbit" aria-hidden="true">↗</span>${esc(hero.primaryLabel)}</a></div>${heroMoments(nature)}<div class="field-hero-foot"><span lang="kn">${esc(c.brand.welcomeKannada)}</span><span>${esc(c.brand.tagline)}</span><a href="#intro">SCROLL TO SLOW DOWN <span aria-hidden="true">↓</span></a></div></section><section id="intro" class="field-section field-intro"><div><p class="eyebrow">${esc(c.intro.eyebrow)}</p><span lang="kn">${esc(c.brand.kannada)}</span>${picture(c.intro.image, c.intro.imageAlt, "field-intro-photo")}</div><h2>${lines(c.intro.title)}</h2><div class="field-intro-copy"><p>${esc(c.intro.description)}</p><span>${esc(c.brand.welcome)}</span></div></section>${natureStory(nature, { esc, lines, picture })}${c.sections
     .filter((x) => x.visible)
     .map((x) => content[x.id]?.() || "")
     .join(
       "",
-    )}</main><footer class="field-footer"><div>${picture("/assets/retreat/DSC_3779.webp", "The main house glowing after sunset")}<div class="field-footer-shade"></div></div><p class="eyebrow">${esc(c.brand.tagline)}</p><h2>${lines(c.brand.welcome.replace(", ", ",\n"))}</h2><button class="field-enter" data-enquire=""><span class="enter-orbit" aria-hidden="true">↗</span>${esc(c.visit.enquiryLabel)}</button><span lang="kn">${esc(c.brand.welcomeKannada)}</span><div class="field-footer-bottom"><a href="/map/">Explore the Living Map</a><a href="/admin/">Host login</a><span>© ${new Date().getFullYear()} ${esc(c.brand.name)}</span><button id="privacy-settings">Privacy & monitoring</button></div></footer><dialog id="details-dialog" class="details-dialog" aria-labelledby="dialog-title"><button class="dialog-close" aria-label="Close details">×</button><div id="dialog-content"></div></dialog><div class="toast" role="status" hidden></div>`;
+    )}</main>${renderFooter(c,{esc,lines,picture})}${guestDialogMarkup()}<div class="toast" role="status" hidden></div>`;
 }
 export function renderFarmMap(c, esc) {
   const t = tourContent(c);
