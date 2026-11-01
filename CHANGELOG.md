@@ -1,3 +1,9 @@
+# 0.9.0
+
+- Add The Living Map at /map/: a tree entrance and full-view illustrated farm journey with eleven farm stories, real media, chapter navigation and Reading View.
+- Add editable map stories and draft preview to the host studio, with optional backward-compatible schema 1 validation (API 0.2.0).
+- Add consent-controlled bounded map events and preserve guest/admin module separation.
+
 # Aroha Retreat website changelog
 
 ## [0.8.3] — 2026-11-01

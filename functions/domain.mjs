@@ -240,6 +240,32 @@ function unique(v) {
   if (new Set(v.map((x) => x.id)).size !== v.length)
     throw new DomainError("DUPLICATE_ID");
 }
+export function validateStoryMap(m, tour) {
+  obj(m, ["eyebrow", "title", "invitation", "description", "rootTitle", "chapters", "places"]);
+  for (const key of ["eyebrow", "title", "invitation", "rootTitle"]) text(m[key], 200);
+  text(m.description, 1500);
+  if (!tour || !Array.isArray(m.chapters) || !Array.isArray(m.places) || !m.chapters.length || !m.places.length) throw new DomainError("INVALID_MAP_REFERENCE");
+  arr(m.chapters, 4, (c) => {
+    obj(c, ["id", "title", "invitation", "description"]);
+    id(c.id);
+    text(c.title, 120); text(c.invitation, 200); text(c.description, 1000);
+  });
+  unique(m.chapters);
+  arr(m.places, 20, (p) => {
+    obj(p, ["id", "chapter", "title", "paragraphs", "facts", "media", "caption"]);
+    id(p.id); id(p.chapter); text(p.title, 200); text(p.caption, 1500); text(p.media, 48);
+    arr(p.paragraphs, 4, (s) => text(s, 2500));
+    arr(p.facts, 3, (s) => text(s, 180));
+    if (!p.paragraphs.length || !m.chapters.some((c) => c.id === p.chapter) ||
+        !tour.stops.some((s) => s.id === p.id) ||
+        (p.media && !tour.media.some((x) => x.id === p.media && x.stop === p.id)))
+      throw new DomainError("INVALID_MAP_REFERENCE");
+  });
+  unique(m.places);
+  if (m.chapters.some((c) => !m.places.some((p) => p.chapter === c.id)))
+    throw new DomainError("INVALID_MAP_REFERENCE");
+  return m;
+}
 export function validateContent(c) {
   obj(
     c,
@@ -259,11 +285,12 @@ export function validateContent(c) {
       "theme",
       "seo",
     ],
-    ["tour"],
+    ["tour", "storyMap"],
   );
   if (c.schemaVersion !== 1 || JSON.stringify(c).length > 180000)
     throw new DomainError("INVALID_SCHEMA");
   if (c.tour !== undefined) validateTour(c.tour);
+  if (c.storyMap !== undefined) validateStoryMap(c.storyMap, c.tour);
   obj(c.brand, ["name", "kannada", "tagline", "welcome", "welcomeKannada"]);
   Object.values(c.brand).forEach((v) => text(v, 240));
   obj(

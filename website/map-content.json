@@ -1,0 +1,222 @@
+{
+  "eyebrow": "Aroha / The Living Map",
+  "title": "A whole world, connected.",
+  "invitation": "Follow a slower story",
+  "description": "Begin beneath the canopy, then follow the route through Aroha: beside the pond, around the house, and into the green.",
+  "rootTitle": "Every place has a story.",
+  "chapters": [
+    {
+      "id": "arrive",
+      "title": "Arrive and slow down",
+      "invitation": "Leave the road behind.",
+      "description": "A first turn, a stretch of water, and permission to take your time."
+    },
+    {
+      "id": "belong",
+      "title": "A place to belong",
+      "invitation": "Make yourself at home.",
+      "description": "The house, a shared kitchen and a quiet library bring people together."
+    },
+    {
+      "id": "green",
+      "title": "Live among the green",
+      "invitation": "Stay a little closer.",
+      "description": "Take the stairs, find a verandah, and discover your own corner of the farm."
+    },
+    {
+      "id": "yourself",
+      "title": "Make room for yourself",
+      "invitation": "Find your own rhythm.",
+      "description": "Stillness, a swim, a walk. There is more than one way to spend a day here."
+    }
+  ],
+  "places": [
+    {
+      "id": "arrival",
+      "chapter": "arrive",
+      "title": "The first thing to leave behind is the hurry.",
+      "paragraphs": [
+        "The entrance is the beginning of a change of pace. Beyond the gate, the central road leads into Hrudhi Farms, with trees and lawn to the left. Rather than moving straight from the road to a room, you begin by meeting the landscape: greenery, a path and the water a little farther ahead.",
+        "Aroha brings nature, meditation and farm life into the same visit. You do not need to fit yourself into a tightly scheduled day to enjoy it. Take the route slowly, ask your hosts what is happening on the farm, and leave some room for an unexpected conversation.",
+        "From the entrance, a right-hand branch leads towards parking. Return to the central path to continue beside the pond. This is the first connection in the journey: arriving, finding your bearings, and beginning to feel at home."
+      ],
+      "facts": [
+        "Trees and lawn to the left",
+        "Parking branches to the right",
+        "Continue towards the pond"
+      ],
+      "media": "v-114109",
+      "caption": "The pond, central path and arrival gate, filmed at the farm."
+    },
+    {
+      "id": "parking",
+      "chapter": "arrive",
+      "title": "Park the car. Keep the afternoon.",
+      "paragraphs": [
+        "Parking sits on the right-hand branch from the entrance, above the pond and arrival area. The hosts describe it as roughly a hundred steps from the gate. That is a way to picture the relationship between the spaces, rather than a measured walking distance.",
+        "Once you have arrived, the rest of the farm invites a slower kind of movement. Come back towards the central path and let the curve beside the water lead you onwards. The pond and the main house become the next points to recognise.",
+        "Guests arrange their own transport to Aroha. If you need help planning the final approach, ask the hosts before travelling; they can also recommend a driver. Discuss unloading, luggage and any mobility needs directly with them so your arrival works for you."
+      ],
+      "facts": [
+        "Right-hand entrance branch",
+        "Above the pond area",
+        "Transport arranged by guests"
+      ],
+      "media": "",
+      "caption": "The farm approach path in the evening; this is a route photograph, not a dedicated parking photograph."
+    },
+    {
+      "id": "pond",
+      "chapter": "arrive",
+      "title": "Let the water set the pace.",
+      "paragraphs": [
+        "The pond opens on the right near the beginning of the central path. The hosts describe it as almost half an acre: a broad stretch of water that becomes a companion as you move farther into the farm. Above this arrival area is the branch to parking.",
+        "The road follows an S-shaped curve alongside the pond. Walking here gives the journey its first long pause. You can watch the changing light, take in the stone-lined edge, or simply follow the path without needing to turn the moment into an activity.",
+        "At the far end of the water, the main house becomes the next destination. The pond connects arrival to the shared heart of the retreat. Follow the curve, recognise a familiar face on the verandah, and let the walk become the beginning of your stay."
+      ],
+      "facts": [
+        "Pond on the right of the path",
+        "S-shaped road beside the water",
+        "Main house at the far end"
+      ],
+      "media": "v-092325",
+      "caption": "A silent film of the pond and the stone-lined path."
+    },
+    {
+      "id": "house",
+      "chapter": "belong",
+      "title": "The heart of a place is its welcome.",
+      "paragraphs": [
+        "The main house sits near the far end of the pond. Stone terraces, steps and a verandah give it a different feeling from the private cottages: this is part of the shared centre of Aroha, where the route brings people back together.",
+        "Three neighbouring spaces make this a useful place to find your bearings. The guest kitchen is in front of the house. The library is beside it. To the right, stairs lead up towards the two raised rooms among the coconut palms.",
+        "The promise of Aroha is personal: come as guests, leave as family. Here that invitation can be as simple as finding your hosts, asking a question, or taking a little time between the quieter corners of the farm. Continue to the kitchen, step aside for a book, or follow the stairs into the green."
+      ],
+      "facts": [
+        "Near the end of the pond",
+        "Kitchen in front; library beside",
+        "Tree-house stairs to the right"
+      ],
+      "media": "v-114045",
+      "caption": "Looking from the main-house path towards the pond."
+    },
+    {
+      "id": "kitchen",
+      "chapter": "belong",
+      "title": "Some memories begin around a meal.",
+      "paragraphs": [
+        "The guest-use kitchen is in front of the main house. It gives visitors another way to feel at home: you can come together and cook your own meals, rather than making every part of a visit something arranged for you.",
+        "This is a shared space within a strictly vegetarian, alcohol-free retreat. Ask the hosts about access, ingredients, utensils and arrangements before you plan to cook. Those practical details are best agreed personally; an invitation to use the kitchen does not imply that every ingredient or facility is available at every time.",
+        "For guests choosing a visit package, meals remain part of the supplied package inclusions. The kitchen adds a different possibility: time spent making something together. With the house behind it and the library nearby, it belongs to the more social, everyday side of life on the farm."
+      ],
+      "facts": [
+        "In front of the main house",
+        "Guests can cook their own meals",
+        "Strictly vegetarian; ask about arrangements"
+      ],
+      "media": "",
+      "caption": "Stone terraces at the main house, near the guest kitchen. A dedicated kitchen photograph is not yet available."
+    },
+    {
+      "id": "library",
+      "chapter": "belong",
+      "title": "A little room for another world.",
+      "paragraphs": [
+        "The library is beside the main house. After the movement of arriving, walking the pond path and meeting the farm, it offers a different invitation: settle into a book and let part of the day remain unplanned.",
+        "Its relationship to the house matters more than a long list of facilities. You can spend time around the shared spaces, then step aside for a quieter afternoon. Reading becomes one choice among a walk, a meal, a conversation or simply time outdoors.",
+        "Ask the hosts about the collection and how the library is used during your stay. There is no need to imagine a fixed programme around it. In this journey through Aroha, the library is a reminder that reconnecting with a place can include choosing a little solitude, close to everyone else."
+      ],
+      "facts": [
+        "Beside the main house",
+        "A quieter pause between activities",
+        "Ask hosts about the collection"
+      ],
+      "media": "",
+      "caption": "The shaded main-house verandah. This image shows the surrounding area, not the library interior."
+    },
+    {
+      "id": "treehouses",
+      "chapter": "green",
+      "title": "A change of perspective, among the palms.",
+      "paragraphs": [
+        "To the right of the main house, stairs lead towards two raised rooms. From below, the coconut palms frame the approach. From the verandahs, the relationship changes: the leaves and open green become part of the view from your own quiet corner.",
+        "The films here follow that real sequence. See the approach to the rooms, the steps and the deck, then look inside the actual accommodation. These are views recorded at Aroha, rather than an imagined interior or a seamless digital reconstruction.",
+        "The cottages lie farther behind this part of the farm. If you are deciding where to stay, ask the hosts which accommodation suits your group and any access needs. The raised rooms are reached by stairs, so that conversation is useful before choosing a room. Let the view inspire the visit, and let the hosts help with the practical choice."
+      ],
+      "facts": [
+        "Two raised rooms",
+        "Stairs to the right of the house",
+        "Cottages farther behind"
+      ],
+      "media": "v-095746",
+      "caption": "Two raised rooms among the palms, recorded at Aroha."
+    },
+    {
+      "id": "cottages",
+      "chapter": "green",
+      "title": "A small roof. A little more sky.",
+      "paragraphs": [
+        "Behind the raised rooms, the cottages sit among the greenery. The red roofs, stone paths and coconut palms give this part of the farm its character: private places to return to, connected to the landscape rather than separated from it.",
+        "Aroha offers A-frame cottages, a verandah cottage and Garden Row rooms. The cottage styles are separate from the three ways to visit. Farm Stay and Meditation & Wellness include overnight accommodation; a Day Visit does not include a room for the night.",
+        "Think about how you want to spend your time, then let the hosts guide the room choice. A private deck, time on the lawn or a place to rest between walks can mean different things to different groups. Continue up the farm towards the meditation hall, or return to the house and the pond at your own pace."
+      ],
+      "facts": [
+        "Behind the tree houses",
+        "Three accommodation styles",
+        "Overnight rooms with stay packages"
+      ],
+      "media": "",
+      "caption": "Red-roofed cottages at Aroha Retreat."
+    },
+    {
+      "id": "meditation",
+      "chapter": "yourself",
+      "title": "Leave a little space in the day.",
+      "paragraphs": [
+        "The meditation hall is at the upper end of the farm, after the accommodation on the route described by the hosts. Its broad steps and larger shared space introduce another side of Aroha: time made deliberately quieter.",
+        "The Meditation & Wellness Retreat includes hall access, guided meditation, wellness activities and sunrise mountain meditation, alongside the Farm Stay offerings. Ask the hosts about the programme for your dates. A description of an experience does not mean a session is running continuously, and your visit can still leave room for rest.",
+        "The swimming pool lies towards the left of the hall. That proximity gives the final part of the journey more than one mood: a quiet session, time in the water, or a return through the green. Nothing here needs to become a race to complete every activity. Choose the moments that suit you."
+      ],
+      "facts": [
+        "At the upper end of the farm",
+        "Wellness programme with retreat package",
+        "Pool towards the left"
+      ],
+      "media": "",
+      "caption": "The meditation hall in daylight, photographed at Aroha."
+    },
+    {
+      "id": "pool",
+      "chapter": "yourself",
+      "title": "Make space for the playful hours.",
+      "paragraphs": [
+        "The swimming pool lies towards the left of the meditation hall. It is one more way to spend time outside, between the walks, shared meals and quieter pauses that shape a visit to the farm.",
+        "Swimming is included with all three visit packages: Day Visit, Farm Stay and Meditation & Wellness. You can plan some time in the water without choosing an overnight stay. Ask your hosts about pool timings, supervision and the arrangements for your group before your visit.",
+        "This part of the map connects the hall and the pool as neighbouring destinations, while leaving their experiences distinct. Some guests will come for guided stillness; others will remember a relaxed afternoon with family. There is room in the same visit for both: a quieter morning, a playful afternoon, and time together before the day ends."
+      ],
+      "facts": [
+        "Towards the left of the hall",
+        "Included with every visit package",
+        "Ask about timings and supervision"
+      ],
+      "media": "",
+      "caption": "Greenery at Aroha. A dedicated pool photograph is not yet available."
+    },
+    {
+      "id": "farm",
+      "chapter": "yourself",
+      "title": "Everything here belongs to the same story.",
+      "paragraphs": [
+        "Aroha is part of a working farm, with more than 9,800 trees across 94 species, coconut groves, orchards and animals. Farm life is not a single stop at the end of the path. It is what connects the rooms, the meals, the walks and the people throughout the place.",
+        "Join the hosts to meet the oxen and sheep, explore the groves, and discover seasonal fruit. The strictly vegetarian food uses organic, farm-grown produce. Participation can remain relaxed: ask what is happening during your visit and join what interests you.",
+        "The tree at the entrance to this page returns to one idea: a visit is made from connected moments. A book beside the house, a meal shared, a walk past the water, a view from a verandah. You do not have to do everything to feel part of Aroha. Come as guests, and leave with a place you would like to return to."
+      ],
+      "facts": [
+        "Working farm: trees, orchards and animals",
+        "Experiences alongside the hosts",
+        "Nature · Meditation · Farm Life"
+      ],
+      "media": "",
+      "caption": "The farm oxen and bullock cart at Aroha."
+    }
+  ]
+}

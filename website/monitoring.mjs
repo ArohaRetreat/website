@@ -8,9 +8,16 @@ const names = new Set([
   "admin.saved",
   "admin.published",
   "admin.access-changed",
+  "map.opened",
+  "map.place-opened",
+  "map.mode-changed",
+  "map.fallback",
 ]);
 export function track(name, attributes = {}) {
   if (!names.has(name) || preference("aroha-monitoring") !== "allowed") return;
+  if (name.startsWith("map.") &&
+      (!['map','arrival','parking','pond','house','kitchen','library','treehouses','cottages','meditation','pool','farm'].includes(attributes.section) ||
+       !['reading','immersive','overview','selected','media-failed','art-failed'].includes(attributes.outcome))) return;
   const safe = {
     schemaVersion: 1,
     "event.authority": "client-observed",

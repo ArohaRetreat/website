@@ -43,3 +43,11 @@ Website 0.7 adds optional `tour.nature.heroEveningImage` and `heroEveningAlt` (2
 ## Canonical production host (website 0.8.2 / API 0.1.1)
 
 The canonical host is https://aroharetreat.com. Exact apex and the two original Firebase origins are admitted; lookalike/suffix/HTTP origins remain denied. www is a Hosting redirect and is not an API origin. No-Origin requests still require verified authentication/membership. Invitation URLs use the canonical host. Emulator origins stay emulator-only.
+
+## Living Map extension (API 0.2.0)
+
+Content schema remains 1. An optional `storyMap` object adds `eyebrow`, `title`, `invitation`, `description`, `rootTitle`, `chapters` and `places`. Existing records without it remain valid. Records supplying it must include `tour`, so references can be validated on the server. There are 1–4 unique chapters (`id`, `title`, `invitation`, `description`) and 1–20 unique places (`id`, `chapter`, `title`, `paragraphs`, `facts`, `media`, `caption`). Each chapter must contain a place. Place IDs must exist in `tour.stops`; chapter IDs must exist in the map; a nonempty media ID must belong to that same stop in `tour.media`. Empty media uses the stop photograph.
+
+Paragraphs: 1–4 strings of at most 2,500 characters. Facts: at most 3 strings of at most 180 characters. Place titles: 200; captions: 1,500; identifiers: 48. Unknown fields/executable markup configuration and dangling references are rejected. The full existing content-size cap still applies. Rendering escapes text. Root geometry and animation code are fixed application assets, not executable CMS content.
+
+The extension uses existing `/draft`, `/publish` and history/restore routes. There is no new write endpoint or public write permission. Viewers read; editors save/upload; admins and super-admins publish. Expected-version conflicts and their audit/OTel classifications remain unchanged. Invalid references return `INVALID_MAP_REFERENCE`/400 without saving a revision. The emulator lifecycle exercises map saves and publication plus a rejected invalid map. Public clients continue to read only `aroha_public/site`.

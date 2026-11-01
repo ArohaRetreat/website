@@ -153,7 +153,8 @@
       "entrypoints": [
         "website/site.mjs",
         "website/admin.mjs",
-        "scripts/build-website.mjs"
+        "scripts/build-website.mjs",
+        "website/map.mjs"
       ],
       "owner": "ArohaRetreat",
       "status": "active",

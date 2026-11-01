@@ -24,6 +24,7 @@ content.tour = JSON.parse(
 content.tour.nature = JSON.parse(
   await readFile(new URL("../../website/nature-content.json", import.meta.url)),
 );
+content.storyMap = JSON.parse(await readFile(new URL("../../website/map-content.json", import.meta.url)));
 async function google(email, verified = true) {
   const jwt = [
     Buffer.from(JSON.stringify({ alg: "none", typ: "JWT" })).toString(
@@ -131,6 +132,10 @@ test("complete content and membership lifecycle with independent rule denials", 
     });
     assert.equal(r.status, 200, JSON.stringify(r));
     assert.equal(r.version, 1);
+    const invalidMap = structuredClone(content);
+    invalidMap.storyMap.places[0].chapter = "missing";
+    assert.equal((await call(editToken, "/draft", "POST", {content:invalidMap,expectedVersion:1})).status,400);
+    assert.equal((await call(editToken, "/draft")).draft.content.storyMap.places[2].id,"pond");
     assert.equal(
       (await call(editToken, "/draft", "POST", { content, expectedVersion: 0 }))
         .status,
@@ -156,7 +161,8 @@ test("complete content and membership lifecycle with independent rule denials", 
       200,
     );
     const anon = env.unauthenticatedContext();
-    await assertSucceeds(getDoc(doc(anon.firestore(), "aroha_public/site")));
+    const published = await assertSucceeds(getDoc(doc(anon.firestore(), "aroha_public/site")));
+    assert.equal(published.data().content.storyMap.places[2].id, "pond");
     await assertFails(getDoc(doc(anon.firestore(), "aroha_content/draft")));
     await assertFails(
       setDoc(doc(anon.firestore(), "aroha_public/site"), { content }),
