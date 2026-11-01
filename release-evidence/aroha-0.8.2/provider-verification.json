@@ -1,0 +1,44 @@
+[
+  {
+    "domain": "aroharetreat.com",
+    "hostState": "HOST_ACTIVE",
+    "ownershipState": "OWNERSHIP_ACTIVE",
+    "certificateState": "CERT_PROPAGATING",
+    "redirectTarget": null
+  },
+  {
+    "domain": "www.aroharetreat.com",
+    "hostState": "HOST_ACTIVE",
+    "ownershipState": "OWNERSHIP_ACTIVE",
+    "certificateState": "CERT_PROPAGATING",
+    "redirectTarget": "aroharetreat.com"
+  },
+  {
+    "authDomains": [
+      "localhost",
+      "aroha-retreat.firebaseapp.com",
+      "aroha-retreat.web.app",
+      "aroharetreat.com"
+    ]
+  },
+  {
+    "function": "projects/aroha-retreat/locations/asia-south2/functions/arohaApi",
+    "state": "ACTIVE",
+    "runtime": "nodejs22",
+    "revision": "arohaapi-00003-yah",
+    "uri": "https://arohaapi-tlds5yqh5a-em.a.run.app",
+    "secretBindings": [
+      {
+        "key": "DYNATRACE_PLATFORM_TOKEN",
+        "secret": "DYNATRACE_PLATFORM_TOKEN",
+        "version": "1"
+      }
+    ],
+    "ownerConfigured": true,
+    "exportEnabled": "true"
+  },
+  {
+    "localProductionOwnerMatchesRemote": true,
+    "syntheticEnvExists": false
+  }
+]

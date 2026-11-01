@@ -100,6 +100,7 @@ function authScreen(error = "") {
   document.getElementById("google-login").onclick = async () => {
     try {
       document.getElementById("google-login").disabled = true;
+      document.getElementById("google-login").textContent = "Complete sign-in in the Google window…";
       await login();
     } catch (e) {
       authScreen(message(e.code || e.message));
@@ -615,6 +616,9 @@ window.addEventListener("beforeunload", (e) => {
     e.returnValue = "";
   }
 });
+function openingStudio(text) {
+  root.innerHTML = `<main class="auth-shell"><a href="/"><img src="/assets/brand/logo-forest.svg" width="230" height="78" alt="Aroha Retreat"></a><p class="eyebrow">THE HOST STUDIO</p><h1>Opening your studio.</h1><p role="status" aria-live="polite">${esc(text)}</p><a href="/">Return to the retreat</a></main>`;
+}
 observeAuth(async (user) => {
   const generation = ++authGeneration;
   if (!user) {
@@ -624,10 +628,12 @@ observeAuth(async (user) => {
     authScreen();
     return;
   }
+  openingStudio("Checking your studio access…");
   try {
     const result = await api("/session", "POST", {});
     if (generation !== authGeneration) return;
     session = result.session;
+    openingStudio("Loading your latest draft…");
     await load();
     if (generation !== authGeneration) return;
     shell();

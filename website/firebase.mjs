@@ -1,21 +1,17 @@
-import { initializeApp } from "firebase/app";
+import { app, isEmulator } from "./firebase-app.mjs";
+export { app, isEmulator } from "./firebase-app.mjs";
+export { db, subscribeSite } from "./firebase-public.mjs";
 import {
-  getAuth,
+  initializeAuth,
+  browserPopupRedirectResolver,
   GoogleAuthProvider,
   signInWithPopup,
   signInWithCredential,
   onAuthStateChanged,
   signOut,
-  setPersistence,
   browserSessionPersistence,
   connectAuthEmulator,
 } from "firebase/auth";
-import {
-  getFirestore,
-  doc,
-  onSnapshot,
-  connectFirestoreEmulator,
-} from "firebase/firestore";
 import {
   getStorage,
   ref,
@@ -23,33 +19,17 @@ import {
   getDownloadURL,
   connectStorageEmulator,
 } from "firebase/storage";
-import config from "../config/firebase.web.json";
-const emulated =
-  typeof __AROHA_EMULATORS__ !== "undefined" &&
-  __AROHA_EMULATORS__ &&
-  ["localhost", "127.0.0.1"].includes(location.hostname);
-export const isEmulator = emulated;
-export const app = initializeApp(
-    emulated
-      ? { ...config, projectId: "demo-aroha", apiKey: "demo-api-key" }
-      : config,
-  ),
-  db = getFirestore(app);
-export const subscribeSite = (next, error) =>
-  onSnapshot(
-    doc(db, "aroha_public", "site"),
-    (s) => s.exists() && next(s.data()),
-    error,
-  );
-export const auth = getAuth(app);
+const emulated = isEmulator;
+export const auth = initializeAuth(app, {
+  persistence: browserSessionPersistence,
+  popupRedirectResolver: browserPopupRedirectResolver,
+});
 if (emulated) {
   connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
-  connectFirestoreEmulator(db, "127.0.0.1", 8080);
   connectStorageEmulator(getStorage(app), "127.0.0.1", 9199);
 }
 export const observeAuth = (fn) => onAuthStateChanged(auth, fn);
-export const login = async () => {
-  await setPersistence(auth, browserSessionPersistence);
+export const login = () => {
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
   return signInWithPopup(auth, provider);
@@ -57,7 +37,6 @@ export const login = async () => {
 export const logout = () => signOut(auth);
 export async function emulatorLogin(email) {
   if (!emulated) throw Error("EMULATOR_ONLY");
-  await setPersistence(auth, browserSessionPersistence);
   const encode = (v) =>
     btoa(JSON.stringify(v))
       .replaceAll("+", "-")

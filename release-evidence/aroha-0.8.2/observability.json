@@ -1,0 +1,19 @@
+{
+  "service": "aroha-api",
+  "version": "0.1.1",
+  "runtime": "arohaapi-00003-yah",
+  "verifiedRequestId": "31ddafbd-deb0-4e79-a891-3eab63dad5d8",
+  "traceId": "ad59a495b7e67adf10f002dde53193f4",
+  "spanId": "fb947224960af1f9",
+  "serverSpanAndLogCorrelated": true,
+  "requestMetricObserved": true,
+  "metricObservedCount": 2,
+  "probe": "unauthenticated canonical-origin GET /api/v1/draft",
+  "httpStatus": 401,
+  "applicationError": "SIGN_IN_REQUIRED",
+  "browserRumToBackendLinkVerified": false,
+  "productionOwnerPublicationVerified": false,
+  "productionOwnerSignInVerified": true,
+  "productionOwnerDraftReadVerified": true,
+  "ownerAccessEvidence": "Owner completed Google sign-in; UI showed superadmin and draft version 0. Server access.session and content.read returned 200."
+}

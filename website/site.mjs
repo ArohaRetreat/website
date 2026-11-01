@@ -345,7 +345,7 @@ async function watchContent() {
   // Public controls become interactive before loading the optional live-data SDK.
   let subscribeSite;
   try {
-    ({ subscribeSite } = await import("./firebase.mjs"));
+    ({ subscribeSite } = await import("./firebase-public.mjs"));
   } catch {
     reportError("CONTENT_READ_FAILED");
     return;
