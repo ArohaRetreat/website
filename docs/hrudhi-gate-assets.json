@@ -41,6 +41,31 @@
       "path": "website/assets/retreat/hrudhi-guide-v1.webp",
       "bytes": 71082,
       "sha256": "1cc5b97bbe9afd91ca610cdc9a8922c220dd73f0347a35bb840ac562643e6c78"
+    },
+    {
+      "path": "website/assets/retreat/hrudhi-gate-desktop-v2.mp4",
+      "bytes": 21515057,
+      "sha256": "3cbbf5643b56d5402075fd11421c24239f4b7e5d0d52fade5fce00a20e6c74ac",
+      "probe": {
+        "width": 1920,
+        "height": 1080,
+        "r_frame_rate": "60/1",
+        "duration": "8.000000",
+        "nb_frames": "480"
+      }
+    },
+    {
+      "path": "website/assets/retreat/hrudhi-gate-mobile-v2.mp4",
+      "bytes": 10415065,
+      "sha256": "ba182c249e3aeac5ecc7bc6a5fe8c6ceda1c7914ec284982254d909e75ed2495",
+      "probe": {
+        "width": 1280,
+        "height": 720,
+        "r_frame_rate": "60/1",
+        "duration": "8.000000",
+        "nb_frames": "480"
+      }
     }
-  ]
+  ],
+  "v2Provenance": "Original 1344x756/24fps performance repeated into 60fps files with Lanczos scaling and restrained sharpening; no optical-flow blending. These exports do not add native detail or native 60fps motion."
 }

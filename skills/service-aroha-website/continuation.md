@@ -1,3 +1,7 @@
+# Mobile gate repair — 0.14.1
+
+Issue #31: 0.14.0 mobile-v2 MP4 was overwritten by metadata JSON in a one-off export script. Re-encode from the original 24fps source without optical-flow blending; validate all bundled films before dist generation and test manifest sizes/hashes. Hash matching alone did not establish valid media playback. API 0.2.2 and Natura 0.6.1 remain unchanged. Current PR/release receipts establish deployment status.
+
 # Transition refinement — 0.12.1 preparation
 
 Issue #25 addresses the too-fast menu and page reveal. `menu-motion.mjs` owns finite reversible menu effects and interruption/disposal; navigation.mjs retains native modal focus and menu-to-fragment/enquiry handoff. Shared tokens pace menu/content/route scenes; native discrete CSS adds details-dialog transitions and gallery changes settle over 420 ms. Reduced/static/keyboard alternatives are preserved. Read docs/website-navigation.md. Current source/CI/preview/deployment evidence belongs to issue #25; this preparation note is not a production claim. API 0.2.0, Natura 0.6.1 and verified delivery reporting remain unchanged.
