@@ -41,7 +41,10 @@ ADDITIONAL_MEDIA.push({
   src: "",
   stop: "meditation",
 });
-export function refreshFarmMedia(input, { poolImage } = {}) {
+export function refreshFarmMedia(
+  input,
+  { poolImage = "/assets/retreat/pool-completion-impression-v1.webp" } = {},
+) {
   const c = structuredClone(input),
     tour = c.tour;
   if (!tour?.stops || !c.storyMap?.places) throw Error("TOUR_AND_MAP_REQUIRED");

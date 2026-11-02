@@ -31,3 +31,19 @@ test("media refresh preserves host edits, is repeatable, removes interior and co
   assert.ok(farm.items.every((m) => m.stop === "farm"));
   assert.ok(farm.ids.includes("v-farm-campfire"));
 });
+
+test("pool completion is disclosed and uses a bundled generated image rather than unrelated greenery", async () => {
+  const c = await read("content.json");
+  c.tour = await read("tour-content.json");
+  c.storyMap = await read("map-content.json");
+  const n = refreshFarmMedia(c);
+  const s = n.tour.stops.find((s) => s.id === "pool");
+  assert.equal(s.image, "/assets/retreat/pool-completion-impression-v1.webp");
+  assert.match(s.imageAlt, /AI-generated.*construction footage/);
+  assert.match(
+    n.storyMap.places.find((p) => p.id === "pool").caption,
+    /Artistic impression.*construction footage/,
+  );
+  const { access } = await import("node:fs/promises");
+  await access(new URL("../website" + s.image, import.meta.url));
+});

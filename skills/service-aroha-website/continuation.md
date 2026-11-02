@@ -4,7 +4,7 @@ Issue41. Album Farm experience filter is based on stop=farm and shares page/view
 
 place-photos.mjs owns day/evening selection, deferred orbit sources, image-error fallback, caption/note updates and listener disposal. Field journey, orbit panels, reduced-motion document, place details and Living Map use the same variants. Tour stops accept optional eveningImage/eveningImageAlt; API must be upgraded before CMS publication. scripts/content/farm-media-refresh.mjs creates an idempotent narrow patch preserving owner text and unrelated content. Export the current host draft, patch that backup, then import/save/publish through existing version-checked administration; never overwrite host changes with the build seed. Current source/CI/browser/API/Hosting/content-version evidence belongs to the issue/release receipt.
 
-Hrudhi narration remains parked. Pool generation is blocked on identifying the construction footage; do not invent its geometry from unrelated landscape clips. Natura consumer remains0.6.1; generated master stays in Natura review assets and only the WebP derivative is bundled.
+Hrudhi narration remains parked. Pool generation uses Downloads clips timestamped18.09.14 and18.09.16 as geometry references and is explicitly labelled as a completion impression. Natura consumer remains0.6.1; generated master stays in Natura review assets and only the WebP derivative is bundled.
 
 # Directional guide, account menu and browser monitoring — 0.15.0
 
