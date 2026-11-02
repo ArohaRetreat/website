@@ -1,3 +1,4 @@
+import { createConsentNotice } from "./consent-notice.mjs";
 import { esc } from "./render.mjs";
 let modulePromise;
 const loadAuth = () =>
@@ -16,6 +17,11 @@ const messages = {
   "auth/unauthorized-domain":
     "Sign-in is unavailable on this preview. Please use aroharetreat.com.",
 };
+export function guestDisplayName(user) {
+  return typeof user?.displayName === "string" && user.displayName.trim()
+    ? user.displayName.trim().slice(0, 80)
+    : "Guest";
+}
 export function createGuestAccount(
   root,
   { show, close, closeMenu = async () => {} },
@@ -25,6 +31,63 @@ export function createGuestAccount(
     unsubscribe,
     authModule;
   const buttons = [...root.querySelectorAll("[data-guest-account]")];
+  const notice = createConsentNotice(root, { show });
+  const leaf = document.createElement("div");
+  leaf.id = "guest-account-leaf";
+  leaf.className = "account-leaf-menu";
+  leaf.setAttribute("popover", "auto");
+  leaf.setAttribute("aria-label", "Account options");
+  root.append(leaf);
+  let signedUser, menuTrigger;
+  function hideMenu() {
+    if (leaf.matches(":popover-open")) leaf.hidePopover();
+    buttons.forEach((b) => b.setAttribute("aria-expanded", "false"));
+  }
+  function showLeaf(trigger) {
+    hideMenu();
+    menuTrigger = trigger;
+    leaf.innerHTML = `<svg class="account-leaf-watermark" viewBox="0 0 100 150" aria-hidden="true"><path d="M10 140C-5 65 45 0 95 5C99 69 68 129 10 140Z" fill="currentColor"/><path d="M12 137L84 20M36 102L25 65M53 77L75 74" stroke="currentColor" fill="none" stroke-width="2"/></svg><p class="eyebrow">YOUR CORNER OF AROHA</p><p class="account-leaf-name" data-dt-mask>${esc(guestDisplayName(signedUser))}</p><nav aria-label="Your account"><button data-account-profile data-dt-name="My account">My account <span aria-hidden="true">↗</span></button><button data-account-signout data-dt-name="Sign out">Sign out <span aria-hidden="true">↗</span></button></nav><p class="account-leaf-note" role="status">Your next visit starts with a conversation.</p>`;
+    const anchor = root.querySelector("#guest-account-header") || trigger,
+      r = anchor.getBoundingClientRect();
+    leaf.style.top = Math.max(12, r.bottom + 12) + "px";
+    leaf.style.left =
+      Math.max(12, Math.min(innerWidth - 292, r.right - 280)) + "px";
+    if (typeof leaf.showPopover !== "function") {
+      open();
+      return;
+    }
+    leaf.showPopover();
+    trigger.setAttribute("aria-expanded", "true");
+    leaf.querySelector("[data-account-profile]").onclick = () => {
+      hideMenu();
+      open();
+    };
+    leaf.querySelector("[data-account-signout]").onclick = async (e) => {
+      e.currentTarget.disabled = true;
+      try {
+        await authModule.logout();
+        hideMenu();
+        labels(null);
+        menuTrigger?.focus({ preventScroll: true });
+      } catch {
+        leaf.querySelector('[role="status"]').textContent =
+          "Sign-out could not finish. Please try again.";
+        e.currentTarget.disabled = false;
+      }
+    };
+    leaf.querySelector("button").focus({ preventScroll: true });
+  }
+  const toggle = () => {
+    if (!leaf.matches(":popover-open")) {
+      buttons.forEach((b) => b.setAttribute("aria-expanded", "false"));
+      if (leaf.contains(document.activeElement))
+        menuTrigger?.focus({ preventScroll: true });
+    }
+  };
+  leaf.addEventListener("toggle", toggle);
+  window.addEventListener("resize", hideMenu);
+  window.addEventListener("scroll", hideMenu, { passive: true });
+
   function remembered(value) {
     try {
       value
@@ -34,15 +97,29 @@ export function createGuestAccount(
   }
   function labels(user) {
     if (disposed) return;
-    buttons.forEach(
-      (b) =>
-        (b.textContent = user
-          ? "My account"
-          : b.closest("header")
-            ? "Sign in"
-            : "Guest sign in"),
-    );
+    signedUser = user;
+    buttons.forEach((b) => {
+      b.textContent = user
+        ? guestDisplayName(user)
+        : b.closest("header")
+          ? "Sign in"
+          : "Guest sign in";
+      b.dataset.signedIn = user ? "true" : "false";
+      b.dataset.dtName = user ? "Account menu" : "Guest sign in";
+      b.setAttribute("aria-label", user ? "Open account menu" : "Sign in");
+      b.setAttribute("aria-haspopup", user ? "true" : "dialog");
+      b.setAttribute("aria-controls", user ? leaf.id : "details-dialog");
+      b.setAttribute("aria-expanded", "false");
+    });
+    if (!user) hideMenu();
     remembered(!!user);
+  }
+  async function accountAction(event) {
+    const trigger = event.currentTarget;
+    if (signedUser) {
+      await closeMenu();
+      if (!disposed) showLeaf(trigger);
+    } else open();
   }
   async function open() {
     await closeMenu();
@@ -119,7 +196,7 @@ export function createGuestAccount(
           '<p role="alert">Sign-in could not load. Please close this window and try again.</p>';
     }
   }
-  buttons.forEach((b) => b.addEventListener("click", open));
+  buttons.forEach((b) => b.addEventListener("click", accountAction));
   try {
     if (sessionStorage.getItem("aroha-guest-session") === "1")
       loadAuth()
@@ -136,7 +213,13 @@ export function createGuestAccount(
       disposed = true;
       generation++;
       unsubscribe?.();
-      buttons.forEach((b) => b.removeEventListener("click", open));
+      hideMenu();
+      leaf.remove();
+      notice.destroy();
+      window.removeEventListener("resize", hideMenu);
+      window.removeEventListener("scroll", hideMenu);
+      leaf.removeEventListener("toggle", toggle);
+      buttons.forEach((b) => b.removeEventListener("click", accountAction));
     },
   };
 }

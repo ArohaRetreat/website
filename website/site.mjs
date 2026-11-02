@@ -66,7 +66,7 @@ function render() {
   journey = createFieldJourney(
     root,
     content,
-    { stop: openTourStop, walk: openWalk, track, error: reportError, guide: (i,force=false)=>{const stops=tourContent(content).stops;guide.select(i,stops[i]?.name||"Aroha",stops.length,force);} },
+    { stop: openTourStop, walk: openWalk, track, error: reportError, guideProgress:p=>guide.follow(p), guide: (i,force=false)=>{const stops=tourContent(content).stops;guide.select(i,stops[i]?.name||"Aroha",stops.length,force);} },
     { simple: simple || !content.theme.motion },
   );
   gate = createGateWelcome(root, natureContent(tourContent(content)).hrudhi, {

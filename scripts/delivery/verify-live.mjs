@@ -25,6 +25,7 @@ export async function verifyLive(
     "/assets/retreat/hrudhi-gate-desktop-v2.mp4",
     "/assets/retreat/hrudhi-gate-mobile-v2.mp4",
     "/assets/retreat/hrudhi-walk-sheet-v1.webp",
+    "/assets/retreat/hrudhi-directions-v2.webp",
     "/assets/retreat/hrudhi-gate-desktop-v1.mp4",
     "/assets/retreat/hrudhi-gate-mobile-v1.mp4",
     "/assets/retreat/hrudhi-gate-open-v1.webp",

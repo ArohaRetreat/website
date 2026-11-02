@@ -218,3 +218,15 @@
   }
 }
 .tour-hrudhi-companion .guide-place-caption{display:none;}
+
+/* Four actual views; pose phase follows travelled distance, not a separate clock. */
+.hrudhi-guide-track[data-gait="distance"] .guide-walk-sheet { height:400% !important; animation:none !important; transform:translate(var(--guide-frame-x,0%),var(--guide-row,0%)); }
+.hrudhi-guide-track[data-direction="north"] { --guide-row:-25%; }
+.hrudhi-guide-track[data-direction="east"] { --guide-row:-50%; }
+.hrudhi-guide-track[data-direction="west"] { --guide-row:-75%; }
+.hrudhi-guide-track[data-direction="south"] { --guide-row:0%; }
+.map-hrudhi-companion[data-direction-ready="true"] .guide-rest { visibility:hidden; }
+.map-hrudhi-companion[data-direction-ready="true"] .guide-walk-sheet { display:block; }
+
+.hrudhi-guide-track[data-legacy-sheet="true"] .guide-walk-sheet{height:200%!important;}
+.hrudhi-guide-track[data-legacy-sheet="true"][data-direction="west"] .guide-viewport{transform:scaleX(-1);}

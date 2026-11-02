@@ -185,7 +185,7 @@ function bind() {
     dialog.showModal();
     root.querySelector(".dialog-close").focus({ preventScroll: true });
   }
-  guide = createMapHrudhi(root,{motion:!reading && content.theme.motion && !reduced.matches});
+  guide = createMapHrudhi(root,{motion:!reading && content.theme.motion && !reduced.matches,onPosition:p=>{if(phone.matches&&!overview&&!reading)root.querySelector('.farm-map-plane').style.transform=`translate(-${p.x/10}%, -${p.y/10}%)`;}});
   const guestAccount = createGuestAccount(root,{show,close:()=>dialog.close(),closeMenu:()=>menu.whenClosed()});
   root
     .querySelectorAll("[data-enquire]")
@@ -283,8 +283,10 @@ function bind() {
     );
     const stop = tourContent(content).stops.find((s) => s.id === active);
     const plane = root.querySelector(".farm-map-plane");
-    if (phone.matches && !overview && stop)
-      plane.style.transform = `translate(-${stop.mapX}%, -${stop.mapY}%)`;
+    if (phone.matches && !overview && stop) {
+      const follow=guide?.walking?guide.position:null;
+      plane.style.transform = `translate(-${follow?follow.x/10:stop.mapX}%, -${follow?follow.y/10:stop.mapY}%)`;
+    }
     else plane.style.transform = "translate(-50%,-50%)";
     if (overview) return;
     root.querySelectorAll(".map-chapter").forEach((ch) => {

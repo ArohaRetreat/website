@@ -2,7 +2,7 @@ import { initializeAnalytics, withdrawAnalytics } from "./analytics.mjs";
 import { preference } from "./preferences.mjs";
 import { esc } from "./render.mjs";
 import { enquiryText, packageAvailability } from "../functions/domain.mjs";
-import { track, initializeMonitoring } from "./monitoring.mjs";
+import { track, initializeMonitoring, withdrawMonitoring, monitoringStatus } from "./monitoring.mjs";
 import { setPreference } from "./preferences.mjs";
 export function openEnquiry(content, show, packageId = "", cottageId = "") {
   show(
@@ -53,7 +53,7 @@ export function openEnquiry(content, show, packageId = "", cottageId = "") {
 }
 
 export function openPrivacy(show) {
-  show(`<div class="dialog-copy privacy-choices"><h2 id="dialog-title">Privacy & optional analytics</h2><p>Choose what helps us improve Aroha. You can explore and sign in without optional analytics.</p><label><input type="checkbox" id="monitoring-choice" ${preference("aroha-monitoring") === "allowed" ? "checked" : ""}><span><strong>Performance monitoring</strong><small>Dynatrace measures page performance and errors. Session replay is disabled.</small></span></label><label><input type="checkbox" id="analytics-choice" ${preference("aroha-analytics") === "allowed" ? "checked" : ""}><span><strong>Website analytics</strong><small>Google Analytics measures visits and use of the site. We do not send account names, email addresses, phone numbers or enquiry messages.</small></span></label><p>Google sign-in is requested only when you choose it. Our optional Google map loads only when you open its view.</p><div class="guest-account-actions"><button class="button" id="save-privacy">Save choices</button><button class="text-link" id="deny-monitoring">Decline / withdraw all</button></div></div>`);
+  show(`<div class="dialog-copy privacy-choices"><h2 id="dialog-title">Privacy & optional analytics</h2><p>Choose what helps us improve Aroha. You can explore and sign in without optional analytics.</p><label><input type="checkbox" id="monitoring-choice" ${preference("aroha-monitoring") === "allowed" ? "checked" : ""}><span><strong>Performance monitoring</strong><small>Dynatrace measures page performance and errors. If signed in, an internal account ID tags your session. Session replay is disabled.</small></span></label><label><input type="checkbox" id="analytics-choice" ${preference("aroha-analytics") === "allowed" ? "checked" : ""}><span><strong>Website analytics</strong><small>Google Analytics measures visits and use of the site. We do not send account names, email addresses, phone numbers or enquiry messages.</small></span></label><p class="monitoring-status" role="status">${monitoringStatus()}</p><p>Google sign-in is requested only when you choose it. Our optional Google map loads only when you open its view.</p><div class="guest-account-actions"><button class="button" id="save-privacy">Save choices</button><button class="text-link" id="deny-monitoring">Decline / withdraw all</button></div></div>`);
   function save(deny=false) {
     const wasMonitoring = preference("aroha-monitoring") === "allowed";
     const monitoring = !deny && document.querySelector("#monitoring-choice").checked;
@@ -61,7 +61,8 @@ export function openPrivacy(show) {
     setPreference("aroha-monitoring", monitoring ? "allowed" : "denied");
     setPreference("aroha-analytics", analytics ? "allowed" : "denied");
     if(analytics) initializeAnalytics(); else withdrawAnalytics();
-    if(monitoring) initializeMonitoring();
+    if(monitoring) initializeMonitoring(); else withdrawMonitoring();
+    window.dispatchEvent(new Event("aroha-consent-change"));
     document.querySelector("#details-dialog").close();
     if(wasMonitoring && !monitoring) location.reload();
   }

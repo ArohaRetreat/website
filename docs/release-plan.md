@@ -1,3 +1,11 @@
+# Website 0.15.0 impact
+
+Issue #39. Frontend-only update to guide rendering/controllers, optional browser telemetry bootstrap/identity, guest account popover and non-overlay consent card. Add one transparent four-view WebP derivative; the new voiced video stays outside website source/build. API remains0.2.2, Natura consumer0.6.1. No Firestore schema, indexes, storage rules, roles, secrets or backend deployment changes. Existing CMS custom walk sheets remain compatible. Use the pinned Natura export for shared Hosting composition.
+
+Gates: gait/heading/path and consent/identity race tests; guest display-name/custom-asset compatibility; all app/foundation checks and build; phone/desktop walk/turn/reverse, dialog pause, name-menu/Escape/focus, consent and lazy Analytics checks. PR-linked CI/review before merge; observed Hosting-only deploy; live hash/draft-denial verification; each delivery receipt; fresh custom-domain user.events and signed-in UID tagging, plus GA tag behavior separately from GA dashboard ingestion. No new video integration.
+
+Rollback: rebuild/redeploy prior immutable website source and the same pinned Natura export using the observed deployment wrapper. No user data rollback. Existing consent choices remain stored and optional. New tag/guide assets can be reverted without changing account access.
+
 # Release impact and verification plan
 
 Status: pending decisions and implementation. This is not deployment authorization.

@@ -1,3 +1,5 @@
+import { bootstrapRum, monitoringPageAllowed } from "./rum-loader.mjs";
+import { createRumIdentity } from "./rum-identity.mjs";
 import { preference, setPreference } from "./preferences.mjs";
 const names = new Set([
   "journey.started",
@@ -18,9 +20,32 @@ const names = new Set([
 ]);
 export function track(name, attributes = {}) {
   if (!names.has(name) || preference("aroha-monitoring") !== "allowed") return;
-  if (name.startsWith("map.") &&
-      (!['map','arrival','parking','pond','house','kitchen','library','treehouses','cottages','meditation','pool','farm'].includes(attributes.section) ||
-       !['reading','immersive','overview','selected','media-failed','art-failed'].includes(attributes.outcome))) return;
+  if (
+    name.startsWith("map.") &&
+    (![
+      "map",
+      "arrival",
+      "parking",
+      "pond",
+      "house",
+      "kitchen",
+      "library",
+      "treehouses",
+      "cottages",
+      "meditation",
+      "pool",
+      "farm",
+    ].includes(attributes.section) ||
+      ![
+        "reading",
+        "immersive",
+        "overview",
+        "selected",
+        "media-failed",
+        "art-failed",
+      ].includes(attributes.outcome))
+  )
+    return;
   const safe = {
     schemaVersion: 1,
     "event.authority": "client-observed",
@@ -35,37 +60,55 @@ export function track(name, attributes = {}) {
     ),
   };
   try {
-    window.dynatrace?.sendBizEvent?.(name, safe);
+    if (typeof window.dynatrace?.sendBizEvent === "function")
+      window.dynatrace.sendBizEvent(name, safe);
+    else
+      window.dynatrace?.sendEvent?.({
+        "event_properties.action": name,
+        "event_properties.authority": "client-observed",
+        ...(safe.section ? { "event_properties.section": safe.section } : {}),
+        ...(safe.outcome ? { "event_properties.outcome": safe.outcome } : {}),
+      });
   } catch {
     /* Monitoring must never interrupt the guest. */
   }
 }
-let loading = false;
+const identity = createRumIdentity({
+  consented: () =>
+    preference("aroha-monitoring") === "allowed" &&
+    monitoringPageAllowed(location.href),
+});
+if (
+  typeof window !== "undefined" &&
+  typeof window.addEventListener === "function"
+) {
+  window.addEventListener("aroha-rum-change", () => identity.sync());
+  window.addEventListener("pageshow", () => identity.sync());
+  window.addEventListener("pagehide", () => identity.suspend());
+}
+export const setMonitoringUser = (user) => identity.setUser(user);
 export async function initializeMonitoring() {
-  if (preference("aroha-monitoring") !== "allowed" || loading ||
-      document.querySelector("script[data-aroha-rum]")) return;
-  loading = true;
+  bootstrapRum();
+  identity.sync();
+}
+export function withdrawMonitoring() {
+  identity.withdraw();
   try {
-    const config = await fetch("/runtime-config.json").then((r) => r.json());
-    if (!config.rumScriptUrl) return;
-    const url = new URL(config.rumScriptUrl);
-    if (
-      url.protocol !== "https:" ||
-      !["js-cdn.dynatrace.com"].includes(url.hostname)
-    )
-      return;
-    // Consent may have changed while configuration was being fetched.
-    if (preference("aroha-monitoring") !== "allowed") return;
-    const script = document.createElement("script");
-    script.dataset.arohaRum = "true";
-    script.src = url.href;
-    script.crossOrigin = "anonymous";
-    document.head.append(script);
-  } catch {
-    /* Optional monitoring must not interrupt the site. */
-  } finally {
-    loading = false;
-  }
+    window.dtrum?.disable?.();
+  } catch {}
+}
+export function monitoringStatus() {
+  if (preference("aroha-monitoring") !== "allowed")
+    return "Off — performance monitoring has not been allowed.";
+  if (!monitoringPageAllowed(location.href))
+    return "Monitoring is limited to the live website.";
+  const state = document.querySelector("script[data-aroha-rum]")?.dataset
+    .rumState;
+  return state === "loaded"
+    ? "Dynatrace script loaded. Browser or network settings may still block collection."
+    : state === "failed"
+      ? "The Dynatrace script could not load. Check browser blocking or network access."
+      : "Loading the Dynatrace monitoring script…";
 }
 export function reportError(code) {
   try {

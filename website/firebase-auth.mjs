@@ -1,3 +1,4 @@
+import {setMonitoringUser} from "./monitoring.mjs";
 import { app, isEmulator } from "./firebase-app.mjs";
 import {
   initializeAuth,
@@ -18,6 +19,7 @@ export const auth = initializeAuth(app, {
 if (emulated) {
   connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
 }
+onAuthStateChanged(auth,user=>setMonitoringUser(user));
 export const observeAuth = (fn) => onAuthStateChanged(auth, fn);
 export const login = () => {
   const provider = new GoogleAuthProvider();

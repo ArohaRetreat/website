@@ -1,3 +1,11 @@
+# Directional guide, account menu and browser monitoring — 0.15.0
+
+Issue #39. guide-walking.mjs owns the distance-driven four-view stride; homepage phones follow native journey progress, map guide follows sampled connected paths and the phone camera tracks her current position. Hidden/offscreen/dialog pauses do not advance the clock. The bundled legacy sheet upgrades to the four-row derivative while host-selected custom eight-frame sheets remain supported. Source master belongs to Natura review assets; new voiced Arrival export is review-only and is not bundled.
+
+Guest account headers show the bounded escaped display name with generic telemetry action labels; native leaf popover owns outside click/Escape and links to existing account/sign-out. Session-scoped Firebase Google Auth and host authorization stay unchanged. Inline first-visit consent never covers story media. Independent Dynatrace and Google preferences remain optional. Saved Dynatrace consent boots the exact approved public script before app modules; Firebase Auth updates dynatrace.identifyUser with a firebase:UID identifier, Classic fallback and bounded readiness retry. Logout/withdrawal clears identity; pagehide only suspends retries. No raw email/name is assigned as a telemetry identifier. New RUM sendEvent fallback uses bounded event_properties fields.
+
+Local tests/build and browser review are recorded in the current PR; use actual release receipts for deployment and tenant evidence. API0.2.2 and Natura0.6.1 pins unchanged. Finalized RUM sessions, new user.events records, GA dashboard ingestion and native RUM-to-backend linkage are separate gates. See docs/website-observability.md and docs/website-guest-experience.md.
+
 # Mobile story and Hrudhi details — 0.14.4
 
 Issue #37: homepage guide clicks invoke openTourStop with journey.index, the same details renderer as Discover; gate introduction remains before entry. Phone tour uses explicit grid rows for media/reading/navigation/guide rather than overlapping absolute reading layers. Small-height variants retain reachable controls and full details in the dialog. Desktop orbit and map guide are unchanged. docs/hrudhi-narrated-guide-plan.md proposes a separate narrated sample; no narration is silently published. API0.2.2/Natura0.6.1 unchanged.

@@ -9,7 +9,10 @@ import {
 import { renderSite, esc } from "../website/render.mjs";
 import { renderMap } from "../website/map-render.mjs";
 import { renderLocationMap } from "../website/location-map.mjs";
-import { initializeAnalytics, analyticsPageAllowed } from "../website/analytics.mjs";
+import {
+  initializeAnalytics,
+  analyticsPageAllowed,
+} from "../website/analytics.mjs";
 import { renderHrudhiGuide } from "../website/hrudhi-guide.mjs";
 const content = JSON.parse(
   await readFile(new URL("../website/content.json", import.meta.url)),
@@ -153,8 +156,37 @@ test("Hrudhi accompanies both public routes with one guide per view and escaped 
   assert.ok(guide.includes("data-src="));
 });
 
-test("Analytics excludes admin, private drafts, aliases, HTTP and lookalike origins",()=>{
- assert.equal(analyticsPageAllowed("https://aroharetreat.com/"),true);
- assert.equal(analyticsPageAllowed("https://aroharetreat.com/map/#pond"),true);
- for(const url of ["https://aroharetreat.com/?preview=1","https://aroharetreat.com/admin/","https://aroha-retreat.web.app/","http://aroharetreat.com/","https://aroharetreat.com.evil.test/","invalid"]){assert.equal(analyticsPageAllowed(url),false,url);}
+test("Analytics excludes admin, private drafts, aliases, HTTP and lookalike origins", () => {
+  assert.equal(analyticsPageAllowed("https://aroharetreat.com/"), true);
+  assert.equal(
+    analyticsPageAllowed("https://aroharetreat.com/map/#pond"),
+    true,
+  );
+  for (const url of [
+    "https://aroharetreat.com/?preview=1",
+    "https://aroharetreat.com/admin/",
+    "https://aroha-retreat.web.app/",
+    "http://aroharetreat.com/",
+    "https://aroharetreat.com.evil.test/",
+    "invalid",
+  ]) {
+    assert.equal(analyticsPageAllowed(url), false, url);
+  }
+});
+
+test("signed-in names are bounded and guide updates preserve a host-selected custom asset", async () => {
+  const { guestDisplayName } = await import("../website/guest-account.mjs");
+  const { guideSheet } = await import("../website/hrudhi-guide.mjs");
+  assert.equal(guestDisplayName({ displayName: "  Hrudhi  " }), "Hrudhi");
+  assert.equal(guestDisplayName({ email: "private@example.test" }), "Guest");
+  assert.equal(guestDisplayName({ displayName: "a".repeat(300) }).length, 80);
+  assert.equal(
+    guideSheet({ walkSheet: "/assets/retreat/hrudhi-walk-sheet-v1.webp" })
+      .layout,
+    "directions",
+  );
+  assert.deepEqual(guideSheet({ walkSheet: "/assets/retreat/custom.webp" }), {
+    src: "/assets/retreat/custom.webp",
+    layout: "legacy",
+  });
 });
