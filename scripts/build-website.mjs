@@ -3,6 +3,7 @@ import { tourContent } from "../website/field-render.mjs";
 import { build } from "esbuild";
 import { PUBLIC_ORIGIN } from "../functions/origins.mjs";
 import { renderMap, mapDefaults } from "../website/map-render.mjs";
+import { verifyBundledFilms } from "./media-integrity.mjs";
 import { verifyNaturaAssets } from "./natura-assets.mjs";
 import { mkdir, cp, readFile, writeFile, copyFile, rm } from "node:fs/promises";
 import { renderSite, esc } from "../website/render.mjs";
@@ -16,6 +17,7 @@ const root = new URL("../", import.meta.url),
   dist = new URL("dist/", root),
   assets = new URL("assets/", dist);
 await verifyNaturaAssets(root);
+await verifyBundledFilms(new URL("website/assets/retreat/", root));
 const application = JSON.parse(await readFile(new URL("package.json", root)));
 await rm(dist, { recursive: true, force: true });
 await mkdir(assets, { recursive: true });

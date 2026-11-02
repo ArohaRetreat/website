@@ -1,3 +1,7 @@
+# Mobile gate repair — 0.14.1
+
+Issue #31: 0.14.0 mobile-v2 MP4 was overwritten by metadata JSON in a one-off export script. Re-encode from the original 24fps source without optical-flow blending; validate all bundled films before dist generation and test manifest sizes/hashes. Hash matching alone did not establish valid media playback. API 0.2.2 and Natura 0.6.1 remain unchanged. Current PR/release receipts establish deployment status.
+
 # Delivery observability — verified production rollout
 
 Issue #22, implementation PR #23 merged as 872393140f98c45af2f2e14d39dccfef2680ed30. Website 0.12.0 was deployed through the observed Hosting command at 2026-11-01T22:32:56.521Z; provider version 48c08d6816bf20f6, deployment ID d49f9c54-caf2-4462-a7cf-55dab92202fa. Live verification matched 22 immutable files and denied unauthenticated draft access (401). API 0.2.0 and pinned Natura 0.6.1 remain unchanged.
