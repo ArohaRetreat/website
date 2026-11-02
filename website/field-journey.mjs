@@ -29,6 +29,7 @@ export function createFieldJourney(
   const dialogOpen = () => !!root.querySelector("dialog[open]");
   let current = -1,
     progress = resumeAt,
+    gatePhase = 0,
     paused = false,
     offscreen = true,
     dead = false,
@@ -238,7 +239,8 @@ export function createFieldJourney(
       return;
     }
     const range = Math.max(1, section.offsetHeight - innerHeight - gateTravel());
-    section.classList.toggle("gate-covering", gateTravel() > 0 && -s.top < gateTravel());
+    gatePhase = gateTravel() ? clamp(-s.top / gateTravel()) : 1;
+    section.classList.toggle("gate-covering", gateTravel() > 0 && gatePhase < 1);
     progress = clamp((-s.top - gateTravel()) / range);
     const state = routeState(progress, tour.stops.length);
     setStop(state.index);
@@ -275,10 +277,10 @@ export function createFieldJourney(
   listen(window, "resize", () => {
     // Keep the same place when a phone rotates or the viewport changes height.
     // The section's svh geometry has already changed by the resize event.
-    if (motion && section && !offscreen && progress > 0 && progress < 1) {
+    if (motion && section && !offscreen && (progress > 0 || gatePhase > 0) && progress < 1) {
       const top = scrollY + section.getBoundingClientRect().top;
       window.scrollTo({
-        top: top + progress * Math.max(1, section.offsetHeight - innerHeight),
+        top: top + (progress > 0 ? gateTravel() + progress * Math.max(1, section.offsetHeight - innerHeight - gateTravel()) : gatePhase * gateTravel()),
         behavior: "instant",
       });
     }
