@@ -275,3 +275,12 @@
     padding: 10px 12px;
   }
 }
+/* Cancel the document header offset for this full-viewport entrance only. */
+#journey:has(#hrudhi-welcome) {
+  scroll-margin-top: -100px;
+}
+@media (max-width: 700px) {
+  #journey:has(#hrudhi-welcome) {
+    scroll-margin-top: -95px;
+  }
+}
