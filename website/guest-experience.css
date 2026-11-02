@@ -347,3 +347,4 @@ html[data-atmosphere="sunset"] .location-map-placeholder {
     radial-gradient(ellipse at 70% 20%, #3d5940, transparent),
     repeating-linear-gradient(30deg, transparent 0 48px, #71836b22 48px 50px);
 }
+.google-signin{width:100%;min-width:0;max-width:340px;gap:16px;box-sizing:border-box;}
