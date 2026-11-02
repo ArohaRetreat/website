@@ -25,3 +25,7 @@ Run unit/foundation/OTLP tests, emulator save/publish/rules integration, graph g
 ## Forest canvas and connected cards (0.9.2)
 
 The map keeps the opening forest green throughout its header, scene, reading backdrop and footer. Explanations float in opaque white cards, with a low-opacity CSS leaf/vein watermark matching the homepage pricing-card treatment. No new raster art is needed. Five decorative connectors link the story heading and successive chapter cards to the closing invitation. The existing native-scroll RAF measures their gaps and writes only `scaleY` on each line; growing lines reverse with scrolling and adapt when story height changes. Reading View, reduced motion and globally disabled motion use steady connections. Decorations are noninteractive and hidden from assistive technology. Route coordinates, media, permissions and API0.2.0 are unchanged.
+
+## Hrudhi follows the farm paths
+
+The guide lives inside the physical map plane, sharing its coordinates, scaling and camera. Place selection finds a connected walking route along sampled drawn main/side paths, rather than interpolating directly across water or buildings. Motion is finite and interruptible, with a static destination for reduced motion. Hrudhi is decorative on this page and never captures marker clicks; her introduction stays on the homepage. There is no separate map introduction button.

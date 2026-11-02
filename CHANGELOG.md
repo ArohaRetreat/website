@@ -1,3 +1,7 @@
+# 0.14.2
+
+- Move Hrudhi into the Living Map illustration and walk along its paths between selected places. Retain position during interruption and use map-relative transforms during responsive resizing. Remove the map introduction button and detached guide rail; preserve marker clicks, reduced motion and homepage guide behavior.
+
 # 0.14.1
 
 - Restore the phone gate film after a metadata export overwrote its MP4. Validate complete MP4 containers before every website build and verify the gate asset manifest against actual bytes.
