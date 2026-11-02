@@ -22,6 +22,19 @@ export function guestDisplayName(user) {
     ? user.displayName.trim().slice(0, 80)
     : "Guest";
 }
+
+export function googlePhotoUrl(user) {
+  const providerPhoto = user?.providerData?.find(p => p.providerId === "google.com")?.photoURL;
+  for (const value of [providerPhoto, user?.photoURL]) {
+    try { const u = new URL(value); if (u.protocol === "https:" && (u.hostname === "googleusercontent.com" || u.hostname.endsWith(".googleusercontent.com")) && !u.username && !u.password) return u.href; } catch {}
+  }
+  return "";
+}
+export function guestAvatar(user) {
+  const url = googlePhotoUrl(user);
+  return `<span class="guest-avatar" aria-hidden="true" data-dt-mask><span>${esc(guestDisplayName(user).slice(0,1))}</span>${url ? `<img data-guest-photo src="${esc(url)}" alt="" width="60" height="60" referrerpolicy="no-referrer">` : ""}</span>`;
+}
+
 export function createGuestAccount(
   root,
   { show, close, closeMenu = async () => {} },
@@ -32,6 +45,8 @@ export function createGuestAccount(
     authModule;
   const buttons = [...root.querySelectorAll("[data-guest-account]")];
   const notice = createConsentNotice(root, { show });
+  const photoError = event => { if (event.target.matches?.("img[data-guest-photo]")) event.target.hidden = true; };
+  root.addEventListener("error", photoError, true);
   const leaf = document.createElement("div");
   leaf.id = "guest-account-leaf";
   leaf.className = "account-leaf-menu";
@@ -46,7 +61,7 @@ export function createGuestAccount(
   function showLeaf(trigger) {
     hideMenu();
     menuTrigger = trigger;
-    leaf.innerHTML = `<svg class="account-leaf-watermark" viewBox="0 0 100 150" aria-hidden="true"><path d="M10 140C-5 65 45 0 95 5C99 69 68 129 10 140Z" fill="currentColor"/><path d="M12 137L84 20M36 102L25 65M53 77L75 74" stroke="currentColor" fill="none" stroke-width="2"/></svg><p class="eyebrow">YOUR CORNER OF AROHA</p><p class="account-leaf-name" data-dt-mask>${esc(guestDisplayName(signedUser))}</p><nav aria-label="Your account"><button data-account-profile data-dt-name="My account">My account <span aria-hidden="true">↗</span></button><button data-account-signout data-dt-name="Sign out">Sign out <span aria-hidden="true">↗</span></button></nav><p class="account-leaf-note" role="status">Your next visit starts with a conversation.</p>`;
+    leaf.innerHTML = `<svg class="account-leaf-watermark" viewBox="0 0 100 150" aria-hidden="true"><path d="M10 140C-5 65 45 0 95 5C99 69 68 129 10 140Z" fill="currentColor"/><path d="M12 137L84 20M36 102L25 65M53 77L75 74" stroke="currentColor" fill="none" stroke-width="2"/></svg><p class="eyebrow">YOUR CORNER OF AROHA</p>${guestAvatar(signedUser)}<p class="account-leaf-name" data-dt-mask>${esc(guestDisplayName(signedUser))}</p><nav aria-label="Your account"><button data-account-profile data-dt-name="My account">My account <span aria-hidden="true">↗</span></button><button data-account-signout data-dt-name="Sign out">Sign out <span aria-hidden="true">↗</span></button></nav><p class="account-leaf-note" role="status">Your next visit starts with a conversation.</p>`;
     const anchor = root.querySelector("#guest-account-header") || trigger,
       r = anchor.getBoundingClientRect();
     leaf.style.top = Math.max(12, r.bottom + 12) + "px";
@@ -99,8 +114,8 @@ export function createGuestAccount(
     if (disposed) return;
     signedUser = user;
     buttons.forEach((b) => {
-      b.textContent = user
-        ? guestDisplayName(user)
+      b.innerHTML = user
+        ? `${guestAvatar(user)}<span class="guest-trigger-name" data-dt-mask>${esc(guestDisplayName(user))}</span>`
         : b.closest("header")
           ? "Sign in"
           : "Guest sign in";
@@ -147,7 +162,7 @@ export function createGuestAccount(
         if (!current()) return;
         const user = m.auth.currentUser;
         body.innerHTML = user
-          ? `<div class="guest-account-person"><span aria-hidden="true">${esc((user.displayName || "Guest").slice(0, 1))}</span><div><strong>${esc(user.displayName || "Welcome to Aroha")}</strong><p>${esc(user.email || "")}</p></div></div><p>You’re signed in. Your hosts still confirm visits personally; online bookings will be added later.</p><div class="guest-account-actions"><button class="button" id="guest-account-done">Keep exploring ↗</button><button class="text-link" id="guest-signout">Sign out</button></div>`
+          ? `<div class="guest-account-person" data-dt-mask>${guestAvatar(user)}<div><strong>${esc(user.displayName || "Welcome to Aroha")}</strong><p>${esc(user.email || "")}</p></div></div><p>You’re signed in. Your hosts still confirm visits personally; online bookings will be added later.</p><div class="guest-account-actions"><button class="button" id="guest-account-done">Keep exploring ↗</button><button class="text-link" id="guest-signout">Sign out</button></div>`
           : `<p>A familiar welcome, with one secure Google sign-in.</p><button type="button" class="google-signin" id="guest-google-login">Continue with Google <span aria-hidden="true">↗</span></button><p class="guest-auth-note">We use your Google name and email for your account. Signing in does not confirm a booking or give access to the host studio.</p>`;
         const status = document.createElement("p");
         status.setAttribute("role", "status");
@@ -216,6 +231,7 @@ export function createGuestAccount(
       hideMenu();
       leaf.remove();
       notice.destroy();
+      root.removeEventListener("error", photoError, true);
       window.removeEventListener("resize", hideMenu);
       window.removeEventListener("scroll", hideMenu);
       leaf.removeEventListener("toggle", toggle);

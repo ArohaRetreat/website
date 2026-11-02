@@ -970,3 +970,9 @@ html[data-atmosphere="sunset"] .botanical-divider { color: #c2cb91; }
 .field-intro { padding-bottom: 72px; }
 .botanical-divider + .nature-story { padding-top: 32px; }
 .botanical-divider + .nature-story .nature-story-heading { padding-top: 24px; }
+.intro-leaf-cluster { position: relative; width: min(100%, 320px); height: 310px; margin-top: 28px; }
+.intro-leaf-cluster .field-intro-photo { display: block; position: absolute; margin: 0; object-fit: cover; border: 1px solid #78986344; }
+.intro-leaf-cluster .leaf-main { width: 70%; height: 175px; left: 0; top: 85px; transform: rotate(-12deg); z-index: 2; }
+.intro-leaf-cluster .leaf-upper { width: 52%; height: 130px; right: 0; top: 0; transform: rotate(-38deg); }
+.intro-leaf-cluster .leaf-lower { width: 50%; height: 125px; right: 4%; bottom: 0; transform: rotate(64deg); }
+@media(max-width:1100px) { .intro-leaf-cluster { width: 230px; height: 265px; } .intro-leaf-cluster .leaf-main { height: 140px; } .intro-leaf-cluster .leaf-upper, .intro-leaf-cluster .leaf-lower { height: 110px; } }

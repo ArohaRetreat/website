@@ -138,3 +138,7 @@
 .map-tools[hidden] {
   display: none;
 }
+.footer-brand { display: inline-block; margin-bottom: 30px; }
+.field-footer .footer-brand img { display: block; width: clamp(245px, 22vw, 340px); height: auto; max-width: 100%; }
+.field-footer { margin-top: 0; }
+@media(max-width:700px) { .footer-brand { margin-bottom: 22px; } .field-footer .footer-brand img { width: 245px; } }

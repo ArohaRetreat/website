@@ -1,3 +1,4 @@
+import { installBrowserBranding } from "./browser-branding.mjs";
 import { startAtmosphereClock } from './atmosphere.mjs';
 import { PUBLIC_PAGES } from './public-pages.mjs';
 
@@ -21,6 +22,7 @@ export function validArrival(record, current, now) {
 // Links remain native: no fetch router, navigation delay or blocking overlay.
 export function installPageTransitions(initialMotion = true) {
   startAtmosphereClock();
+  installBrowserBranding();
   const html = document.documentElement;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   let arrival, activeTransition, firstReveal = true;

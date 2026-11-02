@@ -19,3 +19,17 @@ test('FAQ closes to its full padded summary height, reverses from current geomet
     f.media.matches=true;f.click();assert.equal(f.detail.open,true);assert.equal(f.animations.length,2);c.destroy();assert.equal(f.detail.style.overflow,'');
   }finally{globalThis.matchMedia=oldMatch;globalThis.window=oldWindow;}
 });
+
+test('experience disclosure closes its previous sibling with motion and restores native grouping',()=>{
+  const a=fixture(),b=fixture();a.detail.open=true;
+  for(const f of [a,b]) {f.detail.group='farm-experiences';f.detail.getAttribute=k=>k==='name'?f.detail.group:null;f.detail.removeAttribute=()=>{f.detail.group='';};f.detail.setAttribute=(_k,v)=>{f.detail.group=v;};}
+  const oldMatch=globalThis.matchMedia,oldWindow=globalThis.window;
+  globalThis.matchMedia=()=>a.media;globalThis.window={addEventListener(){},removeEventListener(){}};
+  try {
+    const c=createFaqMotion({querySelectorAll:()=>[a.detail,b.detail]});b.click();
+    assert.equal(a.summary.attrs['aria-expanded'],'false');assert.equal(b.summary.attrs['aria-expanded'],'true');
+    assert.equal(a.animations.length,1);assert.equal(b.animations.length,1);
+    a.animations[0].onfinish();b.animations[0].onfinish();assert.equal(a.detail.open,false);assert.equal(b.detail.open,true);
+    c.destroy();assert.equal(a.detail.group,'farm-experiences');assert.equal(b.detail.group,'farm-experiences');
+  }finally{globalThis.matchMedia=oldMatch;globalThis.window=oldWindow;}
+});
