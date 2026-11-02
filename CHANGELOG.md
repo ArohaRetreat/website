@@ -1,3 +1,9 @@
+# 0.13.0
+
+- Welcome guests with a reversible, scroll-controlled Hrudhi gate-opening film over the existing Explore stage, revealing the real farm in the same pinned viewport. Keep a direct Enter the farm bypass and an accessible illustrated-guide introduction.
+- Serve silent 60fps adaptive web editions (540p phones, 1080p desktop); preserve the approved upscaled/interpolated 4K60 master in Natura. Reduced motion and Save-Data avoid fetching film. Remove the public Simple View controls and saved preference; automatic reduced-motion and CMS-disabled-motion fallbacks remain.
+- Add optional editable `tour.nature.hrudhi` settings under existing CMS permissions; API 0.2.1 validates bounded copy and existing media origins. No booking, membership or schema migration.
+
 # 0.12.0
 
 ## 0.12.1

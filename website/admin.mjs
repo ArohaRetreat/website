@@ -180,7 +180,7 @@ function field(value, path, key) {
     return `<label class="checkbox-field"><input type="checkbox" data-path="${esc(path)}" ${value ? "checked" : ""} ${disabled}>${esc(label)}</label>`;
   if (key === "id")
     return `<label class="field">Stable identifier<input data-path="${esc(path)}" value="${esc(value)}" ${path.startsWith("sections.") ? "readonly" : disabled}><small>Lowercase letters, numbers and hyphens. Keep existing identifiers when editing.</small></label>`;
-  const videoField = key === "src" && path.startsWith("tour.media.");
+  const videoField = (key === "src" && path.startsWith("tour.media.")) || (path.startsWith("tour.nature.hrudhi.") && ["film", "mobileFilm"].includes(key));
   const imageField =
     key === "image" ||
     [
@@ -190,10 +190,10 @@ function field(value, path, key) {
       "foregroundImage",
       "leafImage",
       "plantImage",
-      "heroEveningImage",
+      "heroEveningImage", "poster", "still", "portrait",
     ].includes(key) ||
     (path.startsWith("cottages.") && path.includes(".images."));
-  return `<label class="field">${esc(label)}${["description", "detail", "answer", "message", "note", "priceNote", "inclusions", "caption"].includes(key) || path.includes(".paragraphs.") || String(value).includes("\n") ? `<textarea rows="3" data-path="${esc(path)}" ${disabled}>${esc(value)}</textarea>` : `<input type="${typeof value === "number" ? "number" : key === "email" ? "email" : key === "mapUrl" ? "url" : "text"}" data-path="${esc(path)}" value="${esc(value)}" ${typeof value === "number" ? 'min="0" step="1"' : ""} ${disabled}>`}</label>${videoField ? `<div class="media-field">${value ? `<video controls muted playsinline preload="none" src="${esc(value)}"></video>` : ""}${disabled ? "" : `<label class="upload-button">Upload web video<input type="file" accept="video/mp4,video/webm" data-upload="${esc(path)}" data-media-type="video"></label>`}<small>Public immediately after upload. MP4 or WebM, under 40 MB. Upload an edited web version; originals stay on your device.</small></div>` : ""}${imageField ? `<div class="media-field">${value ? `<img src="${esc(value)}" alt="Selected photograph preview" loading="lazy">` : ""}${disabled ? "" : `<label class="upload-button">Upload photograph<input type="file" accept="image/jpeg,image/png,image/webp,image/avif" data-upload="${esc(path)}"></label>`}<small>Website media is public immediately after upload. JPEG, PNG, WebP or AVIF; under 10 MB. Originals stay on your device.</small></div>` : ""}`;
+  return `<label class="field">${esc(label)}${["bio", "role", "description", "detail", "answer", "message", "note", "priceNote", "inclusions", "caption"].includes(key) || path.includes(".paragraphs.") || String(value).includes("\n") ? `<textarea rows="3" data-path="${esc(path)}" ${disabled}>${esc(value)}</textarea>` : `<input type="${typeof value === "number" ? "number" : key === "email" ? "email" : key === "mapUrl" ? "url" : "text"}" data-path="${esc(path)}" value="${esc(value)}" ${typeof value === "number" ? 'min="0" step="1"' : ""} ${disabled}>`}</label>${videoField ? `<div class="media-field">${value ? `<video controls muted playsinline preload="none" src="${esc(value)}"></video>` : ""}${disabled ? "" : `<label class="upload-button">Upload web video<input type="file" accept="video/mp4,video/webm" data-upload="${esc(path)}" data-media-type="video"></label>`}<small>Public immediately after upload. MP4 or WebM, under 40 MB. Upload an edited web version; originals stay on your device.</small></div>` : ""}${imageField ? `<div class="media-field">${value ? `<img src="${esc(value)}" alt="Selected photograph preview" loading="lazy">` : ""}${disabled ? "" : `<label class="upload-button">Upload photograph<input type="file" accept="image/jpeg,image/png,image/webp,image/avif" data-upload="${esc(path)}"></label>`}<small>Website media is public immediately after upload. JPEG, PNG, WebP or AVIF; under 10 MB. Originals stay on your device.</small></div>` : ""}`;
 }
 function shell() {
   root.innerHTML = `<aside class="studio-sidebar"><a href="/" class="studio-logo"><img src="/assets/brand/logo-forest.svg" alt="Aroha Retreat" width="190" height="65"></a><p class="eyebrow">HOST STUDIO</p><nav aria-label="Studio sections">${Object.entries(

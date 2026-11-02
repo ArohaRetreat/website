@@ -1,0 +1,277 @@
+/* Hrudhi is a cinematic prelude; the real farm tour retains its own camera. */
+.hrudhi-welcome {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  background: #132c24;
+  color: #fff7e5;
+}
+.hrudhi-welcome[data-gate] {
+  display: block;
+}
+.hrudhi-gate-stage {
+  height: 100%;
+  padding: 88px 24px 42px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.hrudhi-welcome[data-gate="reading"] {
+  position: relative;
+}
+[data-gate="reading"] .hrudhi-gate-stage {
+  padding: 48px 24px;
+}
+[data-gate="reading"] .hrudhi-gate-frame {
+  display: none;
+}
+.hrudhi-gate-heading {
+  text-align: center;
+  max-width: 780px;
+}
+.hrudhi-gate-heading .eyebrow {
+  color: #c6d6aa;
+  margin: 0 0 12px;
+}
+.hrudhi-gate-heading h2 {
+  font:
+    400 clamp(38px, 4vw, 62px)/1.08 Allura,
+    cursive;
+  margin: 0 0 10px;
+  text-wrap: balance;
+}
+.hrudhi-gate-heading > p:last-child {
+  font-size: 17px;
+  line-height: 1.55;
+  margin: 0;
+  color: #e2e9d9;
+}
+.hrudhi-gate-frame {
+  position: relative;
+  width: min(92vw, 112svh, 1400px);
+  aspect-ratio: 16/9;
+  flex: none;
+  overflow: hidden;
+  border-radius: 48% 48% 3px 3px / 16% 16% 3px 3px;
+  border: 1px solid #c7d8ae55;
+  box-shadow: 0 24px 80px #0004;
+  background: #263c29;
+}
+.hrudhi-gate-still,
+.hrudhi-gate-film {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.hrudhi-gate-film {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 250ms ease;
+}
+.gate-film-ready[data-gate="motion"] .hrudhi-gate-film {
+  opacity: 1;
+}
+.hrudhi-character {
+  position: absolute;
+  left: 14%;
+  top: 6%;
+  width: 23%;
+  height: 88%;
+  border: 0;
+  background: transparent;
+  border-radius: 46%;
+  cursor: pointer;
+  color: white;
+}
+.hrudhi-character > span {
+  position: absolute;
+  left: 50%;
+  bottom: 1%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font:
+    600 15px/1.3 Source,
+    sans-serif;
+  padding: 10px 15px;
+  border-radius: 30px;
+  background: #153e30ee;
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+.hrudhi-character:focus-visible {
+  outline: 2px solid #f1e3b4;
+  outline-offset: -4px;
+}
+.hrudhi-character:focus-visible > span {
+  opacity: 1;
+}
+@media (hover: hover) and (pointer: fine) {
+  .hrudhi-character:hover > span {
+    opacity: 1;
+  }
+}
+.hrudhi-film-caption {
+  position: absolute;
+  bottom: 14px;
+  right: 16px;
+  font:
+    600 10px/1.4 Source,
+    sans-serif;
+  letter-spacing: 0.16em;
+  background: #142c24bb;
+  padding: 5px 8px;
+  color: #f7f3dd;
+  pointer-events: none;
+}
+.hrudhi-gate-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  width: min(92vw, 112svh, 1400px);
+}
+.hrudhi-gate-controls .button {
+  min-height: 48px;
+  background: transparent;
+  color: #fff7e5;
+  border: 1px solid #d6dfc670;
+}
+.hrudhi-gate-controls .hrudhi-enter {
+  background: #e4ebd5;
+  color: #183a2d;
+  border-color: #e4ebd5;
+}
+.hrudhi-scroll-hint {
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-align: center;
+  color: #c6d6aa;
+}
+.hrudhi-portrait {
+  min-height: 360px;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(ellipse, #e6eadb, #cbd7bb);
+}
+.hrudhi-portrait picture {
+  display: contents;
+}
+.hrudhi-portrait img {
+  width: 100%;
+  height: min(65svh, 560px);
+  object-fit: contain;
+  padding: 24px;
+  box-sizing: border-box;
+}
+@media (max-width: 700px) {
+  .hrudhi-gate-stage {
+    padding: 82px 16px 38px;
+    gap: 28px;
+  }
+  .hrudhi-gate-heading h2 {
+    font-size: 44px;
+  }
+  .hrudhi-gate-heading > p:last-child {
+    font-size: 16px;
+    max-width: 32ch;
+    margin: auto;
+  }
+  .hrudhi-gate-heading .eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.13em;
+  }
+  .hrudhi-gate-frame,
+  .hrudhi-gate-controls {
+    width: 100%;
+  }
+  .hrudhi-gate-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+  .hrudhi-scroll-hint {
+    order: 3;
+    width: 100%;
+    padding-top: 6px;
+  }
+  .hrudhi-film-caption {
+    font-size: 7px;
+    bottom: 5px;
+    right: 5px;
+    padding: 3px 5px;
+    letter-spacing: 0.08em;
+  }
+  .hrudhi-gate-controls .button {
+    padding: 13px 18px;
+    font-size: 15px;
+  }
+  .hrudhi-portrait {
+    min-height: 260px;
+  }
+  .hrudhi-portrait img {
+    height: 320px;
+  }
+}
+@media (max-height: 700px) and (min-width: 701px) {
+  .hrudhi-gate-stage {
+    padding: 70px 24px 20px;
+    gap: 12px;
+  }
+  .hrudhi-gate-heading h2 {
+    font-size: 36px;
+  }
+  .hrudhi-gate-heading > p:last-child {
+    font-size: 15px;
+  }
+  .hrudhi-gate-frame,
+  .hrudhi-gate-controls {
+    width: min(82vw, 90svh);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hrudhi-gate-film,
+  .hrudhi-character > span {
+    transition: none;
+  }
+}
+@media (max-width: 700px) {
+  .hrudhi-gate-stage {
+    max-height: 100svh;
+  }
+  .hrudhi-gate-controls .button {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+    white-space: nowrap;
+  }
+}
+@media (max-height: 700px) and (max-width: 700px) {
+  .hrudhi-gate-stage {
+    padding: 64px 16px 16px;
+    gap: 12px;
+  }
+  .hrudhi-gate-heading h2 {
+    font-size: 34px;
+  }
+  .hrudhi-gate-heading > p:last-child {
+    font-size: 14px;
+  }
+  .hrudhi-gate-heading .eyebrow {
+    margin-bottom: 8px;
+    font-size: 9px;
+  }
+  .hrudhi-gate-frame {
+    width: min(100%, 74svh);
+  }
+  .hrudhi-gate-controls .button {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+}

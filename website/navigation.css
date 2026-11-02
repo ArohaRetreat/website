@@ -423,10 +423,7 @@ body.public-menu-open {
   .public-header .public-visit {
     display: none;
   }
-  .public-header #view-toggle {
-    font-size: 12px;
-    padding: 8px 0;
-  }
+
   .public-header .public-menu-toggle {
     gap: 7px;
     font-size: 13px;
