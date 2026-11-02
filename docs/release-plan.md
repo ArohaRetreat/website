@@ -1,3 +1,7 @@
+## Website 0.16.1 / issue44
+
+Frontend presentation and interaction only: non-modal consent popup, botanical section boundaries, gallery/detail action geometry and reversible FAQ motion. No API/schema/rules/index/secret/content changes. API0.3.0 and Natura0.6.1 retained. Validate desktop/320/390 layouts, FAQ reversal/close/reduced motion, welcome-to-consent handoff and dismissal; deploy immutable merged revision through observed Hosting wrapper. Rollback Hosting to previous version without restoring or modifying CMS content.
+
 # Website 0.16.0 / API0.3.0 impact
 
 Issue41. Public place-photo selector, album farm filter, scoped supplied-media additions/removal and one labelled generated library asset. Existing optional stop fields gain eveningImage/eveningImageAlt with trusted URL/description validation; host studio renders them using existing media controls. Backend update precedes CMS saving/publication. Firestore schemaVersion1 stays compatible, rules/indexes/roles/secrets unchanged. Theme, caption fallback, static/phone images, filter/page/viewer and content-preservation tests apply. Existing generated Hrudhi voice is not integrated. Pool image is a labelled completion impression from the actual rectangular pool and palm setting in the supplied construction clips.

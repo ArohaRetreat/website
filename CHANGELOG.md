@@ -1,3 +1,10 @@
+## 0.16.1 — 2 November 2026
+
+- Move optional monitoring to a dismissible first-visit popup after the welcome, preserving consent gates.
+- Add botanical section separators and reduce excess introductory spacing.
+- Align all four gallery filters, remove filled tour reading backgrounds, and wrap detail actions with a clear gap.
+- Ease FAQ opening and closing with interruption, reduced-motion and cleanup support.
+
 # 0.16.0 / API0.3.0
 
 - Add a Farm experience journal filter covering the supplied farm photographs and films, with filter-scoped viewing and retained paging.

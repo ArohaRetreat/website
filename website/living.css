@@ -954,3 +954,19 @@
   transform: none !important;
   will-change: auto;
 }
+
+/* Botanical boundaries: one winding stem, three leaves and a pair of dew drops. */
+.botanical-divider { max-width: 1500px; margin: 0 auto; padding: 8px 7vw; color: #6e8759; }
+.botanical-divider svg { display: block; width: 100%; height: clamp(44px, 6vw, 80px); overflow: visible; }
+.botanical-divider .divider-stem { stroke: currentColor; stroke-width: 1.2; opacity: .55; }
+.botanical-divider .divider-leaves { fill: currentColor; opacity: .24; }
+.botanical-divider .divider-veins { stroke: currentColor; stroke-width: 1; }
+.botanical-divider circle { fill: currentColor; opacity: .7; }
+.botanical-divider-water svg { transform: scaleX(-1); }
+.field-packages > .botanical-divider { padding: 0; margin: -50px 0 62px; max-width: none; }
+.nature-facts { border-top: 0; }
+html[data-atmosphere="sunset"] .botanical-divider { color: #c2cb91; }
+@media(max-width:700px) { .field-packages > .botanical-divider { margin-top: -20px; margin-bottom: 36px; } }
+.field-intro { padding-bottom: 72px; }
+.botanical-divider + .nature-story { padding-top: 32px; }
+.botanical-divider + .nature-story .nature-story-heading { padding-top: 24px; }
