@@ -38,7 +38,7 @@ export async function verifyLive(
     "/assets/sunset.css",
     "/assets/footer.css",
   ];
-  paths.push("/assets/retreat/library-impression-v1.webp",...new Set(ADDITIONAL_MEDIA.flatMap(m=>[m.image,...(m.src?[m.src]:[])])));
+  paths.push("/assets/retreat/pool-completion-impression-v1.webp","/assets/retreat/library-impression-v1.webp",...new Set(ADDITIONAL_MEDIA.flatMap(m=>[m.image,...(m.src?[m.src]:[])])));
   for (const name of await readdir(root + "dist/assets/chunks"))
     paths.push("/assets/chunks/" + name);
   const checks = [];

@@ -4,7 +4,7 @@
 - Replace the library placeholder with a labelled generated reading-corner impression; use the real illuminated main-house dining photograph for the dining stop.
 - Remove the meditation interior image from the public tour/journal and use the supplied real night exterior when After sunset is selected, retaining the existing daylight image and an image-error fallback.
 - Add optional CMS day/evening place image fields with compatible API validation and shared photo lifecycle handling. Preserve current host-edited text during the scoped content update.
-- Keep Hrudhi narration parked. The pool visual remains pending identification of the construction source.
+- Keep Hrudhi narration parked. The pool visual is a labelled completion impression grounded in the supplied construction videos.
 
 # 0.15.0
 
