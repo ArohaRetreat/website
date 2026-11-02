@@ -1,3 +1,9 @@
+# Website 0.16.0 / API0.3.0 impact
+
+Issue41. Public place-photo selector, album farm filter, scoped supplied-media additions/removal and one labelled generated library asset. Existing optional stop fields gain eveningImage/eveningImageAlt with trusted URL/description validation; host studio renders them using existing media controls. Backend update precedes CMS saving/publication. Firestore schemaVersion1 stays compatible, rules/indexes/roles/secrets unchanged. Theme, caption fallback, static/phone images, filter/page/viewer and content-preservation tests apply. Existing generated Hrudhi voice is not integrated. Pool image waits for its actual construction reference.
+
+Current draft must be exported/backed up and narrowly patched; do not overwrite owner changes with seed. Publish only after media URLs and API are live. Rollback website/API to prior immutable source, and use CMS revision history as a separate content rollback if needed; do not delete original media or revert account access. Compose the same pinned Natura0.6.1 export and run the observed Hosting deploy/live verifier. Check each delivery signal and native marker separately from runtime RUM and CMS writes.
+
 # Website 0.15.0 impact
 
 Issue #39. Frontend-only update to guide rendering/controllers, optional browser telemetry bootstrap/identity, guest account popover and non-overlay consent card. Add one transparent four-view WebP derivative; the new voiced video stays outside website source/build. API remains0.2.2, Natura consumer0.6.1. No Firestore schema, indexes, storage rules, roles, secrets or backend deployment changes. Existing CMS custom walk sheets remain compatible. Use the pinned Natura export for shared Hosting composition.

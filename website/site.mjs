@@ -1,3 +1,5 @@
+import { placePhoto } from "./place-photos.mjs";
+import { atmospherePreference } from "./atmosphere.mjs";
 import { createHrudhiGuide } from "./hrudhi-guide.mjs";
 import { createGuestAccount } from "./guest-account.mjs";
 import { initializeAnalytics } from "./analytics.mjs";
@@ -124,10 +126,11 @@ function openTourStop(index) {
   const t = tourContent(content),
     s = t.stops[index];
   if (!s) return;
+  const photo = placePhoto(s,atmospherePreference());
   const media = t.media.filter((m) => m.stop === s.id),
     ids = media.map((m) => m.id);
   show(
-    `<article class="field-stop-dialog">${picture(s.image, s.imageAlt, "stop-dialog-photo")}<p class="stop-dialog-caption">${esc(s.imageAlt)}</p><div class="dialog-copy"><p class="eyebrow">${String(index + 1).padStart(2, "0")} / ${esc(s.name)}</p><h2 id="dialog-title">${esc(s.title)}</h2><p>${esc(s.detail)}</p>${media.length ? `<div class="stop-media-grid">${media.map((m) => `<button data-stop-media="${esc(m.id)}" aria-label="${m.kind === "video" ? "Watch" : "View"}: ${esc(m.name)}">${picture(m.image, m.name)}<span>${m.kind === "video" ? "▷ Film" : "View ↗"}</span></button>`).join("")}</div>` : ""}<button class="button" id="stop-enquire">${esc(content.visit.enquiryLabel)} ↗</button><button class="field-text-link" id="stop-section">${s.target === "cottages" ? "Explore accommodation" : s.target === "packages" ? "Compare visits" : "Discover more"} ↗</button><div class="stop-nearby"><span>Continue exploring</span>${s.nearby
+    `<article class="field-stop-dialog">${picture(photo.image, photo.imageAlt, "stop-dialog-photo")}<p class="stop-dialog-caption">${esc(photo.imageAlt)}</p><div class="dialog-copy"><p class="eyebrow">${String(index + 1).padStart(2, "0")} / ${esc(s.name)}</p><h2 id="dialog-title">${esc(s.title)}</h2><p>${esc(s.detail)}</p>${media.length ? `<div class="stop-media-grid">${media.map((m) => `<button data-stop-media="${esc(m.id)}" aria-label="${m.kind === "video" ? "Watch" : "View"}: ${esc(m.name)}">${picture(m.image, m.name)}<span>${m.kind === "video" ? "▷ Film" : "View ↗"}</span></button>`).join("")}</div>` : ""}<button class="button" id="stop-enquire">${esc(content.visit.enquiryLabel)} ↗</button><button class="field-text-link" id="stop-section">${s.target === "cottages" ? "Explore accommodation" : s.target === "packages" ? "Compare visits" : "Discover more"} ↗</button><div class="stop-nearby"><span>Continue exploring</span>${s.nearby
       .map((id) => {
         const next = t.stops.find((x) => x.id === id);
         return next

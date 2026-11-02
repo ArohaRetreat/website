@@ -26,8 +26,8 @@ test("the host-described route retains the house relationships and all media", a
   assert.ok(byId.cottages.mapY < byId.treehouses.mapY);
   assert.ok(byId.meditation.mapY < byId.cottages.mapY);
   assert.ok(byId.pool.mapX < byId.meditation.mapX);
-  assert.equal(tour.media.filter((m) => m.kind === "photo").length, 35);
-  assert.equal(tour.media.filter((m) => m.kind === "video").length, 21);
+  assert.equal(tour.media.filter((m) => m.kind === "photo").length, 43);
+  assert.equal(tour.media.filter((m) => m.kind === "video").length, 24);
   await Promise.all(
     tour.media
       .flatMap((m) => [m.image, ...(m.src ? [m.src] : [])])
@@ -73,7 +73,7 @@ test("published content and media captions stay escaped and videos remain unload
   assert.ok(html.includes("&lt;img src=x onerror=alert(1)&gt;"));
   assert.ok(!html.includes("<img src=x"));
   assert.ok(!html.includes("<video src="));
-  assert.equal((html.match(/data-media="/g) || []).length, 56);
+  assert.equal((html.match(/data-media="/g) || []).length, tour.media.length);
 });
 test("native-scroll route progress is reversible, bounded and deterministic at chapter edges", () => {
   for (let i = 0; i < tour.stops.length; i++)

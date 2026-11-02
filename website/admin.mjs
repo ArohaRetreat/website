@@ -59,7 +59,8 @@ const labels = {
   kind: "Media kind: photo or video",
   mobileImage: "Mobile hero photograph URL",
   worldImage: "Illustrated farm world",
-  eveningImage: "Evening illustrated world",
+  eveningImage: "Evening image URL (optional)",
+  eveningImageAlt: "Evening image description",
   foregroundImage: "Foreground botanical artwork",
   imageAlt: "Image description for accessibility",
   image: "Photograph URL",
@@ -412,6 +413,7 @@ function renderEditor() {
       draft.packages = draft.packages.map(p => ({ ...p, availability: packageAvailability(p) }));
       if (!draft.storyMap) draft.storyMap = structuredClone(mapContent(draft));
       if (!draft.tour) draft.tour = structuredClone(tourContent(draft));
+  draft.tour.stops.forEach(s=>{s.eveningImage ??= "";s.eveningImageAlt ??= "";});
       draft.tour.nature = {
         ...structuredClone(natureDefaults),
         ...draft.tour.nature,
@@ -465,6 +467,7 @@ async function load() {
   const r = await api("/draft");
   draft = structuredClone(r.draft?.content || defaults);
   if (!draft.tour) draft.tour = structuredClone(tourContent(draft));
+  draft.tour.stops.forEach(s=>{s.eveningImage ??= "";s.eveningImageAlt ??= "";});
   if (!draft.storyMap) draft.storyMap = structuredClone(mapContent(draft));
   draft.tour.nature = {
     ...structuredClone(natureDefaults),

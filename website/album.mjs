@@ -1,7 +1,9 @@
 export const ALBUM_SIZE = 5;
+export const albumMatches = (m, filter) =>
+  filter === "farm" ? m.stop === "farm" : filter === "all" || m.kind === filter;
 export function albumPage(media, filter = "all", page = 0) {
-  const kind = ["photo", "video"].includes(filter) ? filter : "all";
-  const items = media.filter((m) => kind === "all" || m.kind === kind);
+  const kind = ["photo", "video", "farm"].includes(filter) ? filter : "all";
+  const items = media.filter((m) => albumMatches(m, kind));
   const pages = Math.max(1, Math.ceil(items.length / ALBUM_SIZE));
   const index = Math.min(
     pages - 1,
@@ -37,10 +39,11 @@ export function renderAlbum(tour, { esc, picture }) {
     ["all", "All"],
     ["photo", "Photos"],
     ["video", "Films"],
+    ["farm", "Farm experience"],
   ]
     .map(
       ([kind, label]) =>
-        `<button type="button" data-album-filter="${kind}" aria-pressed="${kind === "all"}">${label}<span>${tour.media.filter((m) => kind === "all" || m.kind === kind).length}</span></button>`,
+        `<button type="button" data-album-filter="${kind}" aria-pressed="${kind === "all"}">${label}<span>${tour.media.filter((m) => albumMatches(m, kind)).length}</span></button>`,
     )
     .join("");
   const controls = `<div class="album-controls"><span id="album-range" role="status" aria-live="polite" aria-atomic="true">${albumRange(first)}</span><nav aria-label="Album pages"><button type="button" id="album-previous" aria-label="Previous album page" aria-controls="album-spread" aria-disabled="true"><span aria-hidden="true">←</span> Previous</button><span id="album-page">01 / ${String(first.pages).padStart(2, "0")}</span><button type="button" id="album-next" aria-label="Next album page" aria-controls="album-spread" aria-disabled="${first.pages <= 1}">Next <span aria-hidden="true">→</span></button></nav></div>`;
@@ -98,27 +101,24 @@ export function createAlbum(root, media, { resume, motion = false } = {}) {
     animation?.cancel();
     if (animate && motion) {
       animation = grid.animate(
-        [
-          from,
-          { opacity: 1, transform: "translateY(0)" },
-        ],
+        [from, { opacity: 1, transform: "translateY(0)" }],
         { duration: 420, easing: "cubic-bezier(.32,.72,0,1)" },
       );
     }
   }
   filters.forEach((b) =>
-    listen(b, event => {
+    listen(b, (event) => {
       state = albumPage(media, b.dataset.albumFilter, 0);
       paint(event?.detail > 0);
     }),
   );
-  listen(previous, event => {
+  listen(previous, (event) => {
     if (state.page > 0) {
       state = albumPage(media, state.filter, state.page - 1);
       paint(event?.detail > 0);
     }
   });
-  listen(next, event => {
+  listen(next, (event) => {
     if (state.page < state.pages - 1) {
       state = albumPage(media, state.filter, state.page + 1);
       paint(event?.detail > 0);

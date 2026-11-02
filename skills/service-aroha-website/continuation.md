@@ -1,3 +1,11 @@
+# Farm media and place photo variants — 0.16.0 / API0.3.0
+
+Issue41. Album Farm experience filter is based on stop=farm and shares page/viewer state with existing photo/film filters. Twelve additional unique media entries include nine photographs and three silent films; higher-resolution originals replace duplicate exports. Meditation interior p-dsc-3815 is removed from public selection, while original files/history are retained. Library uses a labelled generated artistic impression, dining the existing DSC_3779 night photograph, meditation day stays intact with an optional supplied night image.
+
+place-photos.mjs owns day/evening selection, deferred orbit sources, image-error fallback, caption/note updates and listener disposal. Field journey, orbit panels, reduced-motion document, place details and Living Map use the same variants. Tour stops accept optional eveningImage/eveningImageAlt; API must be upgraded before CMS publication. scripts/content/farm-media-refresh.mjs creates an idempotent narrow patch preserving owner text and unrelated content. Export the current host draft, patch that backup, then import/save/publish through existing version-checked administration; never overwrite host changes with the build seed. Current source/CI/browser/API/Hosting/content-version evidence belongs to the issue/release receipt.
+
+Hrudhi narration remains parked. Pool generation is blocked on identifying the construction footage; do not invent its geometry from unrelated landscape clips. Natura consumer remains0.6.1; generated master stays in Natura review assets and only the WebP derivative is bundled.
+
 # Directional guide, account menu and browser monitoring — 0.15.0
 
 Issue #39. guide-walking.mjs owns the distance-driven four-view stride; homepage phones follow native journey progress, map guide follows sampled connected paths and the phone camera tracks her current position. Hidden/offscreen/dialog pauses do not advance the clock. The bundled legacy sheet upgrades to the four-row derivative while host-selected custom eight-frame sheets remain supported. Source master belongs to Natura review assets; new voiced Arrival export is review-only and is not bundled.

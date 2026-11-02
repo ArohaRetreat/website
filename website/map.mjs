@@ -1,3 +1,4 @@
+import { createPlacePhotos } from "./place-photos.mjs";
 import { createMapHrudhi } from "./map-hrudhi.mjs";
 import { createGuestAccount } from "./guest-account.mjs";
 import { initializeAnalytics } from "./analytics.mjs";
@@ -185,6 +186,7 @@ function bind() {
     dialog.showModal();
     root.querySelector(".dialog-close").focus({ preventScroll: true });
   }
+  const placePhotos = createPlacePhotos(root);
   guide = createMapHrudhi(root,{motion:!reading && content.theme.motion && !reduced.matches,onPosition:p=>{if(phone.matches&&!overview&&!reading)root.querySelector('.farm-map-plane').style.transform=`translate(-${p.x/10}%, -${p.y/10}%)`;}});
   const guestAccount = createGuestAccount(root,{show,close:()=>dialog.close(),closeMenu:()=>menu.whenClosed()});
   root
@@ -494,6 +496,7 @@ function bind() {
   );
   schedule();
   return () => {
+    placePhotos.destroy();
     menu.destroy();
     guestAccount.destroy();
     guide?.destroy();

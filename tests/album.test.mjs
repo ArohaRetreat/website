@@ -7,36 +7,37 @@ import {
   renderAlbum,
   createAlbum,
   ALBUM_SIZE,
+  albumMatches,
 } from "../website/album.mjs";
 import { esc, picture } from "../website/render.mjs";
 const tour = JSON.parse(
   await readFile(new URL("../website/tour-content.json", import.meta.url)),
 );
 test("every supplied moment appears once across bounded album spreads and filters never mix kinds", () => {
-  for (const filter of ["all", "photo", "video"]) {
+  for (const filter of ["all", "photo", "video", "farm"]) {
     const all = [];
     const first = albumPage(tour.media, filter);
     for (let p = 0; p < first.pages; p++) {
       const state = albumPage(tour.media, filter, p);
       assert.ok(state.items.length <= ALBUM_SIZE);
       assert.ok(
-        state.items.every((m) => filter === "all" || m.kind === filter),
+        state.items.every((m) => albumMatches(m, filter)),
       );
       all.push(...state.items.map((m) => m.id));
     }
     const expected = tour.media
-      .filter((m) => filter === "all" || m.kind === filter)
+      .filter((m) => albumMatches(m, filter))
       .map((m) => m.id);
     assert.deepEqual(all, expected);
     assert.equal(new Set(all).size, all.length);
   }
   assert.equal(albumPage(tour.media, "all", Infinity).page, 0);
   assert.equal(albumPage(tour.media, "all", -9).page, 0);
-  assert.equal(albumPage(tour.media, "all", 999).items.length, 1);
+  assert.equal(albumPage(tour.media, "all", 999).items.length, tour.media.length % ALBUM_SIZE || ALBUM_SIZE);
   assert.equal(albumPage([], "photo", 999).total, 0);
   assert.equal(
     albumRange(albumPage(tour.media, "video", 999)),
-    "21 of 21 films",
+    "21–24 of 24 films",
   );
   assert.equal(albumPage(tour.media, "invalid").filter, "all");
 });
@@ -44,7 +45,7 @@ test("album SSR retains all media, escapes captions and shows only one spread wi
   const t = structuredClone(tour);
   t.media[0].name = "<img src=x onerror=alert(1)>";
   const html = renderAlbum(t, { esc, picture });
-  assert.equal((html.match(/data-media="/g) || []).length, 56);
+  assert.equal((html.match(/data-media="/g) || []).length, tour.media.length);
   assert.equal((html.match(/data-album-slot="/g) || []).length, 5);
   assert.ok(html.includes("&lt;img src=x"));
   assert.ok(!html.includes("<img src=x"));
@@ -70,7 +71,7 @@ function fixture() {
     ...element(),
     dataset: { albumId: m.id },
   }));
-  const filters = ["all", "photo", "video"].map((kind) => ({
+  const filters = ["all", "photo", "video", "farm"].map((kind) => ({
     ...element(),
     dataset: { albumFilter: kind },
   }));
@@ -116,10 +117,10 @@ test("filtering resets the spread, navigation bounds remain stable, and repaint 
   assert.match(f.range.textContent, /6–10/);
   f.filters[2].click();
   assert.deepEqual(c.state, { filter: "video", page: 0 });
-  assert.equal(c.ids.length, 21);
+  assert.equal(c.ids.length, 24);
   for (let i = 0; i < 10; i++) f.next.click();
   assert.equal(c.state.page, 4);
-  assert.equal(f.prints.filter((p) => !p.hidden).length, 1);
+  assert.equal(f.prints.filter((p) => !p.hidden).length, 4);
   const state = c.state;
   c.destroy();
   assert.equal(f.next.click, undefined);

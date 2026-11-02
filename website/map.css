@@ -1802,3 +1802,5 @@ body {
     transform: scaleY(1) !important;
   }
 }
+
+.story-window img[data-photo-state="evening"]{object-fit:contain;background:#07140d}
