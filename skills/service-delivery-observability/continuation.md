@@ -7,3 +7,5 @@ Main source Actions runs 41357543032 (foundation) and 41357543036 (application/i
 Recovery: read docs/delivery-observability.md. Keep original execution and reporting attempts separate; replay reporting only, never a successful deployment. Preserve ignored production configuration/owner. Safe local receipts are under local/release-evidence/aroha-0.12.0; GitHub receipt artifacts expire after 14 days. All executable production source remains the PR #23 merge; later documentation commits are not additional Hosting deployments.
 
 Website 0.13.0 extends live immutable hash verification to hrudhi-gate.css and the five gate/guide web assets. Transport, event identities and replay policy are unchanged.
+
+Website 0.14.0 extends immutable live hashes to guest-experience.css, hrudhi-guide.css, v2 gate films and the transparent guide walk sheet. Backend prerequisite is API 0.2.2; no exporter identity/transport change.

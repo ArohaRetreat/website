@@ -1,0 +1,236 @@
+.hrudhi-guide-track {
+  position: relative;
+  height: 86px;
+  isolation: isolate;
+  color: #eee8cc;
+}
+.tour-hrudhi-companion {
+  position: absolute;
+  bottom: 65px;
+  left: 5vw;
+  right: 5vw;
+  z-index: 4;
+}
+.guide-ground {
+  position: absolute;
+  bottom: 9px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #cbcfaa80, transparent);
+  pointer-events: none;
+}
+.guide-traveller {
+  position: absolute;
+  bottom: 4px;
+  left: 0;
+}
+.hrudhi-guide-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 72px;
+  min-height: 80px;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+}
+.guide-viewport {
+  width: 65px;
+  height: 65px;
+  display: block;
+  overflow: hidden;
+  position: relative;
+}
+.guide-rest {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.guide-walk-sheet {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 400% !important;
+  max-width: none !important;
+  height: 200% !important;
+  display: none;
+}
+.guide-walking .guide-rest {
+  visibility: hidden;
+}
+.guide-walking .guide-walk-sheet {
+  display: block;
+  animation: hrudhi-stride 800ms steps(1, end) infinite;
+}
+.guide-paused .guide-walk-sheet {
+  animation-play-state: paused;
+}
+.guide-name {
+  font:
+    600 11px/1.4 Source,
+    sans-serif;
+  padding: 1px 8px;
+  border-radius: 12px;
+  background: #17392ee8;
+  color: #fff5d5;
+  white-space: nowrap;
+}
+.guide-place-caption {
+  position: absolute;
+  bottom: 3px;
+  right: 0;
+  font:
+    600 9px/1.4 Source,
+    sans-serif;
+  letter-spacing: 0.12em;
+  max-width: 48%;
+  text-align: right;
+  pointer-events: none;
+}
+.gate-covering .tour-hrudhi-companion {
+  visibility: hidden;
+}
+.map-hrudhi-companion {
+  position: absolute;
+  bottom: 170px;
+  left: 3vw;
+  width: min(240px, 30vw);
+  z-index: 7;
+  pointer-events: auto;
+}
+.map-hrudhi-companion .guide-viewport {
+  width: 96px;
+  height: 96px;
+}
+.map-hrudhi-companion .hrudhi-guide-button {
+  width: 100px;
+  min-height: 110px;
+}
+.map-hrudhi-companion .guide-place-caption {
+  max-width: none;
+  left: 0;
+  right: 0;
+  bottom: -15px;
+  text-align: center;
+  font-size: 10px;
+  text-shadow: 0 1px 5px #132b22;
+}
+.map-reading .map-hrudhi-companion {
+  display: none;
+}
+@keyframes hrudhi-stride {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  12.5% {
+    transform: translate(-25%, 0);
+  }
+  25% {
+    transform: translate(-50%, 0);
+  }
+  37.5% {
+    transform: translate(-75%, 0);
+  }
+  50% {
+    transform: translate(0, -50%);
+  }
+  62.5% {
+    transform: translate(-25%, -50%);
+  }
+  75% {
+    transform: translate(-50%, -50%);
+  }
+  87.5% {
+    transform: translate(-75%, -50%);
+  }
+}
+@media (max-width: 700px) {
+  .guide-place-caption {
+    font-size: 8px;
+    max-width: 42%;
+  }
+  .map-hrudhi-companion {
+    left: 12px;
+    bottom: 145px;
+    width: 130px;
+  }
+  .map-hrudhi-companion .guide-viewport {
+    width: 64px;
+    height: 64px;
+  }
+  .map-hrudhi-companion .hrudhi-guide-button {
+    width: 70px;
+    min-height: 82px;
+  }
+  .map-hrudhi-companion .guide-place-caption {
+    font-size: 8px;
+  }
+}
+@media (max-height: 600px) {
+  .tour-hrudhi-companion {
+    bottom: 58px;
+    height: 66px;
+  }
+  .tour-hrudhi-companion .guide-viewport {
+    width: 45px;
+    height: 45px;
+  }
+  .tour-hrudhi-companion .hrudhi-guide-button {
+    min-height: 62px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .guide-walk-sheet {
+    animation: none !important;
+    display: none !important;
+  }
+  .guide-rest {
+    visibility: visible !important;
+  }
+}
+@media (min-height: 701px) {
+  .tour-hrudhi-companion {
+    height: 112px;
+  }
+  .tour-hrudhi-companion .guide-viewport {
+    width: 90px;
+    height: 90px;
+  }
+  .tour-hrudhi-companion .hrudhi-guide-button {
+    width: 94px;
+    min-height: 108px;
+  }
+  .tour-hrudhi-companion .guide-name {
+    font-size: 12px;
+  }
+}
+
+.hrudhi-portrait {
+  min-height: 300px;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(ellipse, #e6eadb, #cbd7bb);
+}
+.hrudhi-portrait picture {
+  display: contents;
+}
+.hrudhi-portrait img {
+  width: 100%;
+  height: min(55svh, 480px);
+  object-fit: contain;
+  padding: 24px;
+  box-sizing: border-box;
+}
+@media (max-width: 700px) {
+  .hrudhi-portrait {
+    min-height: 240px;
+  }
+  .hrudhi-portrait img {
+    height: 280px;
+  }
+}
+.tour-hrudhi-companion .guide-place-caption{display:none;}

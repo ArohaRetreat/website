@@ -1,3 +1,5 @@
+import locationDefaults from "./location-content.json";
+import { packageAvailability } from "../functions/domain.mjs";
 import natureDefaults from "./nature-content.json";
 import mapDefaults from "./map-content.json";
 import { mapContent } from "./map-render.mjs";
@@ -150,6 +152,7 @@ function field(value, path, key) {
     ["worldImage", "eveningImage", "foregroundImage"].includes(key)
   )
     return "";
+  if (key === "availability") return `<label class="field">Package availability<select data-path="${esc(path)}" ${can(session.role,"edit") ? "" : "disabled"}><option value="available" ${value === "available" ? "selected" : ""}>Available for enquiries</option><option value="coming-soon" ${value === "coming-soon" ? "selected" : ""}>Coming soon</option></select></label>`;
   const label = key === "media" && !Array.isArray(value) ? "Tour media identifier (optional)" : title(key),
     disabled = can(session.role, "edit") ? "" : "disabled";
   if (path.startsWith("storyMap.places.") && ["id", "chapter", "media"].includes(key)) {
@@ -190,7 +193,7 @@ function field(value, path, key) {
       "foregroundImage",
       "leafImage",
       "plantImage",
-      "heroEveningImage", "poster", "still", "portrait",
+      "heroEveningImage", "poster", "still", "portrait", "walkSheet",
     ].includes(key) ||
     (path.startsWith("cottages.") && path.includes(".images."));
   return `<label class="field">${esc(label)}${["bio", "role", "description", "detail", "answer", "message", "note", "priceNote", "inclusions", "caption"].includes(key) || path.includes(".paragraphs.") || String(value).includes("\n") ? `<textarea rows="3" data-path="${esc(path)}" ${disabled}>${esc(value)}</textarea>` : `<input type="${typeof value === "number" ? "number" : key === "email" ? "email" : key === "mapUrl" ? "url" : "text"}" data-path="${esc(path)}" value="${esc(value)}" ${typeof value === "number" ? 'min="0" step="1"' : ""} ${disabled}>`}</label>${videoField ? `<div class="media-field">${value ? `<video controls muted playsinline preload="none" src="${esc(value)}"></video>` : ""}${disabled ? "" : `<label class="upload-button">Upload web video<input type="file" accept="video/mp4,video/webm" data-upload="${esc(path)}" data-media-type="video"></label>`}<small>Public immediately after upload. MP4 or WebM, under 40 MB. Upload an edited web version; originals stay on your device.</small></div>` : ""}${imageField ? `<div class="media-field">${value ? `<img src="${esc(value)}" alt="Selected photograph preview" loading="lazy">` : ""}${disabled ? "" : `<label class="upload-button">Upload photograph<input type="file" accept="image/jpeg,image/png,image/webp,image/avif" data-upload="${esc(path)}"></label>`}<small>Website media is public immediately after upload. JPEG, PNG, WebP or AVIF; under 10 MB. Originals stay on your device.</small></div>` : ""}`;
@@ -405,12 +408,15 @@ function renderEditor() {
       if (!file || file.size > 200000) throw Error("INVALID_BACKUP");
       draft = validateContent(JSON.parse(await file.text()));
       draft.hero = { ...defaults.hero, ...draft.hero };
+      draft.visit = { ...locationDefaults, ...draft.visit };
+      draft.packages = draft.packages.map(p => ({ ...p, availability: packageAvailability(p) }));
       if (!draft.storyMap) draft.storyMap = structuredClone(mapContent(draft));
       if (!draft.tour) draft.tour = structuredClone(tourContent(draft));
       draft.tour.nature = {
         ...structuredClone(natureDefaults),
         ...draft.tour.nature,
       };
+      draft.tour.nature.hrudhi = { ...structuredClone(natureDefaults.hrudhi), ...draft.tour.nature.hrudhi };
       dirty = true;
       shell();
       notice("Backup loaded into the editor. Review before saving.");
@@ -464,7 +470,10 @@ async function load() {
     ...structuredClone(natureDefaults),
     ...draft.tour.nature,
   };
+  draft.tour.nature.hrudhi = { ...structuredClone(natureDefaults.hrudhi), ...draft.tour.nature.hrudhi };
   draft.hero = { ...defaults.hero, ...draft.hero };
+      draft.visit = { ...locationDefaults, ...draft.visit };
+      draft.packages = draft.packages.map(p => ({ ...p, availability: packageAvailability(p) }));
   version = r.draft?.version || 0;
   dirty = false;
 }

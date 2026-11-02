@@ -1,3 +1,7 @@
+# Guest expansion (website 0.14.0 / API 0.2.2)
+
+Google Analytics is newly opt-in via a separate preference; it does not reuse old Dynatrace consent, tag users by account email or collect enquiry contents. Canonical host only; preview/emulator traffic is excluded. See [guest experience](website-guest-experience.md). Guest sign-in goes directly through Firebase Auth; it is not a new backend business write or proof of host membership. Existing Dynatrace and trusted delivery exports remain independent. The guide reuses the bounded hrudhi.introduction.opened event; no positional frames or personal data are emitted.
+
 # Current observability state
 
 Runtime API service is `aroha-api` 0.2.0. A live audit found its logs/spans/request metrics in India CS, including 401/403 verification probes; successful business writes and native RUM linkage need independent evidence. The service is discoverable as SERVICE-5A23B67949B609D6. Browser business events were found, but this does not certify full RUM session coverage. The original setup notes below preserve historical observations rather than certifying current state.

@@ -1,3 +1,9 @@
+import { createHrudhiGuide } from "./hrudhi-guide.mjs";
+import { hrudhiIntroduction } from "./hrudhi-gate.mjs";
+import { natureContent } from "./nature-render.mjs";
+import { esc, picture } from "./render.mjs";
+import { createGuestAccount } from "./guest-account.mjs";
+import { initializeAnalytics } from "./analytics.mjs";
 import { createPublicMenu } from "./navigation.mjs";
 import { openEnquiry, openPrivacy } from "./guest-dialogs.mjs";
 import initial from "./content.json";
@@ -25,6 +31,7 @@ let content = initial,
     !initial.theme.motion ||
     preference("aroha-map-view") === "reading",
   dispose = () => {},
+  guide,
   unsubscribe,
   scrollingTo = null,
   subscriptionGeneration = 0,
@@ -65,6 +72,8 @@ function applySelection(id, announce = true) {
   const p = map.places.find((p) => p.id === id);
   if (!p) return;
   active = id;
+  const stops=tourContent(content).stops,stop=stops.find(s=>s.id===id);
+  guide?.select(stops.findIndex(s=>s.id===id),stop?.name||"Aroha",stops.length);
   chapterSelection.set(p.chapter, id);
   for (const chapter of map.chapters) {
     let selected = chapterSelection.get(chapter.id);
@@ -180,6 +189,14 @@ function bind() {
     dialog.showModal();
     root.querySelector(".dialog-close").focus({ preventScroll: true });
   }
+  const meetGuide = () => {
+    track("hrudhi.introduction.opened");
+    show(hrudhiIntroduction(natureContent(tourContent(content)).hrudhi,{esc,picture}));
+    root.querySelector("#hrudhi-continue").onclick=()=>dialog.close();
+  };
+  guide = createHrudhiGuide(root,"map",{motion:!reading && content.theme.motion && !reduced.matches,meet:meetGuide});
+  listen(root.querySelector("[data-map-meet-hrudhi]"),"click",meetGuide);
+  const guestAccount = createGuestAccount(root,{show,close:()=>dialog.close(),closeMenu:()=>menu.whenClosed()});
   root
     .querySelectorAll("[data-enquire]")
     .forEach((b) =>
@@ -491,6 +508,8 @@ function bind() {
   schedule();
   return () => {
     menu.destroy();
+    guestAccount.destroy();
+    guide?.destroy();
     removals.forEach((fn) => fn());
     cancelAnimationFrame(frame);
     observer.disconnect();
@@ -503,6 +522,7 @@ function bind() {
 }
 render();
 initializeMonitoring();
+initializeAnalytics();
 track("map.opened", {
   section: "map",
   outcome: reading ? "reading" : "immersive",

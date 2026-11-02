@@ -24,7 +24,7 @@ export function renderPublicHeader(
   { esc, mode = "home", path = mode === "home" ? "/" : "/map/" },
 ) {
   const current = path;
-  return `<header class="${mode === "home" ? "field-header" : "map-header"} public-header"><a href="/" class="field-brand" aria-label="${esc(c.brand.name)} home"><img src="/assets/brand/logo-white.svg" width="190" height="65" alt="${esc(c.brand.name)}"></a><nav class="public-quick-links" aria-label="Main navigation">${PUBLIC_PAGES.map((p) => `<a href="${p.href}" ${p.href === current ? 'aria-current="page"' : ""}>${esc(p.label)}</a>`).join("")}</nav><div class="public-header-actions"><button class="field-header-enquire public-visit" data-enquire="">Plan a visit ↗</button><button id="public-menu-toggle" class="public-menu-toggle" aria-label="Open menu" aria-controls="nature-menu" aria-expanded="false"><span class="menu-leaf-icon">${leaves}</span><span>Menu</span></button></div></header>`;
+  return `<header class="${mode === "home" ? "field-header" : "map-header"} public-header"><a href="/" class="field-brand" aria-label="${esc(c.brand.name)} home"><img src="/assets/brand/logo-white.svg" width="190" height="65" alt="${esc(c.brand.name)}"></a><nav class="public-quick-links" aria-label="Main navigation">${PUBLIC_PAGES.map((p) => `<a href="${p.href}" ${p.href === current ? 'aria-current="page"' : ""}>${esc(p.label)}</a>`).join("")}</nav><div class="public-header-actions"><button class="guest-account-trigger" id="guest-account-header" data-guest-account>Sign in</button><button class="field-header-enquire public-visit" data-enquire="">Plan a visit ↗</button><button id="public-menu-toggle" class="public-menu-toggle" aria-label="Open menu" aria-controls="nature-menu" aria-expanded="false"><span class="menu-leaf-icon">${leaves}</span><span>Menu</span></button></div></header>`;
 }
 export function renderPublicMenu(
   c,
@@ -40,7 +40,7 @@ export function renderPublicMenu(
     )
     .join(
       "",
-    )}</nav><div class="menu-visit"><button data-menu-enquire>Let’s plan your visit <span aria-hidden="true">↗</span></button><a href="tel:+${esc(c.visit.phone)}">+${esc(c.visit.phone)}</a></div></div></div><div class="menu-bottom"><span>${esc(c.brand.tagline)}</span>${mode === "map" ? '<button data-menu-reading>Reading view</button>' : ""}<button data-menu-atmosphere aria-pressed="false">☾ After sunset</button><a href="/admin/">Host studio ↗</a></div></dialog>`;
+    )}</nav><div class="menu-visit"><button data-menu-enquire>Let’s plan your visit <span aria-hidden="true">↗</span></button><a href="tel:+${esc(c.visit.phone)}">+${esc(c.visit.phone)}</a></div></div></div><div class="menu-bottom"><span>${esc(c.brand.tagline)}</span>${mode === "map" ? '<button data-menu-reading>Reading view</button>' : ""}<button data-menu-atmosphere aria-pressed="false">☾ After sunset</button><button id="guest-account-menu" data-guest-account>Guest sign in</button><a href="/admin/">Host studio ↗</a></div></dialog>`;
 }
 export function createPublicMenu(
   root,
@@ -48,7 +48,7 @@ export function createPublicMenu(
 ) {
   const dialog = root.querySelector("#nature-menu"),
     toggle = root.querySelector("#public-menu-toggle");
-  if (!dialog || !toggle) return { destroy() {} };
+  if (!dialog || !toggle) return { whenClosed: async () => {}, destroy() {} };
   const reduced = matchMedia("(prefers-reduced-motion: reduce)");
   const listeners = [];
   const scene = createMenuMotion(dialog, {enabled: () => motion && !reduced.matches && !dialog.classList.contains("menu-still")});
@@ -138,6 +138,7 @@ export function createPublicMenu(
     ),
   );
   return {
+    whenClosed() { return new Promise(resolve => { if (!dialog.open) return resolve(); dialog.addEventListener("close", resolve, {once:true}); close(); }); },
     destroy() {
       unwatchAtmosphere();
       listeners.forEach((fn) => fn());

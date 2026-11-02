@@ -1,6 +1,10 @@
+import { createHrudhiGuide } from "./hrudhi-guide.mjs";
+import { createGuestAccount } from "./guest-account.mjs";
+import { initializeAnalytics } from "./analytics.mjs";
+import { createLocationMap } from "./location-map.mjs";
 import { createGateWelcome, hrudhiIntroduction } from "./hrudhi-gate.mjs";
 import { createPublicMenu } from "./navigation.mjs";
-import { openEnquiry, openPrivacy } from "./guest-dialogs.mjs";
+import { openEnquiry, openPrivacy, openUpcoming } from "./guest-dialogs.mjs";
 import { createAlbum } from "./album.mjs";
 import { startWelcome } from "./welcome.mjs";
 import { natureContent } from "./nature-render.mjs";
@@ -15,6 +19,9 @@ let content = initial,
   menu,
   journey,
   gate,
+  guestAccount,
+  guide,
+  locationMap,
   album,
   unsubscribe,
   pendingContent,
@@ -30,6 +37,9 @@ function render() {
   album?.destroy();
   journey?.destroy();
   gate?.destroy();
+  guestAccount?.destroy();
+  guide?.destroy();
+  locationMap?.destroy();
   root.innerHTML = renderSite(content);
   for (const key of ["forest", "ivory", "leaf", "bronze"])
     document.documentElement.style.setProperty("--" + key, content.theme[key]);
@@ -51,10 +61,16 @@ function render() {
     onOpen: () => { lastFocus = root.querySelector("#public-menu-toggle"); },
     onClose: () => root.querySelector("#details-dialog")?.onclose?.(),
   });
+  const meetGuide = () => {
+    track("hrudhi.introduction.opened");
+    show(hrudhiIntroduction(natureContent(tourContent(content)).hrudhi,{esc,picture}));
+    root.querySelector("#hrudhi-continue").onclick=()=>root.querySelector("#details-dialog").close();
+  };
+  guide = createHrudhiGuide(root,"tour",{meet:meetGuide,motion:!simple && content.theme.motion});
   journey = createFieldJourney(
     root,
     content,
-    { stop: openTourStop, walk: openWalk, track, error: reportError },
+    { stop: openTourStop, walk: openWalk, track, error: reportError, guide: (i,force=false)=>{const stops=tourContent(content).stops;guide.select(i,stops[i]?.name||"Aroha",stops.length,force);} },
     { simple: simple || !content.theme.motion },
   );
   gate = createGateWelcome(root, natureContent(tourContent(content)).hrudhi, {
@@ -67,6 +83,8 @@ function render() {
     track,
     enter: () => journey.go(0),
   });
+  guestAccount = createGuestAccount(root,{show,close:()=>root.querySelector("#details-dialog").close(),closeMenu:()=>menu.whenClosed()});
+  locationMap = createLocationMap(root);
   album = createAlbum(root, tourContent(content).media, {
     resume: albumState,
     motion: !simple && content.theme.motion && !motion.matches,
@@ -193,6 +211,7 @@ function openMap() {
   );
 }
 function bind() {
+  root.querySelectorAll("[data-coming-soon]").forEach(b=>b.onclick=()=>openUpcoming(content,show,b.dataset.comingSoon));
   root
     .querySelectorAll("[data-cottage]")
     .forEach((b) => (b.onclick = () => openCottage(b.dataset.cottage)));
@@ -268,6 +287,7 @@ const finishWelcome = startWelcome(root, natureContent(tourContent(content)), {
 });
 window.addEventListener("aroha:route-arrival", finishWelcome, { once: true });
 initializeMonitoring();
+initializeAnalytics();
 motion.addEventListener("change", (e) => {
   if (e.matches) {
     finishWelcome();
@@ -335,5 +355,8 @@ window.addEventListener("pagehide", () => {
   unsubscribe?.();
   journey?.destroy();
   gate?.destroy();
+  guestAccount?.destroy();
+  guide?.destroy();
+  locationMap?.destroy();
   album?.destroy();
 });

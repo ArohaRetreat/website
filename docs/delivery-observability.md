@@ -12,7 +12,7 @@ The observer uses `https://indiacs.live.dynatrace.com`: `/api/v2/otlp/v1/{traces
 
 ## Events and identities
 
-Provider `aroha.sdlc`, namespace `aroha-retreat`, schema `sdlc.schema.version=1`. CI service `aroha-ci-observer`; production release service `aroha-delivery`; both reporter versions `1.0.0`. API service is `aroha-api` version `0.2.1` (optional Hrudhi CMS validation). CI environment is `ci`; Hosting environment is `production`. Their traces do not claim browser/API ancestry.
+Provider `aroha.sdlc`, namespace `aroha-retreat`, schema `sdlc.schema.version=1`. CI service `aroha-ci-observer`; production release service `aroha-delivery`; both reporter versions `1.0.0`. API service is `aroha-api` version `0.2.2` (optional visit/guide CMS validation). CI environment is `ci`; Hosting environment is `production`. Their traces do not claim browser/API ancestry.
 
 Events: `sdlc.workflow.completed`, `sdlc.check.completed`, `sdlc.step.completed`, `sdlc.test.report`, `sdlc.test.completed`, `sdlc.deployment.completed`, `sdlc.runtime.verified`. Preserve source run/attempt, repository, SHA, public run URL, job ID and bounded job alias, step number, actual conclusion and source times. Test events are explicitly runner-reported; names, assertions, output and fixture data are excluded. Case identities are hashes and the safe suite/ordinal links them to source artifacts. Missing reports are emitted as missing, never as passing cases. Original execution attempt is distinct from reporting run ID/attempt (or explicitly local reporting). Workflow completion is derived from original job completion rather than later API metadata updates. Test completion uses the runner callback clock; legacy missing clocks fall back to workflow end with an explicit provenance label.
 
