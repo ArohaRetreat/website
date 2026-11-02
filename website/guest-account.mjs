@@ -24,7 +24,11 @@ export function guestDisplayName(user) {
 }
 
 export function googlePhotoUrl(user) {
-  try { const u = new URL(user?.photoURL); return u.protocol === "https:" && (u.hostname === "googleusercontent.com" || u.hostname.endsWith(".googleusercontent.com")) && !u.username && !u.password ? u.href : ""; } catch { return ""; }
+  const providerPhoto = user?.providerData?.find(p => p.providerId === "google.com")?.photoURL;
+  for (const value of [providerPhoto, user?.photoURL]) {
+    try { const u = new URL(value); if (u.protocol === "https:" && (u.hostname === "googleusercontent.com" || u.hostname.endsWith(".googleusercontent.com")) && !u.username && !u.password) return u.href; } catch {}
+  }
+  return "";
 }
 export function guestAvatar(user) {
   const url = googlePhotoUrl(user);

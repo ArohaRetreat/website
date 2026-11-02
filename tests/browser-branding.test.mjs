@@ -5,6 +5,7 @@ import {googlePhotoUrl,guestAvatar} from '../website/guest-account.mjs';
 test('Google photo URL is restricted to HTTPS provider hosts and avatar names are escaped',()=>{
   const photo='https://lh3.googleusercontent.com/a/test=s96-c';
   assert.equal(googlePhotoUrl({photoURL:photo}),photo);
+  assert.equal(googlePhotoUrl({photoURL:null,providerData:[{providerId:"google.com",photoURL:photo}]}),photo);
   for(const bad of ['javascript:alert(1)','http://lh3.googleusercontent.com/a','https://lh3.googleusercontent.com.evil.test/a','https://user:secret@lh3.googleusercontent.com/a','/image.svg'])assert.equal(googlePhotoUrl({photoURL:bad}),'');
   const html=guestAvatar({displayName:'<img onerror=alert(1)>',photoURL:photo});
   assert.ok(html.includes('&lt;'));assert.ok(!html.includes('<img onerror'));assert.ok(html.includes('data-guest-photo'));assert.ok(html.includes('referrerpolicy="no-referrer"'));
