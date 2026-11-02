@@ -416,6 +416,7 @@ function renderEditor() {
         ...structuredClone(natureDefaults),
         ...draft.tour.nature,
       };
+      draft.tour.nature.hrudhi = { ...structuredClone(natureDefaults.hrudhi), ...draft.tour.nature.hrudhi };
       dirty = true;
       shell();
       notice("Backup loaded into the editor. Review before saving.");
@@ -469,6 +470,7 @@ async function load() {
     ...structuredClone(natureDefaults),
     ...draft.tour.nature,
   };
+  draft.tour.nature.hrudhi = { ...structuredClone(natureDefaults.hrudhi), ...draft.tour.nature.hrudhi };
   draft.hero = { ...defaults.hero, ...draft.hero };
       draft.visit = { ...locationDefaults, ...draft.visit };
       draft.packages = draft.packages.map(p => ({ ...p, availability: packageAvailability(p) }));
