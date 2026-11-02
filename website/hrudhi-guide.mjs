@@ -1,6 +1,7 @@
 // Reuse the approved character artwork; one short walk accompanies a new place.
 export function renderHrudhiGuide(mode, h, { esc }) {
   if (!h?.enabled) return "";
+  if(mode === "map") return `<div class="hrudhi-guide-track map-hrudhi-companion" data-hrudhi-guide="map" aria-hidden="true"><div class="guide-traveller"><span class="guide-viewport"><img class="guide-rest" src="${esc(h.portrait)}" alt="" width="512" height="768" loading="lazy"><img class="guide-walk-sheet" data-src="${esc(h.walkSheet || "/assets/retreat/hrudhi-walk-sheet-v1.webp")}" alt="" width="1774" height="887" decoding="async"></span></div></div>`;
   return `<div class="hrudhi-guide-track ${mode === "map" ? "map-hrudhi-companion" : "tour-hrudhi-companion"}" data-hrudhi-guide="${mode}"><span class="guide-ground" aria-hidden="true"></span><div class="guide-traveller"><button type="button" class="hrudhi-guide-button" id="hrudhi-guide-${mode}" aria-label="Meet Hrudhi, your nature guide"><span class="guide-viewport" aria-hidden="true"><img class="guide-rest" src="${esc(h.portrait)}" alt="" width="512" height="768" loading="lazy"><img class="guide-walk-sheet" data-src="${esc(h.walkSheet || "/assets/retreat/hrudhi-walk-sheet-v1.webp")}" alt="" width="1774" height="887" decoding="async"></span><span class="guide-name">Hrudhi ↗</span></button></div><span class="guide-place-caption">YOUR NATURE GUIDE</span></div>`;
 }
 export function createHrudhiGuide(root, mode, { meet, motion = true } = {}) {

@@ -1,3 +1,7 @@
+# Hrudhi on the map — 0.14.2
+
+Issue #34 replaces the map bottom rail with map-hrudhi.mjs and map-guide-route.mjs. The guide is decorative inside farm-map-plane and follows samples of the drawn main/side paths. New stop selection interrupts from the current rendered position; percentage transforms scale with the map. Dialogs, hidden/offscreen and reduced motion pause/settle safely; disposal removes all effects/listeners. No map Meet Hrudhi button or character hotspot. Homepage introduction/guide remain. API 0.2.2 and Natura 0.6.1 unchanged; current PR/release receipt owns deployment evidence.
+
 # Mobile gate repair — 0.14.1
 
 Issue #31: 0.14.0 mobile-v2 MP4 was overwritten by metadata JSON in a one-off export script. Re-encode from the original 24fps source without optical-flow blending; validate all bundled films before dist generation and test manifest sizes/hashes. Hash matching alone did not establish valid media playback. API 0.2.2 and Natura 0.6.1 remain unchanged. Current PR/release receipts establish deployment status.
