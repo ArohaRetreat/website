@@ -132,3 +132,9 @@ html[data-atmosphere="sunset"] .welcome-botany :is(.seed-root, .seed-shoot) { st
 html[data-atmosphere="sunset"] .album-toolbar { background: var(--dusk-ground); }
 
 html[data-atmosphere="sunset"] .nature-art-caption { color: var(--dusk-muted); }
+/* Outlined controls need explicit dusk ink too, including nested dialog flows. */
+html[data-atmosphere="sunset"] :is(.stop-nearby button, .farm-map-layout button, .guest-account-actions .text-link, .media-dialog-navigation button, .walk-caption nav button) { color: var(--dusk-ink); border-color: var(--dusk-line); }
+html[data-atmosphere="sunset"] .stop-nearby button { background: var(--dusk-raised); }
+html[data-atmosphere="sunset"] :is(.public-header.field-header,.public-header.map-header) { background: #163e2df5; color: #fff; }
+html[data-atmosphere="sunset"] .public-header.on-paper { color: #fff; }
+html[data-atmosphere="sunset"] .public-header.on-paper .field-brand img { filter: none; }

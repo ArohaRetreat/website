@@ -562,3 +562,44 @@ html[data-atmosphere="sunset"] .consent-garden { background:#1c3b2d; color:#f4f0
   .consent-garden[popover] { grid-template-columns: 1fr; padding: 24px; gap: 8px; }
   .consent-garden[popover] .consent-garden-actions { padding-top: 0; }
 }
+/* Centre the complete welcome note, rather than centring only its outer box. */
+.consent-garden[popover] { width: min(820px, calc(100vw - 32px)); inset-block-start: 112px; grid-template-columns: 1fr; justify-items: center; gap: 16px; padding: 28px 42px; }
+.consent-garden[popover] > div:first-of-type { width: 100%; max-width: 680px; }
+.consent-garden[popover] :is(p,h2) { text-align: center; }
+.consent-garden[popover] .consent-garden-actions { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; width: 100%; padding: 0; gap: 12px 22px; }
+.consent-garden[popover] [data-consent-choose] { grid-column: auto; }
+@media(min-width:701px) { .field-hero { min-height: 1120px; } .field-hero-content { top: max(410px, 32%); } }
+@media(max-width:700px) { .consent-garden[popover] { inset-block-start: 94px; padding: 24px; gap: 12px; max-height: calc(100svh - 110px); } .consent-garden[popover] .consent-garden-actions { gap: 10px 16px; } }
+
+/* Personal photographs come from Google Auth; initials remain a network fallback. */
+.guest-avatar { position: relative; display: inline-grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: #dce5c9; color: #183b2e; font: 24px Lora,serif; }
+.guest-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.guest-avatar img[hidden] { display: none; }
+.guest-account-trigger[data-signed-in="true"] { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.guest-trigger-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-leaf-menu > .guest-avatar { width: 54px; height: 54px; margin-bottom: 8px; }
+@media(max-width:700px) { .guest-account-trigger .guest-avatar { width: 26px; height: 26px; font-size: 18px; } }
+.field-experience-list summary > span:last-child { transition: transform 420ms var(--ease); }
+.field-experience-list summary[aria-expanded="true"] > span:last-child { transform: rotate(45deg); }
+@media(prefers-reduced-motion:reduce) { .field-experience-list summary > span:last-child { transition: none; } }
+
+/* The map ends directly at the shared photographic footer, without collapsed margins. */
+#living-map > main { padding-top: 96px; background: #1c2c1f; }
+#living-map .map-narrative { display: flow-root; padding-bottom: 0; }
+#living-map .map-narrative .map-ending { margin-bottom: 0; }
+#living-map .living-layout { padding-bottom: 0; background: #1c2c1f; }
+#living-map .scene-annotation { top: 112px; }
+@media(max-width:700px) { #living-map > main { padding-top: 84px; } }
+.field-experience-list summary[aria-expanded="false"] > span:last-child { transform: rotate(0); }
+/* Keep guest entry and the larger mark available on narrow phones too. */
+@media(max-width:350px) {
+  .public-header .field-brand img { width: 135px; max-width: none; }
+  .public-header .guest-account-trigger { display: inline-flex; max-width: 78px; }
+  #guest-account-header[data-signed-in="true"] { max-width: 78px; padding-inline: 6px; }
+}
+.hrudhi-gate-stage { padding-top: 116px; }
+@media(max-width:700px) { .hrudhi-gate-stage { padding-top: 100px; } }
+@media(max-height:550px) {
+  .hrudhi-gate-heading > p:last-child, .hrudhi-gate-heading .eyebrow { display: none; }
+  .hrudhi-gate-frame { width: min(65vw, 52svh); }
+}

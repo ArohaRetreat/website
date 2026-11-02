@@ -576,3 +576,29 @@ body.public-menu-open {
 .nature-menu[data-menu-phase="closing"] .menu-botanical,
 .nature-menu[data-menu-phase="closing"] .menu-water i,
 .nature-menu[data-menu-phase="closing"] .water-drop { animation-play-state: paused; }
+
+/* One persistent forest masthead on both routes, with a clearly legible mark. */
+.public-header.field-header, .public-header.map-header {
+  position: fixed; inset: 0 0 auto; height: 96px; z-index: 40;
+  padding: 12px 4vw; gap: 20px; color: #fff;
+  background: #163e2df5; border-bottom: 1px solid #b8c8a540;
+  backdrop-filter: blur(12px); box-sizing: border-box;
+}
+.public-header .field-brand img { display: block; width: 225px; height: auto; }
+.public-header.on-paper { color: #fff; }
+.public-header.on-paper .field-brand img { filter: none; }
+html { scroll-padding-top: 112px; }
+@media(min-width:701px) { #journey .tour-top { top: 114px; } }
+@media(max-width:700px) {
+  .public-header.field-header, .public-header.map-header { height: 84px; padding: 12px 16px; gap: 10px; }
+  .public-header .field-brand img { width: 150px; }
+  .public-header .public-header-actions { gap: 10px; min-width: 0; }
+  .public-header .guest-account-trigger { padding: 6px; font-size: 13px; max-width: 105px; }
+  #journey:not(.is-simple) .field-tour-stage { padding-top: 96px; }
+}
+@media(max-width:380px) {
+  .public-header .field-brand img { width: 135px; }
+  .public-header .public-menu-toggle > span:last-child { display: none; }
+  .public-header .public-header-actions { gap: 8px; }
+  .public-header .guest-account-trigger { max-width: 88px; }
+}

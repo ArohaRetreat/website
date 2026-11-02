@@ -43,7 +43,7 @@ export function createPlacePhotos(
     const note = img.parentElement?.querySelector("[data-photo-note]");
     if (note) {
       note.hidden = !/AI-generated|artistic impression/i.test(alt || "");
-      note.textContent = "ARTISTIC IMPRESSION";
+      note.textContent = "ARTIST’S IMPRESSION";
     }
     if (!handlers.has(img)) {
       const error = () => {

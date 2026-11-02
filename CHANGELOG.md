@@ -1,3 +1,10 @@
+## 0.16.3 — 2 November 2026
+
+- Centre first-visit copy, expand leaf photography, add persistent larger-logo navigation and prominent footer branding.
+- Repair sunset outline controls, animate experience disclosures and remove the map/footer gap.
+- Use Google account photographs with fallback, browser-aware favicons and consistent green browser theme metadata.
+- Shorten generated-scene captions and correct the story next arrow; preserve automatic IST atmosphere.
+
 ## 0.16.2 — 2 November 2026
 
 - Default public atmosphere to Aroha’s IST schedule, with timed manual overrides and background/history refresh.

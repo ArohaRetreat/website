@@ -1,3 +1,7 @@
+## Website0.16.3 / issue48
+
+Frontend presentation/identity pass only: shared header/footer, notice centring, intro photos, concise impression captions, dusk controls, experience disclosure grouping, map seam, Google-avatar display, browser favicon/theme metadata and story arrow. API0.3.0/CMSv8/Natura0.6.1 unchanged. Validate both modes and320/390 layouts, photo host rejection/fallback, exclusive disclosure reversal, favicon preference changes and header/fragment spacing. Android toolbar tint and actual Google-photo retrieval are separate device/account gates. Rollback Hosting without changing content or membership.
+
 ## Website 0.16.2 / issue46
 
 Frontend only: IST06:00/18:00 clock, expiring manual override, prepaint/live/bfcache refresh, popup text geometry and stable hero clearance. API0.3.0/CMSv8/Natura0.6.1 unchanged. Test UTC/IST day edges, year rollover, override expiry and storage denial; review popup/hero desktop and phone geometry. Rollback Hosting independently of content; old indefinite saved atmosphere is intentionally superseded by the new clock policy.
