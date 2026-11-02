@@ -64,7 +64,7 @@ function fixture(options) {
       return buttons;
     },
   };
-  const control = createHeroAtmosphere(root, options);
+  const control = createHeroAtmosphere(root, { initial: "day", ...options });
   return {
     buttons,
     classes,

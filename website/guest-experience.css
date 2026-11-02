@@ -540,3 +540,25 @@ html[data-atmosphere="sunset"] .consent-garden { background:#1c3b2d; color:#f4f0
 @media(prefers-reduced-motion:reduce) { .field-faqs summary > span { transition: none; } }
 .consent-garden[popover]:not(:popover-open):not(.consent-visible) { display: none; }
 .stop-dialog-actions > :is(.button, .field-text-link) { display: inline-flex; align-items: center; justify-content: center; min-height: 56px; }
+/* Keep the notice copy in a quiet reading column, separate from its controls. */
+.consent-garden[popover] {
+  width: min(940px, calc(100vw - 32px));
+  display: none;
+  grid-template-columns: minmax(0, 1fr) 250px;
+  align-items: start;
+  gap: 28px;
+  padding: 28px 44px 28px 32px;
+}
+.consent-garden[popover]:popover-open, .consent-garden.consent-visible { display: grid; }
+.consent-garden[popover] > div:first-of-type { min-width: 0; padding-top: 2px; }
+.consent-garden[popover] p { margin: 0; text-align: left; text-wrap: pretty; }
+.consent-garden[popover] h2 { margin: 8px 0 14px; }
+.consent-garden[popover] .consent-garden-actions { min-width: 0; width: 100%; padding-top: 12px; }
+@media(min-width:701px) {
+  .field-hero { min-height: 1000px; }
+  .field-hero-content { top: max(310px, 28%); }
+}
+@media(max-width:700px) {
+  .consent-garden[popover] { grid-template-columns: 1fr; padding: 24px; gap: 8px; }
+  .consent-garden[popover] .consent-garden-actions { padding-top: 0; }
+}

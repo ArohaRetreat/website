@@ -1,5 +1,5 @@
 import { atmospherePreference, setAtmosphere, watchAtmosphere } from './atmosphere.mjs';
-// A guest-controlled change of real photographs. No clock/weather simulation.
+// Real photographic variants follow the shared IST schedule or guest override.
 export function createHeroAtmosphere(root, { initial = atmospherePreference(), onChange = setAtmosphere, subscribe = watchAtmosphere } = {}) {
   const hero = root.querySelector(".field-hero");
   const day = root.querySelector(".hero-day");

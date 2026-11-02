@@ -1,3 +1,7 @@
+# IST atmosphere and welcome copy — 0.16.2
+
+Issue46. atmosphere.mjs resolves06:00–18:00IST daylight, otherwise evening, before public first paint via page-transitions.mjs. Manual override record expires at the next boundary; legacy indefinite preference no longer controls startup. Bootstrap clock schedules next boundary, refreshes on visibility/pageshow and pauses on pagehide; cross-bundle choice listener preserves overrides with denied storage. Keep event value compatible with all existing image/menu listeners. Popup copy/actions use separate columns and hero text reserves stable desktop clearance without moving on dismissal. API0.3.0/CMSv8/Natura0.6.1 unchanged. Clock is editorial, not astronomical sunrise/sunset.
+
 # Public layout and disclosure polish — 0.16.1
 
 Issue #44. Consent notice is a non-modal top-layer first-visit popup after the sprout reveal, with session dismissal and unchanged independent Dynatrace/GA opt-ins. Keep closed popovers explicitly display:none, so the earlier flex surface cannot expose them. No overlay/backdrop or mandatory choice. Privacy choices remain in the footer. FAQ motion is owned by faq-motion.mjs: native details, padded closed height, interruptible measured-height WAAPI, settled state on resize/reduced-motion/disposal. Homepage renderer owns cleanup.
