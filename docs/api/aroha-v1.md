@@ -1,3 +1,7 @@
+# Compatible photo variants — API 0.3.0
+
+Tour stops optionally accept `eveningImage` (existing trusted image URL policy, empty means use day) and `eveningImageAlt` (text, at most600characters). A non-empty evening image requires a non-empty description. Older records remain valid. Existing viewer/editor/admin permissions, expectedVersion conflicts, audit events and publish boundary apply unchanged. No rules/index/membership or secret changes. The host studio materializes empty optional fields and offers the existing image upload control. Only a saved and published variant becomes public. Invalid URLs/descriptions are rejected before a transaction.
+
 # Aroha administration API v1
 
 Base `/api/v1`, JSON over HTTPS. Every route requires a Firebase bearer ID token. `/session` accepts verified Google identities only; other routes require active membership. Errors use `{error:{code,requestId}}`, with the request ID also in `X-Request-Id`. Responses are not cached.

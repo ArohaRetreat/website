@@ -1,3 +1,4 @@
+import { createPlacePhotos } from "./place-photos.mjs";
 import { GATE_TRAVEL } from "./hrudhi-gate.mjs";
 import { createHeroAtmosphere } from "./hero-atmosphere.mjs";
 import { createBotanicalMotion, orbitPose } from "./botanical-motion.mjs";
@@ -65,6 +66,7 @@ export function createFieldJourney(
         const photo = document.createElement("img");
         photo.src = s.image;
         photo.alt = s.imageAlt;
+        Object.assign(photo.dataset,{photoDay:s.image,photoDayAlt:s.imageAlt,photoEvening:s.eveningImage||"",photoEveningAlt:s.eveningImageAlt||s.imageAlt});
         photo.loading = "lazy";
         photo.width = 1800;
         photo.height = 1200;
@@ -87,6 +89,7 @@ export function createFieldJourney(
       section.append(readable);
     }
   }
+  const placePhotos = createPlacePhotos(root);
   function go(index) {
     if (!section || !tour.stops.length) return;
     index = Math.max(0, Math.min(tour.stops.length - 1, index));
@@ -154,8 +157,7 @@ export function createFieldJourney(
         .catch(() => previous.remove());
     };
     image.onerror = () => previous.remove();
-    image.src = s.image;
-    image.alt = s.imageAlt;
+    placePhotos.set(image,s);
     if (image.complete) image.onload();
     stage.querySelector("#tour-index").textContent =
       String(i + 1).padStart(2, "0") +
@@ -375,6 +377,7 @@ export function createFieldJourney(
       cancelAnimationFrame(raf);
       botanical.destroy();
       atmosphere.destroy();
+      placePhotos.destroy();
       if (frame && filmHome) filmHome.append(frame);
       listeners.forEach((fn) => fn());
       observer?.disconnect();

@@ -1,3 +1,11 @@
+# 0.16.0 / API0.3.0
+
+- Add a Farm experience journal filter covering the supplied farm photographs and films, with filter-scoped viewing and retained paging.
+- Replace the library placeholder with a labelled generated reading-corner impression; use the real illuminated main-house dining photograph for the dining stop.
+- Remove the meditation interior image from the public tour/journal and use the supplied real night exterior when After sunset is selected, retaining the existing daylight image and an image-error fallback.
+- Add optional CMS day/evening place image fields with compatible API validation and shared photo lifecycle handling. Preserve current host-edited text during the scoped content update.
+- Keep Hrudhi narration parked. The pool visual remains pending identification of the construction source.
+
 # 0.15.0
 
 - Walk Hrudhi along the Living Map's drawn path with front, back, left and right poses; synchronize stride to distance, retain position on interruption and follow her on phones. Connect the homepage guide to continuous scroll progress rather than re-centred destination tabs.

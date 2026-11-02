@@ -79,8 +79,8 @@
       "title": "Make yourself at home.",
       "description": "The kitchen is in front of the main house.",
       "detail": "Guests can come together and cook their own meals here. Ask your hosts about kitchen access and arrangements before your visit. Aroha remains strictly vegetarian and alcohol-free.",
-      "image": "/assets/retreat/DSC_3917.webp",
-      "imageAlt": "Stone terraces and steps at the main house",
+      "image": "/assets/retreat/DSC_3779.webp",
+      "imageAlt": "Aroha’s dining pavilion glowing beneath warm lights at night.",
       "film": "",
       "mapX": 40,
       "mapY": 60,
@@ -96,8 +96,8 @@
       "title": "A little room for a book.",
       "description": "Beside the main house, another way to spend an unhurried afternoon.",
       "detail": "Find the library beside the main house. Take a reading break between a walk, a meal and time outdoors.",
-      "image": "/assets/retreat/DSC_3892.webp",
-      "imageAlt": "The shaded verandah beside the main house",
+      "image": "/assets/retreat/library-impression-v1.webp",
+      "imageAlt": "AI-generated artistic impression of a quiet library reading corner inspired by Aroha’s materials and greenery.",
       "film": "",
       "mapX": 32,
       "mapY": 51,
@@ -174,7 +174,9 @@
         "pool",
         "cottages"
       ],
-      "target": "packages"
+      "target": "packages",
+      "eveningImage": "/assets/retreat/meditation-evening-v1.webp",
+      "eveningImageAlt": "The meditation hall and its broad curved steps after sunset. Photograph supplied by the Aroha hosts."
     },
     {
       "id": "pool",
@@ -305,11 +307,11 @@
     {
       "id": "p-dsc-3779",
       "kind": "photo",
-      "name": "The main house verandah at night",
-      "description": "The main house verandah at night. Photograph from Aroha Retreat.",
+      "name": "The dining pavilion after sunset",
+      "description": "The dining pavilion at the main house, photographed after sunset.",
       "image": "/assets/retreat/DSC_3779.webp",
       "src": "",
-      "stop": "house"
+      "stop": "kitchen"
     },
     {
       "id": "p-dsc-3780",
@@ -344,15 +346,6 @@
       "name": "The meditation hall and its broad steps",
       "description": "The meditation hall and its broad steps. Photograph from Aroha Retreat.",
       "image": "/assets/retreat/DSC_3809.webp",
-      "src": "",
-      "stop": "meditation"
-    },
-    {
-      "id": "p-dsc-3815",
-      "kind": "photo",
-      "name": "Inside the meditation hall",
-      "description": "Inside the meditation hall. Photograph from Aroha Retreat.",
-      "image": "/assets/retreat/DSC_3815.webp",
       "src": "",
       "stop": "meditation"
     },
@@ -715,6 +708,114 @@
       "image": "/assets/retreat/20261028_114109-poster.webp",
       "src": "/assets/retreat/20261028_114109.mp4",
       "stop": "arrival"
+    },
+    {
+      "id": "p-farm-friends-welcome",
+      "kind": "photo",
+      "name": "Friends sharing a welcome at the farm",
+      "description": "Friends sharing a welcome at the farm. Photograph supplied by the Aroha hosts.",
+      "image": "/assets/retreat/farm-friends-welcome-v1.webp",
+      "src": "",
+      "stop": "farm"
+    },
+    {
+      "id": "p-farm-family-grove",
+      "kind": "photo",
+      "name": "A family afternoon beneath the farm trees",
+      "description": "A family afternoon beneath the farm trees. Photograph supplied by the Aroha hosts.",
+      "image": "/assets/retreat/farm-family-grove-v1.webp",
+      "src": "",
+      "stop": "farm"
+    },
+    {
+      "id": "p-farm-campfire-evening",
+      "kind": "photo",
+      "name": "Conversations around the evening campfire",
+      "description": "Conversations around the evening campfire. Photograph supplied by the Aroha hosts.",
+      "image": "/assets/retreat/farm-campfire-evening-v1.webp",
+      "src": "",
+      "stop": "farm"
+    },
+    {
+      "id": "p-farm-friends-under-palms",
+      "kind": "photo",
+      "name": "Friends together among the palms",
+      "description": "Friends together among the palms. Photograph supplied by the Aroha hosts.",
+      "image": "/assets/retreat/farm-friends-under-palms-v1.webp",
+      "src": "",
+      "stop": "farm"
+    },
+    {
+      "id": "p-farm-rooftop-greenery",
+      "kind": "photo",
+      "name": "Terracotta roofs tucked into the green",
+      "description": "Terracotta roofs tucked into the green. Photograph supplied by the Aroha hosts.",
+      "image": "/assets/retreat/farm-rooftop-greenery-v1.webp",
+      "src": "",
+      "stop": "farm"
+    },
+    {
+      "id": "p-farm-family-walk",
+      "kind": "photo",
+      "name": "A family walk through the farm",
+      "description": "A family walk through the farm. Photograph supplied by the Aroha hosts.",
+      "image": "/assets/retreat/farm-family-walk-v1.webp",
+      "src": "",
+      "stop": "farm"
+    },
+    {
+      "id": "p-farm-boulder-family",
+      "kind": "photo",
+      "name": "Together on the boulder hills",
+      "description": "Together on the boulder hills. Photograph supplied by the Aroha hosts.",
+      "image": "/assets/retreat/farm-boulder-family-v1.webp",
+      "src": "",
+      "stop": "farm"
+    },
+    {
+      "id": "p-farm-valley-family",
+      "kind": "photo",
+      "name": "A family pause above the valley",
+      "description": "A family pause above the valley. Photograph supplied by the Aroha hosts.",
+      "image": "/assets/retreat/farm-valley-family-v1.webp",
+      "src": "",
+      "stop": "farm"
+    },
+    {
+      "id": "v-farm-hilltop-view",
+      "kind": "video",
+      "name": "Across the valley from the boulder hills",
+      "description": "Across the valley from the boulder hills. A silent web edition of footage supplied by the Aroha hosts.",
+      "image": "/assets/retreat/farm-hilltop-view-poster-v1.webp",
+      "src": "/assets/retreat/farm-hilltop-view-v1.mp4",
+      "stop": "farm"
+    },
+    {
+      "id": "v-farm-campfire",
+      "kind": "video",
+      "name": "An evening around the campfire",
+      "description": "An evening around the campfire. A silent web edition of footage supplied by the Aroha hosts.",
+      "image": "/assets/retreat/farm-campfire-poster-v1.webp",
+      "src": "/assets/retreat/farm-campfire-v1.mp4",
+      "stop": "farm"
+    },
+    {
+      "id": "v-farm-canopy-view",
+      "kind": "video",
+      "name": "A view through the palms and cottage roofs",
+      "description": "A view through the palms and cottage roofs. A silent web edition of footage supplied by the Aroha hosts.",
+      "image": "/assets/retreat/farm-canopy-view-poster-v1.webp",
+      "src": "/assets/retreat/farm-canopy-view-v1.mp4",
+      "stop": "farm"
+    },
+    {
+      "id": "p-meditation-evening",
+      "kind": "photo",
+      "name": "The meditation hall after sunset",
+      "description": "The meditation hall and its broad curved steps after sunset. Photograph supplied by the Aroha hosts.",
+      "image": "/assets/retreat/meditation-evening-v1.webp",
+      "src": "",
+      "stop": "meditation"
     }
   ]
 }

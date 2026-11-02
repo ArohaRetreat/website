@@ -144,7 +144,7 @@ export function validateTour(t) {
         "nearby",
         "target",
       ],
-      ["walk", "onMap"],
+      ["walk", "onMap", "eveningImage", "eveningImageAlt"],
     );
     id(s.id);
     text(s.name, 80);
@@ -152,6 +152,9 @@ export function validateTour(t) {
     text(s.description, 600);
     text(s.detail);
     image(s);
+    if(s.eveningImage !== undefined) imageUrl(s.eveningImage);
+    if(s.eveningImageAlt !== undefined) text(s.eveningImageAlt,600);
+    if(s.eveningImage && !s.eveningImageAlt?.trim()) throw new DomainError("INVALID_IMAGE_DESCRIPTION");
     text(s.film, 48);
     if (s.onMap !== undefined) bool(s.onMap);
     if (s.walk !== undefined)
