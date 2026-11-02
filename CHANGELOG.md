@@ -1,3 +1,8 @@
+## 0.16.2 — 2 November 2026
+
+- Default public atmosphere to Aroha’s IST schedule, with timed manual overrides and background/history refresh.
+- Separate first-visit popup copy/actions and give desktop hero text stable clearance below it.
+
 ## 0.16.1 — 2 November 2026
 
 - Move optional monitoring to a dismissible first-visit popup after the welcome, preserving consent gates.

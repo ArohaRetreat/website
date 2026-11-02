@@ -1,3 +1,7 @@
+## Website 0.16.2 / issue46
+
+Frontend only: IST06:00/18:00 clock, expiring manual override, prepaint/live/bfcache refresh, popup text geometry and stable hero clearance. API0.3.0/CMSv8/Natura0.6.1 unchanged. Test UTC/IST day edges, year rollover, override expiry and storage denial; review popup/hero desktop and phone geometry. Rollback Hosting independently of content; old indefinite saved atmosphere is intentionally superseded by the new clock policy.
+
 ## Website 0.16.1 / issue44
 
 Frontend presentation and interaction only: non-modal consent popup, botanical section boundaries, gallery/detail action geometry and reversible FAQ motion. No API/schema/rules/index/secret/content changes. API0.3.0 and Natura0.6.1 retained. Validate desktop/320/390 layouts, FAQ reversal/close/reduced motion, welcome-to-consent handoff and dismissal; deploy immutable merged revision through observed Hosting wrapper. Rollback Hosting to previous version without restoring or modifying CMS content.
