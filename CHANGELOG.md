@@ -1,3 +1,10 @@
+# 0.15.0
+
+- Walk Hrudhi along the Living Map's drawn path with front, back, left and right poses; synchronize stride to distance, retain position on interruption and follow her on phones. Connect the homepage guide to continuous scroll progress rather than re-centred destination tabs.
+- Show the signed-in guest name and a leaf-shaped account list with My account and Sign out. Keep Google Auth session scope and host permissions unchanged.
+- Load the approved Dynatrace tag early for saved consent and identify consenting signed-in visitors with a Firebase UID, clearing on logout/withdrawal. Support the current RUM JavaScript event API, keep collection out of previews and offer a non-overlay first-visit consent card. Google Analytics remains independently opt-in.
+- Keep the new voiced Hrudhi Arrival sample in Natura review assets only, pending owner review.
+
 # 0.14.4
 
 - Open the current place’s Discover dialog from the homepage Hrudhi guide, with a matching accessible label. Keep the gate introduction separate.

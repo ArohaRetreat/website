@@ -244,6 +244,7 @@ export function createFieldJourney(
     section.classList.toggle("gate-covering", gateTravel() > 0 && gatePhase < 1);
     progress = clamp((-s.top - gateTravel()) / range);
     const state = routeState(progress, tour.stops.length);
+    actions.guideProgress?.(progress);
     setStop(state.index);
     const local = state.local;
     const center = progress * tour.stops.length - 0.4;
