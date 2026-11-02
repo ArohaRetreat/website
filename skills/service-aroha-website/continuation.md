@@ -1,3 +1,7 @@
+# Map guide clearance — 0.14.3
+
+Issue #34 final phone review found the arrival label obscured the resting character. guideDestination now chooses a sampled path point clear of all current marker bounds plus the full character silhouette, using current map dimensions. Route travel and reduced-motion destinations share this clearance. No API/Natura changes.
+
 # Hrudhi on the map — 0.14.2
 
 Issue #34 replaces the map bottom rail with map-hrudhi.mjs and map-guide-route.mjs. The guide is decorative inside farm-map-plane and follows samples of the drawn main/side paths. New stop selection interrupts from the current rendered position; percentage transforms scale with the map. Dialogs, hidden/offscreen and reduced motion pause/settle safely; disposal removes all effects/listeners. No map Meet Hrudhi button or character hotspot. Homepage introduction/guide remain. API 0.2.2 and Natura 0.6.1 unchanged; current PR/release receipt owns deployment evidence.
