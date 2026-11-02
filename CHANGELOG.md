@@ -1,3 +1,12 @@
+# 0.14.0
+
+- Add guest Google sign-in/sign-out through a lazy session-scoped Auth module shared with the host studio, without granting host membership or claiming online booking availability.
+- Enable Firebase Google Analytics only after separate explicit consent; preserve independent Dynatrace consent, withdrawal and privacy-safe identities.
+- Mark the ₹4,500 Meditation & Wellness package Coming soon, with host launch enquiries and no active dated enquiry selection. Availability is CMS-editable and backward compatible.
+- Add the verified Hrudhi Farms Google Maps embed on demand and link its supplied address to directions. No Maps API key is needed for the public embed.
+- Accompany tour stops and the Living Map with the approved-style Hrudhi guide and a short reference-derived walk cycle. Replace blended gate frames with clearer high-quality 60fps web exports preserving the original 24fps source cadence.
+- Make tour reading and control lanes adapt to short/zoomed viewports. Preserve the exact completed gate handoff and automatic reduced-motion behavior.
+
 # 0.13.1
 
 - Release the gate overlay’s visibility and interaction exactly at the completed reveal; prevent a floating-point remainder from leaving an invisible surface over Explore.

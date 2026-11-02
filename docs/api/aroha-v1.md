@@ -57,3 +57,13 @@ The extension uses existing `/draft`, `/publish` and history/restore routes. The
 Optional `tour.nature.hrudhi` contains `enabled` (boolean), `invitation` (240 characters), `description` (1,200), `bioTitle` (150), `bio` and `role` (2,000 each), `poster`, `still`, `portrait` (existing image URL policy), and `film`, `mobileFilm` (existing video URL policy). All fields are required when the object is supplied; older records without it remain valid and receive website defaults. Unknown fields are rejected. Text is escaped; media stays local or in the project’s immutable public Storage media path.
 
 Existing draft/save/publish/history routes, role checks, audit events, pagination, errors, expected-version conflicts and size limits remain unchanged. Deploy validator 0.2.1 before the new studio. Changes require explicit publication. No public write endpoint, guest record, live chat or personal biography is introduced. The illustrated guide is clearly distinguished from real farm hosts.
+
+## Visit details and guide assets (API 0.2.2 / website 0.14.0)
+
+Content schema remains 1. Each package optionally accepts `availability`: `available` or `coming-soon`. Missing values retain a backward-compatible product default: wellness is coming soon, other packages are available. The studio materialises defaults for editing; changing launch state requires normal explicit publication. Coming-soon packages cannot produce a dated enquiry (`PACKAGE_COMING_SOON`); visitors may ask the hosts about launch plans through a separate reviewed WhatsApp link.
+
+Optional `visit.address` is escaped text, under the existing string/content limits. Optional `visit.mapEmbedUrl` must be HTTPS at exactly www.google.com/maps/embed with a pb query; malformed/untrusted origins are `INVALID_MAP_URL`. An empty URL disables the embed. Existing location defaults are used for older publications. The standard Google Maps public share embed was obtained from the existing verified pin. It is loaded only when requested; this does not grant geolocation access or require an API key.
+
+Optional `tour.nature.hrudhi.walkSheet` follows the existing image URL policy. The asset format is a 4-by-2 equal-cell walk cycle; animation code remains fixed, not executable CMS content. Existing nature/guide records without it remain valid.
+
+No new backend route, guest database record, permission, membership, index or migration is added. Guest Google sessions are Firebase Auth identities only; every host API call still requires current active membership. Authenticated non-members remain denied by independent server/rules checks. Deploy the validator before studio/Hosting. Existing draft conflict/audit and observability contracts remain intact.

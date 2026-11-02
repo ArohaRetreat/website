@@ -37,7 +37,8 @@
     "poster": "/assets/retreat/hrudhi-gate-closed-v1.webp",
     "still": "/assets/retreat/hrudhi-gate-open-v1.webp",
     "portrait": "/assets/retreat/hrudhi-guide-v1.webp",
-    "film": "/assets/retreat/hrudhi-gate-desktop-v1.mp4",
-    "mobileFilm": "/assets/retreat/hrudhi-gate-mobile-v1.mp4"
+    "film": "/assets/retreat/hrudhi-gate-desktop-v2.mp4",
+    "mobileFilm": "/assets/retreat/hrudhi-gate-mobile-v2.mp4",
+    "walkSheet": "/assets/retreat/hrudhi-walk-sheet-v1.webp"
   }
 }

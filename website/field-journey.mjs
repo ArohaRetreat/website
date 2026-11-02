@@ -220,6 +220,7 @@ export function createFieldJourney(
       playback();
     }
     if (status) status.textContent = s.name + ". " + s.description;
+    actions.guide?.(i);
     actions.track("journey.stop", { section: s.id });
   }
   function paint() {
@@ -284,6 +285,7 @@ export function createFieldJourney(
         behavior: "instant",
       });
     }
+    actions.guide?.(Math.max(0,current),true);
     request();
   });
   listen(document, "visibilitychange", playback);

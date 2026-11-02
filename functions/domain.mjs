@@ -217,7 +217,8 @@ export function validateNature(n) {
   );
   if (n.hrudhi !== undefined) {
     const h = n.hrudhi;
-    obj(h, ["enabled", "invitation", "description", "bioTitle", "bio", "role", "poster", "still", "portrait", "film", "mobileFilm"]);
+    obj(h, ["enabled", "invitation", "description", "bioTitle", "bio", "role", "poster", "still", "portrait", "film", "mobileFilm"], ["walkSheet"]);
+    if (h.walkSheet !== undefined) imageUrl(h.walkSheet);
     bool(h.enabled);
     text(h.invitation, 240);
     text(h.description, 1200);
@@ -408,7 +409,8 @@ export function validateContent(c) {
       "description",
       "inclusions",
       "note",
-    ]);
+    ], ["availability"]);
+    if (s.availability !== undefined && !["available", "coming-soon"].includes(s.availability)) throw new DomainError("INVALID_CONTENT");
     id(s.id);
     ["name", "subtitle", "unit", "description", "note"].forEach((k) =>
       text(s[k], 1200),
@@ -432,7 +434,13 @@ export function validateContent(c) {
     "note",
     "enquiryLabel",
     "priceNote",
-  ]);
+  ], ["address", "mapEmbedUrl"]);
+  if (c.visit.mapEmbedUrl) {
+    try {
+      const u = new URL(c.visit.mapEmbedUrl);
+      if(u.origin !== "https://www.google.com" || u.pathname !== "/maps/embed" || !u.searchParams.has("pb")) throw Error();
+    } catch { throw new DomainError("INVALID_MAP_URL"); }
+  }
   Object.values(c.visit).forEach((v) => text(v));
   if (!/^\d{10,15}$/.test(c.visit.phone))
     throw new DomainError("INVALID_PHONE");
@@ -460,6 +468,7 @@ export function validateContent(c) {
 }
 export function enquiryText(c, f) {
   const p = c.packages.find((p) => p.id === f.package);
+  if (p && packageAvailability(p) === "coming-soon") throw new DomainError("PACKAGE_COMING_SOON");
   if (!p) throw new DomainError("CHOOSE_PACKAGE");
   const guests = Number(f.guests);
   if (!Number.isInteger(guests) || guests < 1 || guests > 100)
@@ -481,3 +490,5 @@ export function enquiryText(c, f) {
     throw new DomainError("CONTACT_DETAILS_REQUIRED");
   return `Hello Aroha! I would like to enquire about ${p.name}.\nDate: ${f.checkin}${p.overnight ? " to " + f.checkout : ""}\nGuests: ${guests}${p.overnight ? "\nPreferred cottage: " + (cottage?.name || "Please advise") : ""}\nName: ${f.name}\nPhone: ${f.phone}${f.message ? "\nMessage: " + f.message : ""}\nPlease confirm availability and the current tariff.`;
 }
+
+export const packageAvailability = p => p.availability ?? (p.id === "wellness" ? "coming-soon" : "available");
