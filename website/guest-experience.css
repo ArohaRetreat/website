@@ -489,3 +489,54 @@ html[data-atmosphere="sunset"] .consent-garden { background:#1c3b2d; color:#f4f0
 @media(max-width:700px){ .guest-account-trigger{max-width:11ch;} .consent-garden{margin:20px 5vw;padding:24px;flex-direction:column;align-items:stretch;gap:16px;} }
 @media(prefers-reduced-motion:reduce){.account-leaf-menu:popover-open{animation:none;}}
 @media(max-width:350px){#guest-account-header[data-signed-in="true"]{display:inline-flex;max-width:8ch;padding-inline:8px;font-size:12px}.public-header .field-brand img{max-width:100px}.public-header-actions{gap:8px}}
+
+/* A first-visit note floats above the hero, never occupying a story row. */
+.consent-garden[popover] {
+  position: fixed;
+  inset: max(84px, env(safe-area-inset-top)) auto auto 50%;
+  transform: translateX(-50%);
+  width: min(1000px, calc(100vw - 32px));
+  max-height: calc(100svh - 110px);
+  overflow-y: auto;
+  margin: 0;
+  padding: 30px 42px 28px 30px;
+  box-shadow: 0 18px 65px #001b2138;
+  transition: opacity 300ms var(--ease), translate 300ms var(--ease), display 300ms allow-discrete, overlay 300ms allow-discrete;
+  opacity: 0;
+  translate: 0 -12px;
+}
+.consent-garden[popover]:popover-open, .consent-garden.consent-visible {
+  display: flex;
+  opacity: 1;
+  translate: 0 0;
+}
+@starting-style { .consent-garden[popover]:popover-open { opacity: 0; translate: 0 -12px; } }
+.consent-garden .consent-dismiss {
+  position: absolute; right: 6px; top: 5px; width: 44px; height: 44px;
+  background: none; border: 0; color: inherit; font: 28px Source, sans-serif; cursor: pointer;
+}
+.consent-garden[popover] .consent-garden-actions {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px; min-width: 270px;
+}
+.consent-garden[popover] [data-consent-choose] { grid-column: 1/-1; justify-self: center; }
+.consent-garden[popover] .consent-garden-actions button { min-height: 44px; white-space: normal; }
+.consent-garden[popover] .button { padding: 12px 18px; }
+@media(max-width:700px) {
+  .consent-garden[popover] { inset-block-start: 76px; padding: 24px; gap: 14px; }
+  .consent-garden[popover] .consent-garden-actions { min-width: 0; width: 100%; }
+  .consent-garden[popover] h2 { padding-right: 20px; }
+}
+@media(prefers-reduced-motion:reduce) { .consent-garden[popover] { translate: none; transition-duration: 120ms; } }
+
+/* Let the actual landscape remain visible beneath the tour controls. */
+#journey .tour-reading-actions { background: none; }
+#journey .tour-reading { background: transparent; box-shadow: none; }
+.stop-dialog-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; margin-top: 30px; }
+.stop-dialog-actions > :is(.button, .field-text-link) { margin: 0; max-width: 100%; min-height: 48px; white-space: normal; }
+.stop-dialog-actions .field-text-link { display: inline-flex; align-items: center; }
+.field-faqs summary { gap: 24px; }
+.field-faqs summary > span { flex: 0 0 auto; transition: transform 420ms var(--ease); }
+.field-faqs summary[aria-expanded="true"] > span { transform: rotate(45deg); }
+@media(prefers-reduced-motion:reduce) { .field-faqs summary > span { transition: none; } }
+.consent-garden[popover]:not(:popover-open):not(.consent-visible) { display: none; }
+.stop-dialog-actions > :is(.button, .field-text-link) { display: inline-flex; align-items: center; justify-content: center; min-height: 56px; }

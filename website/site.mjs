@@ -1,3 +1,4 @@
+import { createFaqMotion } from "./faq-motion.mjs";
 import { placePhoto } from "./place-photos.mjs";
 import { atmospherePreference } from "./atmosphere.mjs";
 import { createHrudhiGuide } from "./hrudhi-guide.mjs";
@@ -25,6 +26,7 @@ let content = initial,
   guide,
   locationMap,
   album,
+  faqs,
   unsubscribe,
   pendingContent,
   subscriptionGeneration = 0;
@@ -37,6 +39,7 @@ function render() {
   const albumState = album?.state;
   menu?.destroy();
   album?.destroy();
+  faqs?.destroy();
   journey?.destroy();
   gate?.destroy();
   guestAccount?.destroy();
@@ -58,6 +61,7 @@ function render() {
     root.prepend(banner);
   }
   bind();
+  faqs = createFaqMotion(root, { enabled: !simple && content.theme.motion });
   menu = createPublicMenu(root, {
     motion: !simple && content.theme.motion && !motion.matches,
     onOpen: () => { lastFocus = root.querySelector("#public-menu-toggle"); },
@@ -130,7 +134,7 @@ function openTourStop(index) {
   const media = t.media.filter((m) => m.stop === s.id),
     ids = media.map((m) => m.id);
   show(
-    `<article class="field-stop-dialog">${picture(photo.image, photo.imageAlt, "stop-dialog-photo")}<p class="stop-dialog-caption">${esc(photo.imageAlt)}</p><div class="dialog-copy"><p class="eyebrow">${String(index + 1).padStart(2, "0")} / ${esc(s.name)}</p><h2 id="dialog-title">${esc(s.title)}</h2><p>${esc(s.detail)}</p>${media.length ? `<div class="stop-media-grid">${media.map((m) => `<button data-stop-media="${esc(m.id)}" aria-label="${m.kind === "video" ? "Watch" : "View"}: ${esc(m.name)}">${picture(m.image, m.name)}<span>${m.kind === "video" ? "▷ Film" : "View ↗"}</span></button>`).join("")}</div>` : ""}<button class="button" id="stop-enquire">${esc(content.visit.enquiryLabel)} ↗</button><button class="field-text-link" id="stop-section">${s.target === "cottages" ? "Explore accommodation" : s.target === "packages" ? "Compare visits" : "Discover more"} ↗</button><div class="stop-nearby"><span>Continue exploring</span>${s.nearby
+    `<article class="field-stop-dialog">${picture(photo.image, photo.imageAlt, "stop-dialog-photo")}<p class="stop-dialog-caption">${esc(photo.imageAlt)}</p><div class="dialog-copy"><p class="eyebrow">${String(index + 1).padStart(2, "0")} / ${esc(s.name)}</p><h2 id="dialog-title">${esc(s.title)}</h2><p>${esc(s.detail)}</p>${media.length ? `<div class="stop-media-grid">${media.map((m) => `<button data-stop-media="${esc(m.id)}" aria-label="${m.kind === "video" ? "Watch" : "View"}: ${esc(m.name)}">${picture(m.image, m.name)}<span>${m.kind === "video" ? "▷ Film" : "View ↗"}</span></button>`).join("")}</div>` : ""}<div class="stop-dialog-actions"><button class="button" id="stop-enquire">${esc(content.visit.enquiryLabel)} ↗</button><button class="field-text-link" id="stop-section">${s.target === "cottages" ? "Explore accommodation" : s.target === "packages" ? "Compare visits" : "Discover more"} ↗</button></div><div class="stop-nearby"><span>Continue exploring</span>${s.nearby
       .map((id) => {
         const next = t.stops.find((x) => x.id === id);
         return next
@@ -358,4 +362,5 @@ window.addEventListener("pagehide", () => {
   guide?.destroy();
   locationMap?.destroy();
   album?.destroy();
+  faqs?.destroy();
 });

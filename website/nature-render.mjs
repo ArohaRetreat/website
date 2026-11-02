@@ -34,3 +34,8 @@ export function heroMoments(n) {
   if (!n.enabled) return "";
   return `<div class="hero-moments" role="group" aria-label="Explore the farm in daylight or after sunset"><button type="button" data-hero-moment="day" aria-pressed="true"><span aria-hidden="true">☼</span> Under the palms</button><button type="button" data-hero-moment="evening" aria-pressed="false"><span aria-hidden="true">☾</span> After sunset</button></div><span id="hero-moment-status" class="sr-only" role="status"></span>`;
 }
+
+// A decorative vine gives sections a boundary without introducing another panel.
+export function botanicalDivider(kind = "branch") {
+  return `<div class="botanical-divider botanical-divider-${kind}" aria-hidden="true"><svg viewBox="0 0 1000 80" fill="none"><path class="divider-stem" d="M0 44C170 44 260 22 390 38S630 60 760 40S930 38 1000 36"/><g class="divider-leaves"><path d="M440 42C422 18 438 5 465 8C467 26 457 39 440 42ZM481 46C493 22 518 22 532 30C518 50 499 54 481 46ZM550 48C547 24 567 10 588 16C583 36 569 46 550 48Z"/></g><path class="divider-veins" d="M440 42L460 13M481 46L525 32M550 48L583 20"/><circle cx="628" cy="49" r="3"/><circle cx="642" cy="47" r="2"/></svg></div>`;
+}

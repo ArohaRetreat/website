@@ -1,3 +1,9 @@
+# Public layout and disclosure polish — 0.16.1
+
+Issue #44. Consent notice is a non-modal top-layer first-visit popup after the sprout reveal, with session dismissal and unchanged independent Dynatrace/GA opt-ins. Keep closed popovers explicitly display:none, so the earlier flex surface cannot expose them. No overlay/backdrop or mandatory choice. Privacy choices remain in the footer. FAQ motion is owned by faq-motion.mjs: native details, padded closed height, interruptible measured-height WAAPI, settled state on resize/reduced-motion/disposal. Homepage renderer owns cleanup.
+
+Botanical dividers separate intro/nature and experiences/packages. Desktop album has four deliberate filter columns; phones retain three plus a full-width Farm experience row. Stop-dialog actions use wrapping flex with real gap. Tour reading/actions have no filled background. API0.3.0, CMS version8, Natura0.6.1 and content remain unchanged. Record actual browser, CI and release evidence separately; physical-device acceptance remains open.
+
 # Farm media and place photo variants — 0.16.0 / API0.3.0
 
 Issue41. Album Farm experience filter is based on stop=farm and shares page/viewer state with existing photo/film filters. Twelve additional unique media entries include nine photographs and three silent films; higher-resolution originals replace duplicate exports. Meditation interior p-dsc-3815 is removed from public selection, while original files/history are retained. Library uses a labelled generated artistic impression, dining the existing DSC_3779 night photograph, meditation day stays intact with an optional supplied night image.

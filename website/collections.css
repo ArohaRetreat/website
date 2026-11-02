@@ -15,8 +15,8 @@
 }
 .album-toolbar .album-filters {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  width: 390px;
+  grid-template-columns: 1fr 1fr 1fr 1.65fr;
+  width: 620px;
   max-width: 100%;
   gap: 4px;
   padding: 5px;
@@ -352,6 +352,7 @@
   }
   .album-toolbar .album-filters {
     width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     padding: 4px;
   }
   .album-toolbar .album-filters button {
