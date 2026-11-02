@@ -2,7 +2,7 @@
 export function renderHrudhiGuide(mode, h, { esc }) {
   if (!h?.enabled) return "";
   if(mode === "map") return `<div class="hrudhi-guide-track map-hrudhi-companion" data-hrudhi-guide="map" aria-hidden="true"><div class="guide-traveller"><span class="guide-viewport"><img class="guide-rest" src="${esc(h.portrait)}" alt="" width="512" height="768" loading="lazy"><img class="guide-walk-sheet" data-src="${esc(h.walkSheet || "/assets/retreat/hrudhi-walk-sheet-v1.webp")}" alt="" width="1774" height="887" decoding="async"></span></div></div>`;
-  return `<div class="hrudhi-guide-track ${mode === "map" ? "map-hrudhi-companion" : "tour-hrudhi-companion"}" data-hrudhi-guide="${mode}"><span class="guide-ground" aria-hidden="true"></span><div class="guide-traveller"><button type="button" class="hrudhi-guide-button" id="hrudhi-guide-${mode}" aria-label="Meet Hrudhi, your nature guide"><span class="guide-viewport" aria-hidden="true"><img class="guide-rest" src="${esc(h.portrait)}" alt="" width="512" height="768" loading="lazy"><img class="guide-walk-sheet" data-src="${esc(h.walkSheet || "/assets/retreat/hrudhi-walk-sheet-v1.webp")}" alt="" width="1774" height="887" decoding="async"></span><span class="guide-name">Hrudhi ↗</span></button></div><span class="guide-place-caption">YOUR NATURE GUIDE</span></div>`;
+  return `<div class="hrudhi-guide-track ${mode === "map" ? "map-hrudhi-companion" : "tour-hrudhi-companion"}" data-hrudhi-guide="${mode}"><span class="guide-ground" aria-hidden="true"></span><div class="guide-traveller"><button type="button" class="hrudhi-guide-button" id="hrudhi-guide-${mode}" aria-label="Discover this place with Hrudhi" aria-haspopup="dialog"><span class="guide-viewport" aria-hidden="true"><img class="guide-rest" src="${esc(h.portrait)}" alt="" width="512" height="768" loading="lazy"><img class="guide-walk-sheet" data-src="${esc(h.walkSheet || "/assets/retreat/hrudhi-walk-sheet-v1.webp")}" alt="" width="1774" height="887" decoding="async"></span><span class="guide-name">Hrudhi ↗</span></button></div><span class="guide-place-caption">YOUR NATURE GUIDE</span></div>`;
 }
 export function createHrudhiGuide(root, mode, { meet, motion = true } = {}) {
   const rail = root.querySelector(`[data-hrudhi-guide="${mode}"]`);
@@ -81,7 +81,7 @@ export function createHrudhiGuide(root, mode, { meet, motion = true } = {}) {
     last = String(index);
     lastTarget = target;
     caption.textContent = `WITH YOU / ${name}`;
-    button.setAttribute("aria-label", `Meet Hrudhi, exploring ${name}`);
+    button.setAttribute("aria-label", `Discover ${name} with Hrudhi`);
     const request = ++generation;
     if (animation) {
       const matrix = getComputedStyle(traveller).transform;

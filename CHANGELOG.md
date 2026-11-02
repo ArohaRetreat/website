@@ -1,3 +1,8 @@
+# 0.14.4
+
+- Open the current place’s Discover dialog from the homepage Hrudhi guide, with a matching accessible label. Keep the gate introduction separate.
+- Separate mobile tour media, reading, destinations and guide controls into responsive rows so the green reading overlay no longer obscures the revolving photographs/films.
+
 # 0.14.3
 
 - Keep Hrudhi’s whole resting silhouette clear of map labels on phone and desktop; choose a nearby drawn path point using current label and character bounds.
