@@ -1,3 +1,7 @@
+# Mobile story and Hrudhi details — 0.14.4
+
+Issue #37: homepage guide clicks invoke openTourStop with journey.index, the same details renderer as Discover; gate introduction remains before entry. Phone tour uses explicit grid rows for media/reading/navigation/guide rather than overlapping absolute reading layers. Small-height variants retain reachable controls and full details in the dialog. Desktop orbit and map guide are unchanged. docs/hrudhi-narrated-guide-plan.md proposes a separate narrated sample; no narration is silently published. API0.2.2/Natura0.6.1 unchanged.
+
 # Map guide clearance — 0.14.3
 
 Issue #34 final phone review found the arrival label obscured the resting character. guideDestination now chooses a sampled path point clear of all current marker bounds plus the full character silhouette, using current map dimensions. Route travel and reduced-motion destinations share this clearance. No API/Natura changes.

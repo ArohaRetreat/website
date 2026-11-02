@@ -61,12 +61,8 @@ function render() {
     onOpen: () => { lastFocus = root.querySelector("#public-menu-toggle"); },
     onClose: () => root.querySelector("#details-dialog")?.onclose?.(),
   });
-  const meetGuide = () => {
-    track("hrudhi.introduction.opened");
-    show(hrudhiIntroduction(natureContent(tourContent(content)).hrudhi,{esc,picture}));
-    root.querySelector("#hrudhi-continue").onclick=()=>root.querySelector("#details-dialog").close();
-  };
-  guide = createHrudhiGuide(root,"tour",{meet:meetGuide,motion:!simple && content.theme.motion});
+  const discoverWithGuide = () => openTourStop(journey?.index ?? 0);
+  guide = createHrudhiGuide(root,"tour",{meet:discoverWithGuide,motion:!simple && content.theme.motion});
   journey = createFieldJourney(
     root,
     content,
