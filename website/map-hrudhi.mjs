@@ -1,4 +1,8 @@
-import { makeGuideNetwork, guideRoute } from "./map-guide-route.mjs";
+import {
+  makeGuideNetwork,
+  guideRoute,
+  guideDestination,
+} from "./map-guide-route.mjs";
 export function createMapHrudhi(root, { motion = true } = {}) {
   const rail = root.querySelector('[data-hrudhi-guide="map"]');
   if (!rail) return { select() {}, destroy() {} };
@@ -147,10 +151,29 @@ export function createMapHrudhi(root, { motion = true } = {}) {
         `[data-map-place="${CSS.escape(id)}"]`,
       );
       if (!marker) return;
-      destination = {
-        x: parseFloat(marker.style.left) * 10,
-        y: parseFloat(marker.style.top) * 10,
-      };
+      const bounds = plane.getBoundingClientRect(),
+        scale = 1000 / Math.max(1, bounds.width),
+        avatar = viewport.getBoundingClientRect();
+      const obstacles = [...plane.querySelectorAll("[data-map-place]")].map(
+        (el) => {
+          const r = el.getBoundingClientRect();
+          return {
+            left: (r.left - bounds.left - 6) * scale,
+            right: (r.right - bounds.left + 6) * scale,
+            top: (r.top - bounds.top - 6) * scale,
+            bottom: (r.bottom - bounds.top + 6) * scale,
+          };
+        },
+      );
+      destination = guideDestination(
+        network.nodes,
+        {
+          x: parseFloat(marker.style.left) * 10,
+          y: parseFloat(marker.style.top) * 10,
+        },
+        obstacles,
+        { width: avatar.width * scale, height: avatar.height * scale },
+      );
       if (initialized && rail.dataset.place === id) return;
       rail.dataset.place = id;
       move(!initialized || force);

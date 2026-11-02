@@ -1,6 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { makeGuideNetwork, guideRoute } from "../website/map-guide-route.mjs";
+import {
+  makeGuideNetwork,
+  guideRoute,
+  guideDestination,
+} from "../website/map-guide-route.mjs";
 import { renderMap } from "../website/map-render.mjs";
 import { readFile } from "node:fs/promises";
 test("guide returns from side paths through the trunk instead of cutting across the map", () => {
@@ -52,4 +56,20 @@ test("map guide is inside the physical map, decorative and has no Meet Hrudhi co
   assert.ok(guide > start);
   assert.match(html.slice(guide, guide + 50), /aria-hidden="true"/);
   assert.ok(html.includes('data-guide-path="main"'));
+});
+
+test("guide rests with her full body clear of place labels", () => {
+  const nodes = [
+    { x: 100, y: 100 },
+    { x: 100, y: 30 },
+    { x: 180, y: 100 },
+  ];
+  const target = guideDestination(
+    nodes,
+    { x: 100, y: 100 },
+    [{ left: 80, right: 120, top: 80, bottom: 120 }],
+    { width: 40, height: 60 },
+  );
+  assert.notDeepEqual(target, { x: 100, y: 100 });
+  assert.deepEqual(target, { x: 100, y: 30 });
 });

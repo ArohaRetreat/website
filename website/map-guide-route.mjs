@@ -65,3 +65,22 @@ export function guideRoute(network, from, to) {
   }
   return [from, ...route];
 }
+
+// Keep the whole character clear of labels, including the space above her feet.
+export function guideDestination(nodes, target, obstacles, size) {
+  const clear = nodes.filter(
+    (p) =>
+      !obstacles.some(
+        (b) =>
+          p.x + size.width / 2 > b.left &&
+          p.x - size.width / 2 < b.right &&
+          p.y > b.top &&
+          p.y - size.height < b.bottom,
+      ),
+  );
+  const candidates = clear.length ? clear : nodes;
+  return candidates.reduce(
+    (best, p) => (distance(p, target) < distance(best, target) ? p : best),
+    candidates[0],
+  );
+}
