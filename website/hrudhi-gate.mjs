@@ -1,4 +1,11 @@
 export const GATE_TRAVEL = 1.25;
+export function gateReveal(progress) {
+  const complete = progress >= 1;
+  return {
+    complete,
+    opacity: complete ? 0 : 1 - clamp((progress - 0.8) / 0.2),
+  };
+}
 const clamp = (n) => Math.max(0, Math.min(1, n));
 export function gatePose(progress) {
   const p = clamp(progress),
@@ -133,14 +140,14 @@ export function createGateWelcome(
     seeker?.block(blocked());
     if (blocked()) return;
     const progress = clamp(-r.top / Math.max(1, innerHeight * GATE_TRAVEL));
-    const fade = clamp((progress - 0.8) / 0.2);
-    section.style.opacity = String(1 - fade);
-    section.style.visibility = fade >= 1 ? "hidden" : "visible";
-    section.inert = fade >= 1;
+    const reveal = gateReveal(progress);
+    section.style.opacity = String(reveal.opacity);
+    section.style.visibility = reveal.complete ? "hidden" : "visible";
     for (const child of stage.children)
-      if (child !== section) child.inert = fade < 1;
-    if (fade >= 1 && section.contains(document.activeElement))
+      if (child !== section) child.inert = !reveal.complete;
+    if (reveal.complete && section.contains(document.activeElement))
       stage.querySelector("#tour-discover")?.focus({ preventScroll: true });
+    section.inert = reveal.complete;
     if (!failed) seeker?.seek(gatePose(progress / 0.8).time);
     if (progress > 0.02 && !started) {
       started = true;

@@ -115,3 +115,5 @@ The shared Hosting design export is pinned to Natura 0.6.1 at d2a170f6b42ed46635
 
 
 Website 0.13.0 adds hrudhi-gate.mjs/hrudhi-gate.css, optional CMS Hrudhi settings, native scroll seeking inside the existing Explore stage and no-film fallbacks; public Simple View controls/preferences are removed. Read docs/website-living-direction.md. Validate seek coalescing/disposal, intro focus, phone framing and no film request in reduced/Save-Data. API 0.2.1 validator must precede Hosting.
+
+0.13.1 corrects exact handoff visibility/inert completion and preserves the entrance offset on resize. Test gateReveal(1) for exact zero/complete; verify tour controls accept clicks after the live bypass.

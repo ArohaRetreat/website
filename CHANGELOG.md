@@ -1,3 +1,8 @@
+# 0.13.1
+
+- Release the gate overlay’s visibility and interaction exactly at the completed reveal; prevent a floating-point remainder from leaving an invisible surface over Explore.
+- Transfer keyboard focus to the tour after entry and preserve the entrance/tour offset on viewport resize.
+
 # 0.13.0
 
 - Welcome guests with a reversible, scroll-controlled Hrudhi gate-opening film over the existing Explore stage, revealing the real farm in the same pinned viewport. Keep a direct Enter the farm bypass and an accessible illustrated-guide introduction.

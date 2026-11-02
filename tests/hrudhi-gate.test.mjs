@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import {
   gatePose,
+  gateReveal,
   createGateSeeker,
   renderGateWelcome,
   hrudhiIntroduction,
@@ -233,4 +234,13 @@ test("Disabled motion, reduced motion and Save-Data keep films unfetched and dis
       if (v) Object.defineProperty(globalThis, k, v);
       else delete globalThis[k];
   }
+});
+
+test("the completed gate is exactly transparent and releases interaction, including reverse travel", () => {
+  assert.deepEqual(gateReveal(1), { complete: true, opacity: 0 });
+  assert.deepEqual(gateReveal(1.5), { complete: true, opacity: 0 });
+  assert.deepEqual(gateReveal(0), { complete: false, opacity: 1 });
+  const back = gateReveal(0.9);
+  assert.equal(back.complete, false);
+  assert.ok(back.opacity > 0 && back.opacity < 1);
 });
