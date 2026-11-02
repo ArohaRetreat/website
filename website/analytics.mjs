@@ -1,9 +1,11 @@
 import { preference } from "./preferences.mjs";
 let pending, adapter;
+export function analyticsPageAllowed(url) {
+  try {const u=new URL(url);return u.origin === "https://aroharetreat.com" && ["/","/map/"].includes(u.pathname) && !u.searchParams.has("preview");} catch {return false;}
+}
 export async function initializeAnalytics({
   load = () => import("./firebase-analytics.mjs"),
-  enabled = typeof location !== "undefined" &&
-    location.hostname === "aroharetreat.com",
+  enabled = typeof location !== "undefined" && analyticsPageAllowed(location.href),
 } = {}) {
   if (!enabled || preference("aroha-analytics") !== "allowed") return;
   if (pending) return pending;

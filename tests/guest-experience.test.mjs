@@ -9,7 +9,7 @@ import {
 import { renderSite, esc } from "../website/render.mjs";
 import { renderMap } from "../website/map-render.mjs";
 import { renderLocationMap } from "../website/location-map.mjs";
-import { initializeAnalytics } from "../website/analytics.mjs";
+import { initializeAnalytics, analyticsPageAllowed } from "../website/analytics.mjs";
 import { renderHrudhiGuide } from "../website/hrudhi-guide.mjs";
 const content = JSON.parse(
   await readFile(new URL("../website/content.json", import.meta.url)),
@@ -151,4 +151,10 @@ test("Hrudhi accompanies both public routes with one guide per view and escaped 
   );
   assert.ok(!guide.includes(' onerror="evil'));
   assert.ok(guide.includes("data-src="));
+});
+
+test("Analytics excludes admin, private drafts, aliases, HTTP and lookalike origins",()=>{
+ assert.equal(analyticsPageAllowed("https://aroharetreat.com/"),true);
+ assert.equal(analyticsPageAllowed("https://aroharetreat.com/map/#pond"),true);
+ for(const url of ["https://aroharetreat.com/?preview=1","https://aroharetreat.com/admin/","https://aroha-retreat.web.app/","http://aroharetreat.com/","https://aroharetreat.com.evil.test/","invalid"]){assert.equal(analyticsPageAllowed(url),false,url);}
 });
