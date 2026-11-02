@@ -1,3 +1,4 @@
+import { GATE_TRAVEL } from "./hrudhi-gate.mjs";
 import { createHeroAtmosphere } from "./hero-atmosphere.mjs";
 import { createBotanicalMotion, orbitPose } from "./botanical-motion.mjs";
 import { tourContent } from "./field-render.mjs";
@@ -48,10 +49,11 @@ export function createFieldJourney(
   const botanical = createBotanicalMotion(root, motion, () => request());
   const panels = [...root.querySelectorAll("[data-orbit-panel]")];
   const filmHome = frame?.parentElement;
+  const gateTravel = () => motion && root.querySelector("#hrudhi-welcome") ? innerHeight * GATE_TRAVEL : 0;
   if (section) {
     section.classList.toggle("is-simple", !motion);
     section.style.height = motion
-      ? `${Math.max(1, tour.stops.length) * 135 + 100}svh`
+      ? `${Math.max(1, tour.stops.length) * 135 + 100 + (root.querySelector("#hrudhi-welcome") ? GATE_TRAVEL * 100 : 0)}svh`
       : "auto";
     if (!motion) {
       const readable = document.createElement("div");
@@ -93,11 +95,12 @@ export function createFieldJourney(
         ?.scrollIntoView({ behavior: "instant", block: "start" });
       return;
     }
-    const range = section.offsetHeight - innerHeight;
+    const range = section.offsetHeight - innerHeight - gateTravel();
     window.scrollTo({
       top:
         scrollY +
         section.getBoundingClientRect().top +
+        gateTravel() +
         (range * (index + 0.4)) / tour.stops.length,
       behavior: reduced ? "instant" : "smooth",
     });
@@ -111,12 +114,13 @@ export function createFieldJourney(
       !document.hidden &&
       !dialogOpen() &&
       motion &&
-      !lowData;
+      !lowData &&
+      !section.classList.contains("gate-covering");
     if (play && film.paused)
       film
         .play()
         .then(() => {
-          if (dead || paused || offscreen || document.hidden || dialogOpen())
+          if (dead || paused || offscreen || document.hidden || dialogOpen() || section.classList.contains("gate-covering"))
             film.pause();
         })
         .catch(() => {
@@ -233,8 +237,9 @@ export function createFieldJourney(
       film.pause();
       return;
     }
-    const range = Math.max(1, section.offsetHeight - innerHeight);
-    progress = clamp(-s.top / range);
+    const range = Math.max(1, section.offsetHeight - innerHeight - gateTravel());
+    section.classList.toggle("gate-covering", gateTravel() > 0 && -s.top < gateTravel());
+    progress = clamp((-s.top - gateTravel()) / range);
     const state = routeState(progress, tour.stops.length);
     setStop(state.index);
     const local = state.local;
@@ -259,11 +264,6 @@ export function createFieldJourney(
     image.style.transform = `translate3d(${px * 10}px,${py * 7 - local * 12}px,0) scale(${1.035 + local * 0.055})`;
     // Only this visual moves. Text and controls stay still for reading.
     visual.style.transform = `perspective(1800px) rotateY(${px * 0.45}deg)`;
-    const open = clamp(progress * tour.stops.length * 3);
-    const doors = stage.querySelectorAll(".tour-threshold>div");
-    doors[0].style.transform = `perspective(1200px) translateX(${-open * 106}%) rotateY(${-open * 16}deg)`;
-    doors[1].style.transform = `perspective(1200px) translateX(${open * 106}%) rotateY(${open * 16}deg)`;
-    stage.querySelector(".tour-threshold").hidden = open >= 1;
     stage.querySelector(".tour-progress>span").style.transform =
       `scaleX(${progress})`;
     playback();

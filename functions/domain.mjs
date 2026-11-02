@@ -213,8 +213,20 @@ export function validateNature(n) {
       "description",
       "items",
     ],
-    ["heroEveningImage", "heroEveningAlt"],
+    ["heroEveningImage", "heroEveningAlt", "hrudhi"],
   );
+  if (n.hrudhi !== undefined) {
+    const h = n.hrudhi;
+    obj(h, ["enabled", "invitation", "description", "bioTitle", "bio", "role", "poster", "still", "portrait", "film", "mobileFilm"]);
+    bool(h.enabled);
+    text(h.invitation, 240);
+    text(h.description, 1200);
+    text(h.bioTitle, 150);
+    text(h.bio, 2000);
+    text(h.role, 2000);
+    for (const k of ["poster", "still", "portrait"]) imageUrl(h[k]);
+    for (const k of ["film", "mobileFilm"]) videoUrl(h[k]);
+  }
   bool(n.enabled);
   bool(n.welcome);
   for (const k of ["welcomeTitle", "welcomeLabel", "eyebrow", "title"])

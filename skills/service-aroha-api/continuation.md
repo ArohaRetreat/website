@@ -37,3 +37,6 @@ functions/domain.mjs now validates optional tour content, bounded map positions,
 Website 0.6 adds optional `tour.nature` to the same schema 1 contract: bounded copy/statistics, two allowed image URLs and enabled/welcome booleans. Integration fixture now saves and publishes it through the isolated lifecycle. Deploy the reviewed validator with preserved production owner configuration before live CMS use. Preview Hosting does not deploy API or Storage rules.
 
 Website 0.7 adds optional nature heroEveningImage/heroEveningAlt under the same image URL/text validation and role/version contracts. Integration fixtures include them. Production validator rollout is still separate from Hosting review previews.
+
+
+API 0.2.1 adds optional tour.nature.hrudhi validation; prior content remains valid. Existing permissions/expectedVersion/telemetry unchanged. See docs/api/aroha-v1.md; deploy before website 0.13.0 studio.

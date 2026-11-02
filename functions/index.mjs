@@ -397,7 +397,7 @@ export const arohaApi = onRequest(
           JSON.stringify({
             severity: status >= 500 ? "ERROR" : "INFO",
             service: "aroha-api",
-            version: "0.2.0",
+            version: "0.2.1",
             operation,
             status,
             durationMs: Date.now() - started,

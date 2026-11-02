@@ -1,0 +1,46 @@
+{
+  "source": "ArohaRetreat/natura#22 gate-opening-v1 approved study",
+  "master": "Natura review/hrudhi-performance/gate-opening-v1/renders/hrudhi-gate-study-01-4k60.mp4",
+  "provenance": "Generated 1344x756/24fps performance upscaled/interpolated to 4K60; web encodes from the 60fps intermediate, not native 4K footage. Portrait is a resized format conversion of the original neutral-v5 character art.",
+  "assets": [
+    {
+      "path": "website/assets/retreat/hrudhi-gate-closed-v1.webp",
+      "bytes": 270250,
+      "sha256": "9391443d724dda23b95bad4c4c6eebadd8f76b3a35b456ac43e9c5ef0a6d3714"
+    },
+    {
+      "path": "website/assets/retreat/hrudhi-gate-desktop-v1.mp4",
+      "bytes": 8347013,
+      "sha256": "50f3e03f413ff8987bec876762b8713ffc47e8965237c9d03fe12dea0fc42207",
+      "probe": {
+        "width": 1920,
+        "height": 1080,
+        "r_frame_rate": "60/1",
+        "duration": "8.000000",
+        "nb_frames": "480"
+      }
+    },
+    {
+      "path": "website/assets/retreat/hrudhi-gate-mobile-v1.mp4",
+      "bytes": 2958541,
+      "sha256": "2e2d07360f91cd833d23d51180560bb301c08c183da1fdf463f55fc9d9aa1df2",
+      "probe": {
+        "width": 960,
+        "height": 540,
+        "r_frame_rate": "60/1",
+        "duration": "8.000000",
+        "nb_frames": "480"
+      }
+    },
+    {
+      "path": "website/assets/retreat/hrudhi-gate-open-v1.webp",
+      "bytes": 283020,
+      "sha256": "0080af127f1049484041e72c49a956b3ceadf04928dcae2e00aa7acf24286ccf"
+    },
+    {
+      "path": "website/assets/retreat/hrudhi-guide-v1.webp",
+      "bytes": 71082,
+      "sha256": "1cc5b97bbe9afd91ca610cdc9a8922c220dd73f0347a35bb840ac562643e6c78"
+    }
+  ]
+}

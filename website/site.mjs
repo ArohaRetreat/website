@@ -1,10 +1,10 @@
+import { createGateWelcome, hrudhiIntroduction } from "./hrudhi-gate.mjs";
 import { createPublicMenu } from "./navigation.mjs";
 import { openEnquiry, openPrivacy } from "./guest-dialogs.mjs";
 import { createAlbum } from "./album.mjs";
 import { startWelcome } from "./welcome.mjs";
 import { natureContent } from "./nature-render.mjs";
 import initial from "./content.json";
-import { preference, setPreference } from "./preferences.mjs";
 import { renderSite, esc, picture, money } from "./render.mjs";
 import { tourContent, renderFarmMap } from "./field-render.mjs";
 import { createFieldJourney } from "./field-journey.mjs";
@@ -14,6 +14,7 @@ let content = initial,
   lastFocus,
   menu,
   journey,
+  gate,
   album,
   unsubscribe,
   pendingContent,
@@ -21,13 +22,14 @@ let content = initial,
 const root = document.getElementById("site"),
   motion = matchMedia("(prefers-reduced-motion: reduce)"),
   preview = new URLSearchParams(location.search).has("preview");
-let simple = motion.matches || preference("aroha-view") === "simple";
+let simple = motion.matches;
 function render() {
   const y = scrollY;
   const albumState = album?.state;
   menu?.destroy();
   album?.destroy();
   journey?.destroy();
+  gate?.destroy();
   root.innerHTML = renderSite(content);
   for (const key of ["forest", "ivory", "leaf", "bronze"])
     document.documentElement.style.setProperty("--" + key, content.theme[key]);
@@ -55,6 +57,16 @@ function render() {
     { stop: openTourStop, walk: openWalk, track, error: reportError },
     { simple: simple || !content.theme.motion },
   );
+  gate = createGateWelcome(root, natureContent(tourContent(content)).hrudhi, {
+    motion: !simple && content.theme.motion && !motion.matches,
+    meet: () => {
+      track("hrudhi.introduction.opened");
+      show(hrudhiIntroduction(natureContent(tourContent(content)).hrudhi, { esc, picture }));
+      root.querySelector("#hrudhi-continue").onclick = () => root.querySelector("#details-dialog").close();
+    },
+    track,
+    enter: () => journey.go(0),
+  });
   album = createAlbum(root, tourContent(content).media, {
     resume: albumState,
     motion: !simple && content.theme.motion && !motion.matches,
@@ -181,24 +193,6 @@ function openMap() {
   );
 }
 function bind() {
-  const toggle = root.querySelector("#view-toggle");
-  toggle.textContent = simple ? "Journey view" : "Simple view";
-  toggle.setAttribute("aria-pressed", String(simple));
-  toggle.hidden = !content.theme.motion;
-  toggle.onclick = () => {
-    const el = root.querySelector("#journey"),
-      r = el?.getBoundingClientRect(),
-      inTour = r && r.top <= 120 && r.bottom > 120,
-      index = journey?.index || 0;
-    simple = !simple;
-    setPreference("aroha-view", simple ? "simple" : "journey");
-    render();
-    if (inTour) journey.go(index);
-    root.querySelector("#view-toggle").focus({ preventScroll: true });
-  };
-  root
-    .querySelectorAll("[data-simple-view]")
-    .forEach((b) => (b.onclick = toggle.onclick));
   root
     .querySelectorAll("[data-cottage]")
     .forEach((b) => (b.onclick = () => openCottage(b.dataset.cottage)));
@@ -215,7 +209,7 @@ function bind() {
     track("journey.started");
     if (root.querySelector("#journey")) {
       e.preventDefault();
-      journey.go(0);
+      root.querySelector("#journey").scrollIntoView({ behavior: simple || !content.theme.motion ? "instant" : "smooth" });
     }
   };
   const dialog = root.querySelector("#details-dialog");
@@ -264,6 +258,11 @@ function bind() {
   root.querySelector("#privacy-settings").onclick = () => openPrivacy(show);
 }
 render();
+// The gate's sticky travel is added during enhancement. Resolve a fresh deep
+// link against the final geometry; restored/reloaded documents keep native scroll.
+if (location.hash && performance.getEntriesByType("navigation")[0]?.type === "navigate") {
+  try { document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView({ behavior: "instant" }); } catch { /* Malformed fragments stay native. */ }
+}
 const finishWelcome = startWelcome(root, natureContent(tourContent(content)), {
   enabled: !simple && content.theme.motion && !preview && !document.documentElement.dataset.routeArrival,
 });
@@ -272,9 +271,9 @@ initializeMonitoring();
 motion.addEventListener("change", (e) => {
   if (e.matches) {
     finishWelcome();
-    simple = true;
-    render();
   }
+  simple = e.matches;
+  render();
 });
 if (preview)
   window.addEventListener("message", (e) => {
@@ -335,5 +334,6 @@ window.addEventListener("pagehide", () => {
   finishWelcome();
   unsubscribe?.();
   journey?.destroy();
+  gate?.destroy();
   album?.destroy();
 });

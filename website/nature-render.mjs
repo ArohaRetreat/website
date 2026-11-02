@@ -1,6 +1,6 @@
 import defaults from "./nature-content.json" with { type: "json" };
 import { sceneSvg } from "../vendor/natura/runtime/nature-scenes.js";
-export const natureContent = (tour) => ({ ...defaults, ...tour.nature });
+export const natureContent = (tour) => ({ ...defaults, ...tour.nature, hrudhi: { ...defaults.hrudhi, ...tour.nature?.hrudhi } });
 export function welcomeMarkup(c, n, esc) {
   return `<div id="aroha-welcome" class="aroha-welcome" role="region" aria-label="Welcome to Aroha"><svg class="welcome-veil" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"><defs><mask id="welcome-leaf-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="100%" height="100%"><rect width="100%" height="100%" fill="white"/><g class="welcome-aperture-anchor" transform="translate(500 400)"><g class="welcome-aperture"><path d="M-20 135C-160 80-160-80-130-150C10-160 170-80 140 55C100 140 30 160-20 135Z" fill="black"/></g></g></mask></defs><rect width="100%" height="100%" class="welcome-paper" mask="url(#welcome-leaf-mask)"/></svg><span class="welcome-orbit welcome-copy" aria-hidden="true"></span><div class="welcome-botany" aria-hidden="true">${sceneSvg("seed")}</div><p class="eyebrow welcome-copy">${esc(n.welcomeLabel)}</p><p class="welcome-title welcome-copy">${esc(n.welcomeTitle)}</p><span class="welcome-copy" lang="kn">${esc(c.brand.kannada)}</span><button id="welcome-skip" type="button">Skip welcome <span aria-hidden="true">↗</span></button></div>`;
 }

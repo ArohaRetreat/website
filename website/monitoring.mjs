@@ -1,6 +1,9 @@
 import { preference, setPreference } from "./preferences.mjs";
 const names = new Set([
   "journey.started",
+  "hrudhi.introduction.opened",
+  "hrudhi.gate.started",
+  "hrudhi.gate.completed",
   "journey.stop",
   "cottage.opened",
   "gallery.opened",

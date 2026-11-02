@@ -26,5 +26,18 @@
     }
   ],
   "heroEveningImage": "/assets/retreat/DSC_3780.webp",
-  "heroEveningAlt": "A-frame cottages after dark at Aroha"
+  "heroEveningAlt": "A-frame cottages after dark at Aroha",
+  "hrudhi": {
+    "enabled": true,
+    "invitation": "A little hello, before you wander.",
+    "description": "Follow Hrudhi through the gate. There is a whole farm waiting on the other side.",
+    "bioTitle": "Meet Hrudhi",
+    "bio": "Hrudhi is Aroha’s illustrated nature guide. Curious about small things and always ready to explore, she welcomes you into the farm’s story.",
+    "role": "She helps you discover the paths, quiet corners and everyday life of Aroha. Your visit and enquiries are looked after by the real farm hosts.",
+    "poster": "/assets/retreat/hrudhi-gate-closed-v1.webp",
+    "still": "/assets/retreat/hrudhi-gate-open-v1.webp",
+    "portrait": "/assets/retreat/hrudhi-guide-v1.webp",
+    "film": "/assets/retreat/hrudhi-gate-desktop-v1.mp4",
+    "mobileFilm": "/assets/retreat/hrudhi-gate-mobile-v1.mp4"
+  }
 }

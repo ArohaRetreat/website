@@ -35,7 +35,7 @@ export function installPageTransitions(initialMotion = true) {
   try {
     simple = location.pathname === '/map/'
       ? localStorage.getItem('aroha-map-view') === 'reading'
-      : localStorage.getItem('aroha-view') === 'simple';
+      : false;
   } catch { /* Private browsing can deny persistent preferences. */ }
   const disabled = !initialMotion || simple || reduced.matches ||
     new URLSearchParams(location.search).has('preview') ||

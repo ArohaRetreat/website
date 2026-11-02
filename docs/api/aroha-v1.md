@@ -51,3 +51,9 @@ Content schema remains 1. An optional `storyMap` object adds `eyebrow`, `title`,
 Paragraphs: 1–4 strings of at most 2,500 characters. Facts: at most 3 strings of at most 180 characters. Place titles: 200; captions: 1,500; identifiers: 48. Unknown fields/executable markup configuration and dangling references are rejected. The full existing content-size cap still applies. Rendering escapes text. Root geometry and animation code are fixed application assets, not executable CMS content.
 
 The extension uses existing `/draft`, `/publish` and history/restore routes. There is no new write endpoint or public write permission. Viewers read; editors save/upload; admins and super-admins publish. Expected-version conflicts and their audit/OTel classifications remain unchanged. Invalid references return `INVALID_MAP_REFERENCE`/400 without saving a revision. The emulator lifecycle exercises map saves and publication plus a rejected invalid map. Public clients continue to read only `aroha_public/site`.
+
+## Illustrated welcome (API 0.2.1 / website 0.13.0)
+
+Optional `tour.nature.hrudhi` contains `enabled` (boolean), `invitation` (240 characters), `description` (1,200), `bioTitle` (150), `bio` and `role` (2,000 each), `poster`, `still`, `portrait` (existing image URL policy), and `film`, `mobileFilm` (existing video URL policy). All fields are required when the object is supplied; older records without it remain valid and receive website defaults. Unknown fields are rejected. Text is escaped; media stays local or in the project’s immutable public Storage media path.
+
+Existing draft/save/publish/history routes, role checks, audit events, pagination, errors, expected-version conflicts and size limits remain unchanged. Deploy validator 0.2.1 before the new studio. Changes require explicit publication. No public write endpoint, guest record, live chat or personal biography is introduced. The illustrated guide is clearly distinguished from real farm hosts.

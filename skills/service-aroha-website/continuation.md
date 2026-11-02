@@ -112,3 +112,6 @@ Browser checks cover paging/filter/reset/final one-item page, modal 2/35 photo s
 ## Natura profile gallery dependency / 1 November 2026
 
 The shared Hosting design export is pinned to Natura 0.6.1 at d2a170f6b42ed46635879873629abb5e9c467447 (ArohaRetreat/natura#20). This adds standalone/profile PNG downloads, including white on forest green. The existing vendored logo/font/nature subset is unchanged. This dependency pin does not authorise upgrading the older currently live public website; its runtime and configuration are preserved for the logo-only release. Full website promotion remains a separate release.
+
+
+Website 0.13.0 adds hrudhi-gate.mjs/hrudhi-gate.css, optional CMS Hrudhi settings, native scroll seeking inside the existing Explore stage and no-film fallbacks; public Simple View controls/preferences are removed. Read docs/website-living-direction.md. Validate seek coalescing/disposal, intro focus, phone framing and no film request in reduced/Save-Data. API 0.2.1 validator must precede Hosting.

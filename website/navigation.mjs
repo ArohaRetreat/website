@@ -24,7 +24,7 @@ export function renderPublicHeader(
   { esc, mode = "home", path = mode === "home" ? "/" : "/map/" },
 ) {
   const current = path;
-  return `<header class="${mode === "home" ? "field-header" : "map-header"} public-header"><a href="/" class="field-brand" aria-label="${esc(c.brand.name)} home"><img src="/assets/brand/logo-white.svg" width="190" height="65" alt="${esc(c.brand.name)}"></a><nav class="public-quick-links" aria-label="Main navigation">${PUBLIC_PAGES.map((p) => `<a href="${p.href}" ${p.href === current ? 'aria-current="page"' : ""}>${esc(p.label)}</a>`).join("")}</nav><div class="public-header-actions">${mode === "home" ? '<button id="view-toggle" aria-pressed="false">Simple view</button>' : ""}<button class="field-header-enquire public-visit" data-enquire="">Plan a visit ↗</button><button id="public-menu-toggle" class="public-menu-toggle" aria-label="Open menu" aria-controls="nature-menu" aria-expanded="false"><span class="menu-leaf-icon">${leaves}</span><span>Menu</span></button></div></header>`;
+  return `<header class="${mode === "home" ? "field-header" : "map-header"} public-header"><a href="/" class="field-brand" aria-label="${esc(c.brand.name)} home"><img src="/assets/brand/logo-white.svg" width="190" height="65" alt="${esc(c.brand.name)}"></a><nav class="public-quick-links" aria-label="Main navigation">${PUBLIC_PAGES.map((p) => `<a href="${p.href}" ${p.href === current ? 'aria-current="page"' : ""}>${esc(p.label)}</a>`).join("")}</nav><div class="public-header-actions"><button class="field-header-enquire public-visit" data-enquire="">Plan a visit ↗</button><button id="public-menu-toggle" class="public-menu-toggle" aria-label="Open menu" aria-controls="nature-menu" aria-expanded="false"><span class="menu-leaf-icon">${leaves}</span><span>Menu</span></button></div></header>`;
 }
 export function renderPublicMenu(
   c,
@@ -40,7 +40,7 @@ export function renderPublicMenu(
     )
     .join(
       "",
-    )}</nav><div class="menu-visit"><button data-menu-enquire>Let’s plan your visit <span aria-hidden="true">↗</span></button><a href="tel:+${esc(c.visit.phone)}">+${esc(c.visit.phone)}</a></div></div></div><div class="menu-bottom"><span>${esc(c.brand.tagline)}</span><button ${mode === "home" ? "data-menu-simple" : "data-menu-reading"}>${mode === "home" ? "Simple view" : "Reading view"}</button><button data-menu-atmosphere aria-pressed="false">☾ After sunset</button><a href="/admin/">Host studio ↗</a></div></dialog>`;
+    )}</nav><div class="menu-visit"><button data-menu-enquire>Let’s plan your visit <span aria-hidden="true">↗</span></button><a href="tel:+${esc(c.visit.phone)}">+${esc(c.visit.phone)}</a></div></div></div><div class="menu-bottom"><span>${esc(c.brand.tagline)}</span>${mode === "map" ? '<button data-menu-reading>Reading view</button>' : ""}<button data-menu-atmosphere aria-pressed="false">☾ After sunset</button><a href="/admin/">Host studio ↗</a></div></dialog>`;
 }
 export function createPublicMenu(
   root,
@@ -79,10 +79,9 @@ export function createPublicMenu(
       image.hidden = false;
     }
     const view =
-      root.querySelector("#view-toggle") ||
       root.querySelector("[data-reading]");
     const modeButton = dialog.querySelector(
-      "[data-menu-simple],[data-menu-reading]",
+      "[data-menu-reading]",
     );
     if (view && modeButton) modeButton.textContent = view.textContent;
     dialog.classList.toggle("menu-still", !motion || reduced.matches || event?.detail === 0);
@@ -126,15 +125,13 @@ export function createPublicMenu(
     close(() => root.querySelector("#footer-enquire")?.click(), e.detail === 0),
   );
   const modeButton = dialog.querySelector(
-    "[data-menu-simple],[data-menu-reading]",
+    "[data-menu-reading]",
   );
-  listen(modeButton, "click", e =>
+  if (modeButton) listen(modeButton, "click", e =>
     close(() =>
       root
         .querySelector(
-          modeButton.hasAttribute("data-menu-simple")
-            ? "#view-toggle"
-            : "[data-reading]",
+          "[data-reading]",
         )
         ?.click(),
       e.detail === 0,
