@@ -1,6 +1,6 @@
 ## 0.17.4 — 3 November 2026
 
-Replace leaf-shaped booking-date backgrounds with actual botanical leaf icons, including stems and veins, above the selected dates. Green in daylight and white in sunset.
+Replace leaf-shaped booking-date backgrounds with illustrative botanical leaf markers with stems and veins around the selected dates. Green in daylight and white in sunset.
 
 ## 0.17.3 — 3 November 2026
 

@@ -1,6 +1,6 @@
 ## Website0.17.4 — issue56 acceptance correction
 
-Owner clarified actual leaf icon, not a leaf-shaped background. Replace decorative selection pseudo-element with drawn stem/veined leaf above each selected date; green/day, white/sunset. Preserve cell geometry/date labels/focus/range and existing atmosphere clock. No API/CMS/reservation data/build bootstrap/Natura changes. Verify both calendar styles in Chrome, application/foundation/build/current-head CI and observed exact-source Hosting. Rollback Hosting only, retain all data.
+Owner clarified actual leaf icon, not a leaf-shaped background. Use website/calendar-leaf.svg as a fine botanical line illustration around each date, with an open centre. Build/export and hash-verify the new /assets/calendar-leaf.svg. Replace decorative selection pseudo-element with drawn stem/veined leaf around each selected date; green/day, white/sunset. Preserve cell geometry/date labels/focus/range and existing atmosphere clock. No API/CMS/reservation data/build bootstrap/Natura changes. Verify both calendar styles in Chrome, application/foundation/build/current-head CI and observed exact-source Hosting. Rollback Hosting only, retain all data.
 
 ## Website 0.17.3 — issue56
 

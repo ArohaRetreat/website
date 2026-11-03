@@ -14,6 +14,7 @@ export async function verifyLive(
     "/admin/bookings/",
     "/assets/booking.js",
     "/assets/booking.css",
+    "/assets/calendar-leaf.svg",
     "/admin/",
     "/design/",
     "/website-release.json",

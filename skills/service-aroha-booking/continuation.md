@@ -1,6 +1,6 @@
 ## Actual leaf icon correction — 3 November 2026
 
-Issue56 reopened: owner rejected the0.17.3 silhouette as a shape rather than an icon. Website0.17.4 booking.css replaces it with a drawn leaf/stem/veins above selected date text, green/day and white/sunset; no selection or clock/API/CMS/booking changes. Current implementation/deployment/browser receipts in local/release-evidence/aroha-0.17.4. Prior production0.17.3 source2a9bdc3 / Hosting1e529bd8ce6ec10a remains until current receipts prove publication. Header refinement retained.
+Issue56 reopened: owner rejected the0.17.3 silhouette as a shape rather than an icon. Website0.17.4 booking.css and calendar-leaf.svg replace it with a botanical line illustration with stem/veins around selected date text, green/day and white/sunset; no selection or clock/API/CMS/booking changes. Current implementation/deployment/browser receipts in local/release-evidence/aroha-0.17.4. Prior production0.17.3 source2a9bdc3 / Hosting1e529bd8ce6ec10a remains until current receipts prove publication. Header refinement retained.
 
 ## Calendar leaf refinement — 3 November 2026
 

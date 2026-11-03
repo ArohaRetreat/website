@@ -345,7 +345,6 @@ input[type="checkbox"] {
 .date-calendar {
   --date-leaf: #163e2d;
   --date-leaf-ink: #163e2d;
-  --date-leaf-icon: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cpath%20fill%3D%22%23163e2d%22%20d%3D%22M27.5%203.5C14%201.5%205%207.5%205%2017.5c0%205.4%203.7%209%209%209%2010.5%200%2015.6-10.4%2013.5-23Z%22%2F%3E%3Cpath%20d%3D%22M7.5%2024.5%2023%208M10%2022l-1-7M15%2017l8%201M19%2013l-1-6%22%20fill%3D%22none%22%20stroke%3D%22%23fffefa%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3Cpath%20d%3D%22M3%2029%208%2024%22%20fill%3D%22none%22%20stroke%3D%22%23163e2d%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E");
   padding: 14px 12px 20px;
 }
 .calendar-heading {
@@ -404,34 +403,29 @@ input[type="checkbox"] {
   background: #edf1e5;
   border-radius: 0;
 }
-/* The selected marker is a botanical icon above the date, not its backdrop. */
+/* A botanical line drawing grazes the date, leaving its centre clear. */
 .date-cell.endpoint {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1px;
-  padding: 0;
+  position: relative;
+  isolation: isolate;
   background: transparent;
   color: var(--date-leaf-ink);
   border-radius: 7px;
   font-weight: 600;
-  line-height: 1;
 }
 .date-cell.endpoint:hover:enabled { background: transparent; }
 .date-cell.endpoint::before {
   content: "";
-  display: block;
-  width: clamp(20px, 1.8vw, 28px);
-  height: clamp(20px, 1.8vw, 28px);
-  flex-shrink: 0;
-  background: var(--date-leaf-icon) center / contain no-repeat;
+  position: absolute;
+  inset: -5px;
+  z-index: -1;
+  background: var(--date-leaf);
+  mask: url("/assets/calendar-leaf.svg") center / contain no-repeat;
+  pointer-events: none;
 }
 .date-cell:focus-visible { outline: 2px solid var(--date-leaf); outline-offset: 2px; }
 html[data-atmosphere="sunset"] .date-calendar {
   --date-leaf: #fff;
   --date-leaf-ink: #fff;
-  --date-leaf-icon: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cpath%20fill%3D%22%23fff%22%20d%3D%22M27.5%203.5C14%201.5%205%207.5%205%2017.5c0%205.4%203.7%209%209%209%2010.5%200%2015.6-10.4%2013.5-23Z%22%2F%3E%3Cpath%20d%3D%22M7.5%2024.5%2023%208M10%2022l-1-7M15%2017l8%201M19%2013l-1-6%22%20fill%3D%22none%22%20stroke%3D%22%23163e2d%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3Cpath%20d%3D%22M3%2029%208%2024%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E");
   background: #163e2d;
   color: #fffefa;
   border-radius: 12px;
