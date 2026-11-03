@@ -438,6 +438,7 @@ async function task(fn) {
     notice(message(e.message), true);
   } finally {
     busy = false;
+    reportStudioDirty();
     document
       .querySelectorAll(".studio-toolbar button")
       .forEach((b) => (b.disabled = false));
@@ -673,7 +674,7 @@ observeAuth(async (user) => {
     await load();
     if (generation !== authGeneration) return;
     shell();
-    if(embeddedStudio)parent.postMessage({type:"aroha-studio-dirty",dirty},location.origin);
+    reportStudioDirty();
   } catch (e) {
     if (generation === authGeneration) authScreen(message(e.message));
   }
@@ -681,4 +682,5 @@ observeAuth(async (user) => {
 
 // Studio keeps this module mounted so switching to Bookings preserves drafts.
 const embeddedStudio = location.pathname.startsWith("/admin/modules/");
-if(embeddedStudio){document.documentElement.dataset.embedded="true";const reportDirty=()=>parent.postMessage({type:"aroha-studio-dirty",dirty},location.origin);document.addEventListener("input",()=>queueMicrotask(reportDirty));document.addEventListener("change",()=>queueMicrotask(reportDirty));window.addEventListener("message",e=>{if(e.origin===location.origin&&e.source===parent&&e.data?.type==="aroha-studio-visibility"){reportDirty();if(!e.data.visible)document.querySelectorAll("video").forEach(v=>v.pause());}});}
+function reportStudioDirty(){if(embeddedStudio)parent.postMessage({type:"aroha-studio-dirty",dirty},location.origin);}
+if(embeddedStudio){document.documentElement.dataset.embedded="true";const reportDirty=reportStudioDirty;document.addEventListener("click",()=>queueMicrotask(reportDirty));document.addEventListener("input",()=>queueMicrotask(reportDirty));document.addEventListener("change",()=>queueMicrotask(reportDirty));window.addEventListener("message",e=>{if(e.origin===location.origin&&e.source===parent&&e.data?.type==="aroha-studio-visibility"){reportDirty();if(!e.data.visible)document.querySelectorAll("video").forEach(v=>v.pause());}});}
