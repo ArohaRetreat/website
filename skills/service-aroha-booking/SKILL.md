@@ -22,3 +22,5 @@ Deploy READY indexes from firestore.indexes.json before function/UI queries. Pre
 Backend OTel retains aroha-api identity/version and bounded operation/error classes. Durable audit/outbox record committed operations with stable event IDs; no private notes/email in telemetry. Email/outbox transport is not configured. Activation of future email must explicitly choose cutover/replay policy; never silently send historic events. Hosting/deployment telemetry and native RUM linkage remain separate evidence.
 
 Website0.17.3 guest date selection uses CSS leaf silhouettes (green in daylight, white on a forest calendar in sunset) without changing rectangular buttons, numbers or aria state. The booking document installs only the existing atmosphere clock before paint; no optional analytics or public-page transition bootstrap. Host booking document is unaffected.
+
+0.17.4 corrects issue56 acceptance: selected dates show an actual botanical icon (stem and veins) above their date, not a leaf-shaped background. Keep matching green/day and white/sunset icons/numbers and existing accessible button box.

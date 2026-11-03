@@ -1,3 +1,7 @@
+## Website0.17.4 — issue56 acceptance correction
+
+Owner clarified actual leaf icon, not a leaf-shaped background. Replace decorative selection pseudo-element with drawn stem/veined leaf above each selected date; green/day, white/sunset. Preserve cell geometry/date labels/focus/range and existing atmosphere clock. No API/CMS/reservation data/build bootstrap/Natura changes. Verify both calendar styles in Chrome, application/foundation/build/current-head CI and observed exact-source Hosting. Rollback Hosting only, retain all data.
+
 ## Website 0.17.3 — issue56
 
 Guest calendar appearance: green/white leaf endpoints with readable inverse date text, range contrast, intact button hit target/focus. Guest booking document restores existing IST atmosphere pre-paint (including boundary/history/background refresh); host document remains unchanged. No optional analytics or page-transition bootstrap on booking. API/CMS/booking/index/rules/secrets/Natura unchanged. Verify app/foundation/build/current-head CI and desktop/phone CSS review in Chrome; publish exact-source Hosting preserving current CMS/Natura. Rollback Hosting only and retain live reservations. Header0.17.2 changes remain intact.
