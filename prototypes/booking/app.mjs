@@ -167,7 +167,7 @@ function header() {
 const foot = () =>
   `<footer class="guest-footer"><img src="/assets/brand/logo-forest.svg" alt="Aroha Retreat" width="140" height="48"><span>A little time. A little closer to nature.</span><span>Local review · No emails or payments</span></footer>`;
 function dateInputs() {
-  return `<div class="date-fields"><label>Arrival<input type="date" name="arrival" value="${search.arrival}" min="${day(1)}" required></label><label>Departure<input type="date" name="departure" value="${search.departure}" min="${add(search.arrival, 1)}" required></label><label>Guests<select name="guests">${Array.from({ length: 10 }, (_, i) => `<option value="${i + 1}" ${search.guests === i + 1 ? "selected" : ""}>${i + 1} ${i ? "guests" : "guest"}</option>`).join("")}</select></label></div>`;
+  return `<div class="date-fields"><label>Arrival<input type="date" name="arrival" value="${search.arrival}" min="${day(1)}" required></label><label>Departure<input type="date" name="departure" value="${search.departure}" min="${add(search.arrival, 1)}" required></label><label>Guests<select name="guests">${Array.from({ length: Math.min(state.settings.capacity, 30) }, (_, i) => `<option value="${i + 1}" ${search.guests === i + 1 ? "selected" : ""}>${i + 1} ${i ? "guests" : "guest"}</option>`).join("")}</select></label></div>`;
 }
 function calendar() {
   const first = month + "-01",
@@ -184,7 +184,7 @@ function calendar() {
 }
 function planPage() {
   if (step === 1)
-    return `<section class="hero"><div class="hero-copy"><p class="eyebrow">MAKE A LITTLE ROOM FOR YOURSELF</p><h1>A little closer<br>to <em>the quiet.</em></h1><p>Wake up among the trees. Take the longer path.<br>Let the day belong to you.</p><div class="hero-facts"><span>Whole-room stays</span><span>Thoughtfully hosted</span><span>10-guest retreat limit</span></div></div><figure class="hero-photo"><img src="/assets/retreat/hero-desktop.webp" alt="A-frame cottages surrounded by coconut palms at the retreat"><figcaption>Aroha, at your own pace.</figcaption></figure></section><section class="planning"><div class="section-heading"><div><p class="eyebrow">YOUR NEXT CHAPTER</p><h2>When shall we welcome you?</h2></div><span class="subtle">All times in India Standard Time</span></div><div class="planning-grid"><form id="search-form" class="date-panel">${dateInputs()}${calendar()}<button class="button full" type="submit">Find your little corner <span>→</span></button><p class="form-note">A request comes first. Your hosts confirm every stay personally.</p></form><aside class="stay-note"><span class="handwriting">Less rush. More room.</span><h3>A stay shaped<br>around you.</h3><p>Choose a tree house or a cottage, tell us who’s coming, and leave a note for your hosts.</p><div class="note-item"><span>01</span><div><strong>Find your dates</strong><p>See rooms available for your whole stay.</p></div></div><div class="note-item"><span>02</span><div><strong>Make it yours</strong><p>Choose your rooms and add a personal request.</p></div></div><div class="note-item"><span>03</span><div><strong>We’ll take it from here</strong><p>Your hosts review and confirm in Your visits.</p></div></div><div class="sample-note">Review note: room prices, offers and cancellation terms are illustrative. Day visits and new rooms are not open.</div></aside></div></section>`;
+    return `<section class="hero"><div class="hero-copy"><p class="eyebrow">MAKE A LITTLE ROOM FOR YOURSELF</p><h1>A little closer<br>to <em>the quiet.</em></h1><p>Wake up among the trees. Take the longer path.<br>Let the day belong to you.</p><div class="hero-facts"><span>Whole-room stays</span><span>Thoughtfully hosted</span><span>${state.settings.capacity}-guest retreat limit</span></div></div><figure class="hero-photo"><img src="/assets/retreat/hero-desktop.webp" alt="A-frame cottages surrounded by coconut palms at the retreat"><figcaption>Aroha, at your own pace.</figcaption></figure></section><section class="planning"><div class="section-heading"><div><p class="eyebrow">YOUR NEXT CHAPTER</p><h2>When shall we welcome you?</h2></div><span class="subtle">All times in India Standard Time</span></div><div class="planning-grid"><form id="search-form" class="date-panel">${dateInputs()}${calendar()}<button class="button full" type="submit">Find your little corner <span>→</span></button><p class="form-note">A request comes first. Your hosts confirm every stay personally.</p></form><aside class="stay-note"><span class="handwriting">Less rush. More room.</span><h3>A stay shaped<br>around you.</h3><p>Choose a tree house or a cottage, tell us who’s coming, and leave a note for your hosts.</p><div class="note-item"><span>01</span><div><strong>Find your dates</strong><p>See rooms available for your whole stay.</p></div></div><div class="note-item"><span>02</span><div><strong>Make it yours</strong><p>Choose your rooms and add a personal request.</p></div></div><div class="note-item"><span>03</span><div><strong>We’ll take it from here</strong><p>Your hosts review and confirm in Your visits.</p></div></div><div class="sample-note">Review note: room prices, offers and cancellation terms are illustrative. Day visits and new rooms are not open.</div></aside></div></section>`;
   const nights = Math.round(
     (Date.parse(search.departure) - Date.parse(search.arrival)) / 86400000,
   );
@@ -320,7 +320,7 @@ function hostContent() {
       .map((b) => bookingCard(b, true))
       .join("")}</div>`;
   if (hostTab === "inventory")
-    return `${title("CARE FOR YOUR SPACES", "Rooms that are ready.", "Individual room capacities and the overall retreat limit are both enforced.")}<div class="notice-strip">10-person overnight limit · 8 configured beds · Fifth room awaiting identification · Future rooms closed</div><div class="inventory-grid">${state.units.map((u) => `<article class="inventory-card"><div class="inventory-art ${u.image ? "" : "future"}">${u.image ? `<img src="/assets/retreat/${esc(u.image)}" alt="Retreat accommodation photograph">` : "<span>⌂</span>"}<span class="inventory-state">${u.active ? "Open for requests" : u.type === "Under construction" ? "Under construction" : "Needs configuration"}</span></div><form data-unit-form="${u.id}"><p class="eyebrow">${esc(u.type)}</p><h3>${esc(u.name)}</h3><div class="two-fields"><label>Guests per room<input name="capacity" type="number" min="1" max="10" value="${u.capacity}" required></label><label>Sample ₹ / night<input name="rate" type="number" min="100" max="1000000" value="${u.rate / 100 || 4200}" required></label></div><label class="check"><input type="checkbox" name="active" ${u.active ? "checked" : ""} ${["Under construction", "Unconfigured"].includes(u.type) ? "disabled" : ""}>Open for requests</label><button class="outline-button full" type="submit">Save room settings</button></form></article>`).join("")}</div>${state.blocks.length ? `<section class="host-section"><h2>Maintenance blocks</h2>${state.blocks.map((b) => `<div class="block-row"><span>${esc(state.units.find((u) => u.id === b.unitId)?.name)} · ${format(b.arrival)} — ${format(b.departure)} · ${esc(b.reason)}</span><button class="text-button" data-unblock="${b.id}">Release block</button></div>`).join("")}</section>` : ""}`;
+    return `${title("CARE FOR YOUR SPACES", "Rooms that are ready.", "Individual room capacities and the overall retreat limit are both enforced.")}<div class="notice-strip">${state.settings.capacity}-person overnight limit · ${rooms.reduce((n, u) => n + u.capacity, 0)} configured beds · Fifth room awaiting identification · Future rooms closed</div><div class="inventory-grid">${state.units.map((u) => `<article class="inventory-card"><div class="inventory-art ${u.image ? "" : "future"}">${u.image ? `<img src="/assets/retreat/${esc(u.image)}" alt="Retreat accommodation photograph">` : "<span>⌂</span>"}<span class="inventory-state">${u.active ? "Open for requests" : u.type === "Under construction" ? "Under construction" : "Needs configuration"}</span></div><form data-unit-form="${u.id}"><p class="eyebrow">${esc(u.type)}</p><h3>${esc(u.name)}</h3><div class="two-fields"><label>Guests per room<input name="capacity" type="number" min="1" max="10" value="${u.capacity}" required></label><label>Sample ₹ / night<input name="rate" type="number" min="100" max="1000000" value="${u.rate / 100 || 4200}" required></label></div><label class="check"><input type="checkbox" name="active" ${u.active ? "checked" : ""} ${["Under construction", "Unconfigured"].includes(u.type) ? "disabled" : ""}>Open for requests</label><button class="outline-button full" type="submit">Save room settings</button></form></article>`).join("")}</div>${state.blocks.length ? `<section class="host-section"><h2>Maintenance blocks</h2>${state.blocks.map((b) => `<div class="block-row"><span>${esc(state.units.find((u) => u.id === b.unitId)?.name)} · ${format(b.arrival)} — ${format(b.departure)} · ${esc(b.reason)}</span><button class="text-button" data-unblock="${b.id}">Release block</button></div>`).join("")}</section>` : ""}`;
   if (hostTab === "offers")
     return `${title("A THOUGHTFUL LITTLE EXTRA", "Invitations to return.", "Sample room rates live under Rooms & inventory. Offers apply before host approval.", '<button class="button" id="new-promo">Create invitation code +</button>')}<div class="notice-strip">One best offer per stay · Pending requests reserve a redemption · Cancellation restores sample offer usage</div><div class="offers-grid">${state.promos.map((p) => `<article class="offer-card"><p class="eyebrow">${p.active ? "ACTIVE INVITATION" : "PAUSED INVITATION"}</p><h2>${esc(p.code)}</h2><strong class="offer-amount">${p.kind === "percent" ? p.value + "%" : money(p.value)} <span>off a stay</span></strong><p>${format(p.from)} — ${format(p.until, { day: "numeric", month: "short", year: "numeric" })}</p><div class="offer-bottom"><span>${p.uses} / ${p.maxUses} reserved or redeemed</span><button class="text-button" data-toggle-promo="${p.id}">${p.active ? "Pause" : "Activate"} →</button></div></article>`).join("")}</div><div class="paper"><h3>Offer rules in this prototype</h3><p>Fixed or percentage discounts; date validity; total redemption limits; one offer per reservation. Loyalty applies automatically unless a promo is better. Prices and benefits remain sample values for review.</p></div>`;
   if (hostTab === "guests")
@@ -710,6 +710,32 @@ function bind() {
   );
   document.querySelector("#search-form")?.addEventListener("change", (e) => {
     readDates(e.currentTarget);
+    const departure = e.currentTarget.querySelector('[name="departure"]');
+    departure.min = add(search.arrival, 1);
+    document.querySelectorAll("[data-date]").forEach((cell) => {
+      const d = cell.dataset.date,
+        endpoint = d === search.arrival || d === search.departure;
+      cell.classList.toggle("endpoint", endpoint);
+      cell.classList.toggle(
+        "in-range",
+        d > search.arrival && d < search.departure,
+      );
+      cell.setAttribute("aria-pressed", String(endpoint));
+      cell.setAttribute(
+        "aria-label",
+        format(d, {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }) +
+          (d === search.arrival
+            ? ", arrival"
+            : d === search.departure
+              ? ", departure"
+              : ""),
+      );
+    });
   });
   document.querySelector("#search-form")?.addEventListener("submit", (e) => {
     e.preventDefault();

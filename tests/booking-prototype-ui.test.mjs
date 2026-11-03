@@ -212,6 +212,15 @@ test("guest request → host approval → guest note/date change → host change
     host.doc.querySelector("[name=capacity]").value = "12";
     await host.submit("#settings-form");
     assert.equal(host.doc.querySelector("[name=capacity]").value, "12");
+    const reopened = await context("/prototype/booking/");
+    assert.equal(
+      reopened.doc.querySelector("[name=guests]").options.length,
+      12,
+    );
+    assert.match(
+      reopened.doc.querySelector(".hero-facts").textContent,
+      /12-guest/,
+    );
     await host.click('[data-host-tab="reservations"]');
     await host.click("#manual-reservation");
     await host.submit("#manual-form");
