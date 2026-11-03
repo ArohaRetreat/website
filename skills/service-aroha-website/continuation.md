@@ -1,3 +1,5 @@
+Website0.18.0 / issue59: mixed booking products and prices with Master room; prior header/menu/leaf/calendar atmosphere retained. No CMS seed overwrite. Read booking service continuation and actual release receipts for publication status.
+
 ## Contextual header — 3 November 2026
 
 Issue54 / website0.17.2: transparent at top, green after24px, transparent over full-screen farm journey (owner explicitly selected this, not botanical story), green on exit. Shared helper header-appearance.mjs; existing field-journey/map RAFs and navigation/sunset CSS. Fixed height/native scrolling/focus unchanged. Text-only/reduced-motion tour and map reading remain solid over text. API0.4.0, CMS8, booking policies/Natura0.6.1 untouched. Verify actual merge/deployment/check receipts in local/release-evidence/aroha-0.17.2; prior production0.17.1 afdef24 / Hosting6a154c888708ad8f. Physical-device/browser acceptance stays separate.

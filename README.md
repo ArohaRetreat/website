@@ -48,6 +48,8 @@ The Living Map is a separate `/map/` journey. See [direction and CMS contract](d
 
 Production deployment now requires installed functions dependencies and `FIREBASE_CLI_PATH` for authenticated Firebase/Secret Manager access. `npm run deploy -- --production` records provider release, live verification and separate telemetry receipts. A reporting failure returns exit code 2 without repeating or rolling back an already successful release. Repair it using the report-only commands in the delivery contract.
 
-## Overnight bookings
+## Visits and bookings
 
-Guests request stays at `/book/` using Google sign-in. Authorised hosts manage reservations at `/admin/bookings/`; existing website editing remains at `/admin/`. Launch pricing is agreed with the host, with no online payment or automatic email. See the [booking contract](docs/api/aroha-booking-v1.json) and [service guide](skills/service-aroha-booking/SKILL.md). The local prototype remains separate from production.
+Website0.18.0 / API0.5.0 supports Google-authenticated day outings, individual shared stays, private family rooms and exclusive event enquiries at `/book/`. Every request needs host approval. Published rates are ₹1,200/day adult, ₹700/day child under10, ₹3,500/individual/night and ₹6,000/private room/night including two occupants, plus ₹1,500/additional child (maximum two adults and two children per room). Events require a host offer and guest acceptance.
+
+Hosts manage calendars, rates, inventory, room readiness, offers and loyalty at `/admin/bookings/`; website editing remains at `/admin/`. The shared capacity is35 adults onsite and10 overnight, with children counted separately. The Master room is the fifth operating room; future rooms remain closed. Existing bookings keep their agreed prices and terms. No online payment or automatic email. Read the [mixed booking rules](docs/booking-products-contract.md), [API contract](docs/api/aroha-booking-v1.json), [host guide](docs/website-host-guide.md) and [service guide](skills/service-aroha-booking/SKILL.md). The local prototype is separate from production.

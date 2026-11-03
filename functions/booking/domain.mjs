@@ -1,3 +1,11 @@
+import {
+  productAvailability,
+  productPrice,
+  assertLegacyCapacity,
+  interval,
+  productDefaults,
+  peakOccupancy,
+} from "./products.mjs";
 // Production booking policy. Firestore adapter loads and commits bounded transactional ledgers.
 import { createHash, randomUUID } from "node:crypto";
 export class BookingError extends Error {
@@ -40,7 +48,7 @@ export function initialState() {
     ["tree-2", "Tree house 02", "Tree house", 2, true, "20261028_093813.webp"],
     ["cottage-1", "Cottage 01", "Cottage", 2, true, "DSC_3795.webp"],
     ["cottage-2", "Cottage 02", "Cottage", 2, true, "DSC_3795.webp"],
-    ["unmapped", "Fifth room · details needed", "Unconfigured", 2, false, null],
+    ["unmapped", "Master room", "Room", 2, true, null],
     ...Array.from({ length: 4 }, (_, i) => [
       `future-${i + 1}`,
       `Future room 0${i + 1}`,
@@ -74,6 +82,7 @@ export function initialState() {
     stats: {},
     settings: {
       version: 1,
+      products: { ...productDefaults },
       capacity: 10,
       approvalHours: 24,
       cancelHours: 0,
@@ -90,8 +99,12 @@ export function initialState() {
 export const tier = (state, uid) => {
   const stays =
     state.stats?.[uid] ??
-    state.bookings.filter((b) => b.owner === uid && b.status === "completed")
-      .length;
+    state.bookings.filter(
+      (b) =>
+        b.owner === uid &&
+        b.status === "completed" &&
+        !["day", "event"].includes(b.kind),
+    ).length;
   const s = state.settings,
     name =
       stays >= s.familyAt
@@ -130,6 +143,7 @@ function stay(input, now) {
   return { arrival, departure, guests: int(input.guests, 1, 30) };
 }
 export function availability(state, input, now = Date.now(), exclude) {
+  if (input.kind) return productAvailability(state, input, now, exclude);
   const selection = stay(input, now),
     active = state.bookings.filter(
       (b) => b.id !== exclude && occupies(b, now) && overlaps(b, selection),
@@ -151,7 +165,12 @@ export function availability(state, input, now = Date.now(), exclude) {
       !state.settings.paused &&
       remaining >= selection.guests &&
       !active.some((b) => b.units.includes(u.id)) &&
-      !state.blocks.some((b) => b.unitId === u.id && overlaps(b, selection)),
+      !state.blocks.some(
+        (b) =>
+          (b.unitId === u.id || b.unitId === "site") &&
+          (!b.expiresAt || b.expiresAt > now) &&
+          overlaps(b, selection),
+      ),
   }));
   return { ...selection, remaining, units };
 }
@@ -177,6 +196,8 @@ const promoUses = (state, code, now, exclude) =>
           (occupies(b, now) || ["completed", "no_show"].includes(b.status)),
       ).length;
 export function price(state, uid, input, now = Date.now(), exclude) {
+  if (input.kind) return productPrice(state, uid, input, now, exclude);
+  assertLegacyCapacity(state, input, now, exclude);
   const available = availability(state, input, now, exclude);
   if (state.settings.paused) fail("BOOKINGS_PAUSED", 409);
   if (
@@ -245,6 +266,12 @@ function event(state, actor, type, entity, now) {
     actor: actor.id,
     at: now,
     delivery: "not_configured",
+    ...(type.startsWith("booking.")
+      ? {
+          bookingKind:
+            state.bookings.find((b) => b.id === entity)?.kind || "legacy",
+        }
+      : {}),
   };
   state.audit.push(e);
   state.outbox.push(e);
@@ -285,9 +312,20 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
       return b;
     }
     if (b.status !== "confirmed") fail("CONFIRMED_STAY_REQUIRED", 409);
+    if (b.kind === "event") fail("EVENT_CHANGE_REQUIRES_NEW_REQUEST", 409);
     if (operation === "change-quote") {
       const q = {
-        ...price(state, actor.id, { ...input, units: b.units }, now, b.id),
+        ...price(
+          state,
+          actor.id,
+          {
+            ...b,
+            ...input,
+            units: b.kind === "private" || !b.kind ? b.units : [],
+          },
+          now,
+          b.id,
+        ),
         id: randomUUID(),
         owner: actor.id,
         bookingId: b.id,
@@ -357,7 +395,10 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
       createdAt: now,
       expiresAt: Math.min(
         now + state.settings.approvalHours * 3600000,
-        Date.parse(q.arrival + "T" + state.settings.checkIn + ":00+05:30"),
+        (q.kind && (q.kind === "day" || q.startsAt <= now)
+          ? q.endsAt
+          : q.startsAt) ??
+          Date.parse(q.arrival + "T" + state.settings.checkIn + ":00+05:30"),
       ),
       history: [{ status: "pending_approval", at: now }],
     };
@@ -390,6 +431,92 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
       event(state, actor, "booking." + input.action, b.id, now);
       return b;
     }
+    if (["offer_event", "accept_event"].includes(input.action)) {
+      if (
+        b.kind !== "event" ||
+        b.status !== "pending_approval" ||
+        b.expiresAt <= now
+      )
+        fail("INVALID_TRANSITION", 409);
+      if (input.action === "offer_event") {
+        host(actor);
+        if (input.holdHours) {
+          const check = productAvailability(state, b, now, b.id);
+          if (!check.available) fail("AVAILABILITY_CHANGED", 409);
+          state.blocks = state.blocks.filter((x) => x.bookingId !== b.id);
+          if (state.blocks.length >= 100) fail("BLOCK_LIMIT", 409);
+          state.blocks.push({
+            id: randomUUID(),
+            unitId: "site",
+            bookingId: b.id,
+            arrival: b.arrival,
+            departure: b.departure,
+            reason: "Exclusive event offer",
+            expiresAt: Math.min(
+              b.expiresAt,
+              now + int(input.holdHours, 1, 72) * 3600000,
+            ),
+          });
+        }
+        b.total = int(input.amount, 10000, 100000000);
+        b.subtotal = b.total;
+        b.quoteAccepted = false;
+        b.lineItems = [
+          { label: "Exclusive retreat · host offer", amount: b.total },
+        ];
+      } else {
+        if (b.owner !== actor.id) fail("FORBIDDEN", 403);
+        if (b.total === null) fail("EVENT_QUOTE_REQUIRED", 409);
+        b.quoteAccepted = true;
+      }
+      b.version++;
+      b.history.push({ status: input.action, at: now });
+      event(state, actor, "booking." + input.action, b.id, now);
+      return b;
+    }
+    if (input.action === "approve" && b.kind) {
+      if (b.kind === "event" && (!b.quoteAccepted || b.total === null))
+        fail("EVENT_QUOTE_REQUIRED", 409);
+      const check = productAvailability(state, b, now, b.id);
+      if (!check.available) fail("AVAILABILITY_CHANGED", 409);
+      // Keep the guest's snapshotted amount and original assigned sleeping places.
+      if (
+        b.kind === "individual" &&
+        b.allocations.some(
+          (x) =>
+            !check.units.find((u) => u.id === x.unitId)?.freeAdults ||
+            check.units.find((u) => u.id === x.unitId).freeAdults < x.adults,
+        )
+      )
+        fail("AVAILABILITY_CHANGED", 409);
+    }
+    if (input.action === "assign_rooms") {
+      host(actor);
+      if (
+        b.kind !== "individual" ||
+        !["pending_approval", "confirmed"].includes(b.status)
+      )
+        fail("INVALID_TRANSITION", 409);
+      if (
+        !Array.isArray(input.units) ||
+        !input.units.length ||
+        input.units.length > 9
+      )
+        fail("SELECT_ROOMS");
+      const check = productAvailability(
+        state,
+        { ...b, preferredUnits: input.units },
+        now,
+        b.id,
+      );
+      if (!check.available) fail("AVAILABILITY_CHANGED", 409);
+      b.units = check.allocations.map((a) => a.unitId);
+      b.allocations = check.allocations;
+      b.version++;
+      b.history.push({ status: "rooms_assigned", at: now });
+      event(state, actor, "booking.rooms_assigned", b.id, now);
+      return b;
+    }
     const transitions = {
       approve: ["pending_approval", "confirmed"],
       decline: ["pending_approval", "declined"],
@@ -404,7 +531,8 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
       if (
         actor.role !== "host" &&
         b.status === "confirmed" &&
-        Date.parse(b.arrival + "T" + state.settings.checkIn + ":00+05:30") -
+        (b.startsAt ??
+          Date.parse(b.arrival + "T" + state.settings.checkIn + ":00+05:30")) -
           now <
           (b.cancelHours ?? 48) * 3600000
       )
@@ -415,13 +543,39 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
       const t = transitions[input.action];
       if (!t || b.status !== t[0]) fail("INVALID_TRANSITION", 409);
       if (
-        (input.action === "checkin" && todayIST(now) < b.arrival) ||
+        (input.action === "checkin" &&
+          (b.kind ? now < b.startsAt : todayIST(now) < b.arrival)) ||
         (["complete", "no_show"].includes(input.action) &&
-          todayIST(now) < b.departure)
+          (b.kind ? now < b.endsAt : todayIST(now) < b.departure))
       )
         fail("STAY_NOT_STARTED_OR_FINISHED", 409);
       next = t[1];
     }
+    if (
+      input.action === "checkin" &&
+      b.kind &&
+      b.units.some(
+        (id) => state.units.find((u) => u.id === id)?.ready === false,
+      )
+    )
+      fail("ROOM_TURNOVER_REQUIRED", 409);
+    if (
+      input.action === "complete" &&
+      b.kind &&
+      !["day", "event"].includes(b.kind)
+    )
+      for (const id of b.units) {
+        const u = state.units.find((u) => u.id === id);
+        if (u) {
+          u.ready = false;
+          u.version++;
+        }
+      }
+    if (
+      b.kind === "event" &&
+      ["confirmed", "declined", "cancelled"].includes(next)
+    )
+      state.blocks = state.blocks.filter((x) => x.bookingId !== b.id);
     b.status = next;
     delete b.changeRequest;
     b.version++;
@@ -430,6 +584,15 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
     return b;
   }
   host(actor);
+  if (operation === "readiness") {
+    const u = state.units.find((u) => u.id === input.id);
+    if (!u) fail("NOT_FOUND", 404);
+    version(u, input.expectedVersion);
+    u.ready = input.ready === true;
+    u.version++;
+    event(state, actor, "unit.readiness_updated", u.id, now);
+    return u;
+  }
   if (operation === "settings") {
     const s = state.settings;
     version(s, input.expectedVersion);
@@ -445,16 +608,43 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
       paused: input.paused === true,
     };
     if (next.familyAt <= next.friendAt) fail("INVALID_TIER_THRESHOLDS");
-    for (const b of state.bookings.filter((b) => occupies(b, now))) {
+    for (const b of state.bookings.filter((b) => !b.kind && occupies(b, now))) {
       for (let d = b.arrival; d < b.departure; d = addDays(d, 1))
         if (
           state.bookings
             .filter(
-              (x) => occupies(x, now) && x.arrival <= d && x.departure > d,
+              (x) =>
+                !x.kind &&
+                occupies(x, now) &&
+                x.arrival <= d &&
+                x.departure > d,
             )
             .reduce((n, x) => n + x.guests, 0) > next.capacity
         )
           fail("EXISTING_BOOKINGS_CONFLICT", 409);
+    }
+    if (input.products) {
+      const p = { ...productDefaults, ...s.products, ...input.products };
+      for (const k of ["siteAdults", "nightAdults"]) int(p[k], 1, 100);
+      if (p.nightAdults > p.siteAdults) fail("INVALID_CAPACITY");
+      for (const k of [
+        "dayAdultRate",
+        "dayChildRate",
+        "individualRate",
+        "roomRate",
+        "extraChildRate",
+      ])
+        int(p[k], 0, 100000000);
+      for (const k of ["dayStart", "dayEnd", "stayStart", "stayEnd"])
+        if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(p[k]))
+          fail("INVALID_TIME_WINDOW");
+      if (p.dayStart >= p.dayEnd) fail("INVALID_TIME_WINDOW");
+      for (const b of state.bookings.filter((b) => occupies(b, now))) {
+        const peak = peakOccupancy(state, b, now);
+        if (peak.adults > p.siteAdults || peak.nightAdults > p.nightAdults)
+          fail("EXISTING_BOOKINGS_CONFLICT", 409);
+      }
+      next.products = p;
     }
     next.version++;
     state.settings = next;
@@ -525,14 +715,20 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
   }
   if (operation === "block") {
     const period = stay({ ...input, guests: 1 }, now);
-    if (!state.units.some((u) => u.id === input.unitId && u.active))
+    if (
+      input.unitId !== "site" &&
+      !state.units.some((u) => u.id === input.unitId && u.active)
+    )
       fail("INVALID_UNIT");
     if (
       state.bookings.some(
         (b) =>
           occupies(b, now) &&
-          b.units.includes(input.unitId) &&
-          overlaps(b, period),
+          (input.unitId === "site" || b.units.includes(input.unitId)) &&
+          interval(b, state).start <
+            Date.parse(period.departure + "T00:00:00+05:30") &&
+          interval(b, state).end >
+            Date.parse(period.arrival + "T00:00:00+05:30"),
       )
     )
       fail("EXISTING_BOOKINGS_CONFLICT", 409);

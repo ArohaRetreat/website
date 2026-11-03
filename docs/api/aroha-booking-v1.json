@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Aroha production booking API",
-    "version": "0.4.0",
-    "description": "Verified Firebase identities, guest ownership and active host capabilities. Whole-unit nightly reservations with transactional Firestore ledgers. Host-agreed prices at launch; no payments or email. See functions/booking/contract-notes.md for limits, states, audit and retention."
+    "version": "0.5.0",
+    "description": "Verified Google identities and active hosts. Shared adult site capacity, day outings, shared sleeping places, private family rooms and host-quoted exclusive events. Existing reservations preserve prices and terms. No payments or email. See booking-products-contract.md and contract-notes.md."
   },
   "servers": [
     {
@@ -1033,6 +1033,162 @@
           }
         ]
       }
+    },
+    "/readiness": {
+      "post": {
+        "operationId": "readiness",
+        "summary": "Active host room-readiness control",
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9-]{8,100}$"
+            }
+          },
+          {
+            "name": "admin",
+            "in": "query",
+            "description": "Explicit host workspace context; active membership is independently required.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/readiness"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Projected domain result; see endpoint extension x-result."
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Error415"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          }
+        }
+      }
+    },
+    "/reservation-detail": {
+      "post": {
+        "operationId": "reservation-detail",
+        "summary": "Owner-scoped reservation detail",
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9-]{8,100}$"
+            }
+          },
+          {
+            "name": "admin",
+            "in": "query",
+            "description": "Explicit host workspace context; active membership is independently required.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/reservation-detail"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Projected domain result; see endpoint extension x-result."
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Error415"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1059,7 +1215,40 @@
           "guests": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 30
+            "maximum": 200
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "day",
+              "individual",
+              "private",
+              "event"
+            ]
+          },
+          "adults": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "childrenAges": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9
+            }
+          },
+          "units": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "minItems": 0,
+            "maxItems": 9,
+            "uniqueItems": true
           }
         },
         "required": [
@@ -1083,7 +1272,7 @@
           "guests": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 30
+            "maximum": 200
           },
           "units": {
             "type": "array",
@@ -1091,7 +1280,7 @@
               "type": "string",
               "maxLength": 100
             },
-            "minItems": 1,
+            "minItems": 0,
             "maxItems": 9,
             "uniqueItems": true
           },
@@ -1102,6 +1291,29 @@
           "guestId": {
             "type": "string",
             "maxLength": 128
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "day",
+              "individual",
+              "private",
+              "event"
+            ]
+          },
+          "adults": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "childrenAges": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9
+            }
           }
         },
         "required": [
@@ -1150,8 +1362,31 @@
               "complete",
               "no_show",
               "approve_change",
-              "decline_change"
+              "decline_change",
+              "offer_event",
+              "accept_event",
+              "assign_rooms"
             ]
+          },
+          "amount": {
+            "type": "integer",
+            "minimum": 10000,
+            "maximum": 100000000
+          },
+          "units": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "minItems": 1,
+            "maxItems": 9,
+            "uniqueItems": true
+          },
+          "holdHours": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 72
           }
         },
         "required": [
@@ -1206,11 +1441,34 @@
           "guests": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 30
+            "maximum": 200
           },
           "promo": {
             "type": "string",
             "maxLength": 32
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "day",
+              "individual",
+              "private",
+              "event"
+            ]
+          },
+          "adults": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "childrenAges": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9
+            }
           }
         },
         "required": [
@@ -1289,6 +1547,63 @@
           },
           "paused": {
             "type": "boolean"
+          },
+          "products": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "dayAdultRate": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100000000
+              },
+              "dayChildRate": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100000000
+              },
+              "individualRate": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100000000
+              },
+              "roomRate": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100000000
+              },
+              "extraChildRate": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100000000
+              },
+              "siteAdults": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100
+              },
+              "nightAdults": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100
+              },
+              "dayStart": {
+                "type": "string",
+                "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+              },
+              "dayEnd": {
+                "type": "string",
+                "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+              },
+              "stayStart": {
+                "type": "string",
+                "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+              },
+              "stayEnd": {
+                "type": "string",
+                "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+              }
+            }
           }
         },
         "required": [
@@ -1470,6 +1785,41 @@
         "required": [
           "error"
         ]
+      },
+      "readiness": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "expectedVersion",
+          "ready"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "ready": {
+            "type": "boolean"
+          }
+        }
+      },
+      "reservation-detail": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 100
+          }
+        }
       }
     },
     "responses": {

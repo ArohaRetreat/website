@@ -14,14 +14,38 @@
       "guests": {
         "type": "integer",
         "minimum": 1,
-        "maximum": 30
+        "maximum": 200
+      },
+      "kind": {
+        "type": "string",
+        "enum": ["day", "individual", "private", "event"]
+      },
+      "adults": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100
+      },
+      "childrenAges": {
+        "type": "array",
+        "maxItems": 100,
+        "items": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9
+        }
+      },
+      "units": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "minItems": 0,
+        "maxItems": 9,
+        "uniqueItems": true
       }
     },
-    "required": [
-      "arrival",
-      "departure",
-      "guests"
-    ]
+    "required": ["arrival", "departure", "guests"]
   },
   "quote": {
     "type": "object",
@@ -38,7 +62,7 @@
       "guests": {
         "type": "integer",
         "minimum": 1,
-        "maximum": 30
+        "maximum": 200
       },
       "units": {
         "type": "array",
@@ -46,7 +70,7 @@
           "type": "string",
           "maxLength": 100
         },
-        "minItems": 1,
+        "minItems": 0,
         "maxItems": 9,
         "uniqueItems": true
       },
@@ -57,14 +81,27 @@
       "guestId": {
         "type": "string",
         "maxLength": 128
+      },
+      "kind": {
+        "type": "string",
+        "enum": ["day", "individual", "private", "event"]
+      },
+      "adults": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100
+      },
+      "childrenAges": {
+        "type": "array",
+        "maxItems": 100,
+        "items": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9
+        }
       }
     },
-    "required": [
-      "arrival",
-      "departure",
-      "guests",
-      "units"
-    ]
+    "required": ["arrival", "departure", "guests", "units"]
   },
   "create": {
     "type": "object",
@@ -79,9 +116,7 @@
         "maxLength": 1000
       }
     },
-    "required": [
-      "quoteId"
-    ]
+    "required": ["quoteId"]
   },
   "booking-action": {
     "type": "object",
@@ -105,15 +140,34 @@
           "complete",
           "no_show",
           "approve_change",
-          "decline_change"
+          "decline_change",
+          "offer_event",
+          "accept_event",
+          "assign_rooms"
         ]
+      },
+      "amount": {
+        "type": "integer",
+        "minimum": 10000,
+        "maximum": 100000000
+      },
+      "units": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "minItems": 1,
+        "maxItems": 9,
+        "uniqueItems": true
+      },
+      "holdHours": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 72
       }
     },
-    "required": [
-      "id",
-      "expectedVersion",
-      "action"
-    ]
+    "required": ["id", "expectedVersion", "action"]
   },
   "note": {
     "type": "object",
@@ -132,11 +186,7 @@
         "maxLength": 1000
       }
     },
-    "required": [
-      "id",
-      "expectedVersion",
-      "note"
-    ]
+    "required": ["id", "expectedVersion", "note"]
   },
   "change-quote": {
     "type": "object",
@@ -161,20 +211,32 @@
       "guests": {
         "type": "integer",
         "minimum": 1,
-        "maximum": 30
+        "maximum": 200
       },
       "promo": {
         "type": "string",
         "maxLength": 32
+      },
+      "kind": {
+        "type": "string",
+        "enum": ["day", "individual", "private", "event"]
+      },
+      "adults": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100
+      },
+      "childrenAges": {
+        "type": "array",
+        "maxItems": 100,
+        "items": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9
+        }
       }
     },
-    "required": [
-      "id",
-      "expectedVersion",
-      "arrival",
-      "departure",
-      "guests"
-    ]
+    "required": ["id", "expectedVersion", "arrival", "departure", "guests"]
   },
   "change-request": {
     "type": "object",
@@ -193,11 +255,7 @@
         "maxLength": 100
       }
     },
-    "required": [
-      "id",
-      "expectedVersion",
-      "quoteId"
-    ]
+    "required": ["id", "expectedVersion", "quoteId"]
   },
   "settings": {
     "type": "object",
@@ -244,6 +302,63 @@
       },
       "paused": {
         "type": "boolean"
+      },
+      "products": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "dayAdultRate": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "dayChildRate": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "individualRate": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "roomRate": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "extraChildRate": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "siteAdults": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "nightAdults": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "dayStart": {
+            "type": "string",
+            "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+          },
+          "dayEnd": {
+            "type": "string",
+            "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+          },
+          "stayStart": {
+            "type": "string",
+            "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+          },
+          "stayEnd": {
+            "type": "string",
+            "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+          }
+        }
       }
     },
     "required": [
@@ -276,10 +391,7 @@
         "maximum": 10
       },
       "rate": {
-        "type": [
-          "integer",
-          "null"
-        ],
+        "type": ["integer", "null"],
         "minimum": 10000,
         "maximum": 100000000
       },
@@ -294,13 +406,7 @@
         "type": "boolean"
       }
     },
-    "required": [
-      "id",
-      "expectedVersion",
-      "capacity",
-      "rate",
-      "active"
-    ]
+    "required": ["id", "expectedVersion", "capacity", "rate", "active"]
   },
   "promo": {
     "type": "object",
@@ -312,10 +418,7 @@
       },
       "kind": {
         "type": "string",
-        "enum": [
-          "percent",
-          "fixed"
-        ]
+        "enum": ["percent", "fixed"]
       },
       "value": {
         "type": "integer",
@@ -342,9 +445,7 @@
         "minimum": 1
       }
     },
-    "required": [
-      "code"
-    ]
+    "required": ["code"]
   },
   "block": {
     "type": "object",
@@ -367,12 +468,7 @@
         "maxLength": 120
       }
     },
-    "required": [
-      "arrival",
-      "departure",
-      "unitId",
-      "reason"
-    ]
+    "required": ["arrival", "departure", "unitId", "reason"]
   },
   "unblock": {
     "type": "object",
@@ -383,16 +479,41 @@
         "maxLength": 100
       }
     },
-    "required": [
-      "id"
-    ]
+    "required": ["id"]
   },
   "guest-contact": {
     "type": "object",
     "additionalProperties": false,
-    "required": [
-      "id"
-    ],
+    "required": ["id"],
+    "properties": {
+      "id": {
+        "type": "string",
+        "maxLength": 100
+      }
+    }
+  },
+  "readiness": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "expectedVersion", "ready"],
+    "properties": {
+      "id": {
+        "type": "string",
+        "maxLength": 100
+      },
+      "expectedVersion": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "ready": {
+        "type": "boolean"
+      }
+    }
+  },
+  "reservation-detail": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id"],
     "properties": {
       "id": {
         "type": "string",
