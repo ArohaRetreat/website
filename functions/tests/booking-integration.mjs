@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
@@ -53,6 +54,11 @@ async function call(
   body,
   { admin = false, key = randomUUID(), cursor } = {},
 ) {
+  if (op === "create" && body && !body.contact)
+    body = {
+      ...body,
+      contact: { name: "Synthetic guest", phone: "+12025550123" },
+    };
   const query = new URLSearchParams();
   if (admin) query.set("admin", "1");
   if (cursor) query.set("cursor", cursor);
@@ -350,7 +356,7 @@ test("production date changes, expiry, loyalty, contact and cursor boundaries us
   assert.equal(contact.email, "booking-change@example.test");
   assert.equal(
     (await call(peer, "guest-contact", { id: created.id })).httpStatus,
-    403,
+    404,
   );
   // Delayed housekeeping must never keep an expired pending room occupied.
   const expired = {
@@ -759,4 +765,396 @@ test("mixed products share atomic site/room capacity, checkout morning, event co
   );
   assert.equal(completed.httpStatus, 200, JSON.stringify(completed));
   assert.equal((await profileRef.get()).data().completedStays, before);
+});
+
+test("module access, private profiles, contact snapshots, multi-day events and business capture use authoritative records", async () => {
+  const host = await google("owner@example.test"),
+    guest = await google("platform-guest@example.test"),
+    peer = await google("platform-peer@example.test"),
+    manager = await google("platform-manager@example.test"),
+    viewer = await google("platform-viewer@example.test");
+  const general = async (
+    user,
+    path,
+    body,
+    method = body === undefined ? "GET" : "POST",
+    extra = {},
+  ) => {
+    const r = await fetch(base + path, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        ...(user ? { Authorization: "Bearer " + user.idToken } : {}),
+        "Idempotency-Key": randomUUID(),
+        ...extra,
+      },
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    });
+    return { httpStatus: r.status, ...(await r.json()) };
+  };
+  await general(host, "/session", {});
+  for (const u of [guest, peer, manager, viewer]) await call(u, "state");
+  for (const u of [manager, viewer])
+    await db
+      .collection("aroha_members")
+      .doc(u.localId)
+      .set({
+        email:
+          u === manager
+            ? "platform-manager@example.test"
+            : "platform-viewer@example.test",
+        role: "editor",
+        active: true,
+      });
+  assert.equal(
+    (
+      await general(host, "/members/" + manager.localId, {
+        role: "editor",
+        active: true,
+        expectedVersion: 0,
+        websiteAccess: false,
+        bookingAccess: "manager",
+      })
+    ).httpStatus,
+    200,
+  );
+  assert.equal(
+    (
+      await general(host, "/members/" + viewer.localId, {
+        role: "viewer",
+        active: true,
+        expectedVersion: 0,
+        websiteAccess: false,
+        bookingAccess: "viewer",
+      })
+    ).httpStatus,
+    200,
+  );
+  const admitted = await general(manager, "/session", {});
+  assert.equal(admitted.session.modules.website, false);
+  assert.equal(admitted.session.modules.bookings, "manager");
+  assert.equal((await general(manager, "/draft")).httpStatus, 403);
+  assert.equal((await general(manager, "/members")).httpStatus, 403);
+  assert.equal(
+    (await call(viewer, "state", undefined, { admin: true })).httpStatus,
+    200,
+  );
+  assert.equal(
+    (
+      await call(
+        viewer,
+        "profile",
+        { name: "Staff", phone: "+12025550123", expectedVersion: 0 },
+        { admin: true },
+      )
+    ).httpStatus,
+    403,
+  );
+  const { initializeTestEnvironment, assertFails } = await import(
+    "@firebase/rules-unit-testing"
+  );
+  const { ref, uploadBytes } = await import("firebase/storage");
+  const rulesEnv = await initializeTestEnvironment({
+    projectId: project,
+    firestore: {
+      host: "127.0.0.1",
+      port: 8080,
+      rules: await readFile(
+        new URL("../../firestore.rules", import.meta.url),
+        "utf8",
+      ),
+    },
+    storage: {
+      host: "127.0.0.1",
+      port: 9199,
+      rules: await readFile(
+        new URL("../../storage.rules", import.meta.url),
+        "utf8",
+      ),
+    },
+  });
+  try {
+    await assertFails(
+      uploadBytes(
+        ref(
+          rulesEnv
+            .authenticatedContext(manager.localId, { email_verified: true })
+            .storage(),
+          "media/booking-only-staff.png",
+        ),
+        new Uint8Array([1, 2, 3]),
+        { contentType: "image/png" },
+      ),
+    );
+  } finally {
+    await rulesEnv.cleanup();
+  }
+  const before = Date.now(),
+    arrival = new Date(Date.now() + 19800000 + 220 * 86400000)
+      .toISOString()
+      .slice(0, 10),
+    add = (n) =>
+      new Date(Date.parse(arrival) + n * 86400000).toISOString().slice(0, 10);
+  const pick = {
+    kind: "day",
+    arrival,
+    departure: add(1),
+    adults: 2,
+    childrenAges: [],
+    guests: 2,
+    units: [],
+  };
+  const q = await call(guest, "quote", pick);
+  assert.equal(q.httpStatus, 200);
+  const missing = await general(guest, "/booking/create", {
+    quoteId: q.id,
+    note: "",
+  });
+  assert.equal(missing.error.code, "CONTACT_REQUIRED");
+  const saved = await call(guest, "profile", {
+    name: "Synthetic Contact",
+    phone: "+1 (202) 555-0123",
+    expectedVersion: 0,
+  });
+  assert.equal(saved.httpStatus, 200);
+  assert.equal(saved.phone, "+12025550123");
+  assert.equal(saved.email, "platform-guest@example.test");
+  assert.equal(
+    (
+      await call(guest, "profile", {
+        name: "Other",
+        phone: "+12025550124",
+        expectedVersion: 0,
+      })
+    ).httpStatus,
+    409,
+  );
+  assert.equal(
+    (
+      await call(peer, "profile", {
+        name: "Other",
+        phone: "+12025550124",
+        expectedVersion: 0,
+        guestId: guest.localId,
+      })
+    ).httpStatus,
+    422,
+  );
+  const created = await general(guest, "/booking/create", {
+    quoteId: q.id,
+    note: "PRIVATE_NOTE_NOT_FOR_MONITORING",
+  });
+  assert.equal(created.httpStatus, 200, JSON.stringify(created));
+  assert.equal(created.contact, undefined);
+  const stored = (
+    await db.collection("aroha_bookings").doc(created.id).get()
+  ).data();
+  assert.equal(stored.contact.phone, saved.phone);
+  assert.equal(
+    (await call(guest, "guest-contact", { id: created.id })).phone,
+    saved.phone,
+  );
+  assert.equal(
+    (await call(peer, "guest-contact", { id: created.id })).httpStatus,
+    404,
+  );
+  assert.equal(
+    (await call(viewer, "guest-contact", { id: created.id }, { admin: true }))
+      .phone,
+    saved.phone,
+  );
+  assert.equal(
+    (
+      await call(
+        viewer,
+        "guest-profile",
+        { guestId: guest.localId },
+        { admin: true },
+      )
+    ).httpStatus,
+    403,
+  );
+  assert.equal(
+    (
+      await call(
+        viewer,
+        "booking-action",
+        { id: created.id, expectedVersion: 1, action: "approve" },
+        { admin: true },
+      )
+    ).httpStatus,
+    403,
+  );
+  assert.equal(
+    (
+      await call(
+        manager,
+        "booking-action",
+        { id: created.id, expectedVersion: 1, action: "approve" },
+        { admin: true },
+      )
+    ).httpStatus,
+    200,
+  );
+  await call(guest, "profile", {
+    name: "Changed Contact",
+    phone: "+12025550124",
+    expectedVersion: 1,
+  });
+  assert.equal(
+    (await call(guest, "guest-contact", { id: created.id })).phone,
+    "+12025550123",
+  );
+  const state = await call(host, "state", undefined, { admin: true });
+  assert.ok(state.bookings.every((b) => !b.contact));
+  assert.doesNotMatch(JSON.stringify(state.calendarDays), /1202555012/);
+  const eventPick = {
+    ...pick,
+    kind: "event",
+    arrival: add(5),
+    departure: add(8),
+    adults: 20,
+    guests: 20,
+  };
+  const eq = await call(guest, "quote", eventPick);
+  assert.equal(eq.httpStatus, 200);
+  assert.equal(new Date(eq.endsAt).toISOString(), add(7) + "T12:30:00.000Z");
+  const event = await general(guest, "/booking/create", {
+    quoteId: eq.id,
+    note: "",
+  });
+  assert.equal(event.httpStatus, 200);
+  const offer = await call(
+    manager,
+    "booking-action",
+    {
+      id: event.id,
+      expectedVersion: 1,
+      action: "offer_event",
+      amount: 3000000,
+      holdHours: 24,
+    },
+    { admin: true },
+  );
+  assert.equal(offer.httpStatus, 200);
+  const conflict = await call(peer, "quote", {
+    ...pick,
+    arrival: add(7),
+    departure: add(8),
+  });
+  assert.equal(conflict.httpStatus, 409);
+  assert.equal(
+    (
+      await call(guest, "booking-action", {
+        id: event.id,
+        expectedVersion: 2,
+        action: "accept_event",
+      })
+    ).httpStatus,
+    200,
+  );
+  assert.equal(
+    (
+      await call(
+        manager,
+        "booking-action",
+        { id: event.id, expectedVersion: 3, action: "approve" },
+        { admin: true },
+      )
+    ).httpStatus,
+    200,
+  );
+  const step = {
+    eventId: randomUUID(),
+    journeyId: randomUUID(),
+    step: "review",
+    outcome: "viewed",
+    kind: "event",
+  };
+  assert.equal(
+    (await general(guest, "/booking/journey-event", step)).httpStatus,
+    403,
+  );
+  assert.equal(
+    (
+      await general(guest, "/booking/journey-event", step, "POST", {
+        "X-Aroha-Consent": "monitoring",
+      })
+    ).httpStatus,
+    200,
+  );
+  assert.equal(
+    (
+      await general(guest, "/booking/journey-event", step, "POST", {
+        "X-Aroha-Consent": "monitoring",
+      })
+    ).httpStatus,
+    200,
+  );
+  assert.equal(
+    (
+      await general(
+        guest,
+        "/booking/journey-event",
+        { ...step, eventId: randomUUID(), phone: "+12025550123" },
+        "POST",
+        { "X-Aroha-Consent": "monitoring" },
+      )
+    ).httpStatus,
+    422,
+  );
+  const events = (
+    await db
+      .collection("aroha_observability_outbox")
+      .where("createdAt", ">=", before)
+      .limit(300)
+      .get()
+  ).docs.map((d) => d.data().event);
+  const observed = events.filter(
+    (e) => e["event.id"] === "client:" + step.journeyId + ":" + step.eventId,
+  );
+  assert.equal(observed.length, 1);
+  assert.equal(observed[0]["event.authority"], "client-reported");
+  assert.equal(observed[0]["contact.phone"], "+12025550124");
+  assert.ok(
+    events.some(
+      (e) =>
+        e["event.type"] === "booking.api_response" &&
+        e["booking.outcome"] === "failed" &&
+        e["error.type"] === "CONTACT_REQUIRED",
+    ),
+  );
+  assert.ok(
+    events.some(
+      (e) =>
+        e["event.type"] === "booking.requested" &&
+        e["event.authority"] === "server-confirmed" &&
+        e["contact.phone"] === "+12025550123",
+    ),
+  );
+  assert.doesNotMatch(
+    JSON.stringify(events),
+    /PRIVATE_NOTE_NOT_FOR_MONITORING|Synthetic Contact|platform-guest@example/,
+  );
+  await general(host, "/members/" + manager.localId, {
+    role: "editor",
+    active: false,
+    expectedVersion: 1,
+    websiteAccess: false,
+    bookingAccess: "manager",
+  });
+  assert.equal(
+    (await call(manager, "state", undefined, { admin: true })).httpStatus,
+    403,
+  );
+  const { drainEvents } = await import("../booking/observability.mjs");
+  const legacy = db
+    .collection("aroha_booking_outbox")
+    .doc("legacy-cutover-probe");
+  await legacy.set({ delivery: "not_configured", schemaVersion: 1 });
+  const delivered = await drainEvents(db, async () => ({ status: 202 }), {
+    limit: 1,
+  });
+  assert.equal(delivered.delivered, 1);
+  assert.equal((await legacy.get()).data().delivery, "not_configured");
 });

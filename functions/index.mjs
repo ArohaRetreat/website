@@ -1,4 +1,20 @@
-import { traceRequest, recordSummary, domainSpan } from "./telemetry.mjs";
+import { onSchedule } from "firebase-functions/v2/scheduler";
+import {
+  bookingEvent,
+  queueEvent,
+  requestPhone,
+  captureJourney,
+  captureResponse,
+  drainEvents,
+  OPERATIONS,
+} from "./booking/observability.mjs";
+import { studioAccess, validModuleAccess } from "./access.mjs";
+import {
+  traceRequest,
+  recordSummary,
+  domainSpan,
+  traceBookingDelivery,
+} from "./telemetry.mjs";
 import { PUBLIC_ORIGIN, isAllowedOrigin } from "./origins.mjs";
 import { defineSecret } from "firebase-functions/params";
 import { onRequest } from "firebase-functions/v2/https";
@@ -15,8 +31,13 @@ import {
   expectedVersion,
   validateContent,
 } from "./domain.mjs";
-import {publicBookingState,bookingState,bookingCommand,throttleBooking} from "./booking/store.mjs";
-import {BookingError} from "./booking/domain.mjs";
+import {
+  publicBookingState,
+  bookingState,
+  bookingCommand,
+  throttleBooking,
+} from "./booking/store.mjs";
+import { BookingError } from "./booking/domain.mjs";
 initializeApp();
 const monitoringSecret = defineSecret("DYNATRACE_PLATFORM_TOKEN");
 const db = getFirestore(),
@@ -65,12 +86,24 @@ async function session(token) {
         );
         audit(tx, token, "access.bootstrap", token.uid);
       }
-      return { uid: token.uid, email, role: "superadmin", active: true };
+      return {
+        uid: token.uid,
+        email,
+        role: "superadmin",
+        active: true,
+        modules: studioAccess({ active: true, role: "superadmin" }),
+      };
     }
     if (member.exists) {
       const m = member.data();
       if (!m.active) throw new DomainError("ACCESS_REVOKED", 403);
-      return { uid: token.uid, email, role: m.role, active: true };
+      return {
+        uid: token.uid,
+        email,
+        role: m.role,
+        active: true,
+        modules: studioAccess(m),
+      };
     }
     const inviteRef = collection("invitations").doc(hash(email)),
       invite = await tx.get(inviteRef);
@@ -80,15 +113,35 @@ async function session(token) {
       invite.data().expiresAt <= Date.now()
     )
       throw new DomainError("INVITATION_REQUIRED", 403);
-    const role = invite.data().role;
-    tx.set(ref, { email, role, active: true, updatedAt: now() });
+    const role = invite.data().role,
+      moduleFields = {
+        ...(invite.data().websiteAccess === undefined
+          ? {}
+          : { websiteAccess: invite.data().websiteAccess }),
+        ...(invite.data().bookingAccess === undefined
+          ? {}
+          : { bookingAccess: invite.data().bookingAccess }),
+      };
+    tx.set(ref, {
+      email,
+      role,
+      active: true,
+      ...moduleFields,
+      updatedAt: now(),
+    });
     tx.update(inviteRef, {
       status: "accepted",
       acceptedAt: now(),
       uid: token.uid,
     });
     audit(tx, token, "access.accepted", token.uid);
-    return { uid: token.uid, email, role, active: true };
+    return {
+      uid: token.uid,
+      email,
+      role,
+      active: true,
+      modules: studioAccess({ active: true, role, ...moduleFields }),
+    };
   });
 }
 async function requireMember(token, operation) {
@@ -96,7 +149,8 @@ async function requireMember(token, operation) {
   if (
     !member.exists ||
     !member.data().active ||
-    !can(member.data().role, operation)
+    !can(member.data().role, operation) ||
+    (operation !== "access" && !studioAccess(member.data()).website)
   )
     throw new DomainError("FORBIDDEN", 403);
   return { uid: token.uid, ...member.data() };
@@ -113,7 +167,8 @@ async function mutate(actor, operation, callback) {
       if (
         !member.exists ||
         !member.data().active ||
-        !can(member.data().role, permission)
+        !can(member.data().role, permission) ||
+        (permission !== "access" && !studioAccess(member.data()).website)
       )
         throw new DomainError("FORBIDDEN", 403);
       actor.role = member.data().role;
@@ -142,24 +197,69 @@ export const arohaApi = onRequest(
       let operation = "unknown",
         bookingKind = "unknown",
         status = 200,
-        errorCode = "";
+        errorCode = "",
+        telemetryToken,
+        businessResult,
+        captureAllowed = false;
       res.set("X-Request-Id", requestId);
       res.set("Cache-Control", "no-store");
       res.set("X-Content-Type-Options", "nosniff");
       try {
-        if (!isAllowedOrigin(req.get("origin"), !!process.env.FUNCTIONS_EMULATOR))
+        if (
+          !isAllowedOrigin(req.get("origin"), !!process.env.FUNCTIONS_EMULATOR)
+        )
           throw new DomainError("ORIGIN_DENIED", 403);
         if (req.rawBody?.length > 220000)
           throw new DomainError("PAYLOAD_TOO_LARGE", 413);
-        const bookingPath=req.path.replace(/^\/api\/v1/, "").replace(/\/$/, "") || "/";
-        if(bookingPath==="/booking/public"&&req.method==="GET"){
-          operation="booking.public"; return await publicBookingState(db);
+        captureAllowed = true;
+        const bookingPath =
+          req.path.replace(/^\/api\/v1/, "").replace(/\/$/, "") || "/";
+        const initialOp = bookingPath.startsWith("/booking/")
+          ? bookingPath.slice(9)
+          : "";
+        if (OPERATIONS.includes(initialOp)) operation = "booking." + initialOp;
+        if (bookingPath === "/booking/public" && req.method === "GET") {
+          operation = "booking.public";
+          return await publicBookingState(db);
+        }
+        if (bookingPath === "/booking/journey-event" && req.method === "POST") {
+          operation = "booking.journey-event";
+          if (req.rawBody?.length > 2000)
+            throw new DomainError("PAYLOAD_TOO_LARGE", 413);
+          if (req.get("X-Aroha-Consent") !== "monitoring")
+            throw new DomainError("MONITORING_CONSENT_REQUIRED", 403);
+          const bearer = req.get("authorization")?.match(/^Bearer (.+)$/)?.[1];
+          if (bearer) {
+            try {
+              telemetryToken = await getAuth().verifyIdToken(bearer, true);
+            } catch {
+              throw new DomainError("INVALID_SESSION", 401);
+            }
+          }
+          await throttleBooking(
+            db,
+            telemetryToken?.uid ||
+              "anonymous:" + hash(String(req.ip || "unknown")),
+          );
+          try {
+            return await captureJourney(
+              db,
+              telemetryToken,
+              req.body,
+              requestId,
+            );
+          } catch (e) {
+            if (e.code === "INVALID_JOURNEY_EVENT")
+              throw new DomainError(e.code, 422);
+            throw e;
+          }
         }
         const bearer = req.get("authorization")?.match(/^Bearer (.+)$/)?.[1];
         if (!bearer) throw new DomainError("SIGN_IN_REQUIRED", 401);
         let token;
         try {
           token = await getAuth().verifyIdToken(bearer, true);
+          telemetryToken = token;
         } catch {
           throw new DomainError("INVALID_SESSION", 401);
         }
@@ -170,32 +270,93 @@ export const arohaApi = onRequest(
           throw new DomainError("JSON_REQUIRED", 415);
         if (path === "/session" && req.method === "POST") {
           operation = "access.session";
-          return ({ session: await session(token), requestId });
+          return { session: await session(token), requestId };
         }
-        if(path.startsWith("/booking/")){
-          const bookingOp=path.slice(9);
-          if(!["state","availability","quote","create","booking-action","note","change-quote","change-request","settings","unit","promo","block","unblock","readiness","reservation-detail","guest-contact"].includes(bookingOp))throw new DomainError("NOT_FOUND",404);
-          operation="booking."+bookingOp;
-          if(req.rawBody?.length>16000)throw new DomainError("PAYLOAD_TOO_LARGE",413);
-          if(token.email_verified!==true||token.firebase?.sign_in_provider!=="google.com")throw new DomainError("VERIFIED_GOOGLE_ACCOUNT_REQUIRED",403);
-          await throttleBooking(db,token.uid);
-          const admin=req.query.admin==="1";
-          try{
-            if(path==="/booking/state"&&req.method==="GET")return await bookingState(db,token,{admin,start:req.query.start,cursor:req.query.cursor});
-            if(req.method!=="POST")throw new DomainError("NOT_FOUND",404);
-            const result=await bookingCommand(db,token,path.slice(9),b,req.get("Idempotency-Key"),{admin});
-            if(["day","individual","private","event"].includes(result.kind))bookingKind=result.kind;
+        if (path.startsWith("/booking/")) {
+          const bookingOp = path.slice(9);
+          if (
+            ![
+              "guest-profile",
+              "journey-event",
+              "profile",
+              "state",
+              "availability",
+              "quote",
+              "create",
+              "booking-action",
+              "note",
+              "change-quote",
+              "change-request",
+              "settings",
+              "unit",
+              "promo",
+              "block",
+              "unblock",
+              "readiness",
+              "reservation-detail",
+              "guest-contact",
+            ].includes(bookingOp)
+          )
+            throw new DomainError("NOT_FOUND", 404);
+          operation = "booking." + bookingOp;
+          const requestedKind =
+            req.body?.kind || req.get("X-Aroha-Booking-Kind");
+          if (["day", "individual", "private", "event"].includes(requestedKind))
+            bookingKind = requestedKind;
+          if (req.rawBody?.length > 16000)
+            throw new DomainError("PAYLOAD_TOO_LARGE", 413);
+          if (
+            token.email_verified !== true ||
+            token.firebase?.sign_in_provider !== "google.com"
+          )
+            throw new DomainError("VERIFIED_GOOGLE_ACCOUNT_REQUIRED", 403);
+          await throttleBooking(db, token.uid);
+          const admin = req.query.admin === "1";
+          try {
+            if (bookingOp === "journey-event" && req.method === "POST")
+              return await captureJourney(db, token, b, requestId);
+            if (path === "/booking/profile" && req.method === "GET")
+              return (await bookingState(db, token, { admin: false })).profile;
+            if (path === "/booking/state" && req.method === "GET")
+              return await bookingState(db, token, {
+                admin,
+                start: req.query.start,
+                cursor: req.query.cursor,
+              });
+            if (req.method !== "POST") throw new DomainError("NOT_FOUND", 404);
+            const result = await domainSpan(
+              "firestore.booking." + bookingOp,
+              () =>
+                bookingCommand(
+                  db,
+                  token,
+                  path.slice(9),
+                  b,
+                  req.get("Idempotency-Key"),
+                  { admin, journeyId: req.get("X-Aroha-Journey"), requestId },
+                ),
+            );
+            businessResult = result;
+            if (["day", "individual", "private", "event"].includes(result.kind))
+              bookingKind = result.kind;
             return result;
-          }catch(e){if(e instanceof BookingError)throw new DomainError(e.code,e.status);throw e;}
+          } catch (e) {
+            if (e instanceof BookingError)
+              throw new DomainError(e.code, e.status);
+            throw e;
+          }
         }
-        const actor = await requireMember(token, "read");
+        const actor = await requireMember(
+          token,
+          /^\/(members|invitations)(\/|$)/.test(path) ? "access" : "read",
+        );
         if (path === "/draft" && req.method === "GET") {
           operation = "content.read";
           const snap = await collection("content").doc("draft").get();
-          return ({
+          return {
             draft: snap.exists ? snap.data() : null,
             requestId,
-          });
+          };
         }
         if (path === "/draft" && req.method === "POST") {
           operation = "content.saved";
@@ -215,7 +376,7 @@ export const arohaApi = onRequest(
             audit(tx, actor, operation, "draft", { version: current + 1 });
             return current + 1;
           });
-          return ({ version, requestId });
+          return { version, requestId };
         }
         if (path === "/publish" && req.method === "POST") {
           operation = "content.published";
@@ -246,7 +407,7 @@ export const arohaApi = onRequest(
             audit(tx, actor, operation, "site", { version: value.version });
             return value.version;
           });
-          return ({ version, requestId });
+          return { version, requestId };
         }
         if (path === "/revisions" && req.method === "GET") {
           operation = "content.history";
@@ -262,19 +423,17 @@ export const arohaApi = onRequest(
             .limit(limit + 1);
           if (cursor) q = q.startAfter(Number(cursor));
           const rows = (await q.get()).docs;
-          return ({
-            revisions: rows
-              .slice(0, limit)
-              .map((s) => ({
-                id: s.id,
-                version: s.data().version,
-                publishedAt:
-                  s.data().publishedAt?.toDate?.().toISOString() ?? null,
-              })),
+          return {
+            revisions: rows.slice(0, limit).map((s) => ({
+              id: s.id,
+              version: s.data().version,
+              publishedAt:
+                s.data().publishedAt?.toDate?.().toISOString() ?? null,
+            })),
             nextCursor:
               rows.length > limit ? rows[limit - 1].data().version : null,
             requestId,
-          });
+          };
         }
         if (path === "/restore" && req.method === "POST") {
           operation = "content.restored";
@@ -307,7 +466,7 @@ export const arohaApi = onRequest(
             });
             return version;
           });
-          return ({ version, requestId });
+          return { version, requestId };
         }
         if (
           (path === "/members" || path === "/invitations") &&
@@ -329,14 +488,16 @@ export const arohaApi = onRequest(
             q = q.startAfter(cursor);
           }
           const rows = (await q.get()).docs;
-          return ({
+          return {
             [col]: rows.slice(0, 50).map(clean),
             nextCursor: rows.length > 50 ? rows[49].id : null,
             requestId,
-          });
+          };
         }
         if (path === "/invitations" && req.method === "POST") {
           operation = "access.invited";
+          if (!validModuleAccess(b))
+            throw new DomainError("INVALID_MODULE_ACCESS", 422);
           const email = emailKey(b.email);
           if (!mayManage(actor.role, "viewer", b.role))
             throw new DomainError("FORBIDDEN", 403);
@@ -350,6 +511,12 @@ export const arohaApi = onRequest(
             tx.set(collection("invitations").doc(hash(email)), {
               email,
               role: b.role,
+              ...(b.websiteAccess === undefined
+                ? {}
+                : { websiteAccess: b.websiteAccess }),
+              ...(b.bookingAccess === undefined
+                ? {}
+                : { bookingAccess: b.bookingAccess }),
               status: "pending",
               expiresAt: Date.now() + 7 * 86400000,
               invitedBy: actor.uid,
@@ -357,11 +524,11 @@ export const arohaApi = onRequest(
             });
             audit(tx, actor, operation, hash(email));
           });
-          return ({
+          return {
             inviteUrl: `${PUBLIC_ORIGIN}/admin/`,
             expiresInDays: 7,
             requestId,
-          });
+          };
         }
         if (path.startsWith("/invitations/") && req.method === "DELETE") {
           operation = "access.invitation-revoked";
@@ -376,7 +543,7 @@ export const arohaApi = onRequest(
             tx.update(ref, { status: "revoked", updatedAt: now() });
             audit(tx, actor, operation, key);
           });
-          return ({ ok: true, requestId });
+          return { ok: true, requestId };
         }
         if (path.startsWith("/members/") && req.method === "POST") {
           operation = "access.updated";
@@ -385,7 +552,8 @@ export const arohaApi = onRequest(
             !uid ||
             uid.length > 128 ||
             uid === actor.uid ||
-            typeof b.active !== "boolean"
+            typeof b.active !== "boolean" ||
+            !validModuleAccess(b)
           )
             throw new DomainError("INVALID_MEMBER");
           await mutate(actor, operation, async (tx) => {
@@ -394,6 +562,12 @@ export const arohaApi = onRequest(
             if (!snap.exists) throw new DomainError("NOT_FOUND", 404);
             const target = snap.data();
             if (
+              (b.websiteAccess !== undefined ||
+                b.bookingAccess !== undefined) &&
+              b.expectedVersion !== (target.version || 0)
+            )
+              throw new DomainError("VERSION_CONFLICT", 409);
+            if (
               owners().has(target.email) ||
               !mayManage(actor.role, target.role, b.role)
             )
@@ -401,26 +575,97 @@ export const arohaApi = onRequest(
             tx.update(ref, {
               role: b.role,
               active: b.active,
+              version: (target.version || 0) + 1,
+              ...(b.websiteAccess === undefined
+                ? {}
+                : { websiteAccess: b.websiteAccess }),
+              ...(b.bookingAccess === undefined
+                ? {}
+                : { bookingAccess: b.bookingAccess }),
               updatedAt: now(),
             });
             audit(tx, actor, operation, uid);
           });
-          return ({ ok: true, requestId });
+          return { ok: true, requestId };
         }
         throw new DomainError("NOT_FOUND", 404);
       } catch (error) {
-        const failure = classifyError(error instanceof BookingError ? new DomainError(error.code,error.status) : error);
+        const failure = classifyError(
+          error instanceof BookingError
+            ? new DomainError(error.code, error.status)
+            : error,
+        );
         status = failure.status;
         errorCode = failure.code;
         res.status(status);
         return { error: { code: errorCode, requestId } };
       } finally {
+        const op = req.path
+          .replace(/^\/api\/v1\/booking\//, "")
+          .replace(/\/$/, "");
+        if (captureAllowed && OPERATIONS.includes(op)) {
+          const delivery = await captureResponse(
+            db,
+            {
+              id: "response:" + requestId,
+              type: "booking.api_response",
+              authority: "server-observed",
+              actor: telemetryToken?.uid,
+              journeyId: req.get("X-Aroha-Journey"),
+              requestId,
+              method: req.method,
+              operation: op,
+              outcome: status < 400 ? "succeeded" : "failed",
+              status,
+              errorCode,
+              durationMs: Date.now() - started,
+              kind: bookingKind,
+              entity: businessResult?.id,
+            },
+            {
+              phoneLookup: () =>
+                requestPhone(
+                  db,
+                  telemetryToken,
+                  req.body,
+                  businessResult,
+                  status,
+                ),
+              fallback:
+                process.env.DT_EXPORT_ENABLED === "true"
+                  ? (event) =>
+                      fetch(
+                        "https://indiacs.live.dynatrace.com/api/v2/bizevents/ingest",
+                        {
+                          method: "POST",
+                          headers: {
+                            Authorization: "Bearer " + monitoringSecret.value(),
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify([event]),
+                          signal: AbortSignal.timeout(1500),
+                        },
+                      )
+                  : undefined,
+            },
+          );
+          if (!delivery.queued)
+            console.warn(
+              JSON.stringify({
+                code: delivery.fallbackAccepted
+                  ? "BUSINESS_EVENT_CAPTURE_FALLBACK"
+                  : "BUSINESS_EVENT_CAPTURE_FAILED",
+                requestId,
+              }),
+            );
+        }
+
         recordSummary({ operation, status, requestId, errorCode, bookingKind });
         console.info(
           JSON.stringify({
             severity: status >= 500 ? "ERROR" : "INFO",
             service: "aroha-api",
-            version: "0.5.0",
+            version: "0.6.0",
             operation,
             status,
             durationMs: Date.now() - started,
@@ -431,5 +676,33 @@ export const arohaApi = onRequest(
     });
     // Finish bounded telemetry exports while request CPU is still allocated.
     return res.json(payload);
+  },
+);
+
+// At-least-once delivery. Existing pre-cutover booking/email outbox is never drained.
+export const arohaBookingEvents = onSchedule(
+  {
+    schedule: "every 1 minutes",
+    region: "asia-south2",
+    memory: "256MiB",
+    timeoutSeconds: 120,
+    maxInstances: 1,
+    secrets: process.env.DT_EXPORT_ENABLED === "true" ? [monitoringSecret] : [],
+  },
+  async () => {
+    if (process.env.DT_EXPORT_ENABLED !== "true") return;
+    await traceBookingDelivery(() =>
+      drainEvents(db, (event) =>
+        fetch("https://indiacs.live.dynatrace.com/api/v2/bizevents/ingest", {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + monitoringSecret.value(),
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify([event]),
+          signal: AbortSignal.timeout(3000),
+        }),
+      ),
+    );
   },
 );

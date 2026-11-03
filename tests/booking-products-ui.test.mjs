@@ -37,6 +37,12 @@ async function mount(s, role = "guest", hash = "") {
     if (op === "state")
       return structuredClone({
         actor,
+        profile: s.uiProfile || {
+          name: actor.name,
+          phone: "+12025550123",
+          email: "guest@example.test",
+          version: 0,
+        },
         settings: s.settings,
         units: s.units,
         bookings: s.bookings,
@@ -47,14 +53,29 @@ async function mount(s, role = "guest", hash = "") {
         audit: s.audit,
       });
     if (op === "availability") return availability(s, body);
+    if (op === "profile") {
+      s.uiProfile = {
+        name: body.name,
+        phone: body.phone,
+        email: "guest@example.test",
+        version: body.expectedVersion + 1,
+      };
+      return structuredClone(s.uiProfile);
+    }
+    if (op === "create") s.lastContact = body.contact;
     return structuredClone(mutate(s, actor, op, body));
   };
   const source = (
     await readFile(new URL("../website/booking.mjs", import.meta.url), "utf8")
-  ).replace(
-    /import \{ bookingApi \} from "\.\/booking-api.mjs";/,
-    "const bookingApi=window.testBookingApi;",
-  );
+  )
+    .replace(
+      /import \{\s*journeyStep\s*\} from "\.\/booking-journey.mjs";/,
+      "const journeyStep=()=>{};",
+    )
+    .replace(
+      /import \{ bookingApi \} from "\.\/booking-api.mjs";/,
+      "const bookingApi=window.testBookingApi;",
+    );
   await w.eval("(async()=>{" + source + "})()");
   const wait = async () => {
     for (let i = 0; i < 100 && w.document.querySelector("#app[aria-busy]"); i++)
@@ -89,7 +110,10 @@ for (const [kind, adults, kids, total] of [
         d.querySelectorAll('[name="childAge"]').forEach(
           (el, i) => (el.value = kids[i]),
         );
-        assert.equal(!!f.elements.departure, kind === "individual");
+        assert.equal(
+          !!(f.elements.departure || f.elements.eventEnd),
+          ["individual", "event"].includes(kind),
+        );
         f.dispatchEvent(
           new w.Event("submit", { bubbles: true, cancelable: true }),
         );
@@ -161,6 +185,85 @@ test("host offer and owner acceptance are separate visible event actions", async
     await ui.wait();
     assert.equal(b.quoteAccepted, true);
     assert.equal(b.status, "pending_approval");
+  } finally {
+    ui.close();
+  }
+});
+
+test("profile saves prefill review while booking-specific contact stays independent", async () => {
+  const s = initialState();
+  s.uiProfile = {
+    name: "Saved Contact",
+    phone: "+12025550123",
+    email: "guest@example.test",
+    version: 0,
+  };
+  const profile = await mount(s, "guest", "#profile");
+  try {
+    const { w, d, wait } = profile;
+    d.querySelector('[name="contactName"]').value = "Updated Contact";
+    d.querySelector('[name="contactPhone"]').value = "+12025550124";
+    d.querySelector("#profile-form").dispatchEvent(
+      new w.Event("submit", { bubbles: true, cancelable: true }),
+    );
+    await wait();
+    assert.equal(s.uiProfile.version, 1);
+    assert.equal(
+      d.querySelector('[name="contactPhone"]').value,
+      "+12025550124",
+    );
+  } finally {
+    profile.close();
+  }
+  const booking = await mount(s);
+  try {
+    const { w, d, wait } = booking;
+    d.querySelector("#search-form").dispatchEvent(
+      new w.Event("submit", { bubbles: true, cancelable: true }),
+    );
+    await wait();
+    d.querySelector('[data-room="cottage-1"]').click();
+    d.querySelector("#review").click();
+    await wait();
+    assert.equal(
+      d.querySelector('[name="contactName"]').value,
+      "Updated Contact",
+    );
+    assert.equal(
+      d.querySelector('[name="contactPhone"]').value,
+      "+12025550124",
+    );
+    assert.equal(d.querySelector('input[type="email"]').readOnly, true);
+    d.querySelector('[name="contactName"]').value = "Booking Contact";
+    d.querySelector("#terms").checked = true;
+    d.querySelector("#request-form").dispatchEvent(
+      new w.Event("submit", { bubbles: true, cancelable: true }),
+    );
+    await wait();
+    assert.equal(s.lastContact.name, "Booking Contact");
+    assert.equal(s.uiProfile.name, "Updated Contact");
+  } finally {
+    booking.close();
+  }
+});
+test("exclusive event end date is inclusive in the UI and exclusive in the API", async () => {
+  const s = initialState(),
+    ui = await mount(s);
+  try {
+    const { w, d, wait } = ui;
+    const option = d.querySelector('[name="bookingKind"][value="event"]');
+    option.checked = true;
+    option.dispatchEvent(new w.Event("change", { bubbles: true }));
+    const f = d.querySelector("#search-form"),
+      start = addDays(todayIST(), 8),
+      last = addDays(start, 2);
+    f.elements.arrival.value = start;
+    f.elements.eventEnd.value = last;
+    f.dispatchEvent(new w.Event("submit", { bubbles: true, cancelable: true }));
+    await wait();
+    assert.equal(s.quotes.at(-1).departure, addDays(last, 1));
+    assert.ok(d.querySelector("#request-form"));
+    assert.match(d.querySelector(".terms").textContent, /Exclusive range/);
   } finally {
     ui.close();
   }

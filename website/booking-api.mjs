@@ -1,3 +1,8 @@
+import {
+  bookingJourneyId,
+  bookingJourneyKind,
+  journeyStep,
+} from "./booking-journey.mjs";
 import { auth, login, logout } from "./firebase-auth.mjs";
 let ready = auth.authStateReady();
 export async function bookingApi(
@@ -8,7 +13,15 @@ export async function bookingApi(
 ) {
   await ready;
   if (operation === "session") {
-    await login();
+    journeyStep("auth", "attempted");
+    await login().catch((e) => {
+      journeyStep(
+        "auth",
+        e.code === "auth/popup-closed-by-user" ? "cancelled" : "failed",
+      );
+      throw e;
+    });
+    journeyStep("auth", "succeeded");
     try {
       sessionStorage.setItem("aroha-guest-session", "1");
     } catch {}
@@ -55,11 +68,22 @@ async function request(
   if (start) query.set("start", start);
   if (cursor) query.set("cursor", cursor);
   const token = await auth.currentUser?.getIdToken();
+  const stage = {
+    availability: "availability",
+    quote: "review",
+    create: "submit",
+    profile: "profile",
+    "booking-action": "admin",
+  }[operation];
   const response = await fetch(
     "/api/v1/booking/" + operation + (query.size ? "?" + query : ""),
     {
       method: body === undefined ? "GET" : "POST",
       headers: {
+        "X-Aroha-Journey": bookingJourneyId(),
+        ...(bookingJourneyKind()
+          ? { "X-Aroha-Booking-Kind": bookingJourneyKind() }
+          : {}),
         ...(token ? { Authorization: "Bearer " + token } : {}),
         ...(body !== undefined
           ? {
@@ -72,13 +96,28 @@ async function request(
       cache: "no-store",
       signal: AbortSignal.timeout(25000),
     },
-  );
+  ).catch((e) => {
+    if (stage) journeyStep(stage, "failed");
+    throw e;
+  });
   let result;
   try {
     result = await response.json();
   } catch {
     throw Error("Booking service is temporarily unavailable.");
   }
+  if (stage)
+    journeyStep(
+      stage,
+      response.ok ? "succeeded" : "failed",
+      result.kind,
+      response.headers.get("X-Request-Id") || undefined,
+    );
+  if (
+    !response.ok &&
+    ["CONTACT_REQUIRED", "INVALID_CONTACT"].includes(result.error?.code)
+  )
+    journeyStep("contact", "failed");
   if (!response.ok) {
     const e = Error(result.error?.code || "REQUEST_FAILED");
     e.code = result.error?.code;

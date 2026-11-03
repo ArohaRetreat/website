@@ -1,3 +1,11 @@
+## Website0.19.0 / API0.6.0 — issue63
+
+One access-controlled `/admin/` shell retains Website changes and Bookings frames and unsaved editor drafts. People & access independently grants website access and booking viewer/manager capability; legacy defaults are preserved, owner/peer protections remain, module edits require expectedVersion, and server/storage checks enforce grants. `/admin/bookings/` redirects to `/admin/#bookings`. Internal module routes are not separate access domains.
+
+Guest `/book/#profile` saves versioned name/international phone; verified Google email is server-derived. Final booking form inherits editable contacts and saves a per-reservation snapshot. New bookings require supplied or saved valid contact; existing reservations remain intact. Phone syntax is validated, not OTP verified. Exclusive dates include both first/last dates and reserve continuously first morning through final18:00, including intervening nights. Accommodation requires explicit host agreement. Existing single-day snapshots/prices/credits remain unchanged.
+
+[Booking platform contract](../../docs/booking-platform-v2.md) owns details. New service-booking-observability owns provider aroha.booking schema2, server-enriched contact.phone, real trace correlation and scheduled durable outbox. Phone never enters OTLP attributes/logs/metrics, browser payloads or URLs; names/email/notes/ages excluded. Optional detailed form observations retain monitoring consent; essential server/transaction outcomes do not depend on optional analytics. Deploy rules/index metadata and exact worker query readiness before API+worker, then exact-source Hosting with pinned Natura. No CMS seed replacement, synthetic production bookings, email, payments or narration. Actual delivery evidence belongs to local/release-evidence/aroha-0.19.0; do not infer deployment from prepared source.
+
 API0.5.0 / issue59 adds mixed booking policy. Read booking service continuation and approved product contract; preserve legacy records and existing CMS/member authorization. Existing status/departure index must support exact overdue query before publication. Deployment facts in local/release-evidence/aroha-0.18.0.
 
 # Production booking API — 0.4.0 prepared

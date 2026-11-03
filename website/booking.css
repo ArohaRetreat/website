@@ -3039,3 +3039,10 @@ textarea {
   color: var(--ink);
   border: 1px solid var(--line);
 }
+
+html[data-embedded="true"] .studio-nav > :is(a,p,.studio-bottom){display:none}
+html[data-embedded="true"] .studio-nav{padding-top:18px}
+
+@media (max-width: 600px) {
+  :is(#profile-form, #request-form) .two-fields { grid-template-columns: minmax(0, 1fr); }
+}

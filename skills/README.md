@@ -13,6 +13,7 @@ Read [catalog.json](catalog.json), choose relevant workflow/service skills, then
 | Resume/continue | [Handoff](project-handoff/SKILL.md) |
 | README/docs | [Documentation](project-documentation/SKILL.md) |
 | Useful explanatory images | [Ian Xiaohei](ian-xiaohei-illustrations/SKILL.md) |
+| Booking business observability | [Booking business events](service-booking-observability/SKILL.md) |
 | Foundation tooling | [Foundation tooling](service-foundation-tooling/SKILL.md) |
 
 ## Register a service

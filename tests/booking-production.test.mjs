@@ -175,7 +175,14 @@ test("production guest UI presents published private-room pricing without sample
       await new Promise((r) => setTimeout(r, 5));
   };
   try {
-    await w.eval("(async()=>{" + source + "})()");
+    await w.eval(
+      "(async()=>{" +
+        source.replace(
+          /import \{\s*journeyStep\s*\} from "\.\/booking-journey.mjs";/,
+          "const journeyStep=()=>{};",
+        ) +
+        "})()",
+    );
     assert.match(w.document.body.textContent, /Sign in/);
     assert.doesNotMatch(
       w.document.body.textContent,
@@ -190,10 +197,7 @@ test("production guest UI presents published private-room pricing without sample
         new w.Event("submit", { bubbles: true, cancelable: true }),
       );
     await wait();
-    assert.match(
-      w.document.querySelector(".room-price").textContent,
-      /6,000/,
-    );
+    assert.match(w.document.querySelector(".room-price").textContent, /6,000/);
     w.document.querySelector('[data-room="cottage-1"]').click();
     w.document.querySelector("#review").click();
     await wait();

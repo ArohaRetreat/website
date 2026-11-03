@@ -4,7 +4,7 @@ The public Aroha Retreat website, Google-authenticated host studio and Firebase 
 
 Template version: **1.9.0** · [template changelog](docs/template-changelog.md) · [licence boundaries](THIRD-PARTY-NOTICES.md)
 
-Website version **0.12.0** adds automatic trusted Actions reporting and observed production Hosting releases, preserving the public design and sunset experience. Read the [delivery observability contract](docs/delivery-observability.md). See [repository separation](docs/repository-separation.md), [source provenance](docs/repository-import.json) and [open acceptance work](https://github.com/ArohaRetreat/website/issues/2).
+Website **0.19.0** / API **0.6.0** adds guest contact profiles, continuous exclusive-event dates, a unified permission-controlled Host Studio and durable booking business observability. See the [booking platform contract](docs/booking-platform-v2.md). Trusted Actions reporting and observed production Hosting releases preserve the public design and sunset experience. Read the [delivery observability contract](docs/delivery-observability.md). See [repository separation](docs/repository-separation.md), [source provenance](docs/repository-import.json) and [open acceptance work](https://github.com/ArohaRetreat/website/issues/2).
 
 ## Develop and verify
 
