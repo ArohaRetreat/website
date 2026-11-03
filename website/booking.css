@@ -318,7 +318,7 @@ label {
   font-size: 0.85rem;
   line-height: 1.5;
 }
-input:not([type="checkbox"]),
+input:not([type="checkbox"]):not([type="radio"]),
 select,
 textarea {
   width: 100%;
@@ -2602,9 +2602,440 @@ dialog form > .two-fields {
 }
 
 /* Let narrow calendars shrink within their grid without widening the page. */
-.planning-grid > * { min-width: 0; }
-.date-cell { min-width: 0; width: 100%; padding-inline: 0; }
+.planning-grid > * {
+  min-width: 0;
+}
+.date-cell {
+  min-width: 0;
+  width: 100%;
+  padding-inline: 0;
+}
 @media (max-width: 600px) {
-  .date-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .date-fields label:last-child { grid-column: auto; }
+  .date-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .date-fields label:last-child {
+    grid-column: auto;
+  }
+}
+
+/* Booking surfaces share the public atmosphere; brand green remains a brand token. */
+:root {
+  --ink: #183f30;
+  --ground: #f8f7f1;
+  --soft: #e9eddf;
+  --raised: #eef1e4;
+  --field: #fffefa;
+  --accent: #526b47;
+  --action: #163e2d;
+  --action-ink: #fffefa;
+  --focus: #91661c;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+html[data-atmosphere="sunset"] {
+  color-scheme: dark;
+  --ink: #f4efdf;
+  --ground: #0c2119;
+  --paper: #173b2d;
+  --soft: #204836;
+  --raised: #254d3b;
+  --field: #102c21;
+  --muted: #c1cdbb;
+  --line: #55715c;
+  --accent: #e1cd98;
+  --action: #e1cd98;
+  --action-ink: #173425;
+  --focus: #e1cd98;
+}
+:root,
+body {
+  background: var(--ground);
+  color: var(--ink);
+}
+.booking-brand {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.booking-brand .brand-night {
+  display: none;
+}
+html[data-atmosphere="sunset"] .booking-brand .brand-day {
+  display: none;
+}
+html[data-atmosphere="sunset"] .booking-brand .brand-night {
+  display: block;
+}
+.review-banner {
+  background: var(--soft);
+  color: var(--ink);
+  border-color: var(--line);
+}
+.account-button,
+.total,
+.summary hr,
+.steps span {
+  border-color: var(--line);
+}
+:is(.eyebrow, .handwriting, .hero h1 em, .note-item > span, .steps .done) {
+  color: var(--accent);
+}
+:is(.form-note, .sample-note, .guest-footer, .steps, .hero-facts span:before) {
+  color: var(--muted);
+}
+:is(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline-color: var(--focus);
+}
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  background: var(--field);
+  color: var(--ink);
+  border-color: var(--line);
+  font-size: 1rem;
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--action);
+}
+.button {
+  background: var(--action);
+  color: var(--action-ink);
+  border-color: var(--action);
+}
+.outline-button {
+  color: var(--ink);
+  border-color: var(--line);
+}
+:is(.summary, .approval-note, .private-note, .room-placeholder, .persona) {
+  background: var(--raised);
+  color: var(--ink);
+  border-color: var(--line);
+}
+:is(.steps .current, dialog) {
+  color: var(--ink);
+}
+.steps .current {
+  border-color: var(--accent);
+}
+dialog {
+  border-color: var(--line);
+}
+.skip {
+  background: var(--paper);
+  color: var(--ink);
+}
+.success-mark,
+.avatar {
+  background: var(--soft);
+  color: var(--ink);
+}
+#toast {
+  background: var(--action);
+  color: var(--action-ink);
+}
+#toast.error {
+  background: #783d2b;
+  color: #fffefa;
+}
+
+/* Match field rhythm, card hierarchy and stable selection geometry. */
+.date-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.date-fields label:last-child {
+  grid-column: auto;
+}
+.date-calendar {
+  margin-top: 24px;
+  border-top: 1px solid var(--line);
+  padding: 14px 0 8px;
+}
+.calendar-heading {
+  margin: 0 0 4px;
+}
+.calendar-heading strong {
+  font-size: 1.15rem;
+}
+.calendar-hint {
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin-bottom: 12px;
+}
+.month-grid {
+  column-gap: 4px;
+  row-gap: 6px;
+}
+.weekday {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.76rem;
+  letter-spacing: 0.05em;
+}
+.date-cell {
+  font:
+    600 0.95rem/1 Source,
+    Arial,
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+  height: 48px;
+  min-height: 40px;
+  aspect-ratio: auto;
+  isolation: isolate;
+}
+.date-cell.outside {
+  color: var(--muted);
+}
+.date-cell:disabled {
+  opacity: 0.42;
+}
+.date-cell.in-range {
+  background: var(--soft);
+  color: var(--ink);
+}
+.date-cell.endpoint {
+  font-weight: 700;
+}
+.date-cell.endpoint::before {
+  inset: -2px;
+}
+.product-choice {
+  grid-template-columns: 20px minmax(0, 1fr);
+  grid-template-rows: auto auto 1fr;
+  gap: 9px 12px;
+  border-radius: 14px;
+  align-content: start;
+}
+.product-choice input[type="radio"] {
+  grid-column: 1;
+  grid-row: 1;
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  margin: 2px 0 0;
+  padding: 0;
+}
+.product-choice :is(strong, span, small) {
+  grid-column: 2;
+}
+.product-choice strong {
+  font-size: 1rem;
+  line-height: 1.35;
+}
+.product-choice span {
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+.product-choice small {
+  font-size: 0.8rem;
+}
+.product-choice.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+  background: var(--soft);
+}
+.room-card.selected {
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.stay-note > p {
+  max-width: 48ch;
+}
+.planning-grid {
+  gap: clamp(28px, 4vw, 56px);
+  align-items: start;
+}
+.room-price {
+  flex-wrap: wrap;
+}
+.guest-main,
+.booking-layout > *,
+.room-info,
+.summary {
+  min-width: 0;
+}
+.summary dt {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+html[data-atmosphere="sunset"] .date-calendar {
+  background: var(--field);
+  border: 1px solid var(--line);
+  padding: 16px 12px 12px;
+  color: var(--ink);
+  --date-leaf: #fffefa;
+  --date-leaf-ink: #fffefa;
+}
+html[data-atmosphere="sunset"]
+  .date-calendar
+  :is(.weekday, .calendar-hint, .date-cell.outside) {
+  color: var(--muted);
+}
+html[data-atmosphere="sunset"] .date-calendar .date-cell.in-range {
+  background: var(--raised);
+  color: var(--ink);
+}
+html[data-atmosphere="sunset"] :is(.loyalty-card, .tier-path span) {
+  background: var(--paper);
+}
+html[data-atmosphere="sunset"] .loyalty-card {
+  border: 1px solid var(--line);
+}
+html[data-atmosphere="sunset"] .tier-path .reached span {
+  color: #173425;
+  background: #d8dfc2;
+}
+html[data-atmosphere="sunset"] .badge {
+  background: #254d3b;
+  color: #e0ecd5;
+}
+html[data-atmosphere="sunset"] .badge.pending_approval {
+  background: #4a4026;
+  color: #f0daa4;
+}
+html[data-atmosphere="sunset"] :is(.badge.cancelled, .badge.declined) {
+  background: #4b332d;
+  color: #f2c2b2;
+}
+html[data-atmosphere="sunset"] .danger {
+  color: #f2bca9;
+}
+html[data-atmosphere="sunset"] .visit-info .deadline {
+  color: #e1cd98;
+}
+html[data-atmosphere="sunset"] .room-card.selected {
+  border-color: var(--accent);
+}
+html[data-atmosphere="sunset"] .guest-header nav a[aria-current]:after {
+  background: var(--accent);
+}
+html[data-atmosphere="sunset"] .tabs .active {
+  border-color: var(--accent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .button:hover:enabled {
+    background: var(--action);
+    filter: brightness(1.08);
+  }
+  .outline-button:hover:enabled,
+  .icon-button:hover:enabled {
+    background: var(--soft);
+  }
+  .product-choice:hover,
+  .room-card:hover {
+    border-color: var(--accent);
+  }
+  .date-cell:hover:enabled {
+    background: var(--soft);
+  }
+  html[data-atmosphere="sunset"]
+    .date-calendar
+    :is(.icon-button, .date-cell):hover:enabled {
+    background: var(--raised);
+  }
+  .date-cell.endpoint:hover:enabled {
+    background: transparent;
+  }
+}
+@media (hover: none) {
+  .button:hover:enabled {
+    background: var(--action);
+  }
+  .outline-button:hover:enabled,
+  .icon-button:hover {
+    background: transparent;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  :is(.button, .outline-button, .icon-button, .close) {
+    transition:
+      transform 120ms var(--ease-out),
+      background-color 160ms ease;
+  }
+  :is(.button, .outline-button, .icon-button, .close):active:enabled {
+    transform: translateY(1px) scale(0.98);
+  }
+  #toast {
+    transition:
+      opacity 180ms var(--ease-out),
+      transform 180ms var(--ease-out);
+  }
+}
+@media (max-width: 600px) {
+  .product-choice {
+    padding: 18px;
+  }
+  .date-panel {
+    padding: 18px;
+  }
+  .date-fields {
+    gap: 14px 12px;
+  }
+  .date-cell {
+    height: 42px;
+  }
+  .child-ages {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .summary {
+    padding: 22px;
+  }
+  .stay-note h3 {
+    font-size: clamp(1.7rem, 6vw, 2.2rem);
+  }
+}
+
+/* Native dates need their full value visible even on a 320px viewport. */
+:root {
+  --control-line: #748a74;
+}
+html[data-atmosphere="sunset"] {
+  --control-line: #819a82;
+}
+:is(.account-button, .outline-button),
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  border-color: var(--control-line);
+}
+.product-choice input[type="radio"] {
+  appearance: none;
+  border: 1.5px solid var(--control-line);
+  border-radius: 50%;
+  background: var(--field);
+}
+.product-choice input[type="radio"]:checked {
+  border-color: var(--action);
+  background: radial-gradient(circle, var(--action) 0 42%, transparent 47%);
+}
+@media (max-width: 380px) {
+  .date-fields .date-field {
+    grid-column: 1 / -1;
+  }
+  .calendar-heading {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) 36px;
+  }
+  .calendar-heading .icon-button {
+    width: 36px;
+    height: 40px;
+  }
+  .calendar-heading strong {
+    font-size: 1rem;
+    text-align: center;
+    white-space: nowrap;
+  }
+}
+
+.hero-photo figcaption {
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--line);
 }
