@@ -472,8 +472,8 @@ html[data-atmosphere="sunset"] .location-map-placeholder {
 .account-leaf-name { position:relative; font:500 23px/1.25 Lora,serif; overflow-wrap:anywhere; margin:14px 0 22px; }
 .account-leaf-menu .eyebrow { font-size:9px; letter-spacing:.15em; position:relative; }
 .account-leaf-menu nav { position:relative; display:grid; gap:4px; }
-.account-leaf-menu nav button { display:flex; justify-content:space-between; min-height:48px; align-items:center; padding:8px 0; border:0; border-top:1px solid #678e6333; background:none; color:inherit; font:600 16px Source,sans-serif; cursor:pointer; }
-.account-leaf-menu nav button:hover { color:#77712c; }
+.account-leaf-menu nav :is(a, button) { text-decoration:none; display:flex; justify-content:space-between; min-height:48px; align-items:center; padding:8px 0; border:0; border-top:1px solid #678e6333; background:none; color:inherit; font:600 16px Source,sans-serif; cursor:pointer; }
+.account-leaf-menu nav :is(a, button):hover { color:#77712c; }
 .account-leaf-note { position:relative; font:13px/1.5 Source,sans-serif; opacity:.75; margin:18px 0 0; }
 .account-leaf-menu:popover-open { animation: account-leaf-arrive 300ms cubic-bezier(.2,.7,.2,1) both; }
 @keyframes account-leaf-arrive { from {opacity:0;transform:translateY(-8px) scale(.97);transform-origin:top right;} to{opacity:1;transform:none;} }

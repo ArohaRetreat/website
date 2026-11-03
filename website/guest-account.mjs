@@ -61,7 +61,7 @@ export function createGuestAccount(
   function showLeaf(trigger) {
     hideMenu();
     menuTrigger = trigger;
-    leaf.innerHTML = `<svg class="account-leaf-watermark" viewBox="0 0 100 150" aria-hidden="true"><path d="M10 140C-5 65 45 0 95 5C99 69 68 129 10 140Z" fill="currentColor"/><path d="M12 137L84 20M36 102L25 65M53 77L75 74" stroke="currentColor" fill="none" stroke-width="2"/></svg><p class="eyebrow">YOUR CORNER OF AROHA</p>${guestAvatar(signedUser)}<p class="account-leaf-name" data-dt-mask>${esc(guestDisplayName(signedUser))}</p><nav aria-label="Your account"><button data-account-profile data-dt-name="My account">My account <span aria-hidden="true">↗</span></button><button data-account-signout data-dt-name="Sign out">Sign out <span aria-hidden="true">↗</span></button></nav><p class="account-leaf-note" role="status">Your next visit starts with a conversation.</p>`;
+    leaf.innerHTML = `<svg class="account-leaf-watermark" viewBox="0 0 100 150" aria-hidden="true"><path d="M10 140C-5 65 45 0 95 5C99 69 68 129 10 140Z" fill="currentColor"/><path d="M12 137L84 20M36 102L25 65M53 77L75 74" stroke="currentColor" fill="none" stroke-width="2"/></svg><p class="eyebrow">YOUR CORNER OF AROHA</p>${guestAvatar(signedUser)}<p class="account-leaf-name" data-dt-mask>${esc(guestDisplayName(signedUser))}</p><nav aria-label="Your account"><a href="/book/" data-dt-name="Book a stay">Book a stay <span aria-hidden="true">↗</span></a><a href="/book/#visits" data-dt-name="My bookings">My bookings <span aria-hidden="true">↗</span></a><button data-account-signout data-dt-name="Sign out">Sign out <span aria-hidden="true">↗</span></button></nav><p class="account-leaf-note" role="status">Your next visit starts with a conversation.</p>`;
     const anchor = root.querySelector("#guest-account-header") || trigger,
       r = anchor.getBoundingClientRect();
     leaf.style.top = Math.max(12, r.bottom + 12) + "px";
@@ -73,10 +73,6 @@ export function createGuestAccount(
     }
     leaf.showPopover();
     trigger.setAttribute("aria-expanded", "true");
-    leaf.querySelector("[data-account-profile]").onclick = () => {
-      hideMenu();
-      location.assign('/book/#visits');
-    };
     leaf.querySelector("[data-account-signout]").onclick = async (e) => {
       e.currentTarget.disabled = true;
       try {
@@ -90,7 +86,7 @@ export function createGuestAccount(
         e.currentTarget.disabled = false;
       }
     };
-    leaf.querySelector("button").focus({ preventScroll: true });
+    leaf.querySelector("nav a, nav button").focus({ preventScroll: true });
   }
   const toggle = () => {
     if (!leaf.matches(":popover-open")) {

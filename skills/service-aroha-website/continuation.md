@@ -1,3 +1,7 @@
+## Booking menu refinement — 3 November 2026
+
+Issue52: website0.17.1 puts Book a stay and My bookings in signed-in account menus, keeps Book a stay in full Menu, removes separate header quick link through registry quickLink:false. Source: public-pages.mjs, navigation.mjs, guest-account.mjs and guest-experience.css. API0.4.0/CMS8/booking policies unchanged. Current source/deployment/check receipts must be read from local/release-evidence/aroha-0.17.1; prior deployed0.17.0 was664a1f4 / Hostinga217bac6e6d5852e. Browser/account/device acceptance remains separate.
+
 # Production booking activation — 0.17.0 prepared
 
 Owner subsequently authorised real production bookings in issue50/PR51, confirming no offline commitments and host-agreed pricing. Read [production booking continuation](../service-aroha-booking/continuation.md). Four identified units open under a10-person cap; fifth/future units closed; no sample data, payment or email. Existing CMSv8 content and Natura0.6.1 are preserved. Deployment/live evidence remains in the release receipt; earlier prototype-only hold is superseded by this explicit owner authorization.

@@ -1,3 +1,7 @@
+## Website 0.17.1 — issue52
+
+Booking navigation only: omit booking from header quick links, retain full Menu entry and expose explicit booking/history anchors in the signed-in account popover. Account link styles share existing controls. No API, CMS, inventory, rules, indexes, secrets, consent or telemetry schema change. Validate application/foundation checks and build, merge linked PR, compose pinned Natura0.6.1 and verify exact-source Hosting hashes/observed deployment. Rollback Hosting only; preserve all live booking/CMS data. Actual account/device acceptance stays separate.
+
 ## Website0.17.0 / API0.4.0 — issue50
 
 Production booking activation was explicitly authorised. Owner confirmed no existing offline commitments and selected host-agreed pricing. Four identified two-person units active, overall capacity10; fifth/future rooms closed until explicit readiness verification. Publish no demo identities, records, tariffs or offers. Pricing remains null at launch; no payment/email. Existing CMS/public content and Natura0.6.1 remain preserved.
