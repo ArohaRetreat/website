@@ -1,3 +1,7 @@
+## 0.17.3 — 3 November 2026
+
+Booking dates use green leaf selection markers in daylight and white leaves on a forest calendar in sunset. Guest booking pages now share the existing IST atmosphere clock and expiring manual choice.
+
 ## 0.17.2 — 3 November 2026
 
 Transparent public headers at the top, forest-green after scrolling, and transparent again over the full-screen farm journey. Reverse scroll and restored positions recalculate the surface; readable fallbacks retain contrast.

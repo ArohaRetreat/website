@@ -1,3 +1,7 @@
+## Website 0.17.3 — issue56
+
+Guest calendar appearance: green/white leaf endpoints with readable inverse date text, range contrast, intact button hit target/focus. Guest booking document restores existing IST atmosphere pre-paint (including boundary/history/background refresh); host document remains unchanged. No optional analytics or page-transition bootstrap on booking. API/CMS/booking/index/rules/secrets/Natura unchanged. Verify app/foundation/build/current-head CI and desktop/phone CSS review in Chrome; publish exact-source Hosting preserving current CMS/Natura. Rollback Hosting only and retain live reservations. Header0.17.2 changes remain intact.
+
 ## Website 0.17.2 — issue54
 
 Header appearance only: shared top transparency through24px, solid forest masthead after scroll, transparent homepage masthead when the full header band is over the cinematic farm journey, solid on exit. Existing RAF/geometry and cleanup are reused; no new observer. Reduced-motion/text tour and map Reading View keep solid contrast while scrolled. Both atmospheres covered. API/CMS/booking/index/rules/secrets/browser theme-color unchanged. Verify boundaries/reverse/restored scroll, application/foundation/build/current-head integration and exact-source observed Hosting release with pinned Natura0.6.1. Rollback Hosting only, preserving all live data. Actual browser/phone acceptance remains separate.
