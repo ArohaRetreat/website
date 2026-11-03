@@ -53,7 +53,7 @@ Living Map Hrudhi uses map-hrudhi.mjs/map-guide-route.mjs, with samples from the
 
 Homepage tour Hrudhi opens openTourStop(journey.index), sharing Discover details and focus restoration. Gate Meet Hrudhi still explains the character. Phone layout separates orbit media, compact reading, stop navigation and guide controls into rows; never restore the large green reading overlay across the media.
 
-Production bookings0.17.0 use /book/ and /admin/bookings/, owned by [booking service](../service-aroha-booking/SKILL.md). Public account completion opens the booking portal; restored sessions do not repeatedly redirect. Existing Studio editing is grouped under Website changes and the booking workspace opens separately to preserve unsaved drafts. CMSv8/APIcontent schema1/Natura0.6.1 remain unchanged.
+Production booking frontend0.19.0 uses /book/ (including #profile) and one access-controlled /admin/ Studio, owned with [booking service](../service-aroha-booking/SKILL.md). Public account completion opens booking; restored sessions do not repeatedly redirect. Website changes/Bookings remain mounted inside the shared shell, preserving unsaved drafts. People & access grants independent module permissions enforced by API0.6.0. Legacy /admin/bookings/ redirects /admin/#bookings. Guest contact snapshots and continuous inclusive event dates follow docs/booking-platform-v2.md. Detailed client steps respect monitoring consent; server business events may include validated contact.phone, excluded from OTLP. CMSv8/APIcontent schema1/Natura0.6.1 remain unchanged.
 
 0.17.1 keeps booking in the full Menu and signed-in account popover; quickLink:false hides only the header registry entry. Native account anchors distinguish new stays from booking history.
 
