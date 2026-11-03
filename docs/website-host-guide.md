@@ -11,3 +11,11 @@ People & access creates seven-day invitations and provides a link to share manua
 The guest form prepares a WhatsApp enquiry for the guest to review and send. It does not confirm availability, hold a room or take payment. Hosts confirm the visit personally. Update provisional copy, tariff details and accurately matched room photographs before relying on them in customer conversations.
 
 The cinematic public view uses the final journey photograph for its evening atmosphere and closing invitation. Keep that chapter paired with an evening image when changing photographs. Simple View presents all journey chapters without spatial movement; guests can switch views at any time.
+
+## Mixed booking products (0.18.0)
+
+Open `/admin/bookings/` for all booking operations; Website changes opens the existing content studio. Review requests before approving. Day visits and overnight bookings share35 adult onsite places, while overnight adults also use the10-bed limit. Children under10 are listed separately. The calendar includes departure morning, shared sleeping places and day/event requests. Use Rooms & inventory for cleaning handover; a room that needs cleaning cannot be checked in. Future rooms remain closed until explicitly verified.
+
+Booking policies configures product rates, adult limits and IST arrival/departure windows for new quotes. Rates & offers manages promo codes and loyalty offers. Existing reservations retain their totals and terms. Private rooms include the first two occupants and allow at most two adults and two children. Shared individual stays reserve sleeping places without private-room guarantees; hosts may assign available rooms.
+
+Exclusive event enquiries initially do not reserve inventory. Send a host price offer, optionally holding exclusive availability up to24 hours. Guests must accept the current offer before host approval, which rechecks conflicts. Replacing an offer resets acceptance. Event date changes require a fresh enquiry and offer. Day visits/events never earn overnight loyalty credits. Email, external calendar sync and online payments remain disabled. The [booking rules](booking-products-contract.md) describe pricing and capacity in detail.
