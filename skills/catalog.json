@@ -140,6 +140,18 @@
         "project-deployment",
         "project-observability"
       ]
+    },
+    {
+      "id": "service-aroha-booking",
+      "kind": "service",
+      "path": "skills/service-aroha-booking/SKILL.md",
+      "description": "Maintain the aroha-booking service; read its implementation and continuation context.",
+      "dependsOn": [
+        "project-implementation",
+        "project-testing",
+        "project-deployment",
+        "project-observability"
+      ]
     }
   ],
   "services": [
@@ -273,6 +285,34 @@
         "npm run build"
       ],
       "continuation": "skills/service-aroha-booking-prototype/continuation.md",
+      "lastReviewedRevision": null
+    },
+    {
+      "id": "aroha-booking",
+      "skillId": "service-aroha-booking",
+      "sourcePaths": [
+        "functions/booking"
+      ],
+      "entrypoints": [
+        "functions/booking/store.mjs",
+        "website/booking.mjs"
+      ],
+      "owner": "ArohaRetreat",
+      "status": "active",
+      "dependsOn": [
+        "aroha-api"
+      ],
+      "contracts": [
+        "docs/api/aroha-booking-v1.json",
+        "functions/booking/contract.json",
+        "firestore.indexes.json"
+      ],
+      "testCommands": [
+        "npm test",
+        "npm run build",
+        "node scripts/delivery/run-node-tests.mjs api-integration"
+      ],
+      "continuation": "skills/service-aroha-booking/continuation.md",
       "lastReviewedRevision": null
     }
   ]

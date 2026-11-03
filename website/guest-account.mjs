@@ -75,7 +75,7 @@ export function createGuestAccount(
     trigger.setAttribute("aria-expanded", "true");
     leaf.querySelector("[data-account-profile]").onclick = () => {
       hideMenu();
-      open();
+      location.assign('/book/#visits');
     };
     leaf.querySelector("[data-account-signout]").onclick = async (e) => {
       e.currentTarget.disabled = true;
@@ -162,7 +162,7 @@ export function createGuestAccount(
         if (!current()) return;
         const user = m.auth.currentUser;
         body.innerHTML = user
-          ? `<div class="guest-account-person" data-dt-mask>${guestAvatar(user)}<div><strong>${esc(user.displayName || "Welcome to Aroha")}</strong><p>${esc(user.email || "")}</p></div></div><p>You’re signed in. Your hosts still confirm visits personally; online bookings will be added later.</p><div class="guest-account-actions"><button class="button" id="guest-account-done">Keep exploring ↗</button><button class="text-link" id="guest-signout">Sign out</button></div>`
+          ? `<div class="guest-account-person" data-dt-mask>${guestAvatar(user)}<div><strong>${esc(user.displayName || "Welcome to Aroha")}</strong><p>${esc(user.email || "")}</p></div></div><p>You’re signed in. Your hosts review every stay request personally. Open the booking portal to request a stay or manage your visits.</p><div class="guest-account-actions"><a class="button" href="/book/">Book a stay ↗</a><button class="text-link" id="guest-signout">Sign out</button></div>`
           : `<p>A familiar welcome, with one secure Google sign-in.</p><button type="button" class="google-signin" id="guest-google-login">Continue with Google <span aria-hidden="true">↗</span></button><p class="guest-auth-note">We use your Google name and email for your account. Signing in does not confirm a booking or give access to the host studio.</p>`;
         const status = document.createElement("p");
         status.setAttribute("role", "status");
@@ -178,7 +178,7 @@ export function createGuestAccount(
           m.login()
             .then(() => {
               labels(m.auth.currentUser);
-              paint();
+              location.assign('/book/');
             })
             .catch((e) => {
               if (current()) {

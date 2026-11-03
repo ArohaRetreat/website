@@ -95,6 +95,7 @@ const bundle = await build({
     site: new URL("website/site.mjs", root).pathname,
     admin: new URL("website/admin.mjs", root).pathname,
     map: new URL("website/map.mjs", root).pathname,
+    booking: new URL("website/booking.mjs", root).pathname,
   },
   bundle: true,
   format: "esm",
@@ -187,3 +188,10 @@ await writeFile(
 console.log("Built independent Aroha website and host studio. Compose a pinned Natura export before shared Hosting deployment.");
 
 await writeFile(new URL("sitemap.xml", dist), `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${PUBLIC_ORIGIN}/</loc></url><url><loc>${PUBLIC_ORIGIN}/map/</loc></url></urlset>`);
+
+// Authenticated booking surfaces are distinct documents, with no demo selectors or analytics bootstraps.
+for(const route of ['book','admin/bookings']){
+ await mkdir(new URL(route+'/',dist),{recursive:true});
+ await writeFile(new URL(route+'/index.html',dist),`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#163e2d"><meta name="robots" content="noindex,nofollow"><title>${route==='book'?'Your stay at Aroha':'Bookings · Aroha Host Studio'}</title><link rel="icon" href="/assets/brand/favicon.svg"><link rel="stylesheet" href="/assets/booking.css"><script type="module" src="/assets/booking.js"></script></head><body><a class="skip" href="#main">Skip to content</a><div class="review-banner">Host-approved reservations · Prices agreed directly with your host · No online payment</div><div id="app" data-dt-mask><main class="loading">Opening a little space for you…</main></div><div id="toast" role="status" aria-live="polite"></div><dialog id="detail" data-dt-mask></dialog><noscript>Sign-in and booking requests need JavaScript. Please contact your hosts to arrange a visit.</noscript></body></html>`);
+}
+await copyFile(new URL('website/booking.css',root),new URL('booking.css',assets));

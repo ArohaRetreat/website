@@ -435,3 +435,5 @@
 }
 
 .media-field video{display:block;max-width:420px;max-height:260px;background:#142b22}
+
+.studio-module-links{display:grid;gap:8px;margin:8px 0 24px}.studio-module-links a{padding:12px 14px;border:1px solid #9bb28c;border-radius:6px;color:inherit;font:600 .9rem sans-serif}.studio-module-links a[aria-current]{background:#31513a;color:#fff}

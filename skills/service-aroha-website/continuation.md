@@ -1,3 +1,7 @@
+# Production booking activation — 0.17.0 prepared
+
+Owner subsequently authorised real production bookings in issue50/PR51, confirming no offline commitments and host-agreed pricing. Read [production booking continuation](../service-aroha-booking/continuation.md). Four identified units open under a10-person cap; fifth/future units closed; no sample data, payment or email. Existing CMSv8 content and Natura0.6.1 are preserved. Deployment/live evidence remains in the release receipt; earlier prototype-only hold is superseded by this explicit owner authorization.
+
 # Branding, disclosure and contrast pass — 0.16.3
 
 Booking prototype work is isolated under `prototypes/booking/`, issue50, branch `feat/booking-prototype`. Read [its service continuation](../service-aroha-booking-prototype/continuation.md) and [review guide](../../docs/booking-prototype-review.md). The live website, actual guest Google sign-in, current CMS draft/published content and Natura composition are unchanged. Website changes grouping is proposed in the prototype; the existing CMS editor is preserved. No production booking/availability claim is authorised by local prototype success.

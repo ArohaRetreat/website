@@ -1,0 +1,403 @@
+{
+  "availability": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "arrival": {
+        "type": "string",
+        "format": "date"
+      },
+      "departure": {
+        "type": "string",
+        "format": "date"
+      },
+      "guests": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 30
+      }
+    },
+    "required": [
+      "arrival",
+      "departure",
+      "guests"
+    ]
+  },
+  "quote": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "arrival": {
+        "type": "string",
+        "format": "date"
+      },
+      "departure": {
+        "type": "string",
+        "format": "date"
+      },
+      "guests": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 30
+      },
+      "units": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "minItems": 1,
+        "maxItems": 9,
+        "uniqueItems": true
+      },
+      "promo": {
+        "type": "string",
+        "maxLength": 32
+      },
+      "guestId": {
+        "type": "string",
+        "maxLength": 128
+      }
+    },
+    "required": [
+      "arrival",
+      "departure",
+      "guests",
+      "units"
+    ]
+  },
+  "create": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "quoteId": {
+        "type": "string",
+        "maxLength": 100
+      },
+      "note": {
+        "type": "string",
+        "maxLength": 1000
+      }
+    },
+    "required": [
+      "quoteId"
+    ]
+  },
+  "booking-action": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "maxLength": 100
+      },
+      "expectedVersion": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "action": {
+        "type": "string",
+        "enum": [
+          "approve",
+          "decline",
+          "cancel",
+          "checkin",
+          "complete",
+          "no_show",
+          "approve_change",
+          "decline_change"
+        ]
+      }
+    },
+    "required": [
+      "id",
+      "expectedVersion",
+      "action"
+    ]
+  },
+  "note": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "maxLength": 100
+      },
+      "expectedVersion": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "note": {
+        "type": "string",
+        "maxLength": 1000
+      }
+    },
+    "required": [
+      "id",
+      "expectedVersion",
+      "note"
+    ]
+  },
+  "change-quote": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "maxLength": 100
+      },
+      "expectedVersion": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "arrival": {
+        "type": "string",
+        "format": "date"
+      },
+      "departure": {
+        "type": "string",
+        "format": "date"
+      },
+      "guests": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 30
+      },
+      "promo": {
+        "type": "string",
+        "maxLength": 32
+      }
+    },
+    "required": [
+      "id",
+      "expectedVersion",
+      "arrival",
+      "departure",
+      "guests"
+    ]
+  },
+  "change-request": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "maxLength": 100
+      },
+      "expectedVersion": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "quoteId": {
+        "type": "string",
+        "maxLength": 100
+      }
+    },
+    "required": [
+      "id",
+      "expectedVersion",
+      "quoteId"
+    ]
+  },
+  "settings": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "expectedVersion": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "capacity": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100
+      },
+      "approvalHours": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 72
+      },
+      "cancelHours": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 336
+      },
+      "friendAt": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100
+      },
+      "familyAt": {
+        "type": "integer",
+        "minimum": 2,
+        "maximum": 200
+      },
+      "friendDiscount": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 50
+      },
+      "familyDiscount": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 50
+      },
+      "paused": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "expectedVersion",
+      "capacity",
+      "approvalHours",
+      "cancelHours",
+      "friendAt",
+      "familyAt",
+      "friendDiscount",
+      "familyDiscount",
+      "paused"
+    ]
+  },
+  "unit": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "maxLength": 100
+      },
+      "expectedVersion": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "capacity": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 10
+      },
+      "rate": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "minimum": 10000,
+        "maximum": 100000000
+      },
+      "active": {
+        "type": "boolean"
+      },
+      "name": {
+        "type": "string",
+        "maxLength": 120
+      },
+      "verified": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "id",
+      "expectedVersion",
+      "capacity",
+      "rate",
+      "active"
+    ]
+  },
+  "promo": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "code": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9]{4,24}$"
+      },
+      "kind": {
+        "type": "string",
+        "enum": [
+          "percent",
+          "fixed"
+        ]
+      },
+      "value": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "maxUses": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100
+      },
+      "from": {
+        "type": "string",
+        "format": "date"
+      },
+      "until": {
+        "type": "string",
+        "format": "date"
+      },
+      "active": {
+        "type": "boolean"
+      },
+      "expectedVersion": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "required": [
+      "code"
+    ]
+  },
+  "block": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "arrival": {
+        "type": "string",
+        "format": "date"
+      },
+      "departure": {
+        "type": "string",
+        "format": "date"
+      },
+      "unitId": {
+        "type": "string",
+        "maxLength": 100
+      },
+      "reason": {
+        "type": "string",
+        "maxLength": 120
+      }
+    },
+    "required": [
+      "arrival",
+      "departure",
+      "unitId",
+      "reason"
+    ]
+  },
+  "unblock": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "maxLength": 100
+      }
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "guest-contact": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "maxLength": 100
+      }
+    }
+  }
+}

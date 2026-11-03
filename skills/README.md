@@ -34,3 +34,5 @@ Replace arguments with the actual architecture. The command creates a planned se
 Application services: [Website and host studio](service-aroha-website/SKILL.md), [Firebase API](service-aroha-api/SKILL.md). Natura is an external pinned asset dependency.
 
 Review module: [Local booking prototype](service-aroha-booking-prototype/SKILL.md), excluded from production builds. See the [review guide](../docs/booking-prototype-review.md).
+
+Production overnight reservations: [Aroha booking](service-aroha-booking/SKILL.md), distinct from the isolated synthetic prototype.

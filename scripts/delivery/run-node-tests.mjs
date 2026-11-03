@@ -3,7 +3,7 @@ import { mkdirSync } from "node:fs";
 const suites = {
   application: ["tests/*.test.mjs"],
   "api-telemetry": ["functions/tests/telemetry.mjs"],
-  "api-integration": ["functions/tests/integration.mjs"],
+  "api-integration": ["functions/tests/integration.mjs", "functions/tests/booking-integration.mjs"],
 };
 const suite = process.argv[2];
 if (!suites[suite]) throw Error("INVALID_SUITE");
