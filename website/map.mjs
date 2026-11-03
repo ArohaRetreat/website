@@ -1,3 +1,4 @@
+import { transparentHeader } from "./header-appearance.mjs";
 import { createPlacePhotos } from "./place-photos.mjs";
 import { createMapHrudhi } from "./map-hrudhi.mjs";
 import { createGuestAccount } from "./guest-account.mjs";
@@ -228,13 +229,15 @@ function bind() {
     observer;
   const camera = root.querySelector(".tree-camera"),
     intro = root.querySelector(".map-introduction"),
-    descent = root.querySelector(".map-descent");
+    descent = root.querySelector(".map-descent"),
+    header = root.querySelector(".public-header");
   const connectors = [...root.querySelectorAll(".map-timeline")].map((el) => ({
     el,
     fill: el.querySelector(".timeline-growth"),
   }));
   function draw() {
     frame = 0;
+    header.classList.toggle("is-transparent", !reading && transparentHeader(scrollY));
     document.body.classList.toggle(
       "map-paused",
       document.hidden || !!root.querySelector("dialog[open]"),

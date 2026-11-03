@@ -1,3 +1,7 @@
+## Contextual header — 3 November 2026
+
+Issue54 / website0.17.2: transparent at top, green after24px, transparent over full-screen farm journey (owner explicitly selected this, not botanical story), green on exit. Shared helper header-appearance.mjs; existing field-journey/map RAFs and navigation/sunset CSS. Fixed height/native scrolling/focus unchanged. Text-only/reduced-motion tour and map reading remain solid over text. API0.4.0, CMS8, booking policies/Natura0.6.1 untouched. Verify actual merge/deployment/check receipts in local/release-evidence/aroha-0.17.2; prior production0.17.1 afdef24 / Hosting6a154c888708ad8f. Physical-device/browser acceptance stays separate.
+
 ## Booking menu refinement — 3 November 2026
 
 Issue52: website0.17.1 puts Book a stay and My bookings in signed-in account menus, keeps Book a stay in full Menu, removes separate header quick link through registry quickLink:false. Source: public-pages.mjs, navigation.mjs, guest-account.mjs and guest-experience.css. API0.4.0/CMS8/booking policies unchanged. Current source/deployment/check receipts must be read from local/release-evidence/aroha-0.17.1; prior deployed0.17.0 was664a1f4 / Hostinga217bac6e6d5852e. Browser/account/device acceptance remains separate.

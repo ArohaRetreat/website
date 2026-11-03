@@ -1,3 +1,4 @@
+import { transparentHeader } from "./header-appearance.mjs";
 import { createPlacePhotos } from "./place-photos.mjs";
 import { GATE_TRAVEL } from "./hrudhi-gate.mjs";
 import { createHeroAtmosphere } from "./hero-atmosphere.mjs";
@@ -230,8 +231,9 @@ export function createFieldJourney(
     if (dead) return;
     const h = hero.getBoundingClientRect(),
       s = section?.getBoundingClientRect();
-    const light = h.bottom < 90 && (!s || s.top > 90 || s.bottom < 90);
-    header.classList.toggle("on-paper", light);
+    const transparent = transparentHeader(scrollY, stage && motion ? s : null, header.offsetHeight);
+    header.classList.toggle("is-transparent", transparent);
+    header.classList.toggle("on-paper", !transparent);
     botanical.paint(h);
     if (motion && h.bottom > 0)
       heroImage.style.transform = `translate3d(0,${Math.min(180, -h.top * 0.13)}px,0) scale(${1 + clamp(-h.top / innerHeight) * 0.035})`;
@@ -291,7 +293,8 @@ export function createFieldJourney(
     actions.guide?.(Math.max(0,current),true);
     request();
   });
-  listen(document, "visibilitychange", playback);
+  listen(document, "visibilitychange", () => { playback(); request(); });
+  listen(window, "pageshow", request);
   listen(stage, "pointermove", (e) => {
     if (e.pointerType === "mouse" && motion) {
       const r = stage.getBoundingClientRect();
