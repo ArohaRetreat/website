@@ -43,3 +43,7 @@ Details dialogs use native display/overlay discrete transitions with @starting-s
 ## Public branding — 0.16.3
 
 Both routes use the fixed forest masthead and a prominent white Aroha logo in the shared footer. Insets keep phone tour controls and fragment destinations clear. browser-branding.mjs follows the browser’s colour preference for light/white favicon derivatives, independent of the IST farm atmosphere. theme-color remains#163e2d in both modes/routes; this requests browser tint rather than controlling the native Android UI. The map ending joins the footer without collapsed external margins.
+
+## Booking menu placement — 0.17.1
+
+Book a stay remains in the full Menu; its registry quickLink:false omits it from desktop header links. Signed-in guest account popovers contain native Book a stay (/book/) and My bookings (/book/#visits) links, followed by Sign out. Signed-out account controls retain Google sign-in. Shared link styles keep touch targets and visible focus.

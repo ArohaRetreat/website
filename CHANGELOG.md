@@ -1,3 +1,7 @@
+## 0.17.1 — 3 November 2026
+
+Keep Book a stay in the main menu and add Book a stay / My bookings to the signed-in account menu. Remove the separate header booking link.
+
 ## 0.17.0 — 3 November 2026
 
 - Add authenticated overnight booking requests, host approval, comments, cancellation, date changes and visit tiers.

@@ -20,7 +20,11 @@ test('public menu offers only known pages and visible retreat sections',()=>{
   const links=sectionLinks(c);assert.ok(!links.some(p=>p.href==='/#gallery'));assert.ok(links.some(p=>p.href==='/#visit'));
   for(const mode of ['home','map']){
     const menu=renderPublicMenu(c,{esc,mode});
-    for(const page of PUBLIC_PAGES)assert.ok(menu.includes(`href="${page.href}"`));
+    const header=renderPublicHeader(c,{esc,mode});
+    for(const page of PUBLIC_PAGES){
+      assert.ok(menu.includes(`href="${page.href}"`));
+      assert.equal(header.includes(`href="${page.href}"`),page.quickLink!==false);
+    }
     assert.ok(!menu.includes('href="/#gallery"'));
     assert.ok(menu.includes('aria-labelledby="nature-menu-title"'));
   }
