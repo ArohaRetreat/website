@@ -22,7 +22,7 @@ import {
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-proto";
 import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-proto";
-let providers, logger, counter, duration, tracer, manager, businessCounter;
+let providers, logger, counter, duration, tracer, manager, businessCounter, deliveryCounter, deliveryDuration;
 const endpoint = () =>
   process.env.FUNCTIONS_EMULATOR && process.env.OTEL_TEST_ENDPOINT
     ? process.env.OTEL_TEST_ENDPOINT
@@ -101,6 +101,8 @@ function initialize() {
     ],
   });
   const meter = mp.getMeter("aroha-api", "0.6.0");
+  deliveryCounter = meter.createCounter("aroha.booking.delivery.runs", {description:"Completed business-event delivery runs"});
+  deliveryDuration = meter.createHistogram("aroha.booking.delivery.duration", {unit:"s"});
   businessCounter = meter.createCounter("aroha.booking.events", {
     description: "Captured booking lifecycle events",
   });
@@ -263,6 +265,7 @@ export async function shutdownTelemetry() {
 
 export function recordBusinessEvent(event, stage = "captured") {
   const attrs = {
+    "delivery.stage": stage,
     "event.id": event["event.id"],
     "event.type": event["event.type"],
     "event.authority": event["event.authority"],
@@ -294,8 +297,11 @@ export async function traceBookingDelivery(handler) {
     "booking.events.delivery",
     { kind: SpanKind.INTERNAL },
     async (span) => {
+      const started = Date.now();
+      let outcome = "failed";
       try {
         const result = await handler();
+        outcome = result.failed ? "partial" : "succeeded";
         span.setAttributes({
           "delivery.delivered": result.delivered,
           "delivery.failed": result.failed,
@@ -312,7 +318,15 @@ export async function traceBookingDelivery(handler) {
           context: context.active(),
         });
         return result;
+      } catch (error) {
+        const failure = classifyError(error);
+        span.setStatus({code: SpanStatusCode.ERROR});
+        span.setAttribute("error.type", failure.code);
+        logger?.emit({severityNumber:17,severityText:"ERROR",body:"booking.events.delivery_failed",attributes:{"error.type":failure.code},context:context.active()});
+        throw error;
       } finally {
+        deliveryCounter?.add(1,{outcome});
+        deliveryDuration?.record((Date.now()-started)/1000,{outcome});
         span.end();
         await flushTelemetry();
       }

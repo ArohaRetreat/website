@@ -42,6 +42,7 @@ test("OTLP emits separate protobuf traces, logs and bounded metrics without enqu
       },
     );
     await traceBookingDelivery(async()=>({delivered:1,failed:0}));
+    await assert.rejects(()=>traceBookingDelivery(async()=>{throw Object.assign(Error("PRIVATE_WORKER_FAILURE"),{code:4});}));
     for (const path of ["/v1/traces", "/v1/logs", "/v1/metrics"]) {
       const req = requests.find((x) => x.path === path);
       assert.ok(req, path + " was not exported");
@@ -55,6 +56,9 @@ test("OTLP emits separate protobuf traces, logs and bounded metrics without enqu
       );
     }
     assert.ok(requests.filter(x=>x.path==="/v1/traces").some(x=>x.body.includes(Buffer.from("AVAILABILITY_CHANGED"))));
+    assert.ok(requests.filter(x=>x.path==="/v1/logs").some(x=>x.body.includes(Buffer.from("booking.events.delivery_failed"))));
+    assert.ok(requests.every(x=>!["+12025550123","PRIVATE_WORKER_FAILURE"].some(v=>x.body.includes(Buffer.from(v)))));
+    assert.ok(requests.filter(x=>x.path==="/v1/metrics").some(x=>x.body.includes(Buffer.from("aroha.booking.delivery.runs"))));
     const metrics = requests.find((x) => x.path === "/v1/metrics").body;
     assert.ok(metrics.includes(Buffer.from("aroha.api.requests")));
     assert.ok(!metrics.includes(Buffer.from("synthetic-request-123")));
