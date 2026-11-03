@@ -1,6 +1,6 @@
 # Aroha booking prototype continuation — 3 November 2026
 
-Issue [#50](https://github.com/ArohaRetreat/website/issues/50), branch `feat/booking-prototype`, working checkout `/private/tmp/aroha-guest-experience`. Based on production website0.16.3 / cec4a963840a4cf6a88e1d77d324dc3f8ea104ff. Prototype version0.1.0 is independent; no production version/tag/Hosting change.
+Issue [#50](https://github.com/ArohaRetreat/website/issues/50), draft PR [#51](https://github.com/ArohaRetreat/website/pull/51), branch `feat/booking-prototype`, working checkout `/private/tmp/aroha-guest-experience`. Based on production website0.16.3 / cec4a963840a4cf6a88e1d77d324dc3f8ea104ff. Prototype version0.1.0 is independent; no production version/tag/Hosting change.
 
 ## Implemented locally
 
