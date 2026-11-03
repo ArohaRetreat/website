@@ -344,7 +344,7 @@ input[type="checkbox"] {
 }
 .date-calendar {
   --date-leaf: #163e2d;
-  --date-leaf-ink: #fff;
+  --date-leaf-ink: #163e2d;
   padding: 14px 12px 20px;
 }
 .calendar-heading {
@@ -403,6 +403,7 @@ input[type="checkbox"] {
   background: #edf1e5;
   border-radius: 0;
 }
+/* A botanical line drawing grazes the date, leaving its centre clear. */
 .date-cell.endpoint {
   position: relative;
   isolation: isolate;
@@ -415,15 +416,16 @@ input[type="checkbox"] {
 .date-cell.endpoint::before {
   content: "";
   position: absolute;
-  inset: 1px;
+  inset: -5px;
   z-index: -1;
   background: var(--date-leaf);
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M8 56C2 28 15 5 56 8C62 36 49 59 8 56Z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("/assets/calendar-leaf.svg") center / contain no-repeat;
+  pointer-events: none;
 }
 .date-cell:focus-visible { outline: 2px solid var(--date-leaf); outline-offset: 2px; }
 html[data-atmosphere="sunset"] .date-calendar {
   --date-leaf: #fff;
-  --date-leaf-ink: #163e2d;
+  --date-leaf-ink: #fff;
   background: #163e2d;
   color: #fffefa;
   border-radius: 12px;

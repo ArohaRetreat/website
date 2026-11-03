@@ -1,3 +1,7 @@
+## Actual leaf icon correction — 3 November 2026
+
+Issue56 reopened: owner rejected the0.17.3 silhouette as a shape rather than an icon. Website0.17.4 booking.css and calendar-leaf.svg replace it with a botanical line illustration with stem/veins around selected date text, green/day and white/sunset; no selection or clock/API/CMS/booking changes. Current implementation/deployment/browser receipts in local/release-evidence/aroha-0.17.4. Prior production0.17.3 source2a9bdc3 / Hosting1e529bd8ce6ec10a remains until current receipts prove publication. Header refinement retained.
+
 ## Calendar leaf refinement — 3 November 2026
 
 Issue56 / website0.17.3 changes guest calendar endpoint appearance and restores existing IST atmosphere before paint on /book/. Green leaf/white date in daylight, white leaf/green date on dark calendar in sunset. Selection/typed dates/range/keyboard/aria behavior stays intact; no API/CMS/booking/host changes. Source booking.css and scripts/build-website.mjs. Header0.17.2 source80dff7b / Hostingea0a5fdef222e794 is retained. Exact merge/deployment/check/browser receipts in local/release-evidence/aroha-0.17.3. Chrome extension became available after earlier Work-settings browser denial; fresh inventory required. Do not infer OAuth/booking writes/physical-device acceptance from calendar visual checks.

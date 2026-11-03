@@ -1,3 +1,7 @@
+## 0.17.4 — 3 November 2026
+
+Replace leaf-shaped booking-date backgrounds with illustrative botanical leaf markers with stems and veins around the selected dates. Green in daylight and white in sunset.
+
 ## 0.17.3 — 3 November 2026
 
 Booking dates use green leaf selection markers in daylight and white leaves on a forest calendar in sunset. Guest booking pages now share the existing IST atmosphere clock and expiring manual choice.
