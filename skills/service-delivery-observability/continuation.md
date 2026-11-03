@@ -1,3 +1,7 @@
+# Booking delivery — website0.17.0 / API0.4.0 prepared
+
+Issue50/PR51 extends live immutable verification to /book/, /admin/bookings/, booking.js and booking.css, plus independent unauthenticated booking denial. Source API is deployed before Hosting, after READY indexes. Hosting must preserve pinned Natura0.6.1 and CMSv8. No new delivery exporter or browser SDK is introduced. Read current release receipts for actual provider/verification/ingest/tenant outcomes.
+
 # Mobile gate repair — 0.14.1
 
 Issue #31: 0.14.0 mobile-v2 MP4 was overwritten by metadata JSON in a one-off export script. Re-encode from the original 24fps source without optical-flow blending; validate all bundled films before dist generation and test manifest sizes/hashes. Hash matching alone did not establish valid media playback. API 0.2.2 and Natura 0.6.1 remain unchanged. Current PR/release receipts establish deployment status.

@@ -1,3 +1,7 @@
+# Production booking API — 0.4.0 prepared
+
+Issue50/PR51 adds verified guest booking routes alongside unchanged host-only content/member routes. Read [booking continuation](../service-aroha-booking/continuation.md), ready indexes before activation, preserve owner/secret configuration and remove emulator .env.local before deployment. The owner authorised production activation with no prior commitments and host-agreed pricing. Do not infer deployed state from this preparation note.
+
 # Optional place photo variants — API 0.3.0
 
 Issue41 adds only optional eveningImage/eveningImageAlt to validated tour stops. Non-empty trusted image URL requires a description; historical content remains valid. Existing permissions/expectedVersion/audit/rules remain unchanged. Upgrade API before saving/publishing the new CMS fields; runtime resource/instrument versions are0.3.0. No new secret/rule/index changes. Refer to current release/issue evidence for actual deployment.

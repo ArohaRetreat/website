@@ -1,3 +1,10 @@
+## 0.17.0 — 3 November 2026
+
+- Add authenticated overnight booking requests, host approval, comments, cancellation, date changes and visit tiers.
+- Add Host Studio reservation calendar, inventory/readiness controls, blocks, rates/offers, policies and private guest contact; preserve website editing in its own module.
+- Enforce verified guest identity, active host permissions, atomic nightly capacity, scoped idempotency, bounded pagination and continuous-stay credit deduplication.
+- Launch with host-agreed pricing, no online payment or email, four identified rooms within the ten-person limit, and closed fifth/future inventory. Keep CMS version8 and Natura0.6.1 unchanged.
+
 ## 0.16.3 — 2 November 2026
 
 - Centre first-visit copy, expand leaf photography, add persistent larger-logo navigation and prominent footer branding.

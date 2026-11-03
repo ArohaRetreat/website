@@ -1,3 +1,11 @@
+## Website0.17.0 / API0.4.0 — issue50
+
+Production booking activation was explicitly authorised. Owner confirmed no existing offline commitments and selected host-agreed pricing. Four identified two-person units active, overall capacity10; fifth/future rooms closed until explicit readiness verification. Publish no demo identities, records, tariffs or offers. Pricing remains null at launch; no payment/email. Existing CMS/public content and Natura0.6.1 remain preserved.
+
+New private booking/config/day/profile/quote/request/cursor/audit/outbox/credit collections are protected by existing deny-all browser rules. Create booking query/credit indexes and metadata TTL configuration; wait READY and run exact read-only probes. Test guest/host capability, concurrency, quote/version/idempotency, expiry, global promo counters, date-change replacement, credit coalescing, contact and cursor ownership. Deploy API before guarded immutable Hosting. Verify book/host pages, hashes and unauthenticated booking denial, and record signal receipts and tenant records separately. Real-account browser/device acceptance remains distinct.
+
+Rollback Hosting independently. Preserve API0.4 compatibility and booking records; never roll back reservation data, ledger state, membership or secrets. Use the booking pause setting to stop new requests while retaining host management.
+
 ## Website0.16.3 / issue48
 
 Frontend presentation/identity pass only: shared header/footer, notice centring, intro photos, concise impression captions, dusk controls, experience disclosure grouping, map seam, Google-avatar display, browser favicon/theme metadata and story arrow. API0.3.0/CMSv8/Natura0.6.1 unchanged. Validate both modes and320/390 layouts, photo host rejection/fallback, exclusive disclosure reversal, favicon preference changes and header/fragment spacing. Android toolbar tint and actual Google-photo retrieval are separate device/account gates. Rollback Hosting without changing content or membership.

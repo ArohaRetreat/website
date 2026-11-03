@@ -15,6 +15,8 @@ import {
   expectedVersion,
   validateContent,
 } from "./domain.mjs";
+import {publicBookingState,bookingState,bookingCommand,throttleBooking} from "./booking/store.mjs";
+import {BookingError} from "./booking/domain.mjs";
 initializeApp();
 const monitoringSecret = defineSecret("DYNATRACE_PLATFORM_TOKEN");
 const db = getFirestore(),
@@ -148,6 +150,10 @@ export const arohaApi = onRequest(
           throw new DomainError("ORIGIN_DENIED", 403);
         if (req.rawBody?.length > 220000)
           throw new DomainError("PAYLOAD_TOO_LARGE", 413);
+        const bookingPath=req.path.replace(/^\/api\/v1/, "").replace(/\/$/, "") || "/";
+        if(bookingPath==="/booking/public"&&req.method==="GET"){
+          operation="booking.public"; return await publicBookingState(db);
+        }
         const bearer = req.get("authorization")?.match(/^Bearer (.+)$/)?.[1];
         if (!bearer) throw new DomainError("SIGN_IN_REQUIRED", 401);
         let token;
@@ -164,6 +170,20 @@ export const arohaApi = onRequest(
         if (path === "/session" && req.method === "POST") {
           operation = "access.session";
           return ({ session: await session(token), requestId });
+        }
+        if(path.startsWith("/booking/")){
+          const bookingOp=path.slice(9);
+          if(!["state","availability","quote","create","booking-action","note","change-quote","change-request","settings","unit","promo","block","unblock","guest-contact"].includes(bookingOp))throw new DomainError("NOT_FOUND",404);
+          operation="booking."+bookingOp;
+          if(req.rawBody?.length>16000)throw new DomainError("PAYLOAD_TOO_LARGE",413);
+          if(token.email_verified!==true||token.firebase?.sign_in_provider!=="google.com")throw new DomainError("VERIFIED_GOOGLE_ACCOUNT_REQUIRED",403);
+          await throttleBooking(db,token.uid);
+          const admin=req.query.admin==="1";
+          try{
+            if(path==="/booking/state"&&req.method==="GET")return await bookingState(db,token,{admin,start:req.query.start,cursor:req.query.cursor});
+            if(req.method!=="POST")throw new DomainError("NOT_FOUND",404);
+            return await bookingCommand(db,token,path.slice(9),b,req.get("Idempotency-Key"),{admin});
+          }catch(e){if(e instanceof BookingError)throw new DomainError(e.code,e.status);throw e;}
         }
         const actor = await requireMember(token, "read");
         if (path === "/draft" && req.method === "GET") {
@@ -386,7 +406,7 @@ export const arohaApi = onRequest(
         }
         throw new DomainError("NOT_FOUND", 404);
       } catch (error) {
-        const failure = classifyError(error);
+        const failure = classifyError(error instanceof BookingError ? new DomainError(error.code,error.status) : error);
         status = failure.status;
         errorCode = failure.code;
         res.status(status);
@@ -397,7 +417,7 @@ export const arohaApi = onRequest(
           JSON.stringify({
             severity: status >= 500 ? "ERROR" : "INFO",
             service: "aroha-api",
-            version: "0.2.2",
+            version: "0.4.0",
             operation,
             status,
             durationMs: Date.now() - started,

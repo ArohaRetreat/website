@@ -10,6 +10,10 @@ export async function verifyLive(
   const paths = [
     "/",
     "/map/",
+    "/book/",
+    "/admin/bookings/",
+    "/assets/booking.js",
+    "/assets/booking.css",
     "/admin/",
     "/design/",
     "/website-release.json",
@@ -71,6 +75,8 @@ export async function verifyLive(
     signal: AbortSignal.timeout(15000),
   });
   if (denied.status !== 401) throw Error("LIVE_ACCESS_CHECK_FAILED");
+  const bookingDenied=await fetchImpl(origin+'/api/v1/booking/state',{headers:{Origin:origin},signal:AbortSignal.timeout(15000)});
+  if(bookingDenied.status!==401)throw Error('LIVE_BOOKING_ACCESS_CHECK_FAILED');
   return {
     status: "verified",
     verifiedAt: new Date().toISOString(),

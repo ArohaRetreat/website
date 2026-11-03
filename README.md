@@ -47,3 +47,7 @@ Build the design export from the Natura revision in [config/natura-hosting.json]
 The Living Map is a separate `/map/` journey. See [direction and CMS contract](docs/website-map-direction.md).
 
 Production deployment now requires installed functions dependencies and `FIREBASE_CLI_PATH` for authenticated Firebase/Secret Manager access. `npm run deploy -- --production` records provider release, live verification and separate telemetry receipts. A reporting failure returns exit code 2 without repeating or rolling back an already successful release. Repair it using the report-only commands in the delivery contract.
+
+## Overnight bookings
+
+Guests request stays at `/book/` using Google sign-in. Authorised hosts manage reservations at `/admin/bookings/`; existing website editing remains at `/admin/`. Launch pricing is agreed with the host, with no online payment or automatic email. See the [booking contract](docs/api/aroha-booking-v1.json) and [service guide](skills/service-aroha-booking/SKILL.md). The local prototype remains separate from production.

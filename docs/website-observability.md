@@ -1,3 +1,7 @@
+# Production bookings — website0.17.0 / API0.4.0
+
+Booking pages do not initialise optional browser analytics and mask private UI. Backend booking operations use the existing traced API and bounded operation/error classes under API0.4.0. Private names, emails, guest notes and promo codes do not enter telemetry. Transactional audit/outbox rows record committed booking changes and stay-credit effects, without a configured delivery consumer. No email or tenant-visible booking business-event delivery is claimed from outbox creation. Hosting verification now checks booking pages/assets and protected booking-state denial. Native RUM linkage and authenticated production writes remain separate acceptance gates.
+
 # Browser monitoring update — website 0.15.0
 
 The exact owner-approved public jstag URL remains in config/website-runtime.public.json. No ingestion credential is exposed. rum-loader.mjs is bundled into the earliest executable head bootstrap for homepage, Living Map and host studio when saved aroha-monitoring consent is allowed. First consent inserts the same script once. Preview channels, localhost, private draft previews and /design/ do not collect. A first-visit inline consent card offers independent settings, allow-both or essentials without covering the experience. Existing denied choices are retained. Withdrawal clears identification and reloads without the agent; script state in Privacy settings distinguishes off/loading/failed/loaded from actual ingestion.
