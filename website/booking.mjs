@@ -148,19 +148,118 @@ async function refresh() {
   state = await api("state");
 }
 const hostRoute = () => location.pathname.startsWith("/admin/bookings/");
+// Short, interruptible transitions; rendering and focus never wait for an entrance.
+const motionPreference = window.matchMedia?.(
+  "(prefers-reduced-motion: reduce)",
+);
+const activeMotion = new Map();
+let closingDialog = null,
+  renderedView,
+  keyboardInteraction = false;
+window.addEventListener(
+  "keydown",
+  () => {
+    keyboardInteraction = true;
+  },
+  { capture: true },
+);
+window.addEventListener(
+  "pointerdown",
+  () => {
+    keyboardInteraction = false;
+  },
+  { capture: true },
+);
+function playMotion(key, element, frames, duration = 180) {
+  activeMotion.get(key)?.cancel();
+  activeMotion.delete(key);
+  if (
+    !element?.animate ||
+    motionPreference?.matches ||
+    keyboardInteraction ||
+    document.hidden
+  )
+    return null;
+  const animation = element.animate(frames, {
+    duration,
+    easing: "cubic-bezier(0.23, 1, 0.32, 1)",
+  });
+  activeMotion.set(key, animation);
+  const clear = () => {
+    if (activeMotion.get(key) === animation) activeMotion.delete(key);
+  };
+  animation.finished.then(clear, clear);
+  return animation;
+}
+function closeDialog() {
+  if (!dialog.open || closingDialog) return;
+  const animation = playMotion(
+    "dialog",
+    dialog,
+    [
+      { opacity: 1, transform: "translateY(0) scale(1)" },
+      { opacity: 0, transform: "translateY(8px) scale(.98)" },
+    ],
+    140,
+  );
+  if (!animation) {
+    dialog.close();
+    return;
+  }
+  closingDialog = animation;
+  animation.finished.then(
+    () => {
+      if (closingDialog === animation) {
+        closingDialog = null;
+        dialog.close();
+      }
+    },
+    () => {},
+  );
+}
+function stopMotion() {
+  for (const animation of activeMotion.values()) animation.cancel();
+  activeMotion.clear();
+  if (closingDialog) {
+    closingDialog = null;
+    dialog.close();
+  }
+}
+motionPreference?.addEventListener("change", (e) => {
+  if (e.matches) stopMotion();
+});
+window.addEventListener("pagehide", stopMotion);
+dialog.addEventListener("cancel", (e) => {
+  e.preventDefault();
+  closeDialog();
+});
+
 function open(markup) {
-  lastFocus = document.activeElement;
+  if (!dialog.open) lastFocus = document.activeElement;
+  closingDialog = null;
   dialog.innerHTML = `<button class="close" aria-label="Close dialog" data-close>×</button>${markup}`;
   if (!dialog.open) dialog.showModal();
-  dialog.querySelector("[data-close]").onclick = () => dialog.close();
+  dialog.querySelector("[data-close]").onclick = () => closeDialog();
   dialog.querySelector("h2")?.setAttribute("tabindex", "-1");
   dialog.querySelector("h2")?.setAttribute("id", "review-dialog-title");
   dialog.setAttribute("aria-labelledby", "review-dialog-title");
   dialog.querySelector("h2")?.focus();
   bindDialog();
   extendDetail();
+  playMotion(
+    "dialog",
+    dialog,
+    [
+      { opacity: 0, transform: "translateY(8px) scale(.98)" },
+      { opacity: 1, transform: "translateY(0) scale(1)" },
+    ],
+    200,
+  );
 }
 dialog.addEventListener("close", () => {
+  closingDialog = null;
+  activeMotion.get("dialog")?.cancel();
+  activeMotion.delete("dialog");
   if (lastFocus?.isConnected) lastFocus.focus();
   else document.querySelector("#main")?.focus();
 });
@@ -173,7 +272,7 @@ dialog.addEventListener("click", (e) => {
       e.clientY < r.top ||
       e.clientY > r.bottom
     )
-      dialog.close();
+      closeDialog();
   }
 });
 function login() {
@@ -184,30 +283,32 @@ function login() {
     run(async () => {
       await api("session", {});
       await refresh();
-      dialog.close();
+      closeDialog();
       render();
       toast("You’re signed in. Welcome to Aroha.");
     });
 }
 
+const brand = (width, height) =>
+  `<span class="booking-brand"><img class="brand-day" src="/assets/brand/logo-forest.svg" alt="Aroha Retreat" width="${width}" height="${height}"><img class="brand-night" src="/assets/brand/logo-white.svg" alt="Aroha Retreat" width="${width}" height="${height}"></span>`;
 function header() {
-  return `<header class="guest-header"><a href="/" aria-label="Aroha Retreat home"><img src="/assets/brand/logo-forest.svg" width="160" height="55" alt="Aroha Retreat"></a><nav aria-label="Booking navigation"><a href="#plan" ${location.hash !== "#visits" ? 'aria-current="page"' : ""}>Plan a stay</a><a href="#visits" ${location.hash === "#visits" ? 'aria-current="page"' : ""}>Your visits</a></nav><div class="header-actions"><a class="host-link" href="/admin/bookings/">Host Studio ↗</a><button class="account-button" id="account">${state.actor ? `<span class="avatar small">${esc(state.actor.name[0])}</span><span>${esc(state.actor.name.split(" ·")[0])}</span>` : "Sign in ↗"}</button></div></header>`;
+  return `<header class="guest-header"><a href="/" aria-label="Aroha Retreat home">${brand(160, 55)}</a><nav aria-label="Booking navigation"><a href="#plan" ${location.hash !== "#visits" ? 'aria-current="page"' : ""}>Plan a stay</a><a href="#visits" ${location.hash === "#visits" ? 'aria-current="page"' : ""}>Your visits</a></nav><div class="header-actions"><a class="host-link" href="/admin/bookings/">Host Studio ↗</a><button class="account-button" id="account">${state.actor ? `<span class="avatar small">${esc(state.actor.name[0])}</span><span>${esc(state.actor.name.split(" ·")[0])}</span>` : "Sign in ↗"}</button></div></header>`;
 }
 const foot = () =>
-  `<footer class="guest-footer"><img src="/assets/brand/logo-forest.svg" alt="Aroha Retreat" width="140" height="48"><span>A little time. A little closer to nature.</span><span>Host-approved stays · No online payments</span></footer>`;
+  `<footer class="guest-footer">${brand(140, 48)}<span>A little time. A little closer to nature.</span><span>Host-approved stays · No online payments</span></footer>`;
 function dateInputs() {
-  return `<div class="date-fields"><label>${shortVisit() ? "Visit date" : "Arrival"}<input type="date" name="arrival" value="${search.arrival}" min="${day()}" required></label>${shortVisit() ? "" : `<label>Departure<input type="date" name="departure" value="${search.departure}" min="${add(search.arrival, 1)}" required></label>`}<label>Adults · age 10+<input type="number" name="adults" value="${search.adults}" min="1" max="${["private", "individual"].includes(search.kind) ? policy().nightAdults : policy().siteAdults}" required></label><label>Children · under 10<input type="number" name="childCount" value="${search.childrenAges.length}" min="0" max="${search.kind === "individual" ? 0 : search.kind === "private" ? 18 : 100}" ${search.kind === "individual" ? "readonly" : ""} required></label></div>${search.childrenAges.length ? `<p class="form-note">Children’s ages are private to you and your hosts.</p><div class="child-ages">${search.childrenAges.map((age, i) => `<label>Child ${i + 1} age on arrival<input name="childAge" type="number" min="0" max="9" value="${age ?? ""}" required></label>`).join("")}</div>` : ""}`;
+  return `<div class="date-fields"><label class="date-field">${shortVisit() ? "Visit date" : "Arrival"}<input type="date" name="arrival" value="${search.arrival}" min="${day()}" required></label>${shortVisit() ? "" : `<label class="date-field">Departure<input type="date" name="departure" value="${search.departure}" min="${add(search.arrival, 1)}" required></label>`}<label>Adults · age 10+<input type="number" name="adults" value="${search.adults}" min="1" max="${["private", "individual"].includes(search.kind) ? policy().nightAdults : policy().siteAdults}" required></label><label>Children · under 10<input type="number" name="childCount" value="${search.childrenAges.length}" min="0" max="${search.kind === "individual" ? 0 : search.kind === "private" ? 18 : 100}" ${search.kind === "individual" ? "readonly" : ""} required></label></div>${search.childrenAges.length ? `<p class="form-note">Children’s ages are private to you and your hosts.</p><div class="child-ages">${search.childrenAges.map((age, i) => `<label>Child ${i + 1} age on arrival<input name="childAge" type="number" min="0" max="9" value="${age ?? ""}" required></label>`).join("")}</div>` : ""}`;
 }
 function calendar() {
   const first = month + "-01",
     start = add(first, -((new Date(first + "T12:00:00Z").getUTCDay() + 6) % 7));
-  return `<div class="date-calendar"><div class="calendar-heading"><button type="button" class="icon-button" data-month="-1" aria-label="Previous month">←</button><strong>${format(first, { month: "long", year: "numeric" })}</strong><button type="button" class="icon-button" data-month="1" aria-label="Next month">→</button></div><p class="calendar-hint">Choose your ${picking === "arrival" ? "arrival" : "departure"} date</p><div class="month-grid">${["M", "T", "W", "T", "F", "S", "S"].map((d) => `<span class="weekday">${d}</span>`).join("")}${Array.from(
+  return `<div class="date-calendar"><div class="calendar-heading"><button type="button" class="icon-button" data-month="-1" aria-label="Previous month">←</button><strong>${format(first, { month: "long", year: "numeric" })}</strong><button type="button" class="icon-button" data-month="1" aria-label="Next month">→</button></div><p class="calendar-hint">Choose your ${shortVisit() ? "visit" : picking === "arrival" ? "arrival" : "departure"} date</p><div class="month-grid">${["M", "T", "W", "T", "F", "S", "S"].map((d) => `<span class="weekday">${d}</span>`).join("")}${Array.from(
     { length: 42 },
     (_, i) => {
       const d = add(start, i),
         inMonth = d.startsWith(month),
         disabled = d < day() || d > day(365);
-      return `<button type="button" data-date="${d}" class="date-cell ${inMonth ? "" : "outside"} ${d === search.arrival || (!shortVisit() && d === search.departure) ? "endpoint" : ""} ${!shortVisit() && d > search.arrival && d < search.departure ? "in-range" : ""}" ${disabled ? "disabled" : ""} aria-label="${format(d, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}${d === search.arrival ? ", arrival" : d === search.departure ? ", departure" : ""}" aria-pressed="${d === search.arrival || (!shortVisit() && d === search.departure)}">${Number(d.slice(-2))}</button>`;
+      return `<button type="button" data-date="${d}" class="date-cell ${inMonth ? "" : "outside"} ${d === search.arrival || (!shortVisit() && d === search.departure) ? "endpoint" : ""} ${!shortVisit() && d > search.arrival && d < search.departure ? "in-range" : ""}" ${disabled ? "disabled" : ""} aria-label="${format(d, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}${d === search.arrival ? ", arrival" : !shortVisit() && d === search.departure ? ", departure" : ""}" aria-pressed="${d === search.arrival || (!shortVisit() && d === search.departure)}">${Number(d.slice(-2))}</button>`;
     },
   ).join("")}</div></div>`;
 }
@@ -519,6 +620,19 @@ function hostContent() {
   return `${title("YOUR PUBLIC RETREAT", "Website changes.", "Website content stays separate from reservation operations.")}<div class="paper"><h2>Website content editor</h2><p>Manage website content in the existing editor. Booking operations are saved separately and never publish or overwrite website drafts.</p><div class="website-categories">${["Brand & welcome", "Page layout", "Farm tour & films", "Living Map stories", "Cottages", "Experiences", "Visit packages", "Contact & FAQs", "Design & motion", "Published history"].map((s) => `<div><span>${s}</span><small>Existing CMS editor</small></div>`).join("")}</div><a class="outline-button" href="https://aroharetreat.com/admin/" target="_blank" rel="noopener noreferrer">Open existing Host Studio ↗</a><p class="form-note">Opens the real Studio in a new tab and requires your existing host account. Publishing there affects the live site.</p></div>`;
 }
 function render() {
+  const view = hostRoute()
+    ? `host:${hostTab}`
+    : location.hash === "#visits"
+      ? "visits"
+      : `plan:${step}`;
+  activeMotion.get("view")?.cancel();
+  activeMotion.get("calendar")?.cancel();
+  const focused = document.activeElement;
+  const calendarFocus = focused?.dataset?.month
+    ? ["month", focused.dataset.month]
+    : focused?.dataset?.date
+      ? ["date", focused.dataset.date]
+      : null;
   document.title = hostRoute()
     ? "Host Studio · Aroha booking portal"
     : "Your time at Aroha · Booking";
@@ -527,6 +641,17 @@ function render() {
     : `${header()}<main id="main" class="guest-main" tabindex="-1">${location.hash === "#visits" ? visitsPage() : planPage()}</main>${foot()}`;
   bind();
   extendPage();
+  if (calendarFocus)
+    document
+      .querySelector(`[data-${calendarFocus[0]}="${calendarFocus[1]}"]`)
+      ?.focus({ preventScroll: true });
+  if (view !== renderedView) {
+    playMotion("view", document.querySelector("#main"), [
+      { opacity: 0, transform: "translateY(6px)" },
+      { opacity: 1, transform: "translateY(0)" },
+    ]);
+    renderedView = view;
+  }
 }
 function detail(id) {
   dialog.dataset.detailId = id;
@@ -956,7 +1081,7 @@ function bind() {
       run(async () => {
         await api("logout", {});
         await refresh();
-        dialog.close();
+        closeDialog();
         render();
       });
   });
@@ -982,7 +1107,17 @@ function bind() {
         const d = new Date(month + "-01T12:00:00Z");
         d.setUTCMonth(d.getUTCMonth() + Number(b.dataset.month));
         month = d.toISOString().slice(0, 7);
+        const direction = Number(b.dataset.month);
         render();
+        playMotion(
+          "calendar",
+          document.querySelector(".month-grid"),
+          [
+            { opacity: 0.35, transform: `translateX(${direction * 8}px)` },
+            { opacity: 1, transform: "translateX(0)" },
+          ],
+          160,
+        );
       }),
   );
   document.querySelectorAll("[data-date]").forEach(
@@ -1276,7 +1411,7 @@ function bind() {
           maxUses: Number(f.get("maxUses")),
         });
         await refresh();
-        dialog.close();
+        closeDialog();
         render();
         toast("Invitation code created.");
       });
@@ -1299,7 +1434,7 @@ function bind() {
               reason: f.get("reason"),
             });
             await refresh();
-            dialog.close();
+            closeDialog();
             render();
             toast("Maintenance block saved.");
           });
@@ -1316,7 +1451,7 @@ function bind() {
           run(async () => {
             await api("unblock", { id: b.dataset.unblock });
             await refresh();
-            dialog.close();
+            closeDialog();
             render();
             toast("Room block released.");
           });

@@ -1,3 +1,7 @@
+## Booking polish0.18.1 — issue61
+
+Guest booking follows the existing pre-paint IST/manual atmosphere across every surface. booking.css uses semantic palette/action/ink tokens and CSS-switched original white/forest logos; no photo filtering. Form fields use balanced columns; radio sizing and calendar typography corrected. booking.mjs owns short interruptible WAAPI entrances, month transitions and symmetric dialog closure. Keyboard/reduced-motion paths immediate, close/reopen cannot close a replacement, pagehide/preference change cancel animations. Do not animate each date or form edit. Host Studio stays a distinct daytime administrative workspace. API0.5.0 and all business/data policies unchanged. Read local/release-evidence/aroha-0.18.1 for actual delivery/browser evidence.
+
 Website0.18.0 / issue59: mixed booking products and prices with Master room; prior header/menu/leaf/calendar atmosphere retained. No CMS seed overwrite. Read booking service continuation and actual release receipts for publication status.
 
 ## Contextual header — 3 November 2026

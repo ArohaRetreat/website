@@ -1,3 +1,7 @@
+## 0.18.1 — Booking atmosphere and motion
+
+Apply sunset forest surfaces throughout guest booking, including inputs, branding, reviews and dialogs; unify calendar text and form/card layout. Add interruptible step/month/dialog transitions, immediate keyboard/reduced-motion behavior and focus/cleanup coverage. No booking policy/API/data changes.
+
 ## 0.18.0 — 3 November 2026
 
 Add day outings, shared individual stays, private family rooms and host-quoted exclusive events. Adult/child pricing, shared35-adult capacity,10 overnight adult places,11AM turnover, event offers/acceptance and room readiness use the same transactional policy. Master room joins the two tree houses/two cottages; construction rooms stay closed. Existing booking prices/terms, CMS and Natura are preserved. API0.5.0.

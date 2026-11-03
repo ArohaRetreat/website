@@ -5,7 +5,7 @@ description: Maintain Aroha's authenticated overnight reservations and host inve
 
 # Aroha production booking
 
-Owner ArohaRetreat. API0.5.0 / website0.18.0. Domain `functions/booking/domain.mjs`; Firestore adapter `store.mjs`; request schema `contract.json`; API entry `functions/index.mjs`. Guest frontend `website/booking.mjs` / `booking-api.mjs` / `booking.css`; `/book/` and `/admin/bookings/`. Read [API contract](../../docs/api/aroha-booking-v1.json), [policy notes](../../functions/booking/contract-notes.md), [continuation](continuation.md) and [plan](../../docs/booking-module-plan.md).
+Owner ArohaRetreat. API0.5.0 / website0.18.1. Domain `functions/booking/domain.mjs`; Firestore adapter `store.mjs`; request schema `contract.json`; API entry `functions/index.mjs`. Guest frontend `website/booking.mjs` / `booking-api.mjs` / `booking.css`; `/book/` and `/admin/bookings/`. Read [API contract](../../docs/api/aroha-booking-v1.json), [policy notes](../../functions/booking/contract-notes.md), [continuation](continuation.md) and [plan](../../docs/booking-module-plan.md).
 
 Verified Google bearer identity is independent of host membership. Existing host session admission bootstraps only configured owners/invited members. Booking admin requires active admin/superadmin, re-read in the same mutation transaction. Public config never exposes reservations. Guest state projects only own records; calendar/contact reads require host capability. Private screens are masked; booking pages do not initialise optional analytics.
 
@@ -26,3 +26,5 @@ Website0.17.3 guest date selection uses CSS leaf silhouettes (green in daylight,
 0.17.4 corrects issue56 acceptance: selected dates show an actual botanical icon (stem and veins) around their date, not a leaf-shaped background. Keep matching green/day and white/sunset icons/numbers and existing accessible button box.
 
 Mixed products: read docs/booking-products-contract.md and products.mjs before changing availability. Preserve35-adult onsite/10 overnight limits, under10 classification, private max2+2/base2-person pricing, shared allocations, departure-morning/overdue presence, site exclusivity with expiring offer holds and owner consent. Day/event completions must never create stay credits. Master room is owner-confirmed operating inventory; future rooms closed. Config migration is scoped, never a seed restore. Existing settings/products and old bookings retain host edits/terms. Existing status/departure index needs exact overdue query probe before deployment.
+
+Guest booking0.18.1 uses semantic full-surface day/sunset palettes and native dark date inputs. Preserve white/forest original logos, legible calendar labels and leaf icons; theme follows the shared clock without re-rendering forms. Step/month/dialog motion is interruptible and disabled for reduced motion/keyboard; preserve close/reopen safety and focus cleanup. No API/policy/data change.
