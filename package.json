@@ -11,6 +11,8 @@
     "test:website": "node --test tests/website.test.mjs tests/field-tour.test.mjs tests/living-motion.test.mjs tests/hero-atmosphere.test.mjs tests/album.test.mjs tests/hrudhi-gate.test.mjs tests/guest-experience.test.mjs",
     "test:integration": "node --test functions/tests/integration.mjs",
     "dev": "python3 -m http.server 8770 --directory dist",
+    "dev:booking": "node prototypes/booking/server.mjs",
+    "test:booking": "node --test tests/booking-prototype.test.mjs tests/booking-prototype-ui.test.mjs",
     "deploy": "node scripts/deploy-website.mjs"
   },
   "dependencies": {
@@ -19,7 +21,8 @@
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "6.0.0",
-    "esbuild": "0.28.2"
+    "esbuild": "0.28.2",
+    "jsdom": "26.1.0"
   },
   "engines": {
     "node": ">=20"

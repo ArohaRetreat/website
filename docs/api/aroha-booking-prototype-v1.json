@@ -1,0 +1,1627 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Aroha local booking review API",
+    "version": "0.1.0",
+    "description": "Synthetic loopback prototype only. Not the production /api/v1 contract. Single-process serialised JSON persistence. No Firebase, payment, external calendar, email or Dynatrace transport. Currency INR in integer paise. Dates Asia/Kolkata; half-open arrival/departure. Snapshot terms and pending expiry apply. Idempotency scoped to actor and key; mismatched request returns409. Full prototype snapshot is intentionally bounded only by local review data; production needs paginated DTOs and distributed ledgers."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8782/prototype-api/v1"
+    }
+  ],
+  "paths": {
+    "/state": {
+      "get": {
+        "operationId": "state",
+        "summary": "Own projected snapshot or host workspace. Anonymous receives no bookings.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Snapshot: prototype, now, actor, settings, units, own bookings/loyalty, host-only promos/users/blocks/audit, delivery and revision. Private response, no-store."
+          }
+        }
+      }
+    },
+    "/session": {
+      "post": {
+        "operationId": "session",
+        "summary": "Choose an explicitly synthetic local persona. No production authentication.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "X-Prototype-Client",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "const": "aroha-review"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/session"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Projected domain result; see endpoint extension x-result."
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Error415"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          }
+        }
+      }
+    },
+    "/logout": {
+      "post": {
+        "operationId": "logout",
+        "summary": "Clear local demo session.",
+        "security": [
+          {
+            "reviewCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Prototype-Client",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "const": "aroha-review"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/logout"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Projected domain result; see endpoint extension x-result."
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Error415"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          }
+        }
+      }
+    },
+    "/availability": {
+      "post": {
+        "operationId": "availability",
+        "summary": "Signed-in demo guest or host; no guest identities in result.",
+        "security": [
+          {
+            "reviewCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Prototype-Client",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "const": "aroha-review"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/availability"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Projected domain result; see endpoint extension x-result."
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Error415"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          }
+        }
+      }
+    },
+    "/quote": {
+      "post": {
+        "operationId": "quote",
+        "summary": "Signed-in demo guest; host may choose a sample guest.",
+        "security": [
+          {
+            "reviewCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Prototype-Client",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "const": "aroha-review"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9-]{8,100}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/quote"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Projected domain result; see endpoint extension x-result."
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Error415"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          }
+        }
+      }
+    },
+    "/create": {
+      "post": {
+        "operationId": "create",
+        "summary": "Owner of the quote; host creates a pending reservation for its quoted sample guest.",
+        "security": [
+          {
+            "reviewCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Prototype-Client",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "const": "aroha-review"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9-]{8,100}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/create"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Projected domain result; see endpoint extension x-result."
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Error415"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          }
+        }
+      }
+    },
+    "/booking-action": {
+      "post": {
+        "operationId": "booking_action",
+        "summary": "Owner may cancel under snapshot policy. All other actions require host.",
+        "security": [
+          {
+            "reviewCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Prototype-Client",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "const": "aroha-review"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9-]{8,100}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/booking-action"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Projected domain result; see endpoint extension x-result."
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Error415"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          }
+        }
+      }
+    },
+    "/note": {
+      "post": {
+        "operationId": "note",
+        "summary": "Reservation owner only.",
+        "security": [
+          {
+            "reviewCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Prototype-Client",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "const": "aroha-review"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9-]{8,100}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/note"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Projected domain result; see endpoint extension x-result."
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Error415"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          }
+        }
+      }
+    },
+    "/change-quote": {
+      "post": {
+        "operationId": "change_quote",
+        "summary": "Owner of a confirmed booking only. Excludes original allocation for advisory search.",
+        "security": [
+          {
+            "reviewCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Prototype-Client",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "const": "aroha-review"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9-]{8,100}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/change-quote"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Projected domain result; see endpoint extension x-result."
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Error415"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          }
+        }
+      }
+    },
+    "/change-request": {
+      "post": {
+        "operationId": "change_request",
+        "summary": "Owner of a confirmed booking only. Original inventory remains reserved; replacement allocates on host approval.",
+        "security": [
+          {
+            "reviewCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Prototype-Client",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "const": "aroha-review"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9-]{8,100}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/change-request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Projected domain result; see endpoint extension x-result."
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Error415"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          }
+        }
+      }
+    },
+    "/settings": {
+      "post": {
+        "operationId": "settings",
+        "summary": "Host only; rejects capacity conflict.",
+        "security": [
+          {
+            "reviewCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Prototype-Client",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "const": "aroha-review"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9-]{8,100}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/settings"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Projected domain result; see endpoint extension x-result."
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Error415"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          }
+        }
+      }
+    },
+    "/unit": {
+      "post": {
+        "operationId": "unit",
+        "summary": "Host only; closed unconfigured/future rooms cannot be activated.",
+        "security": [
+          {
+            "reviewCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Prototype-Client",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "const": "aroha-review"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9-]{8,100}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/unit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Projected domain result; see endpoint extension x-result."
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Error415"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          }
+        }
+      }
+    },
+    "/promo": {
+      "post": {
+        "operationId": "promo",
+        "summary": "Host only; generated fixed/percentage offer or versioned activation toggle.",
+        "security": [
+          {
+            "reviewCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Prototype-Client",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "const": "aroha-review"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9-]{8,100}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/promo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Projected domain result; see endpoint extension x-result."
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Error415"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          }
+        }
+      }
+    },
+    "/block": {
+      "post": {
+        "operationId": "block",
+        "summary": "Host only; rejects overlap with occupied room.",
+        "security": [
+          {
+            "reviewCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Prototype-Client",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "const": "aroha-review"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9-]{8,100}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/block"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Projected domain result; see endpoint extension x-result."
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Error415"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          }
+        }
+      }
+    },
+    "/unblock": {
+      "post": {
+        "operationId": "unblock",
+        "summary": "Host only.",
+        "security": [
+          {
+            "reviewCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Prototype-Client",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "const": "aroha-review"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9-]{8,100}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/unblock"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Projected domain result; see endpoint extension x-result."
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Error415"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "reviewCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "aroha_review",
+        "description": "HTTP-only SameSite=Strict local synthetic session. Never deploy as real authentication."
+      }
+    },
+    "schemas": {
+      "session": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "persona": {
+            "type": "string",
+            "enum": [
+              "guest-1",
+              "guest-2",
+              "host"
+            ]
+          }
+        },
+        "required": [
+          "persona"
+        ]
+      },
+      "logout": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {},
+        "required": []
+      },
+      "availability": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "arrival": {
+            "type": "string",
+            "format": "date"
+          },
+          "departure": {
+            "type": "string",
+            "format": "date"
+          },
+          "guests": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30
+          }
+        },
+        "required": [
+          "arrival",
+          "departure",
+          "guests"
+        ]
+      },
+      "quote": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "arrival": {
+            "type": "string",
+            "format": "date"
+          },
+          "departure": {
+            "type": "string",
+            "format": "date"
+          },
+          "guests": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30
+          },
+          "units": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "minItems": 1,
+            "maxItems": 9,
+            "uniqueItems": true
+          },
+          "promo": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "guestId": {
+            "type": "string",
+            "enum": [
+              "guest-1",
+              "guest-2"
+            ]
+          }
+        },
+        "required": [
+          "arrival",
+          "departure",
+          "guests",
+          "units"
+        ]
+      },
+      "create": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "quoteId": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "quoteId"
+        ]
+      },
+      "booking-action": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "approve",
+              "decline",
+              "cancel",
+              "checkin",
+              "complete",
+              "no_show",
+              "approve_change",
+              "decline_change"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "expectedVersion",
+          "action"
+        ]
+      },
+      "note": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "id",
+          "expectedVersion",
+          "note"
+        ]
+      },
+      "change-quote": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "arrival": {
+            "type": "string",
+            "format": "date"
+          },
+          "departure": {
+            "type": "string",
+            "format": "date"
+          },
+          "guests": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 30
+          },
+          "promo": {
+            "type": "string",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "id",
+          "expectedVersion",
+          "arrival",
+          "departure",
+          "guests"
+        ]
+      },
+      "change-request": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "quoteId": {
+            "type": "string",
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "id",
+          "expectedVersion",
+          "quoteId"
+        ]
+      },
+      "settings": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "capacity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "approvalHours": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 72
+          },
+          "cancelHours": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 336
+          },
+          "friendAt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "familyAt": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 200
+          },
+          "friendDiscount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50
+          },
+          "familyDiscount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50
+          },
+          "paused": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "expectedVersion",
+          "capacity",
+          "approvalHours",
+          "cancelHours",
+          "friendAt",
+          "familyAt",
+          "friendDiscount",
+          "familyDiscount",
+          "paused"
+        ]
+      },
+      "unit": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "capacity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10
+          },
+          "rate": {
+            "type": "integer",
+            "minimum": 10000,
+            "maximum": 100000000
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "expectedVersion",
+          "capacity",
+          "rate",
+          "active"
+        ]
+      },
+      "promo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9]{4,24}$"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "percent",
+              "fixed"
+            ]
+          },
+          "value": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "maxUses": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "until": {
+            "type": "string",
+            "format": "date"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "code"
+        ]
+      },
+      "block": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "arrival": {
+            "type": "string",
+            "format": "date"
+          },
+          "departure": {
+            "type": "string",
+            "format": "date"
+          },
+          "unitId": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 120
+          }
+        },
+        "required": [
+          "arrival",
+          "departure",
+          "unitId",
+          "reason"
+        ]
+      },
+      "unblock": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "Error": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "requestId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "code",
+              "requestId"
+            ]
+          }
+        },
+        "required": [
+          "error"
+        ]
+      }
+    },
+    "responses": {
+      "Error400": {
+        "description": "Malformed request or missing idempotency key",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error401": {
+        "description": "Local session required",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error403": {
+        "description": "Forbidden capability or origin",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error404": {
+        "description": "Missing or non-owned record",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error409": {
+        "description": "Availability, version, lifecycle or price conflict",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error410": {
+        "description": "Quote expired",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error413": {
+        "description": "Body exceeds 16 KB",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error415": {
+        "description": "JSON required",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error422": {
+        "description": "Bounded domain validation failure",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error429": {
+        "description": "Request/rate limit",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    }
+  },
+  "x-transitions": {
+    "pending_approval": [
+      "confirmed",
+      "declined",
+      "cancelled",
+      "expired"
+    ],
+    "confirmed": [
+      "checked_in",
+      "cancelled",
+      "no_show"
+    ],
+    "checked_in": [
+      "completed"
+    ]
+  },
+  "x-limitations": [
+    "Approval window and prices are sample values.",
+    "Day visits disabled.",
+    "Date changes keep original rooms; requested replacement dates are not held before host approval.",
+    "Promo cancellation restores usage. One best discount, no stacking.",
+    "No scheduled notification/expiry worker. Server reconciles expiry on every API transaction."
+  ]
+}

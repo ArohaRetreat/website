@@ -32,3 +32,5 @@ Replace arguments with the actual architecture. The command creates a planned se
 - Run `sh scripts/check.sh`. See [checks](../docs/testing.md) and [inventory](../docs/services.md).
 
 Application services: [Website and host studio](service-aroha-website/SKILL.md), [Firebase API](service-aroha-api/SKILL.md). Natura is an external pinned asset dependency.
+
+Review module: [Local booking prototype](service-aroha-booking-prototype/SKILL.md), excluded from production builds. See the [review guide](../docs/booking-prototype-review.md).
