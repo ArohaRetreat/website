@@ -1,3 +1,5 @@
+API0.5.0 / issue59 adds mixed booking policy. Read booking service continuation and approved product contract; preserve legacy records and existing CMS/member authorization. Existing status/departure index must support exact overdue query before publication. Deployment facts in local/release-evidence/aroha-0.18.0.
+
 # Production booking API — 0.4.0 prepared
 
 Issue50/PR51 adds verified guest booking routes alongside unchanged host-only content/member routes. Read [booking continuation](../service-aroha-booking/continuation.md), ready indexes before activation, preserve owner/secret configuration and remove emulator .env.local before deployment. The owner authorised production activation with no prior commitments and host-agreed pricing. Do not infer deployed state from this preparation note.

@@ -1,3 +1,9 @@
+import {
+  productDefaults,
+  reservesCapacity,
+  bookingOnDate,
+  calendarSummary,
+} from "./products.mjs";
 import { createHash, randomUUID } from "node:crypto";
 import {
   initialState,
@@ -45,7 +51,8 @@ const dates = (arrival, departure) => {
   )
     fail("INVALID_STAY_DATES");
   const rows = [];
-  for (let d = arrival; d < departure; d = addDays(d, 1)) rows.push(d);
+  for (let d = addDays(arrival, -1); d <= departure; d = addDays(d, 1))
+    rows.push(d);
   return rows;
 };
 function validate(schema, value) {
@@ -106,10 +113,19 @@ const pickConfig = (s) => ({
   promos: s.promos,
   blocks: s.blocks,
 });
-const loadConfig = (snap) => ({
-  ...initialState(),
-  ...(snap.exists ? snap.data() : {}),
-});
+const loadConfig = (snap) => {
+  const initial = initialState(),
+    stored = snap.exists ? snap.data() : {};
+  return {
+    ...initial,
+    ...stored,
+    settings: {
+      ...initial.settings,
+      ...stored.settings,
+      products: { ...productDefaults, ...stored.settings?.products },
+    },
+  };
+};
 const project = (s, actor, profile, bookings, extra = {}) => ({
   actor,
   settings: s.settings,
@@ -212,6 +228,7 @@ export async function bookingState(
       });
   }
   let users = [],
+    calendarDays = [],
     audit = [],
     activeBookings = [];
   if (!admin && !cursor && (profile.activeIds || []).length) {
@@ -232,7 +249,37 @@ export async function bookingState(
     const dayRefs = Array.from({ length: 14 }, (_, i) =>
       collection(db, "days").doc(addDays(start, i)),
     );
-    const ledgers = await db.getAll(...dayRefs);
+    const ledgers = await db.getAll(
+      ...dayRefs,
+      collection(db, "days").doc(addDays(start, -1)),
+    );
+    const overdue = await reservations(db)
+      .where("status", "==", "checked_in")
+      .where("departure", "<=", todayIST(now))
+      .limit(201)
+      .get();
+    if (overdue.size > 200) fail("RECONCILIATION_REQUIRED", 409);
+    for (const d of overdue.docs) all.set(d.id, effective(d.data(), now));
+    calendarDays = dayRefs.map((r, i) =>
+      calendarSummary(
+        {
+          ...s,
+          bookings: [
+            ...new Map(
+              [
+                ...Object.values(ledgers[i].data()?.entries || {}),
+                ...Object.values(
+                  ledgers[i === 0 ? 14 : i - 1].data()?.entries || {},
+                ),
+                ...overdue.docs.map((d) => d.data()),
+              ].map((b) => [b.id, b]),
+            ).values(),
+          ],
+        },
+        r.id,
+        now,
+      ),
+    );
     const ids = new Set(
       ledgers.flatMap((d) =>
         Object.values(d.data()?.entries || {})
@@ -241,7 +288,7 @@ export async function bookingState(
       ),
     );
     const missing = [...ids].filter((id) => !all.has(id));
-    if (missing.length > 200) fail("CALENDAR_LIMIT", 409);
+    missing.splice(150);
     if (missing.length)
       for (const d of await db.getAll(...missing.map((id) => col.doc(id))))
         if (d.exists) all.set(d.id, effective(d.data(), now));
@@ -266,6 +313,7 @@ export async function bookingState(
     audit,
     nextCursor,
     activeBookings,
+    calendarDays,
   });
 }
 export async function throttleBooking(db, uid) {
@@ -289,9 +337,15 @@ export async function bookingCommand(
   if (!schemas[operation]) fail("NOT_FOUND", 404);
   validate(schemas[operation], input);
   if (
-    ["settings", "unit", "promo", "block", "unblock", "guest-contact"].includes(
-      operation,
-    ) &&
+    [
+      "settings",
+      "unit",
+      "promo",
+      "block",
+      "unblock",
+      "readiness",
+      "guest-contact",
+    ].includes(operation) &&
     !admin
   )
     fail("FORBIDDEN", 403);
@@ -358,10 +412,15 @@ export async function bookingCommand(
       ownerSnap = owner === token.uid ? ps : await tx.get(ownerRef);
     if (owner !== token.uid && !ownerSnap.exists) fail("INVALID_GUEST");
     const ownerProfile = ownerSnap.exists ? ownerSnap.data() : profile;
+    if (operation === "reservation-detail") {
+      if (!target) fail("NOT_FOUND", 404);
+      return effective(target, now);
+    }
     const completing =
       operation === "booking-action" &&
       input.action === "complete" &&
-      target?.status === "checked_in";
+      target?.status === "checked_in" &&
+      !["day", "event"].includes(target?.kind);
     const creditRows = completing
       ? await tx.get(
           collection(db, "credits")
@@ -388,7 +447,7 @@ export async function bookingCommand(
     const days = [
       ...new Set(periods.flatMap((p) => dates(p.arrival, p.departure))),
     ];
-    if (days.length > 93) fail("CALENDAR_LIMIT");
+    if (days.length > 102) fail("CALENDAR_LIMIT");
     const dayRefs = days.map((d) => collection(db, "days").doc(d)),
       daySnaps = days.length ? await tx.getAll(...dayRefs) : [];
     const map = new Map(
@@ -405,9 +464,23 @@ export async function bookingCommand(
         : [];
     for (const d of activeSnaps) if (d.exists) map.set(d.id, d.data());
     if (target) map.set(target.id, effective(target, now));
+    if (days.length) {
+      const overdue = await tx.get(
+        reservations(db)
+          .where("status", "==", "checked_in")
+          .where("departure", "<=", todayIST(now))
+          .limit(201),
+      );
+      if (overdue.size > 200) fail("RECONCILIATION_REQUIRED", 409);
+      for (const d of overdue.docs)
+        if (d.id !== target?.id) map.set(d.id, d.data());
+    }
     const changingUnit = s.units.find((u) => u.id === input.id);
     const needsConflictScan =
-      (operation === "settings" && input.capacity < s.settings.capacity) ||
+      (operation === "settings" &&
+        (input.capacity < s.settings.capacity ||
+          input.products?.siteAdults < s.settings.products.siteAdults ||
+          input.products?.nightAdults < s.settings.products.nightAdults)) ||
       (operation === "unit" &&
         changingUnit &&
         (!input.active || input.capacity < changingUnit.capacity));
@@ -509,7 +582,7 @@ export async function bookingCommand(
               ([id, x]) => id !== b.id && occupies(x, now),
             ),
           );
-        if (occupies(b, now) && b.arrival <= d && b.departure > d)
+        if (reservesCapacity(b, now) && bookingOnDate(s, b, d))
           entries[b.id] = {
             id: b.id,
             owner: b.owner,
@@ -520,6 +593,17 @@ export async function bookingCommand(
             status: b.status,
             expiresAt: b.expiresAt || 0,
             promo: b.promo || "",
+            reference: b.reference || "",
+            ...(b.kind
+              ? {
+                  kind: b.kind,
+                  adults: b.adults,
+                  children: b.children,
+                  startsAt: b.startsAt,
+                  endsAt: b.endsAt,
+                  allocations: b.allocations,
+                }
+              : {}),
           };
         tx.set(dayRefs[i], { date: d, entries, updatedAt: now });
       }
@@ -529,7 +613,7 @@ export async function bookingCommand(
       if (occupies(b, now)) active.push(b.id);
       const completed =
         (ownerProfile.completedStays || 0) +
-        (b.status === "completed" && priorStatus !== "completed"
+        (completing && b.status === "completed" && priorStatus !== "completed"
           ? 1 - (creditRows?.size || 0)
           : 0);
       if (completing && b.status === "completed") {
@@ -571,6 +655,7 @@ export async function bookingCommand(
         actor: e.actor,
         at: e.at,
         delivery: "not_configured",
+        ...(e.bookingKind ? { bookingKind: e.bookingKind } : {}),
       };
       tx.set(collection(db, "audit").doc(e.eventId), safe);
       tx.set(collection(db, "outbox").doc(e.eventId), safe);

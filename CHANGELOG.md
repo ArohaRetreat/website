@@ -1,3 +1,7 @@
+## 0.18.0 — 3 November 2026
+
+Add day outings, shared individual stays, private family rooms and host-quoted exclusive events. Adult/child pricing, shared35-adult capacity,10 overnight adult places,11AM turnover, event offers/acceptance and room readiness use the same transactional policy. Master room joins the two tree houses/two cottages; construction rooms stay closed. Existing booking prices/terms, CMS and Natura are preserved. API0.5.0.
+
 ## 0.17.4 — 3 November 2026
 
 Replace leaf-shaped booking-date backgrounds with illustrative botanical leaf markers with stems and veins around the selected dates. Green in daylight and white in sunset.

@@ -412,7 +412,9 @@ input[type="checkbox"] {
   border-radius: 7px;
   font-weight: 600;
 }
-.date-cell.endpoint:hover:enabled { background: transparent; }
+.date-cell.endpoint:hover:enabled {
+  background: transparent;
+}
 .date-cell.endpoint::before {
   content: "";
   position: absolute;
@@ -422,7 +424,10 @@ input[type="checkbox"] {
   mask: url("/assets/calendar-leaf.svg") center / contain no-repeat;
   pointer-events: none;
 }
-.date-cell:focus-visible { outline: 2px solid var(--date-leaf); outline-offset: 2px; }
+.date-cell:focus-visible {
+  outline: 2px solid var(--date-leaf);
+  outline-offset: 2px;
+}
 html[data-atmosphere="sunset"] .date-calendar {
   --date-leaf: #fff;
   --date-leaf-ink: #fff;
@@ -430,9 +435,20 @@ html[data-atmosphere="sunset"] .date-calendar {
   color: #fffefa;
   border-radius: 12px;
 }
-html[data-atmosphere="sunset"] .date-calendar :is(.weekday, .calendar-hint, .date-cell.outside) { color: #c5d2c4; }
-html[data-atmosphere="sunset"] .date-calendar :is(.icon-button:hover, .date-cell:hover:enabled, .date-cell.in-range) { background: #ffffff1f; }
-html[data-atmosphere="sunset"] .date-calendar .date-cell.endpoint { color: var(--date-leaf-ink); background: transparent; }
+html[data-atmosphere="sunset"]
+  .date-calendar
+  :is(.weekday, .calendar-hint, .date-cell.outside) {
+  color: #c5d2c4;
+}
+html[data-atmosphere="sunset"]
+  .date-calendar
+  :is(.icon-button:hover, .date-cell:hover:enabled, .date-cell.in-range) {
+  background: #ffffff1f;
+}
+html[data-atmosphere="sunset"] .date-calendar .date-cell.endpoint {
+  color: var(--date-leaf-ink);
+  background: transparent;
+}
 
 .button,
 .outline-button {
@@ -2503,4 +2519,92 @@ dialog form > .two-fields {
   }
 }
 
-.room-placeholder{display:grid;place-items:center;background:#e8eddf;color:#506249;min-height:180px;padding:24px;text-align:center}
+.room-placeholder {
+  display: grid;
+  place-items: center;
+  background: #e8eddf;
+  color: #506249;
+  min-height: 180px;
+  padding: 24px;
+  text-align: center;
+}
+.product-choices {
+  border: 0;
+  padding: 0;
+  margin: 0 0 28px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.product-choices legend {
+  font:
+    500 1.25rem Lora,
+    serif;
+  margin-bottom: 16px;
+}
+.product-choice {
+  display: grid;
+  gap: 10px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 18px 5px 18px 5px;
+  background: var(--paper);
+  cursor: pointer;
+}
+.product-choice input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--forest);
+}
+.product-choice.selected {
+  border-color: var(--forest);
+  box-shadow: 0 0 0 1px var(--forest);
+}
+.product-choice span {
+  font-weight: 600;
+}
+.product-choice small {
+  line-height: 1.5;
+  color: var(--muted);
+}
+.child-ages {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+.capacity-strip {
+  display: flex;
+  overflow: auto;
+  gap: 10px;
+  padding: 8px 0 24px;
+}
+.capacity-strip article {
+  min-width: 180px;
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+@media (max-width: 900px) {
+  .product-choices {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 450px) {
+  .product-choices {
+    grid-template-columns: 1fr;
+  }
+  .product-choice {
+    padding: 16px;
+  }
+}
+
+/* Let narrow calendars shrink within their grid without widening the page. */
+.planning-grid > * { min-width: 0; }
+.date-cell { min-width: 0; width: 100%; padding-inline: 0; }
+@media (max-width: 600px) {
+  .date-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .date-fields label:last-child { grid-column: auto; }
+}

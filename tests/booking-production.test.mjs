@@ -17,7 +17,7 @@ test("production starts with real inventory and no demo reservations or tariffs"
   assert.equal(s.bookings.length, 0);
   assert.equal(s.users.length, 0);
   assert.equal(s.promos.length, 0);
-  assert.equal(s.units.filter((u) => u.active).length, 4);
+  assert.equal(s.units.filter((u) => u.active).length, 5);
   assert.equal(s.settings.capacity, 10);
   assert.ok(s.units.every((u) => u.rate === null));
   const q = mutate(s, guest, "quote", selection, now);
@@ -120,7 +120,7 @@ test("production frontend uses verified Firebase transport and contains no demo 
   assert.doesNotMatch(adapter, /localStorage|prototype-api/);
 });
 
-test("production guest UI presents unpriced verified requests without sample history or fictional totals", async () => {
+test("production guest UI presents published private-room pricing without sample history", async () => {
   const { JSDOM } = await import("jsdom");
   const s = initialState();
   let actor = null;
@@ -192,14 +192,14 @@ test("production guest UI presents unpriced verified requests without sample his
     await wait();
     assert.match(
       w.document.querySelector(".room-price").textContent,
-      /Agreed with host/,
+      /6,000/,
     );
     w.document.querySelector('[data-room="cottage-1"]').click();
     w.document.querySelector("#review").click();
     await wait();
     assert.match(
       w.document.querySelector(".summary .total").textContent,
-      /Agreed with host/,
+      /12,000/,
     );
     w.document.querySelector("#terms").checked = true;
     w.document
@@ -209,7 +209,7 @@ test("production guest UI presents unpriced verified requests without sample his
       );
     await wait();
     assert.equal(s.bookings.length, 1);
-    assert.equal(s.bookings[0].total, null);
+    assert.equal(s.bookings[0].total, 1200000);
     assert.match(s.bookings[0].reference, /^AR-/);
     assert.match(
       w.document.querySelector("#detail").textContent,

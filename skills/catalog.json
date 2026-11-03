@@ -295,7 +295,8 @@
       ],
       "entrypoints": [
         "functions/booking/store.mjs",
-        "website/booking.mjs"
+        "website/booking.mjs",
+        "functions/booking/products.mjs"
       ],
       "owner": "ArohaRetreat",
       "status": "active",
@@ -305,7 +306,8 @@
       "contracts": [
         "docs/api/aroha-booking-v1.json",
         "functions/booking/contract.json",
-        "firestore.indexes.json"
+        "firestore.indexes.json",
+        "docs/booking-products-contract.md"
       ],
       "testCommands": [
         "npm test",

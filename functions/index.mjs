@@ -140,6 +140,7 @@ export const arohaApi = onRequest(
       const requestId = randomUUID(),
         started = Date.now();
       let operation = "unknown",
+        bookingKind = "unknown",
         status = 200,
         errorCode = "";
       res.set("X-Request-Id", requestId);
@@ -173,7 +174,7 @@ export const arohaApi = onRequest(
         }
         if(path.startsWith("/booking/")){
           const bookingOp=path.slice(9);
-          if(!["state","availability","quote","create","booking-action","note","change-quote","change-request","settings","unit","promo","block","unblock","guest-contact"].includes(bookingOp))throw new DomainError("NOT_FOUND",404);
+          if(!["state","availability","quote","create","booking-action","note","change-quote","change-request","settings","unit","promo","block","unblock","readiness","reservation-detail","guest-contact"].includes(bookingOp))throw new DomainError("NOT_FOUND",404);
           operation="booking."+bookingOp;
           if(req.rawBody?.length>16000)throw new DomainError("PAYLOAD_TOO_LARGE",413);
           if(token.email_verified!==true||token.firebase?.sign_in_provider!=="google.com")throw new DomainError("VERIFIED_GOOGLE_ACCOUNT_REQUIRED",403);
@@ -182,7 +183,9 @@ export const arohaApi = onRequest(
           try{
             if(path==="/booking/state"&&req.method==="GET")return await bookingState(db,token,{admin,start:req.query.start,cursor:req.query.cursor});
             if(req.method!=="POST")throw new DomainError("NOT_FOUND",404);
-            return await bookingCommand(db,token,path.slice(9),b,req.get("Idempotency-Key"),{admin});
+            const result=await bookingCommand(db,token,path.slice(9),b,req.get("Idempotency-Key"),{admin});
+            if(["day","individual","private","event"].includes(result.kind))bookingKind=result.kind;
+            return result;
           }catch(e){if(e instanceof BookingError)throw new DomainError(e.code,e.status);throw e;}
         }
         const actor = await requireMember(token, "read");
@@ -412,12 +415,12 @@ export const arohaApi = onRequest(
         res.status(status);
         return { error: { code: errorCode, requestId } };
       } finally {
-        recordSummary({ operation, status, requestId, errorCode });
+        recordSummary({ operation, status, requestId, errorCode, bookingKind });
         console.info(
           JSON.stringify({
             severity: status >= 500 ? "ERROR" : "INFO",
             service: "aroha-api",
-            version: "0.4.0",
+            version: "0.5.0",
             operation,
             status,
             durationMs: Date.now() - started,
