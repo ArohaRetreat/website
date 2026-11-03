@@ -95,6 +95,7 @@ const bundle = await build({
     site: new URL("website/site.mjs", root).pathname,
     admin: new URL("website/admin.mjs", root).pathname,
     map: new URL("website/map.mjs", root).pathname,
+    studio: new URL("website/studio.mjs", root).pathname,
     booking: new URL("website/booking.mjs", root).pathname,
   },
   bundle: true,
@@ -200,3 +201,12 @@ for(const route of ['book','admin/bookings']){
 await copyFile(new URL('website/booking.css',root),new URL('booking.css',assets));
 
 await copyFile(new URL("website/calendar-leaf.svg",root),new URL("calendar-leaf.svg",assets));
+
+// One authenticated Studio shell; existing module documents remain mounted privately.
+await mkdir(new URL('admin/modules/website/',dist),{recursive:true});
+await copyFile(new URL('website/admin.html',root),new URL('admin/modules/website/index.html',dist));
+await mkdir(new URL('admin/modules/bookings/',dist),{recursive:true});
+await copyFile(new URL('admin/bookings/index.html',dist),new URL('admin/modules/bookings/index.html',dist));
+await copyFile(new URL('website/studio.html',root),new URL('admin/index.html',dist));
+await copyFile(new URL('website/studio.css',root),new URL('studio.css',assets));
+await writeFile(new URL('admin/bookings/index.html',dist),'<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex"><title>Host Studio</title><script>location.replace("/admin/#bookings")</script><a href="/admin/#bookings">Open bookings in Host Studio</a>');

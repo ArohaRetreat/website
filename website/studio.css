@@ -1,0 +1,175 @@
+@font-face {
+  font-family: Source;
+  src: url("/assets/fonts/Source.woff2");
+}
+@font-face {
+  font-family: Lora;
+  src: url("/assets/fonts/Lora.woff2");
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: #f8f7f1;
+  color: #183f30;
+  font:
+    16px/1.6 Source,
+    Arial,
+    sans-serif;
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+  min-height: 42px;
+  padding: 8px 14px;
+  border: 1px solid #748a74;
+  border-radius: 8px;
+  background: #163e2d;
+  color: #fffefa;
+}
+a {
+  color: inherit;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid #a77b2c;
+  outline-offset: 3px;
+}
+.studio-bar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 24px;
+  background: #163e2d;
+  color: #fffefa;
+  flex-wrap: wrap;
+}
+.studio-bar img {
+  display: block;
+}
+.studio-bar nav {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-right: auto;
+}
+.studio-bar button {
+  background: transparent;
+  border-color: #819a82;
+}
+.studio-bar button[aria-current] {
+  background: #e1cd98;
+  color: #173425;
+}
+.studio-bar > span {
+  font-size: 0.82rem;
+}
+#studio-status {
+  margin: 0;
+  padding: 0 24px;
+  background: #e9eddf;
+  font-size: 0.85rem;
+}
+#studio-status:not(:empty) {
+  padding-block: 8px;
+}
+.studio-module {
+  display: block;
+  width: 100%;
+  height: calc(100dvh - 100px);
+  min-height: 600px;
+  border: 0;
+}
+.studio-module[hidden],
+[hidden] {
+  display: none !important;
+}
+#studio-access {
+  max-width: 1100px;
+  padding: 28px;
+  margin: auto;
+}
+#studio-access form {
+  background: #fffefa;
+  border: 1px solid #d8dfd2;
+  border-radius: 14px;
+  padding: 24px;
+  margin: 20px 0;
+}
+#studio-access fieldset {
+  border: 0;
+  padding: 0;
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  align-items: end;
+}
+#studio-access label {
+  display: block;
+  margin-bottom: 12px;
+}
+input:not([type="checkbox"]),
+select {
+  display: block;
+  max-width: 100%;
+  padding: 10px;
+  border: 1px solid #748a74;
+  border-radius: 7px;
+  background: #fffefa;
+  color: #183f30;
+}
+.studio-login {
+  max-width: 550px;
+  margin: 10vh auto;
+  padding: 28px;
+}
+.studio-login a {
+  display: block;
+  margin-top: 24px;
+}
+h1,
+h2 {
+  font-family: Lora, serif;
+  font-weight: 500;
+}
+.studio-login img {
+  margin-bottom: 28px;
+}
+@media (max-width: 600px) {
+  .studio-bar {
+    padding: 14px;
+    gap: 12px;
+  }
+  .studio-bar > span {
+    display: none;
+  }
+  .studio-bar nav {
+    order: 2;
+    width: 100%;
+    gap: 6px;
+  }
+  .studio-bar strong {
+    margin-right: auto;
+  }
+  .studio-bar nav button {
+    font-size: 0.87rem;
+  }
+  .studio-module {
+    height: calc(100dvh - 150px);
+  }
+  #studio-access {
+    padding: 18px;
+  }
+  #studio-access fieldset {
+    display: block;
+  }
+}
+
+.studio-invitation { padding: 18px 0; border-bottom: 1px solid #d8dfd2; }

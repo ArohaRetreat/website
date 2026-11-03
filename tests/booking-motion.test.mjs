@@ -62,10 +62,15 @@ async function mount(reduced = false) {
     });
   const source = (
     await readFile(new URL("../website/booking.mjs", import.meta.url), "utf8")
-  ).replace(
-    /import \{ bookingApi \} from "\.\/booking-api.mjs";/,
-    "const bookingApi=window.testBookingApi;",
-  );
+  )
+    .replace(
+      /import \{\s*journeyStep\s*\} from "\.\/booking-journey.mjs";/,
+      "const journeyStep=()=>{};",
+    )
+    .replace(
+      /import \{ bookingApi \} from "\.\/booking-api.mjs";/,
+      "const bookingApi=window.testBookingApi;",
+    );
   await w.eval("(async()=>{" + source + "})()");
   await new Promise((r) => setTimeout(r, 5));
   for (const a of animations) a.finish();

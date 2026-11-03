@@ -8,6 +8,7 @@ import defaultTour from "./tour-content.json";
 import defaults from "./content.json";
 import {
   api,
+  isEmulator,
   login,
   logout,
   observeAuth,
@@ -18,7 +19,7 @@ import {
 import { can, validateContent } from "../functions/domain.mjs";
 import { esc } from "./render.mjs";
 import { track, initializeMonitoring } from "./monitoring.mjs";
-initializeMonitoring();
+if(!isEmulator)initializeMonitoring();
 const root = document.getElementById("admin");
 let session,
   draft,
@@ -203,7 +204,7 @@ function shell() {
   root.innerHTML = `<aside class="studio-sidebar"><a href="/" class="studio-logo"><img src="/assets/brand/logo-forest.svg" alt="Aroha Retreat" width="190" height="65"></a><p class="eyebrow">HOST STUDIO</p><div class="studio-module-links"><a href="/admin/" aria-current="page">Website changes</a><a href="/admin/bookings/" target="_blank" rel="noopener noreferrer" aria-label="Bookings, opens in a new tab">Bookings ↗</a></div><nav aria-label="Studio sections">${Object.entries(
     tabs,
   )
-    .filter(([k]) => k !== "access" || can(session.role, "access"))
+    .filter(([k]) => k !== "access" && (k !== "access" || can(session.role, "access")))
     .map(
       ([key, [name]]) =>
         `<button data-tab="${key}" ${tab === key ? 'aria-current="page"' : ""}>${esc(name)}</button>`,
@@ -672,7 +673,12 @@ observeAuth(async (user) => {
     await load();
     if (generation !== authGeneration) return;
     shell();
+    if(embeddedStudio)parent.postMessage({type:"aroha-studio-dirty",dirty},location.origin);
   } catch (e) {
     if (generation === authGeneration) authScreen(message(e.message));
   }
 });
+
+// Studio keeps this module mounted so switching to Bookings preserves drafts.
+const embeddedStudio = location.pathname.startsWith("/admin/modules/");
+if(embeddedStudio){document.documentElement.dataset.embedded="true";const reportDirty=()=>parent.postMessage({type:"aroha-studio-dirty",dirty},location.origin);document.addEventListener("input",()=>queueMicrotask(reportDirty));document.addEventListener("change",()=>queueMicrotask(reportDirty));window.addEventListener("message",e=>{if(e.origin===location.origin&&e.source===parent&&e.data?.type==="aroha-studio-visibility"){reportDirty();if(!e.data.visible)document.querySelectorAll("video").forEach(v=>v.pause());}});}

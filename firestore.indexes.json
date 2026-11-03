@@ -135,6 +135,27 @@
       "collectionGroup": "aroha_bookings",
       "fieldPath": "history",
       "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_observability_outbox",
+      "fieldPath": "expireAt",
+      "ttl": true,
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_observability_outbox",
+      "fieldPath": "event",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_booking_profiles",
+      "fieldPath": "contact",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_bookings",
+      "fieldPath": "contact",
+      "indexes": []
     }
   ]
 }

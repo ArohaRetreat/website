@@ -1,3 +1,4 @@
+import { journeyStep } from "./booking-journey.mjs";
 import { bookingApi } from "./booking-api.mjs";
 const app = document.querySelector("#app"),
   dialog = document.querySelector("#detail");
@@ -38,6 +39,7 @@ const pretty = (s) =>
   })[s] || s?.replaceAll("_", " ").replace(/^./, (s) => s.toUpperCase());
 const badge = (status) =>
   `<span class="badge ${esc(status)}"><span></span>${esc(pretty(status))}</span>`;
+let contactDraft;
 let state,
   search = {
     kind: "private",
@@ -61,6 +63,12 @@ let state,
   lastFocus,
   submitting = false;
 const errors = {
+  CONTACT_REQUIRED:
+    "Add your contact details before sending this booking request.",
+  INVALID_CONTACT:
+    "Enter your full name and a phone number with country code, for example +91 98765 43210.",
+  VERSION_CONFLICT:
+    "Your details changed in another window. Refresh and review them before saving.",
   INVALID_TIME_WINDOW:
     "This visit window has ended. Choose another date or contact your host.",
   RECONCILIATION_REQUIRED:
@@ -94,7 +102,7 @@ const errors = {
     "Your loyalty benefit is already equal to or better than this code.",
   QUOTE_CHANGED: "The price or policy changed. Please review a fresh quote.",
   QUOTE_EXPIRED: "Your quote expired. Review the price again.",
-  VERSION_CONFLICT: "This item changed in another view. Refresh and try again.",
+
   EXISTING_BOOKINGS_CONFLICT:
     "Existing reservations conflict with this change. Resolve them first.",
   ROOM_NOT_READY:
@@ -145,9 +153,20 @@ async function run(fn) {
   }
 }
 async function refresh() {
+  const previous = state?.actor?.id;
   state = await api("state");
+  if (previous && state.actor?.id !== previous) {
+    contactDraft = undefined;
+    quote = null;
+    note = "";
+    promo = "";
+    selected = [];
+    step = 1;
+  }
 }
-const hostRoute = () => location.pathname.startsWith("/admin/bookings/");
+const hostRoute = () =>
+  location.pathname.startsWith("/admin/bookings/") ||
+  location.pathname.startsWith("/admin/modules/bookings/");
 // Short, interruptible transitions; rendering and focus never wait for an entrance.
 const motionPreference = window.matchMedia?.(
   "(prefers-reduced-motion: reduce)",
@@ -246,6 +265,7 @@ function open(markup) {
   dialog.querySelector("h2")?.focus();
   bindDialog();
   extendDetail();
+  if(hostRoute() && state.actor?.bookingAccess === "viewer")dialog.querySelectorAll('form input,form select,form textarea,form button,[data-action],[data-cancel]').forEach(el=>{el.disabled=true;});
   playMotion(
     "dialog",
     dialog,
@@ -292,23 +312,33 @@ function login() {
 const brand = (width, height) =>
   `<span class="booking-brand"><img class="brand-day" src="/assets/brand/logo-forest.svg" alt="Aroha Retreat" width="${width}" height="${height}"><img class="brand-night" src="/assets/brand/logo-white.svg" alt="Aroha Retreat" width="${width}" height="${height}"></span>`;
 function header() {
-  return `<header class="guest-header"><a href="/" aria-label="Aroha Retreat home">${brand(160, 55)}</a><nav aria-label="Booking navigation"><a href="#plan" ${location.hash !== "#visits" ? 'aria-current="page"' : ""}>Plan a stay</a><a href="#visits" ${location.hash === "#visits" ? 'aria-current="page"' : ""}>Your visits</a></nav><div class="header-actions"><a class="host-link" href="/admin/bookings/">Host Studio ↗</a><button class="account-button" id="account">${state.actor ? `<span class="avatar small">${esc(state.actor.name[0])}</span><span>${esc(state.actor.name.split(" ·")[0])}</span>` : "Sign in ↗"}</button></div></header>`;
+  return `<header class="guest-header"><a href="/" aria-label="Aroha Retreat home">${brand(160, 55)}</a><nav aria-label="Booking navigation"><a href="#plan" ${!["#visits", "#profile"].includes(location.hash) ? 'aria-current="page"' : ""}>Plan a stay</a><a href="#visits" ${location.hash === "#visits" ? 'aria-current="page"' : ""}>Your visits</a><a href="#profile" ${location.hash === "#profile" ? 'aria-current="page"' : ""}>Profile</a></nav><div class="header-actions"><a class="host-link" href="/admin/#bookings">Host Studio ↗</a><button class="account-button" id="account">${state.actor ? `<span class="avatar small">${esc(state.actor.name[0])}</span><span>${esc(state.actor.name.split(" ·")[0])}</span>` : "Sign in ↗"}</button></div></header>`;
 }
 const foot = () =>
   `<footer class="guest-footer">${brand(140, 48)}<span>A little time. A little closer to nature.</span><span>Host-approved stays · No online payments</span></footer>`;
+const contactNotice =
+  "Your contact number is used by authorised hosts and included in operational booking events in Dynatrace. Names, private requests and child ages are not sent. Profile edits do not change past booking contact records.";
+function contactFields(value = contactDraft || state.profile || {}) {
+  return `<div class="two-fields"><label>Full name<input name="contactName" autocomplete="name" value="${esc(value.name || state.actor?.name || "")}" minlength="2" maxlength="120" required></label><label>Phone number with country code<input name="contactPhone" type="tel" autocomplete="tel" placeholder="+91 98765 43210" value="${esc(value.phone || "")}" maxlength="32" required></label></div><label>Verified Google email<input type="email" value="${esc(state.profile?.email || "")}" readonly autocomplete="email"></label><p class="form-note">${contactNotice}</p>`;
+}
+function profilePage() {
+  if (!state.actor)
+    return `<section class="empty"><h1>Your guest profile.</h1><p>Sign in to save the contact details for your visits.</p><button class="button" id="profile-login">Sign in with Google</button></section>`;
+  return `<section class="account-heading"><div><p class="eyebrow">YOUR AROHA</p><h1>Your guest profile.</h1><p>Save your contact details once. Review them before every visit.</p></div></section><form id="profile-form" class="paper">${contactFields(state.profile)}<button class="button" type="submit">Save profile</button><p role="status" id="profile-result"></p></form>`;
+}
 function dateInputs() {
-  return `<div class="date-fields"><label class="date-field">${shortVisit() ? "Visit date" : "Arrival"}<input type="date" name="arrival" value="${search.arrival}" min="${day()}" required></label>${shortVisit() ? "" : `<label class="date-field">Departure<input type="date" name="departure" value="${search.departure}" min="${add(search.arrival, 1)}" required></label>`}<label>Adults · age 10+<input type="number" name="adults" value="${search.adults}" min="1" max="${["private", "individual"].includes(search.kind) ? policy().nightAdults : policy().siteAdults}" required></label><label>Children · under 10<input type="number" name="childCount" value="${search.childrenAges.length}" min="0" max="${search.kind === "individual" ? 0 : search.kind === "private" ? 18 : 100}" ${search.kind === "individual" ? "readonly" : ""} required></label></div>${search.childrenAges.length ? `<p class="form-note">Children’s ages are private to you and your hosts.</p><div class="child-ages">${search.childrenAges.map((age, i) => `<label>Child ${i + 1} age on arrival<input name="childAge" type="number" min="0" max="9" value="${age ?? ""}" required></label>`).join("")}</div>` : ""}`;
+  return `<div class="date-fields"><label class="date-field">${search.kind === "event" ? "Start date" : shortVisit() ? "Visit date" : "Arrival"}<input type="date" name="arrival" value="${search.arrival}" min="${day()}" required></label>${search.kind === "event" ? `<label class="date-field">End date<input type="date" name="eventEnd" value="${add(search.departure, -1)}" min="${search.arrival}" required></label>` : shortVisit() ? "" : `<label class="date-field">Departure<input type="date" name="departure" value="${search.departure}" min="${add(search.arrival, 1)}" required></label>`}<label>Adults · age 10+<input type="number" name="adults" value="${search.adults}" min="1" max="${["private", "individual"].includes(search.kind) ? policy().nightAdults : policy().siteAdults}" required></label><label>Children · under 10<input type="number" name="childCount" value="${search.childrenAges.length}" min="0" max="${search.kind === "individual" ? 0 : search.kind === "private" ? 18 : 100}" ${search.kind === "individual" ? "readonly" : ""} required></label></div>${search.childrenAges.length ? `<p class="form-note">Children’s ages are private to you and your hosts.</p><div class="child-ages">${search.childrenAges.map((age, i) => `<label>Child ${i + 1} age on arrival<input name="childAge" type="number" min="0" max="9" value="${age ?? ""}" required></label>`).join("")}</div>` : ""}`;
 }
 function calendar() {
   const first = month + "-01",
     start = add(first, -((new Date(first + "T12:00:00Z").getUTCDay() + 6) % 7));
-  return `<div class="date-calendar"><div class="calendar-heading"><button type="button" class="icon-button" data-month="-1" aria-label="Previous month">←</button><strong>${format(first, { month: "long", year: "numeric" })}</strong><button type="button" class="icon-button" data-month="1" aria-label="Next month">→</button></div><p class="calendar-hint">Choose your ${shortVisit() ? "visit" : picking === "arrival" ? "arrival" : "departure"} date</p><div class="month-grid">${["M", "T", "W", "T", "F", "S", "S"].map((d) => `<span class="weekday">${d}</span>`).join("")}${Array.from(
+  return `<div class="date-calendar"><div class="calendar-heading"><button type="button" class="icon-button" data-month="-1" aria-label="Previous month">←</button><strong>${format(first, { month: "long", year: "numeric" })}</strong><button type="button" class="icon-button" data-month="1" aria-label="Next month">→</button></div><p class="calendar-hint">Choose your ${search.kind === "event" ? picking === "arrival" ? "start" : "end" : shortVisit() ? "visit" : picking === "arrival" ? "arrival" : "departure"} date</p><div class="month-grid">${["M", "T", "W", "T", "F", "S", "S"].map((d) => `<span class="weekday">${d}</span>`).join("")}${Array.from(
     { length: 42 },
     (_, i) => {
       const d = add(start, i),
         inMonth = d.startsWith(month),
         disabled = d < day() || d > day(365);
-      return `<button type="button" data-date="${d}" class="date-cell ${inMonth ? "" : "outside"} ${d === search.arrival || (!shortVisit() && d === search.departure) ? "endpoint" : ""} ${!shortVisit() && d > search.arrival && d < search.departure ? "in-range" : ""}" ${disabled ? "disabled" : ""} aria-label="${format(d, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}${d === search.arrival ? ", arrival" : !shortVisit() && d === search.departure ? ", departure" : ""}" aria-pressed="${d === search.arrival || (!shortVisit() && d === search.departure)}">${Number(d.slice(-2))}</button>`;
+      return `<button type="button" data-date="${d}" class="date-cell ${inMonth ? "" : "outside"} ${d === search.arrival || (!shortVisit() && d === calendarEnd()) ? "endpoint" : ""} ${!shortVisit() && d > search.arrival && d < calendarEnd() ? "in-range" : ""}" ${disabled ? "disabled" : ""} aria-label="${format(d, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}${d === search.arrival ? search.kind === "event" ? ", start" : ", arrival" : !shortVisit() && d === calendarEnd() ? search.kind === "event" ? ", end" : ", departure" : ""}" aria-pressed="${d === search.arrival || (!shortVisit() && d === calendarEnd())}">${Number(d.slice(-2))}</button>`;
     },
   ).join("")}</div></div>`;
 }
@@ -319,7 +349,11 @@ const kindLabel = (k) =>
     private: "Private room / Family stay",
     event: "Exclusive retreat",
   })[k] || "Overnight stay";
-const shortVisit = () => ["day", "event"].includes(search.kind);
+const shortVisit = () => search.kind === "day";
+const endDateOf = (b) =>
+  b.kind === "event" ? add(b.departure, -1) : b.departure;
+const calendarEnd = () =>
+  search.kind === "event" ? add(search.departure, -1) : search.departure;
 const policy = () =>
   state.settings.products || {
     siteAdults: 35,
@@ -374,10 +408,10 @@ function productChoices() {
 function planPage() {
   const p = policy();
   if (step === 1)
-    return `<section class="hero"><div class="hero-copy"><p class="eyebrow">MAKE A LITTLE ROOM FOR YOURSELF</p><h1>A day away.<br>A little <em>longer.</em></h1><p>Come for the day, stay among the trees, or make the retreat your own.</p><div class="hero-facts"><span>Host-approved visits</span><span>${p.siteAdults} adult places · children counted separately</span><span>No online payment</span></div></div><figure class="hero-photo"><img src="/assets/retreat/hero-desktop.webp" alt="A-frame cottages surrounded by coconut palms at the retreat"><figcaption>Aroha, at your own pace.</figcaption></figure></section><section class="planning"><div class="section-heading"><div><p class="eyebrow">YOUR NEXT CHAPTER</p><h2>How shall we welcome you?</h2></div><span class="subtle">All times in India Standard Time</span></div>${productChoices()}<div class="planning-grid"><form id="search-form" class="date-panel">${dateInputs()}${calendar()}<button class="button full" type="submit">${search.kind === "event" ? "Explore an exclusive day" : "Find your little corner"} <span>→</span></button><p class="form-note">Every request needs host approval. Under 10 means age 0–9 on arrival; age 10+ uses an adult place.</p></form><aside class="stay-note"><span class="handwriting">Less rush. More room.</span><h3>${kindLabel(search.kind)}</h3><p>${search.kind === "day" ? `Flexible morning arrival from ${p.dayStart}, breakfast and lunch included, departure by ${p.dayEnd}. Meal service is coordinated with your hosts.` : search.kind === "individual" ? `You reserve a sleeping place, not a private room. Your host allocates compatible accommodation, which may be shared. Under 10s use the private-room option.` : search.kind === "event" ? `Request exclusive use during ${p.dayStart}–${p.dayEnd}. A host quote must be accepted before approval. Other guests cannot overlap the exclusive period. Overnight rooms are not included.` : `A dedicated room for your party. ${money(p.roomRate)} includes the first 2 occupants; ${money(p.extraChildRate)} per additional under 10 child per night. Maximum 2 adults and 2 children per room.`}</p><p>Overnight arrival ${p.stayStart} · checkout ${p.stayEnd}. Your host coordinates room readiness.</p><div class="sample-note">${state.settings.paused ? "New requests are paused." : `${state.units.filter((u) => u.active).length} verified rooms open. Unverified and future rooms remain closed.`} Adult day capacity adjusts to overnight occupancy, including departure morning.</div></aside></div></section>`;
+    return `<section class="hero"><div class="hero-copy"><p class="eyebrow">MAKE A LITTLE ROOM FOR YOURSELF</p><h1>A day away.<br>A little <em>longer.</em></h1><p>Come for the day, stay among the trees, or make the retreat your own.</p><div class="hero-facts"><span>Host-approved visits</span><span>${p.siteAdults} adult places · children counted separately</span><span>No online payment</span></div></div><figure class="hero-photo"><img src="/assets/retreat/hero-desktop.webp" alt="A-frame cottages surrounded by coconut palms at the retreat"><figcaption>Aroha, at your own pace.</figcaption></figure></section><section class="planning"><div class="section-heading"><div><p class="eyebrow">YOUR NEXT CHAPTER</p><h2>How shall we welcome you?</h2></div><span class="subtle">All times in India Standard Time</span></div>${productChoices()}<div class="planning-grid"><form id="search-form" class="date-panel">${dateInputs()}${calendar()}<button class="button full" type="submit">${search.kind === "event" ? "Explore exclusive dates" : "Find your little corner"} <span>→</span></button><p class="form-note">Every request needs host approval. Under 10 means age 0–9 on arrival; age 10+ uses an adult place.</p></form><aside class="stay-note"><span class="handwriting">Less rush. More room.</span><h3>${kindLabel(search.kind)}</h3><p>${search.kind === "day" ? `Flexible morning arrival from ${p.dayStart}, breakfast and lunch included, departure by ${p.dayEnd}. Meal service is coordinated with your hosts.` : search.kind === "individual" ? `You reserve a sleeping place, not a private room. Your host allocates compatible accommodation, which may be shared. Under 10s use the private-room option.` : search.kind === "event" ? `Reserve exclusive use continuously from ${p.dayStart} on the start date through ${p.dayEnd} on the end date. A host quote must be accepted before approval. Other guests cannot overlap the exclusive period. Overnight accommodation requires an explicit host agreement.` : `A dedicated room for your party. ${money(p.roomRate)} includes the first 2 occupants; ${money(p.extraChildRate)} per additional under 10 child per night. Maximum 2 adults and 2 children per room.`}</p><p>Overnight arrival ${p.stayStart} · checkout ${p.stayEnd}. Your host coordinates room readiness.</p><div class="sample-note">${state.settings.paused ? "New requests are paused." : `${state.units.filter((u) => u.active).length} verified rooms open. Unverified and future rooms remain closed.`} Adult day capacity adjusts to overnight occupancy, including departure morning.</div></aside></div></section>`;
   const selection = quote || search,
     description = `${selection.adults ?? selection.guests} adult(s) · ${selection.children ?? selection.childrenAges?.length ?? 0} under 10(s)`;
-  const summary = `<aside class="summary"><p class="eyebrow">YOUR TIME AT AROHA</p><h3>${kindLabel(search.kind)}</h3><p>${format(search.arrival)}${shortVisit() ? "" : " — " + format(search.departure)}</p><p>${description}</p><hr><dl>${(quote?.lineItems || []).map((x) => `<div><dt>${esc(x.label)}</dt><dd>${money(x.amount)}</dd></div>`).join("")}${quote?.discount ? `<div><dt>${esc(quote.offer)}</dt><dd>−${money(quote.discount)}</dd></div>` : ""}<div class="total"><dt>${quote ? "Request total" : "Room rate from"}</dt><dd>${quote ? money(quote.total) : money(p.roomRate)}</dd></div></dl><p class="form-note">No online payment or automatic email. ${search.kind === "event" ? "A host offer requires your acceptance; enquiry alone reserves no space." : "Pending requests hold capacity until their review deadline."}</p>${(quote?.allocations || []).map((a) => `<p>${search.kind === "individual" ? "Host-allocated sleeping places" : esc(state.units.find((u) => u.id === a.unitId)?.name)} · ${a.adults} adult(s)${a.children ? " · " + a.children + " child(ren)" : ""}</p>`).join("")}</aside>`;
+  const summary = `<aside class="summary"><p class="eyebrow">YOUR TIME AT AROHA</p><h3>${kindLabel(search.kind)}</h3><p>${format(search.arrival)}${shortVisit() ? "" : " — " + format(endDateOf(search))}</p><p>${description}</p><hr><dl>${(quote?.lineItems || []).map((x) => `<div><dt>${esc(x.label)}</dt><dd>${money(x.amount)}</dd></div>`).join("")}${quote?.discount ? `<div><dt>${esc(quote.offer)}</dt><dd>−${money(quote.discount)}</dd></div>` : ""}<div class="total"><dt>${quote ? "Request total" : "Room rate from"}</dt><dd>${quote ? money(quote.total) : money(p.roomRate)}</dd></div></dl><p class="form-note">No online payment or automatic email. ${search.kind === "event" ? "A host offer requires your acceptance; enquiry alone reserves no space." : "Pending requests hold capacity until their review deadline."}</p>${(quote?.allocations || []).map((a) => `<p>${search.kind === "individual" ? "Host-allocated sleeping places" : esc(state.units.find((u) => u.id === a.unitId)?.name)} · ${a.adults} adult(s)${a.children ? " · " + a.children + " child(ren)" : ""}</p>`).join("")}</aside>`;
   return `<section class="wizard-heading"><button class="text-button" id="back-step">← ${step === 2 ? "Change dates" : search.kind === "private" ? "Back to rooms" : "Change visit"}</button><h1>${step === 2 ? "A little room for your family." : "Review your visit."}</h1><p>${description} · ${kindLabel(search.kind)}</p></section><div class="booking-layout"><div>${
     step === 2
       ? `<div class="room-list">${(available?.units || [])
@@ -389,14 +423,14 @@ function planPage() {
           .join(
             "",
           )}</div><p class="form-note">Each occupied room needs an adult. We allocate your party within the room limits and show the child extras before submission.</p><button class="button continue-button" id="review" ${selected.length ? "" : "disabled"}>Review this stay →</button>`
-      : `<form id="request-form" class="review-form"><div class="paper"><h2>A note to your hosts</h2><label for="note">Special requests (optional)</label><textarea id="note" maxlength="1000" rows="5" placeholder="Arrival plans or something you would like us to know…">${esc(note)}</textarea><p class="form-note">Private to you and your hosts. Please leave out sensitive personal information.</p></div>${search.kind !== "event" ? `<div class="paper"><h3>An invitation for your visit</h3><label for="promo">Invitation code</label><div class="promo-field"><input id="promo" maxlength="24" value="${esc(promo)}" placeholder="Optional"><button class="outline-button" type="button" id="apply-promo">Apply</button></div><p class="form-note">One offer applies. Day visits and events do not earn overnight stay credits.</p></div>` : ""}<div class="paper terms"><h3>Before you send your request</h3><p>${shortVisit() ? `Morning arrival ${p.dayStart} · departure ${p.dayEnd}` : `Check-in ${p.stayStart} · check-out ${p.stayEnd}`} IST</p><p>Self-service cancellation up to ${state.settings.cancelHours} hours before arrival; later changes need your host.</p><label class="check"><input type="checkbox" id="terms" required><span>I understand the accommodation/sharing terms and price shown, that host approval is required, and no online payment or automated email is provided.</span></label></div><button class="button full" type="submit">${search.kind === "event" ? "Request an event quote" : "Send visit request"} →</button></form>`
+      : `<form id="request-form" class="review-form"><div class="paper"><h2>A note to your hosts</h2><label for="note">Special requests (optional)</label><textarea id="note" maxlength="1000" rows="5" placeholder="Arrival plans or something you would like us to know…">${esc(note)}</textarea><p class="form-note">Private to you and your hosts. Please leave out sensitive personal information.</p></div>${search.kind !== "event" ? `<div class="paper"><h3>An invitation for your visit</h3><label for="promo">Invitation code</label><div class="promo-field"><input id="promo" maxlength="24" value="${esc(promo)}" placeholder="Optional"><button class="outline-button" type="button" id="apply-promo">Apply</button></div><p class="form-note">One offer applies. Day visits and events do not earn overnight stay credits.</p></div>` : ""}<div class="paper terms"><h3>Before you send your request</h3><p>${search.kind === "event" ? `Exclusive range: ${format(search.arrival)} at ${p.dayStart} to ${format(add(search.departure, -1))} at ${p.dayEnd}. Accommodation is subject to the host’s explicit quote.` : shortVisit() ? `Morning arrival ${p.dayStart} · departure ${p.dayEnd}` : `Check-in ${p.stayStart} · check-out ${p.stayEnd}`} IST</p><p>Self-service cancellation up to ${state.settings.cancelHours} hours before arrival; later changes need your host.</p><label class="check"><input type="checkbox" id="terms" required><span>I understand the accommodation/sharing terms and price shown, that host approval is required, and no online payment or automated email is provided.</span></label></div><section class="paper"><h2>Your contact details</h2>${contactFields()}<label class="check"><input type="checkbox" id="save-booking-profile">Save these details to my guest profile for future visits</label></section><button class="button full" type="submit">${search.kind === "event" ? "Request an event quote" : "Send visit request"} →</button></form>`
   }</div>${summary}</div>`;
 }
 function visitsPage() {
   if (!state.actor)
     return `<section class="empty"><span class="handwriting">Your next chapter</span><h1>A little space of your own.</h1><p>Sign in with a guest to see reservations and your journey with Aroha.</p><button class="button" data-login>Choose guest ↗</button></section>`;
   if (state.actor.role === "host")
-    return `<section class="empty"><h1>You’re in the host account.</h1><p>Open Host Studio to manage all reservations, or choose a guest account to review their experience.</p><a class="button" href="/admin/bookings/">Open Host Studio ↗</a><button class="text-button" id="switch-guest">Choose guest</button></section>`;
+    return `<section class="empty"><h1>You’re in the host account.</h1><p>Open Host Studio to manage all reservations, or choose a guest account to review their experience.</p><a class="button" href="/admin/#bookings">Open Host Studio ↗</a><button class="text-button" id="switch-guest">Choose guest</button></section>`;
   const t = state.loyalty,
     next = t.nextAt ? t.nextAt - t.stays : 0;
   const bookings = state.bookings
@@ -422,7 +456,7 @@ function visitsPage() {
     )}</div></section><div class="tabs" role="group" aria-label="Booking filters">${["upcoming", "past", "cancelled"].map((f) => `<button data-filter="${f}" class="${bookingFilter === f ? "active" : ""}" aria-pressed="${bookingFilter === f}">${pretty(f)}</button>`).join("")}</div><div class="visits-list">${bookings.length ? bookings.map((b) => bookingCard(b)).join("") : `<div class="empty small-empty"><h2>${bookingFilter === "upcoming" ? "A new story is waiting." : "Nothing here just yet."}</h2><p>${bookingFilter === "upcoming" ? "Your next stay begins with a little room in the calendar." : "Reservations in this category will appear here."}</p><a class="outline-button" href="#plan">Explore dates →</a></div>`}</div>`;
 }
 function bookingCard(b, host = false) {
-  return `<article class="visit-card"><div class="visit-date"><strong>${format(b.arrival, { day: "numeric" })}</strong><span>${format(b.arrival, { month: "short" })}</span></div><div class="visit-info"><div class="visit-top">${badge(b.status)}<span class="reference">${esc(b.reference)}</span></div><h3>${esc(b.kind ? kindLabel(b.kind) : b.unitNames?.join(" + ") || b.units.join(", "))}</h3><p>${format(b.arrival)} — ${format(b.departure)} · ${b.guests} guests${host ? " · " + esc(b.guestName || state.users.find((u) => u.id === b.owner)?.name.split(" ·")[0] || "Guest") : ""}</p>${b.status === "pending_approval" ? `<p class="deadline">Host review by ${new Date(b.expiresAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })} IST</p>` : ""}</div><div class="visit-action"><strong>${money(b.total)}</strong><button class="text-button" data-booking="${b.id}">View ${host ? "request" : "details"} ↗</button></div></article>`;
+  return `<article class="visit-card"><div class="visit-date"><strong>${format(b.arrival, { day: "numeric" })}</strong><span>${format(b.arrival, { month: "short" })}</span></div><div class="visit-info"><div class="visit-top">${badge(b.status)}<span class="reference">${esc(b.reference)}</span></div><h3>${esc(b.kind ? kindLabel(b.kind) : b.unitNames?.join(" + ") || b.units.join(", "))}</h3><p>${format(b.arrival)} — ${format(endDateOf(b))} · ${b.guests} guests${host ? " · " + esc(b.guestName || state.users.find((u) => u.id === b.owner)?.name.split(" ·")[0] || "Guest") : ""}</p>${b.status === "pending_approval" ? `<p class="deadline">Host review by ${new Date(b.expiresAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })} IST</p>` : ""}</div><div class="visit-action"><strong>${money(b.total)}</strong><button class="text-button" data-booking="${b.id}">View ${host ? "request" : "details"} ↗</button></div></article>`;
 }
 function hostPage() {
   const nav = [
@@ -433,11 +467,10 @@ function hostPage() {
     ["offers", "Rates & offers", "◇"],
     ["guests", "Guests & loyalty", "♡"],
     ["settings", "Booking policies", "⚙"],
-    ["website", "Website changes", "↗"],
   ];
   if (state.actor?.role !== "host")
     return `<div class="host-welcome"><img src="/assets/brand/logo-forest.svg" width="200" alt="Aroha Retreat"><p class="eyebrow">HOST STUDIO</p><h1>A thoughtful stay<br>starts with you.</h1><p>Explore your reservation desk with a host account.<br>Guest sessions do not have access to host booking controls.</p><button class="button" id="host-login">Sign in to Host Studio ↗</button><a class="text-button" href="/book/">← Back to guest experience</a></div>`;
-  return `<div class="studio"><aside class="studio-nav"><a href="/book/"><img src="/assets/brand/logo-white.svg" alt="Aroha Retreat" width="180" height="62"></a><p class="eyebrow">HOST STUDIO</p><nav aria-label="Studio modules">${nav.map(([id, label, icon]) => `<button data-host-tab="${id}" ${hostTab === id ? 'aria-current="page"' : ""}><span aria-hidden="true">${icon}</span>${label}</button>`).join("")}</nav><div class="studio-bottom"><p>Host workspace</p><a href="/book/">View guest portal ↗</a><button class="text-button" id="logout">Leave account</button></div></aside><div class="studio-content"><header class="studio-header"><span>HOST STUDIO <b>/</b> ${nav.find((x) => x[0] === hostTab)[1]}</span><span class="host-avatar">H</span></header><main id="main" class="studio-main" tabindex="-1">${hostContent()}</main></div></div>`;
+  return `<div class="studio"><aside class="studio-nav"><a href="/book/"><img src="/assets/brand/logo-white.svg" alt="Aroha Retreat" width="180" height="62"></a><p class="eyebrow">HOST STUDIO</p><nav aria-label="Booking sections">${nav.map(([id, label, icon]) => `<button data-host-tab="${id}" ${hostTab === id ? 'aria-current="page"' : ""}><span aria-hidden="true">${icon}</span>${label}</button>`).join("")}</nav><div class="studio-bottom"><p>Host workspace</p><a href="/book/">View guest portal ↗</a><button class="text-button" id="logout">Leave account</button></div></aside><div class="studio-content"><header class="studio-header"><span>BOOKINGS <b>/</b> ${nav.find((x) => x[0] === hostTab)[1]}</span><span class="host-avatar">H</span></header><main id="main" class="studio-main" tabindex="-1">${hostContent()}</main></div></div>`;
 }
 function hostContent() {
   const pending = state.bookings.filter((b) => b.status === "pending_approval"),
@@ -448,7 +481,7 @@ function hostContent() {
     title = (eye, h, p, action = "") =>
       `<div class="section-heading studio-title"><div><p class="eyebrow">${eye}</p><h1>${h}</h1><p>${p}</p></div>${action}</div>`;
   if (hostTab === "overview")
-    return `${title("YOUR HOSTING DESK", "Make room for good days.", "A clear view of the people and places you’re caring for.")}<div class="stat-grid"><article><span>Awaiting your welcome</span><strong>${pending.length}</strong><small>Requests to review</small></article><article><span>Confirmed & checked in</span><strong>${active.length}</strong><small>Reservations on the calendar</small></article><article><span>Ready to host</span><strong>${rooms.length}<em>rooms</em></strong><small>${rooms.reduce((n, u) => n + u.capacity, 0)} configured adult beds · onsite cap ${policy().siteAdults}</small></article><article><span>Future rooms</span><strong>${state.units.filter((u) => u.type === "Under construction").length}</strong><small>Under construction · not available</small></article></div><section class="host-section"><div class="section-heading"><div><p class="eyebrow">A PERSONAL WELCOME</p><h2>Waiting for your reply</h2></div><button class="text-button" data-host-tab="calendar">Open calendar ↗</button></div>${pending.length ? pending.map((b) => bookingCard(b, true)).join("") : '<div class="paper"><h3>You’re all caught up.</h3><p>New requests will appear here.</p></div>'}</section><div class="host-bottom-grid"><article class="paper"><p class="eyebrow">BEFORE YOU OPEN THE DOORS</p><h3>${rooms.length} rooms ready to host.</h3><p>Room capacity and the overall retreat limit are configured separately. Verify room readiness before opening new inventory.</p><button class="text-button" data-host-tab="inventory">Review inventory →</button></article><article class="paper"><p class="eyebrow">DELIVERY STATUS</p><h3>Everything stays here, for now.</h3><p>Requests and status changes appear in the portal. Email, payments and external calendar sync are not connected.</p><small>${state.audit.length} committed booking events · durable operational history</small></article></div>`;
+    return `${title("YOUR HOSTING DESK", "Make room for good days.", "A clear view of the people and places you’re caring for.")}<div class="stat-grid"><article><span>Awaiting your welcome</span><strong>${pending.length}</strong><small>Requests to review</small></article><article><span>Confirmed & checked in</span><strong>${active.length}</strong><small>Reservations on the calendar</small></article><article><span>Ready to host</span><strong>${rooms.length}<em>rooms</em></strong><small>${rooms.reduce((n, u) => n + u.capacity, 0)} configured adult beds · onsite cap ${policy().siteAdults}</small></article><article><span>Future rooms</span><strong>${state.units.filter((u) => u.type === "Under construction").length}</strong><small>Under construction · not available</small></article></div><section class="host-section"><div class="section-heading"><div><p class="eyebrow">A PERSONAL WELCOME</p><h2>Waiting for your reply</h2></div><button class="text-button" data-host-tab="calendar">Open calendar ↗</button></div>${pending.length ? pending.map((b) => bookingCard(b, true)).join("") : '<div class="paper"><h3>You’re all caught up.</h3><p>New requests will appear here.</p></div>'}</section><div class="host-bottom-grid"><article class="paper"><p class="eyebrow">BEFORE YOU OPEN THE DOORS</p><h3>${rooms.length} rooms ready to host.</h3><p>Room capacity and the overall retreat limit are configured separately. Verify room readiness before opening new inventory.</p><button class="text-button" data-host-tab="inventory">Review inventory →</button></article><article class="paper"><p class="eyebrow">DELIVERY STATUS</p><h3>Follow every request.</h3><p>Booking steps and outcomes are queued for operational monitoring in Dynatrace. Requests and host responses remain available here. Email, payments and external calendar sync are not connected.</p><small>${state.audit.length} committed booking events · durable operational history</small></article></div>`;
   if (hostTab === "calendar")
     return `${
       (state.calendarDays || []).length
@@ -527,7 +560,7 @@ function hostContent() {
       .map((b) => bookingCard(b, true))
       .join("")}</div>`;
   if (hostTab === "inventory")
-    return `${title("CARE FOR YOUR SPACES", "Rooms that are ready.", "Individual room capacities and the overall retreat limit are both enforced.")}<div class="notice-strip">${state.settings.capacity}-person overnight limit · ${rooms.reduce((n, u) => n + u.capacity, 0)} configured beds · ${state.units.filter((u) => u.type === "Unconfigured").length} awaiting identification · ${state.units.filter((u) => u.type === "Under construction").length} under construction</div><div class="inventory-grid">${state.units.map((u) => `<article class="inventory-card"><div class="inventory-art ${u.image ? "" : "future"}">${u.image ? `<img src="/assets/retreat/${esc(u.image)}" alt="Retreat accommodation photograph">` : "<span>⌂</span>"}<span class="inventory-state">${u.active ? "Open for requests" : u.type === "Under construction" ? "Under construction" : "Needs configuration"}</span></div><form data-unit-form="${u.id}"><p class="eyebrow">${esc(u.type)}</p><h3>${esc(u.name)}</h3><label>Room name<input name="name" maxlength="120" value="${esc(u.name)}" required></label><div class="two-fields"><label>Adult beds per room<input name="capacity" type="number" min="1" max="2" value="${u.capacity}" required></label><label>₹ / room / night (blank: default room rate)<input name="rate" type="number" min="100" max="1000000" value="${u.rate === null ? "" : u.rate / 100}"></label></div><label class="check"><input type="checkbox" name="active" ${u.active ? "checked" : ""} >Open for requests</label>${["Under construction", "Unconfigured"].includes(u.type) ? `<label class="check"><input type="checkbox" name="verified">I have verified this room is complete and ready for guests, and supplied its actual name.</label>` : ""}<button class="outline-button full" type="submit">Save room settings</button></form></article>`).join("")}</div>${state.blocks.length ? `<section class="host-section"><h2>Maintenance blocks</h2>${state.blocks.map((b) => `<div class="block-row"><span>${esc(state.units.find((u) => u.id === b.unitId)?.name || "Entire retreat")} · ${format(b.arrival)} — ${format(b.departure)} · ${esc(b.reason)}</span><button class="text-button" data-unblock="${b.id}">Release block</button></div>`).join("")}</section>` : ""}`;
+    return `${title("CARE FOR YOUR SPACES", "Rooms that are ready.", "Individual room capacities and the overall retreat limit are both enforced.")}<div class="notice-strip">${state.settings.capacity}-person overnight limit · ${rooms.reduce((n, u) => n + u.capacity, 0)} configured beds · ${state.units.filter((u) => u.type === "Unconfigured").length} awaiting identification · ${state.units.filter((u) => u.type === "Under construction").length} under construction</div><div class="inventory-grid">${state.units.map((u) => `<article class="inventory-card"><div class="inventory-art ${u.image ? "" : "future"}">${u.image ? `<img src="/assets/retreat/${esc(u.image)}" alt="Retreat accommodation photograph">` : "<span>⌂</span>"}<span class="inventory-state">${u.active ? "Open for requests" : u.type === "Under construction" ? "Under construction" : "Needs configuration"}</span></div><form data-unit-form="${u.id}"><p class="eyebrow">${esc(u.type)}</p><h3>${esc(u.name)}</h3><label>Room name<input name="name" maxlength="120" value="${esc(u.name)}" required></label><div class="two-fields"><label>Adult beds per room<input name="capacity" type="number" min="1" max="2" value="${u.capacity}" required></label><label>₹ / room / night (blank: default room rate)<input name="rate" type="number" min="100" max="1000000" value="${u.rate === null ? "" : u.rate / 100}"></label></div><label class="check"><input type="checkbox" name="active" ${u.active ? "checked" : ""} >Open for requests</label>${["Under construction", "Unconfigured"].includes(u.type) ? `<label class="check"><input type="checkbox" name="verified">I have verified this room is complete and ready for guests, and supplied its actual name.</label>` : ""}<button class="outline-button full" type="submit">Save room settings</button></form></article>`).join("")}</div>${state.blocks.length ? `<section class="host-section"><h2>Maintenance blocks</h2>${state.blocks.map((b) => `<div class="block-row"><span>${esc(state.units.find((u) => u.id === b.unitId)?.name || "Entire retreat")} · ${format(b.arrival)} — ${format(endDateOf(b))} · ${esc(b.reason)}</span><button class="text-button" data-unblock="${b.id}">Release block</button></div>`).join("")}</section>` : ""}`;
   if (hostTab === "offers")
     return `${title("A THOUGHTFUL LITTLE EXTRA", "Invitations to return.", "Room rates live under Rooms & inventory. Offers apply before host approval.", '<button class="button" id="new-promo">Create invitation code +</button>')}<div class="notice-strip">One best offer per stay · Pending requests reserve a redemption · Cancellation restores offer usage</div><div class="offers-grid">${state.promos.map((p) => `<article class="offer-card"><p class="eyebrow">${p.active ? "ACTIVE INVITATION" : "PAUSED INVITATION"}</p><h2>${esc(p.code)}</h2><strong class="offer-amount">${p.kind === "percent" ? p.value + "%" : money(p.value)} <span>off a stay</span></strong><p>${format(p.from)} — ${format(p.until, { day: "numeric", month: "short", year: "numeric" })}</p><div class="offer-bottom"><span>${p.maxUses} maximum redemptions</span><button class="text-button" data-toggle-promo="${p.id}">${p.active ? "Pause" : "Activate"} →</button></div></article>`).join("")}</div><div class="paper"><h3>Offer rules in this booking service</h3><p>Fixed or percentage discounts; date validity; total redemption limits; one offer per reservation. Loyalty applies automatically unless a promo is better. Offers require configured room rates. The initial launch uses prices agreed directly with hosts.</p></div>`;
   if (hostTab === "guests")
@@ -622,9 +655,11 @@ function hostContent() {
 function render() {
   const view = hostRoute()
     ? `host:${hostTab}`
-    : location.hash === "#visits"
-      ? "visits"
-      : `plan:${step}`;
+    : location.hash === "#profile"
+      ? "profile"
+      : location.hash === "#visits"
+        ? "visits"
+        : `plan:${step}`;
   activeMotion.get("view")?.cancel();
   activeMotion.get("calendar")?.cancel();
   const focused = document.activeElement;
@@ -638,9 +673,44 @@ function render() {
     : "Your time at Aroha · Booking";
   app.innerHTML = hostRoute()
     ? hostPage()
-    : `${header()}<main id="main" class="guest-main" tabindex="-1">${location.hash === "#visits" ? visitsPage() : planPage()}</main>${foot()}`;
+    : `${header()}<main id="main" class="guest-main" tabindex="-1">${location.hash === "#profile" ? profilePage() : location.hash === "#visits" ? visitsPage() : planPage()}</main>${foot()}`;
   bind();
+  document.querySelector("#profile-login")?.addEventListener("click", login);
+  document.querySelector("#profile-form")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    run(async () => {
+      await api("profile", {
+        name: String(f.get("contactName")),
+        phone: String(f.get("contactPhone")),
+        expectedVersion: state.profile?.version || 0,
+      });
+      await refresh();
+      contactDraft = undefined;
+      render();
+      toast("Your profile is saved.");
+    });
+  });
+  document
+    .querySelectorAll('[name="contactName"], [name="contactPhone"]')
+    .forEach((input) =>
+      input.addEventListener("input", () => {
+        contactDraft = {
+          name: document.querySelector('[name="contactName"]')?.value || "",
+          phone: document.querySelector('[name="contactPhone"]')?.value || "",
+        };
+      }),
+    );
   extendPage();
+  if (hostRoute() && state.actor?.bookingAccess === "viewer") {
+    document
+      .querySelectorAll(
+        ".studio-main form input,.studio-main form select,.studio-main form textarea,.studio-main form button,[data-action],[data-cancel],[data-unblock],[data-block-unit],[data-ready-unit],#manual-reservation",
+      )
+      .forEach((el) => {
+        el.disabled = true;
+      });
+  }
   if (calendarFocus)
     document
       .querySelector(`[data-${calendarFocus[0]}="${calendarFocus[1]}"]`)
@@ -651,6 +721,21 @@ function render() {
       { opacity: 1, transform: "translateY(0)" },
     ]);
     renderedView = view;
+    if (hostRoute()) journeyStep("admin", "viewed");
+    if (!hostRoute())
+      journeyStep(
+        location.hash === "#profile"
+          ? "profile"
+          : location.hash === "#visits"
+            ? "visits"
+            : step === 1
+              ? "plan"
+              : step === 2
+                ? "rooms"
+                : "review",
+        "viewed",
+        search.kind,
+      );
   }
 }
 function detail(id) {
@@ -660,7 +745,7 @@ function detail(id) {
   const isHost = state.actor?.role === "host",
     owner = state.users?.find((u) => u.id === b.owner);
   open(
-    `<p class="eyebrow">${esc(b.reference)} ${isHost && owner ? "· " + esc(owner.name.split(" ·")[0]) : ""}</p><h2>Your little corner of Aroha.</h2>${badge(b.status)}<div class="detail-dates"><strong>${format(b.arrival, { day: "numeric", month: "long" })} — ${format(b.departure, { day: "numeric", month: "long", year: "numeric" })}</strong><p>${esc(b.kind ? kindLabel(b.kind) : b.unitNames.join(" + "))} · ${b.adults ?? b.guests} adult(s) · ${b.children ?? 0} under 10(s)</p></div><dl class="detail-price"><div><dt>Visit subtotal</dt><dd>${money(b.subtotal)}</dd></div><div><dt>Offer</dt><dd>−${money(b.discount)}</dd></div><div class="total"><dt>Visit total</dt><dd>${money(b.total)}</dd></div></dl>${b.note ? `<div class="private-note"><p class="eyebrow">PRIVATE GUEST REQUEST</p><p>${esc(b.note)}</p></div>` : ""}${b.status === "pending_approval" ? `<div class="approval-note"><strong>Awaiting your host’s approval</strong><p>Review deadline: ${new Date(b.expiresAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} IST. ${b.kind === "event" ? "Event enquiries do not hold the property." : "Your places are held until then."}</p></div>` : ""}<div class="status-history">${b.history.map((h) => `<div><span></span><p><strong>${esc(pretty(h.status))}</strong><small>${new Date(h.at).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short" })}</small></p></div>`).join("")}</div><div class="detail-actions">${isHost && b.status === "pending_approval" ? `<button class="button" data-action="approve" data-id="${b.id}" ${b.kind === "event" && !b.quoteAccepted ? "disabled" : ""}>Approve request ✓</button><button class="outline-button" data-action="decline" data-id="${b.id}">Decline request</button>` : ""}${isHost && b.status === "confirmed" ? `<button class="button" data-action="checkin" data-id="${b.id}">Check in</button><button class="text-button" data-action="no_show" data-id="${b.id}">Mark no-show</button>` : ""}${isHost && b.status === "checked_in" ? `<button class="button" data-action="complete" data-id="${b.id}">Complete stay</button>` : ""}${["pending_approval", "confirmed"].includes(b.status) ? `<button class="text-button danger" data-cancel="${b.id}">Cancel ${b.status === "pending_approval" ? "request" : "booking"}</button>` : ""}</div><p class="form-note">Email notifications are not enabled. No online payment collected. Confirmed-stay cancellation cutoff: ${b.cancelHours ?? state.settings.cancelHours} hours before arrival. For later cancellation, contact the host.</p>`,
+    `<p class="eyebrow">${esc(b.reference)} ${isHost && owner ? "· " + esc(owner.name.split(" ·")[0]) : ""}</p><h2>Your little corner of Aroha.</h2>${badge(b.status)}<div class="detail-dates"><strong>${format(b.arrival, { day: "numeric", month: "long" })} — ${format(endDateOf(b), { day: "numeric", month: "long", year: "numeric" })}</strong><p>${esc(b.kind ? kindLabel(b.kind) : b.unitNames.join(" + "))} · ${b.adults ?? b.guests} adult(s) · ${b.children ?? 0} under 10(s)</p></div><dl class="detail-price"><div><dt>Visit subtotal</dt><dd>${money(b.subtotal)}</dd></div><div><dt>Offer</dt><dd>−${money(b.discount)}</dd></div><div class="total"><dt>Visit total</dt><dd>${money(b.total)}</dd></div></dl>${b.note ? `<div class="private-note"><p class="eyebrow">PRIVATE GUEST REQUEST</p><p>${esc(b.note)}</p></div>` : ""}${b.status === "pending_approval" ? `<div class="approval-note"><strong>Awaiting your host’s approval</strong><p>Review deadline: ${new Date(b.expiresAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} IST. ${b.kind === "event" ? "Event enquiries do not hold the property." : "Your places are held until then."}</p></div>` : ""}<div class="status-history">${b.history.map((h) => `<div><span></span><p><strong>${esc(pretty(h.status))}</strong><small>${new Date(h.at).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short" })}</small></p></div>`).join("")}</div><div class="detail-actions">${isHost && b.status === "pending_approval" ? `<button class="button" data-action="approve" data-id="${b.id}" ${b.kind === "event" && !b.quoteAccepted ? "disabled" : ""}>Approve request ✓</button><button class="outline-button" data-action="decline" data-id="${b.id}">Decline request</button>` : ""}${isHost && b.status === "confirmed" ? `<button class="button" data-action="checkin" data-id="${b.id}">Check in</button><button class="text-button" data-action="no_show" data-id="${b.id}">Mark no-show</button>` : ""}${isHost && b.status === "checked_in" ? `<button class="button" data-action="complete" data-id="${b.id}">Complete stay</button>` : ""}${["pending_approval", "confirmed"].includes(b.status) ? `<button class="text-button danger" data-cancel="${b.id}">Cancel ${b.status === "pending_approval" ? "request" : "booking"}</button>` : ""}</div><p class="form-note">Email notifications are not enabled. No online payment collected. Confirmed-stay cancellation cutoff: ${b.cancelHours ?? state.settings.cancelHours} hours before arrival. For later cancellation, contact the host.</p>`,
   );
 }
 function bindDialog() {
@@ -865,16 +950,17 @@ function extendDetail() {
   }
 
   if (!b) return;
-  if (state.actor.role === "host") {
+  if (state.actor.role === "host" || b.owner === state.actor.id) {
     const contact = document.createElement("button");
     contact.type = "button";
     contact.className = "outline-button";
-    contact.textContent = "Guest contact";
+    contact.textContent =
+      state.actor.role === "host" ? "Guest contact" : "Booking contact details";
     contact.onclick = () =>
       run(async () => {
         const person = await api("guest-contact", { id: b.id });
         open(
-          `<p class="eyebrow">PRIVATE BOOKING CONTACT</p><h2>${esc(person.name)}</h2><p data-dt-mask>${esc(person.email || "No contact address available.")}</p><p class="form-note">Use only to arrange this guest’s stay. No automated email has been sent.</p>`,
+          `<p class="eyebrow">PRIVATE BOOKING CONTACT</p><h2>${esc(person.name)}</h2><p data-dt-mask>${esc(person.email || "No contact address available.")}</p><p data-dt-mask>${esc(person.phone || "No phone number was recorded for this older booking.")}</p><p class="form-note">Use only to arrange this guest’s stay. No automated email has been sent.</p>`,
         );
       });
     dialog.querySelector(".detail-actions").append(contact);
@@ -970,7 +1056,7 @@ function changeDates(b) {
         promo: b.promo,
       });
       open(
-        `<p class="eyebrow">REVIEW YOUR CHANGE</p><h2>A new little chapter.</h2><p>${format(q.arrival)} — ${format(q.departure)} · ${q.guests} guests</p><h3>${money(q.total)} stay total</h3><p>Same rooms. The host must approve the new dates and price. Your original booking stays valid until then.</p><button class="button full" id="send-change">Send change request →</button>`,
+        `<p class="eyebrow">REVIEW YOUR CHANGE</p><h2>A new little chapter.</h2><p>${format(q.arrival)} — ${format(endDateOf(q))} · ${q.guests} guests</p><h3>${money(q.total)} stay total</h3><p>Same rooms. The host must approve the new dates and price. Your original booking stays valid until then.</p><button class="button full" id="send-change">Send change request →</button>`,
       );
       dialog.querySelector("#send-change").onclick = () =>
         run(async () => {
@@ -989,7 +1075,7 @@ function changeDates(b) {
 }
 function manualReservation() {
   open(
-    `<p class="eyebrow">A PERSONAL RESERVATION</p><h2>Add a host booking.</h2><p>The same price, adult capacity and room rules apply. Choose an existing registered guest.</p><form id="manual-form"><label>Guest<select name="guestId" required>${state.users.map((u) => `<option value="${u.id}">${esc(u.name)}</option>`).join("")}</select></label><label>Booking type<select name="kind">${["day", "individual", "private", "event"].map((k) => `<option value="${k}">${kindLabel(k)}</option>`).join("")}</select></label><div class="two-fields"><label>Arrival / visit date<input name="arrival" type="date" min="${day()}" value="${day(3)}" required></label><label>Departure (overnight only)<input name="departure" type="date" value="${day(5)}" required></label><label>Adults, age 10+<input name="adults" type="number" min="1" max="${policy().siteAdults}" value="2" required></label><label>Under 10 ages, separated by commas<input name="ages" placeholder="For example:4,7"></label></div><fieldset><legend>Private rooms only</legend>${state.units
+    `<p class="eyebrow">A PERSONAL RESERVATION</p><h2>Add a host booking.</h2><p>The same price, adult capacity and room rules apply. Choose an existing registered guest.</p><form id="manual-form"><label>Guest<select name="guestId" required>${state.users.map((u) => `<option value="${u.id}">${esc(u.name)}</option>`).join("")}</select></label><label>Booking type<select name="kind">${["day", "individual", "private", "event"].map((k) => `<option value="${k}">${kindLabel(k)}</option>`).join("")}</select></label><div class="two-fields"><label>Arrival / visit date<input name="arrival" type="date" min="${day()}" value="${day(3)}" required></label><label>Departure / event end date<input name="departure" type="date" value="${day(5)}" required></label><label>Adults, age 10+<input name="adults" type="number" min="1" max="${policy().siteAdults}" value="2" required></label><label>Under 10 ages, separated by commas<input name="ages" placeholder="For example:4,7"></label></div><fieldset><legend>Private rooms only</legend>${state.units
       .filter((u) => u.active)
       .map(
         (u) =>
@@ -997,11 +1083,39 @@ function manualReservation() {
       )
       .join(
         "",
-      )}</fieldset><label>Private note<textarea name="note" maxlength="1000"></textarea></label><button class="button full">Review request</button></form>`,
+      )}</fieldset><h3>Guest contact details</h3><label>Full name<input name="contactName" maxlength="120" required></label><label>Phone with country code<input name="contactPhone" type="tel" maxlength="32" required></label><p class="form-note">${contactNotice}</p><label>Private note<textarea name="note" maxlength="1000"></textarea></label><button class="button full">Review request</button></form>`,
   );
+  let contactDirty = false;
+  const guestSelect = dialog.querySelector('[name="guestId"]');
+  const fillGuest = async () => {
+    const id = guestSelect.value;
+    try {
+      const p = await api("guest-profile", { guestId: id });
+      if (guestSelect.value !== id || contactDirty) return;
+      dialog.querySelector('[name="contactName"]').value = p.name;
+      dialog.querySelector('[name="contactPhone"]').value = p.phone;
+    } catch {
+      toast("Enter the guest’s contact details before confirming.");
+    }
+  };
+  guestSelect.onchange = () => {
+    contactDirty = false;
+    void fillGuest();
+  };
+  dialog.querySelectorAll('[name="contactName"],[name="contactPhone"]').forEach(
+    (x) =>
+      (x.oninput = () => {
+        contactDirty = true;
+      }),
+  );
+  void fillGuest();
   dialog.querySelector("form").onsubmit = (e) => {
     e.preventDefault();
     const f = new FormData(e.currentTarget),
+      contact = {
+        name: String(f.get("contactName")),
+        phone: String(f.get("contactPhone")),
+      },
       kind = f.get("kind"),
       adults = Number(f.get("adults")),
       childrenAges = String(f.get("ages")).trim()
@@ -1017,9 +1131,12 @@ function manualReservation() {
         childrenAges,
         guests: adults + childrenAges.length,
         arrival: f.get("arrival"),
-        departure: ["day", "event"].includes(kind)
-          ? add(f.get("arrival"), 1)
-          : f.get("departure"),
+        departure:
+          kind === "day"
+            ? add(f.get("arrival"), 1)
+            : kind === "event"
+              ? add(f.get("departure"), 1)
+              : f.get("departure"),
         units: kind === "private" ? f.getAll("unit") : [],
         guestId: f.get("guestId"),
         promo: "",
@@ -1029,7 +1146,11 @@ function manualReservation() {
       );
       dialog.querySelector("#create-manual").onclick = () =>
         run(async () => {
-          const booking = await api("create", { quoteId: q.id, note }, q.id);
+          const booking = await api(
+            "create",
+            { quoteId: q.id, note, contact },
+            q.id,
+          );
           await refresh();
           render();
           detail(booking.id);
@@ -1040,7 +1161,12 @@ function manualReservation() {
 function readDates(form) {
   const f = new FormData(form);
   search.arrival = f.get("arrival");
-  search.departure = shortVisit() ? add(search.arrival, 1) : f.get("departure");
+  search.departure =
+    search.kind === "event"
+      ? add(f.get("eventEnd"), 1)
+      : shortVisit()
+        ? add(search.arrival, 1)
+        : f.get("departure");
   search.adults = Number(f.get("adults"));
   const count = Number(f.get("childCount") || 0),
     ages = f.getAll("childAge").map((x) => (x === "" ? null : Number(x)));
@@ -1051,11 +1177,16 @@ function readDates(form) {
   search.guests = search.adults + count;
 }
 function bind() {
+  for (const [id, stepName] of [["search-form", "dates"], ["request-form", "contact"], ["profile-form", "profile"]]) {
+    let invalidReported = false;
+    document.getElementById(id)?.addEventListener("invalid", () => { if (!invalidReported) { invalidReported = true; journeyStep(stepName, "failed", search.kind); queueMicrotask(() => {invalidReported = false;}); } }, true);
+  }
   document.querySelectorAll('[name="bookingKind"]').forEach(
     (el) =>
       (el.onchange = () => {
         const oldShort = shortVisit();
         search.kind = el.value;
+        journeyStep("plan", "selected", search.kind);
         if (shortVisit()) search.departure = add(search.arrival, 1);
         else if (oldShort) search.departure = add(search.arrival, 2);
         if (search.kind === "individual") search.childrenAges = [];
@@ -1124,6 +1255,21 @@ function bind() {
     (b) =>
       (b.onclick = () => {
         const d = b.dataset.date;
+        if (search.kind === "event") {
+          if (picking === "arrival") {
+            search.arrival = d;
+            if (search.departure <= d) search.departure = add(d, 1);
+            picking = "departure";
+          } else if (d < search.arrival) {
+            search.arrival = d;
+            search.departure = add(d, 1);
+          } else {
+            search.departure = add(d, 1);
+            picking = "arrival";
+          }
+          render();
+          return;
+        }
         if (shortVisit()) {
           search.arrival = d;
           search.departure = add(d, 1);
@@ -1158,14 +1304,16 @@ function bind() {
     }
     const departure = e.currentTarget.querySelector('[name="departure"]');
     if (departure) departure.min = add(search.arrival, 1);
+    const eventEnd = e.currentTarget.querySelector('[name="eventEnd"]');
+    if (eventEnd) eventEnd.min = search.arrival;
     document.querySelectorAll("[data-date]").forEach((cell) => {
       const d = cell.dataset.date,
         endpoint =
-          d === search.arrival || (!shortVisit() && d === search.departure);
+          d === search.arrival || (!shortVisit() && d === calendarEnd());
       cell.classList.toggle("endpoint", endpoint);
       cell.classList.toggle(
         "in-range",
-        !shortVisit() && d > search.arrival && d < search.departure,
+        !shortVisit() && d > search.arrival && d < calendarEnd(),
       );
       cell.setAttribute("aria-pressed", String(endpoint));
       cell.setAttribute(
@@ -1177,9 +1325,9 @@ function bind() {
           year: "numeric",
         }) +
           (d === search.arrival
-            ? ", arrival"
-            : d === search.departure
-              ? ", departure"
+            ? search.kind === "event" ? ", start" : ", arrival"
+            : d === calendarEnd()
+              ? search.kind === "event" ? ", end" : ", departure"
               : ""),
       );
     });
@@ -1187,6 +1335,7 @@ function bind() {
   document.querySelector("#search-form")?.addEventListener("submit", (e) => {
     e.preventDefault();
     readDates(e.currentTarget);
+    journeyStep("dates", "attempted", search.kind);
     if (!state.actor) {
       login();
       return;
@@ -1213,6 +1362,7 @@ function bind() {
   document.querySelectorAll("[data-room]").forEach(
     (b) =>
       (b.onclick = () => {
+        journeyStep("rooms", "selected", search.kind);
         const id = b.dataset.room;
         selected = selected.includes(id)
           ? selected.filter((x) => x !== id)
@@ -1250,9 +1400,24 @@ function bind() {
     const body = {
       quoteId: quote.id,
       note: document.querySelector("#note").value,
+      contact: {
+        name: document.querySelector('[name="contactName"]').value,
+        phone: document.querySelector('[name="contactPhone"]').value,
+      },
     };
     run(async () => {
+      journeyStep("contact", "attempted", search.kind);
+      if (document.querySelector("#save-booking-profile")?.checked) {
+        await api("profile", {
+          ...body.contact,
+          expectedVersion: state.profile?.version || 0,
+        });
+        await refresh();
+      }
+      journeyStep("submit", "attempted", search.kind);
       const b = await api("create", body, quote.id);
+      journeyStep("contact", "succeeded", search.kind);
+      contactDraft = undefined;
       await refresh();
       step = 1;
       selected = [];
@@ -1262,7 +1427,7 @@ function bind() {
       location.hash = "visits";
       render();
       open(
-        `<div class="success-mark">✓</div><p class="eyebrow">A LITTLE SOMETHING TO LOOK FORWARD TO</p><h2>Your request is with your hosts.</h2><p>${esc(b.reference)} · ${format(b.arrival)} — ${format(b.departure)}</p>${badge("pending_approval")}<p>${b.kind === "event" ? "Your event enquiry does not hold the retreat. A host offer needs your acceptance and approval." : "Your requested places are held until the host review deadline."} Follow the response in Your visits.</p><p class="form-note">${b.kind === "event" ? "No exclusive hold is made by an enquiry." : "This request reserves inventory until the review deadline."} Your host must approve it. No email has been sent.</p><button class="button full" id="see-request">See my request →</button>`,
+        `<div class="success-mark">✓</div><p class="eyebrow">A LITTLE SOMETHING TO LOOK FORWARD TO</p><h2>Your request is with your hosts.</h2><p>${esc(b.reference)} · ${format(b.arrival)} — ${format(endDateOf(b))}</p>${badge("pending_approval")}<p>${b.kind === "event" ? "Your event enquiry does not hold the retreat. A host offer needs your acceptance and approval." : "Your requested places are held until the host review deadline."} Follow the response in Your visits.</p><p class="form-note">${b.kind === "event" ? "No exclusive hold is made by an enquiry." : "This request reserves inventory until the review deadline."} Your host must approve it. No email has been sent.</p><button class="button full" id="see-request">See my request →</button>`,
       );
       dialog.querySelector("#see-request").onclick = () => detail(b.id);
     });
@@ -1530,4 +1695,17 @@ try {
   render();
 } catch (e) {
   app.innerHTML = `<main class="empty"><h1>The booking service is taking a moment.</h1><p>${esc(e.message)}</p><a class="button" href="/book/">Try again</a></main>`;
+}
+
+if (location.pathname.startsWith("/admin/modules/")) {
+  document.documentElement.dataset.embedded = "true";
+  window.addEventListener("message", (e) => {
+    if (
+      e.origin === location.origin &&
+      e.source === parent &&
+      e.data?.type === "aroha-studio-visibility" &&
+      !e.data.visible
+    )
+      stopMotion();
+  });
 }

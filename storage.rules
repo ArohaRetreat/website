@@ -5,6 +5,7 @@ service firebase.storage {
       return request.auth != null && request.auth.token.email_verified == true
         && firestore.exists(/databases/(default)/documents/aroha_members/$(request.auth.uid))
         && firestore.get(/databases/(default)/documents/aroha_members/$(request.auth.uid)).data.active == true
+        && (!('websiteAccess' in firestore.get(/databases/(default)/documents/aroha_members/$(request.auth.uid)).data) || firestore.get(/databases/(default)/documents/aroha_members/$(request.auth.uid)).data.websiteAccess != false || firestore.get(/databases/(default)/documents/aroha_members/$(request.auth.uid)).data.role == 'superadmin')
         && firestore.get(/databases/(default)/documents/aroha_members/$(request.auth.uid)).data.role in ['superadmin','admin','editor'];
     }
     // Uploaded website media is public immediately; the portal states this before upload.

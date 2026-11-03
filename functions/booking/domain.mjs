@@ -8,11 +8,10 @@ import {
 } from "./products.mjs";
 // Production booking policy. Firestore adapter loads and commits bounded transactional ledgers.
 import { createHash, randomUUID } from "node:crypto";
-export class BookingError extends Error {
+import {DomainError} from "../domain.mjs";
+export class BookingError extends DomainError {
   constructor(code, status = 422) {
-    super(code);
-    this.code = code;
-    this.status = status;
+    super(code,status);
   }
 }
 const fail = (code, status) => {
@@ -452,6 +451,8 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
             arrival: b.arrival,
             departure: b.departure,
             reason: "Exclusive event offer",
+            startsAt: b.startsAt,
+            endsAt: b.endsAt,
             expiresAt: Math.min(
               b.expiresAt,
               now + int(input.holdHours, 1, 72) * 3600000,

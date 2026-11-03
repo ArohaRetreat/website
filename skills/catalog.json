@@ -152,6 +152,15 @@
         "project-deployment",
         "project-observability"
       ]
+    },
+    {
+      "id": "service-booking-observability",
+      "kind": "service",
+      "path": "skills/service-booking-observability/SKILL.md",
+      "description": "Booking business event capture and durable Dynatrace delivery",
+      "dependsOn": [
+        "app-launchpad"
+      ]
     }
   ],
   "services": [
@@ -315,6 +324,36 @@
         "node scripts/delivery/run-node-tests.mjs api-integration"
       ],
       "continuation": "skills/service-aroha-booking/continuation.md",
+      "lastReviewedRevision": null
+    },
+    {
+      "id": "aroha-booking-observability",
+      "skillId": "service-booking-observability",
+      "sourcePaths": [
+        "functions/booking/observability.mjs",
+        "website/booking-journey.mjs"
+      ],
+      "entrypoints": [
+        "functions/index.mjs",
+        "functions/booking/observability.mjs",
+        "website/booking-journey.mjs"
+      ],
+      "owner": "ArohaRetreat",
+      "status": "active",
+      "dependsOn": [
+        "aroha-api",
+        "aroha-booking"
+      ],
+      "contracts": [
+        "docs/booking-platform-v2.md",
+        "firestore.indexes.json"
+      ],
+      "testCommands": [
+        "npm test",
+        "node --test functions/tests/telemetry.mjs",
+        "node scripts/delivery/run-node-tests.mjs api-integration"
+      ],
+      "continuation": "skills/service-booking-observability/continuation.md",
       "lastReviewedRevision": null
     }
   ]

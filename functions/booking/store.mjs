@@ -1,3 +1,6 @@
+import { bookingEvent, queueCommitted } from "./observability.mjs";
+import { studioAccess } from "../access.mjs";
+import { contactDetails, ownContact, withoutContact } from "./contact.mjs";
 import {
   productDefaults,
   reservesCapacity,
@@ -102,10 +105,11 @@ const effective = (b, now) =>
   b.status === "pending_approval" && b.expiresAt <= now
     ? { ...b, status: "expired" }
     : b;
-const guardMember = (m) =>
+const guardMember = (m, write = false) =>
   m.exists &&
-  m.data().active &&
-  ["admin", "superadmin"].includes(m.data().role);
+  (write
+    ? studioAccess(m.data()).bookings === "manager"
+    : studioAccess(m.data()).bookings !== "none");
 const pickConfig = (s) => ({
   schemaVersion: 1,
   settings: s.settings,
@@ -130,7 +134,8 @@ const project = (s, actor, profile, bookings, extra = {}) => ({
   actor,
   settings: s.settings,
   units: s.units,
-  bookings,
+  bookings: bookings.map(withoutContact),
+  profile: actor ? ownContact(profile) : null,
   loyalty: actor
     ? {
         ...tier(
@@ -169,6 +174,7 @@ export async function bookingState(
       id: token.uid,
       name: String(token.name || "Guest").slice(0, 80),
       role: admin ? "host" : "guest",
+      ...(admin ? { bookingAccess: studioAccess(ms.data()).bookings } : {}),
     };
     const profile = ps.exists
       ? ps.data()
@@ -332,7 +338,7 @@ export async function bookingCommand(
   operation,
   input,
   key,
-  { admin = false } = {},
+  { admin = false, journeyId, requestId } = {},
 ) {
   if (!schemas[operation]) fail("NOT_FOUND", 404);
   validate(schemas[operation], input);
@@ -344,7 +350,7 @@ export async function bookingCommand(
       "block",
       "unblock",
       "readiness",
-      "guest-contact",
+      "guest-profile",
     ].includes(operation) &&
     !admin
   )
@@ -366,11 +372,21 @@ export async function bookingCommand(
       tx.get(profileRef),
       tx.get(requestRef),
     ]);
-    if (admin && !guardMember(ms)) fail("FORBIDDEN", 403);
+    if (
+      admin &&
+      !guardMember(
+        ms,
+        !["availability", "guest-contact", "reservation-detail"].includes(
+          operation,
+        ),
+      )
+    )
+      fail("FORBIDDEN", 403);
     const actor = {
       id: token.uid,
       name: String(token.name || "Guest").slice(0, 80),
       role: admin ? "host" : "guest",
+      ...(admin ? { bookingAccess: studioAccess(ms.data()).bookings } : {}),
     };
     if (rs.exists) {
       if (rs.data().hash !== requestHash) fail("IDEMPOTENCY_CONFLICT", 409);
@@ -387,6 +403,50 @@ export async function bookingCommand(
             activeIds: [],
             createdAt: now,
           };
+    if (operation === "profile") {
+      if (admin) fail("FORBIDDEN", 403);
+      if (input.expectedVersion !== (profile.contactVersion || 0))
+        fail("VERSION_CONFLICT", 409);
+      const contact = contactDetails({ name: input.name, phone: input.phone });
+      tx.set(profileRef, {
+        ...profile,
+        email: String(token.email || ""),
+        contact,
+        contactVersion: (profile.contactVersion || 0) + 1,
+        updatedAt: now,
+      });
+      queueCommitted(
+        tx,
+        db,
+        bookingEvent({
+          type: "guest.profile_updated",
+          journeyId,
+          requestId,
+          transactionId: requestRef.id,
+          authority: "server-confirmed",
+          actor: token.uid,
+          phone: contact.phone,
+          operation: "profile",
+          outcome: "succeeded",
+        }),
+      );
+      const result = ownContact(
+        {
+          ...profile,
+          contact,
+          contactVersion: (profile.contactVersion || 0) + 1,
+        },
+        token,
+      );
+      tx.set(requestRef, {
+        owner: token.uid,
+        hash: requestHash,
+        result,
+        createdAt: now,
+        expireAt: new Date(now + 86400000),
+      });
+      return result;
+    }
     if (input.id && !/^[A-Za-z0-9-]{1,100}$/.test(input.id)) fail("INVALID_ID");
     if (input.quoteId && !/^[a-z0-9-]{36}$/.test(input.quoteId))
       fail("INVALID_ID");
@@ -412,9 +472,13 @@ export async function bookingCommand(
       ownerSnap = owner === token.uid ? ps : await tx.get(ownerRef);
     if (owner !== token.uid && !ownerSnap.exists) fail("INVALID_GUEST");
     const ownerProfile = ownerSnap.exists ? ownerSnap.data() : profile;
+    if (operation === "guest-profile") {
+      if (!admin) fail("FORBIDDEN", 403);
+      return ownContact(ownerProfile);
+    }
     if (operation === "reservation-detail") {
       if (!target) fail("NOT_FOUND", 404);
-      return effective(target, now);
+      return withoutContact(effective(target, now));
     }
     const completing =
       operation === "booking-action" &&
@@ -504,10 +568,12 @@ export async function bookingCommand(
       );
     }
     if (operation === "guest-contact") {
-      if (!admin) fail("FORBIDDEN", 403);
       if (!target) fail("NOT_FOUND", 404);
       return {
-        name: ownerProfile.name || "Guest",
+        ...(target.contact || {
+          name: ownerProfile.name || "Guest",
+          phone: ownerProfile.contact?.phone || "",
+        }),
         email: ownerProfile.email || "",
       };
     }
@@ -550,6 +616,12 @@ export async function bookingCommand(
     )
       fail("PROMO_LIMIT");
     if (operation === "block" && s.blocks.length >= 100) fail("BLOCK_LIMIT");
+    let contact;
+    if (operation === "create") {
+      if (!input.contact && !ownerProfile.contact?.phone)
+        fail("CONTACT_REQUIRED", 422);
+      contact = contactDetails(input.contact || ownerProfile.contact);
+    }
     const result =
       operation === "availability"
         ? availability(s, input, now)
@@ -568,6 +640,7 @@ export async function bookingCommand(
     ].includes(operation);
     if (reservationMutation) {
       const b = result;
+      if (operation === "create") b.contact = contact;
       if (operation === "create")
         b.guestName = String(ownerProfile.name || actor.name || "Guest").slice(
           0,
@@ -659,15 +732,34 @@ export async function bookingCommand(
       };
       tx.set(collection(db, "audit").doc(e.eventId), safe);
       tx.set(collection(db, "outbox").doc(e.eventId), safe);
+      queueCommitted(
+        tx,
+        db,
+        bookingEvent({
+          id: e.eventId,
+          journeyId,
+          requestId,
+          transactionId: requestRef.id,
+          type: e.type,
+          authority: "server-confirmed",
+          actor: e.actor,
+          phone: result?.contact?.phone || ownerProfile.contact?.phone,
+          operation,
+          kind: e.bookingKind,
+          entity: e.entity,
+          outcome: "succeeded",
+          at: e.at,
+        }),
+      );
     }
     tx.set(requestRef, {
       owner: token.uid,
       hash: requestHash,
-      result,
+      result: reservationMutation ? withoutContact(result) : result,
       createdAt: now,
       expireAt: new Date(now + 90 * 86400000),
     });
-    return result;
+    return reservationMutation ? withoutContact(result) : result;
   });
 }
 export function validateBookingOperation(operation, body) {

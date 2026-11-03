@@ -56,7 +56,8 @@ export function productSelection(state, input, now = Date.now()) {
       new Date(d + "T00:00:00Z").toISOString().slice(0, 10) !== d
     )
       fail("INVALID_DATE");
-  const short = kind === "day" || kind === "event";
+  const short = kind === "day",
+    event = kind === "event";
   if (
     input.arrival < todayIST(now) ||
     input.arrival > addDays(todayIST(now), 365) ||
@@ -81,17 +82,26 @@ export function productSelection(state, input, now = Date.now()) {
       todayIST(input.startsAt) === input.arrival
         ? input.startsAt
         : Math.max(
-            local(input.arrival, short ? p.dayStart : p.stayStart),
+            local(input.arrival, short || event ? p.dayStart : p.stayStart),
             input.arrival === todayIST(now) ? now : 0,
           ),
     endsAt =
       input.policy &&
       Number.isFinite(input.endsAt) &&
-      todayIST(input.endsAt) === (short ? input.arrival : input.departure)
+      todayIST(input.endsAt) ===
+        (short
+          ? input.arrival
+          : event
+            ? addDays(input.departure, -1)
+            : input.departure)
         ? input.endsAt
         : local(
-            short ? input.arrival : input.departure,
-            short ? p.dayEnd : p.stayEnd,
+            short
+              ? input.arrival
+              : event
+                ? addDays(input.departure, -1)
+                : input.departure,
+            short || event ? p.dayEnd : p.stayEnd,
           );
   if (endsAt <= startsAt || endsAt <= now) fail("INVALID_TIME_WINDOW");
   return {
@@ -104,11 +114,13 @@ export function productSelection(state, input, now = Date.now()) {
     guests: adults + ages.length,
     startsAt,
     endsAt,
-    nights: short
-      ? 0
-      : Math.round(
-          (Date.parse(input.departure) - Date.parse(input.arrival)) / 86400000,
-        ),
+    nights:
+      short || event
+        ? 0
+        : Math.round(
+            (Date.parse(input.departure) - Date.parse(input.arrival)) /
+              86400000,
+          ),
   };
 }
 const adultCount = (b) => b.adults ?? b.guests;
@@ -197,7 +209,10 @@ export function productAvailability(state, input, now = Date.now(), exclude) {
       (!exclude || b.bookingId !== exclude) &&
       (!b.expiresAt || b.expiresAt > now) &&
       intersects(
-        { start: local(b.arrival, "00:00"), end: local(b.departure, "00:00") },
+        {
+          start: b.startsAt ?? local(b.arrival, "00:00"),
+          end: b.endsAt ?? local(b.departure, "00:00"),
+        },
         period,
       ),
   );
@@ -217,8 +232,8 @@ export function productAvailability(state, input, now = Date.now(), exclude) {
           (!b.expiresAt || b.expiresAt > now) &&
           intersects(
             {
-              start: local(b.arrival, "00:00"),
-              end: local(b.departure, "00:00"),
+              start: b.startsAt ?? local(b.arrival, "00:00"),
+              end: b.endsAt ?? local(b.departure, "00:00"),
             },
             period,
           ),

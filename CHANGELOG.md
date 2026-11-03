@@ -1,5 +1,13 @@
 ## 0.18.1 — Booking atmosphere and motion
 
+## 0.19.0 — 4 November 2026
+
+- Unite Website changes, Bookings and People & access inside one permission-controlled Host Studio, retaining unsaved editor drafts between modules.
+- Add guest contact profiles, final booking contact review and immutable reservation contact snapshots.
+- Add inclusive exclusive-event end dates with continuous conflict protection through the last evening.
+- Capture consent-aware form steps, server responses and atomic booking outcomes as durable Dynatrace business events, including server-validated guest phone numbers; retain separate bounded logs, metrics and real traces.
+- Add scheduled retry delivery, module-aware Storage rules, queue TTL and contact index exemptions. API0.6.0 precedes Hosting; preserve CMS/Natura and existing guest records.
+
 Apply sunset forest surfaces throughout guest booking, including inputs, branding, reviews and dialogs; unify calendar text and form/card layout. Add interruptible step/month/dialog transitions, immediate keyboard/reduced-motion behavior and focus/cleanup coverage. No booking policy/API/data changes.
 
 ## 0.18.0 — 3 November 2026

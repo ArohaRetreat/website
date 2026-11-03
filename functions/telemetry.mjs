@@ -22,24 +22,27 @@ import {
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-proto";
 import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-proto";
-let providers, logger, counter, duration, tracer, manager;
+let providers, logger, counter, duration, tracer, manager, businessCounter;
 const endpoint = () =>
   process.env.FUNCTIONS_EMULATOR && process.env.OTEL_TEST_ENDPOINT
     ? process.env.OTEL_TEST_ENDPOINT
     : "https://indiacs.live.dynatrace.com/api/v2/otlp";
 function initialize() {
-  if (providers || !process.env.DYNATRACE_PLATFORM_TOKEN) return;
+  if (providers || !process.env.DYNATRACE_PLATFORM_TOKEN || (process.env.DT_EXPORT_ENABLED === "false" && !process.env.OTEL_TEST_ENDPOINT)) return;
   const resource = resourceFromAttributes({
-    "service.name": "aroha-api",
+    "service.name":
+      process.env.FUNCTION_TARGET === "arohaBookingEvents"
+        ? "aroha-booking-events"
+        : "aroha-api",
     "service.namespace": "aroha-retreat",
-    "service.version": "0.5.0",
+    "service.version": "0.6.0",
     "deployment.environment.name": process.env.FUNCTIONS_EMULATOR
       ? "emulator"
       : "production",
     "cloud.provider": "gcp",
     "cloud.platform": "gcp_cloud_run",
     "cloud.region": "asia-south2",
-    "faas.name": "arohaApi",
+    "faas.name": process.env.FUNCTION_TARGET === "arohaBookingEvents" ? "arohaBookingEvents" : "arohaApi",
     "faas.version": (process.env.K_REVISION || "local").slice(0, 128),
   });
   const opts = (path) => ({
@@ -73,7 +76,7 @@ function initialize() {
   context.setGlobalContextManager(manager);
   trace.setGlobalTracerProvider(tp);
   propagation.setGlobalPropagator(new W3CTraceContextPropagator());
-  tracer = tp.getTracer("aroha-api", "0.5.0");
+  tracer = tp.getTracer("aroha-api", "0.6.0");
   const lp = new LoggerProvider({
     resource,
     processors: [
@@ -83,7 +86,7 @@ function initialize() {
       }),
     ],
   });
-  logger = lp.getLogger("aroha-api", "0.5.0");
+  logger = lp.getLogger("aroha-api", "0.6.0");
   const mp = new MeterProvider({
     resource,
     readers: [
@@ -97,7 +100,10 @@ function initialize() {
       }),
     ],
   });
-  const meter = mp.getMeter("aroha-api", "0.5.0");
+  const meter = mp.getMeter("aroha-api", "0.6.0");
+  businessCounter = meter.createCounter("aroha.booking.events", {
+    description: "Captured booking lifecycle events",
+  });
   counter = meter.createCounter("aroha.api.requests", {
     description: "Completed API requests",
   });
@@ -111,6 +117,33 @@ function initialize() {
 }
 function route(req) {
   const p = req.path.replace(/^\/api\/v1/, "");
+  const booking = p.match(/^\/booking\/([a-z-]+)\/?$/);
+  if (
+    booking &&
+    [
+      "public",
+      "state",
+      "profile",
+      "availability",
+      "quote",
+      "create",
+      "booking-action",
+      "note",
+      "change-quote",
+      "change-request",
+      "settings",
+      "unit",
+      "promo",
+      "block",
+      "unblock",
+      "readiness",
+      "reservation-detail",
+      "guest-contact",
+      "journey-event",
+      "guest-profile",
+    ].includes(booking[1])
+  )
+    return "booking." + booking[1];
   for (const s of [
     "session",
     "draft",
@@ -147,7 +180,11 @@ export function recordSummary(summary) {
     "http.response.status_code": summary.status,
     "request.id": summary.requestId,
     "error.type": summary.errorCode || "none",
-    "booking.kind": ["day","individual","private","event"].includes(summary.bookingKind)?summary.bookingKind:"unknown",
+    "booking.kind": ["day", "individual", "private", "event"].includes(
+      summary.bookingKind,
+    )
+      ? summary.bookingKind
+      : "unknown",
   };
   trace.getActiveSpan()?.setAttributes(attrs);
   logger?.emit({
@@ -175,7 +212,9 @@ export async function traceRequest(req, res, handler) {
         "http.request.method": ["GET", "POST", "DELETE"].includes(req.method)
           ? req.method
           : "OTHER",
-        "http.route": "/api/v1/" + path,
+        "http.route": path.startsWith("booking.")
+          ? "/api/v1/booking/" + path.slice(8)
+          : "/api/v1/" + path,
       },
     },
     parent,
@@ -220,4 +259,63 @@ export async function shutdownTelemetry() {
   if (providers)
     await Promise.allSettled(Object.values(providers).map((p) => p.shutdown()));
   manager?.disable();
+}
+
+export function recordBusinessEvent(event, stage = "captured") {
+  const attrs = {
+    "event.id": event["event.id"],
+    "event.type": event["event.type"],
+    "event.authority": event["event.authority"],
+    "booking.step": event["booking.step"] || "none",
+    "booking.outcome": event["booking.outcome"] || "unknown",
+    "booking.kind": event["booking.kind"] || "unknown",
+  };
+  logger?.emit({
+    severityNumber: 9,
+    severityText: "INFO",
+    body: "booking.business_event_captured",
+    attributes: attrs,
+    context: context.active(),
+  });
+  businessCounter?.add(1, {
+    stage,
+    type: attrs["event.type"],
+    authority: attrs["event.authority"],
+    step: attrs["booking.step"],
+    outcome: attrs["booking.outcome"],
+    kind: attrs["booking.kind"],
+  });
+}
+
+export async function traceBookingDelivery(handler) {
+  initialize();
+  if (!tracer) return handler();
+  return tracer.startActiveSpan(
+    "booking.events.delivery",
+    { kind: SpanKind.INTERNAL },
+    async (span) => {
+      try {
+        const result = await handler();
+        span.setAttributes({
+          "delivery.delivered": result.delivered,
+          "delivery.failed": result.failed,
+        });
+        if (result.failed) span.setStatus({ code: SpanStatusCode.ERROR });
+        logger?.emit({
+          severityNumber: result.failed ? 13 : 9,
+          severityText: result.failed ? "WARN" : "INFO",
+          body: "booking.events.delivery",
+          attributes: {
+            "delivery.delivered": result.delivered,
+            "delivery.failed": result.failed,
+          },
+          context: context.active(),
+        });
+        return result;
+      } finally {
+        span.end();
+        await flushTelemetry();
+      }
+    },
+  );
 }

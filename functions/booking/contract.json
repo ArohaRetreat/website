@@ -18,7 +18,12 @@
       },
       "kind": {
         "type": "string",
-        "enum": ["day", "individual", "private", "event"]
+        "enum": [
+          "day",
+          "individual",
+          "private",
+          "event"
+        ]
       },
       "adults": {
         "type": "integer",
@@ -45,7 +50,11 @@
         "uniqueItems": true
       }
     },
-    "required": ["arrival", "departure", "guests"]
+    "required": [
+      "arrival",
+      "departure",
+      "guests"
+    ]
   },
   "quote": {
     "type": "object",
@@ -84,7 +93,12 @@
       },
       "kind": {
         "type": "string",
-        "enum": ["day", "individual", "private", "event"]
+        "enum": [
+          "day",
+          "individual",
+          "private",
+          "event"
+        ]
       },
       "adults": {
         "type": "integer",
@@ -101,7 +115,12 @@
         }
       }
     },
-    "required": ["arrival", "departure", "guests", "units"]
+    "required": [
+      "arrival",
+      "departure",
+      "guests",
+      "units"
+    ]
   },
   "create": {
     "type": "object",
@@ -114,9 +133,29 @@
       "note": {
         "type": "string",
         "maxLength": 1000
+      },
+      "contact": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "phone"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 32
+          }
+        }
       }
     },
-    "required": ["quoteId"]
+    "required": [
+      "quoteId"
+    ]
   },
   "booking-action": {
     "type": "object",
@@ -167,7 +206,11 @@
         "maximum": 72
       }
     },
-    "required": ["id", "expectedVersion", "action"]
+    "required": [
+      "id",
+      "expectedVersion",
+      "action"
+    ]
   },
   "note": {
     "type": "object",
@@ -186,7 +229,11 @@
         "maxLength": 1000
       }
     },
-    "required": ["id", "expectedVersion", "note"]
+    "required": [
+      "id",
+      "expectedVersion",
+      "note"
+    ]
   },
   "change-quote": {
     "type": "object",
@@ -219,7 +266,12 @@
       },
       "kind": {
         "type": "string",
-        "enum": ["day", "individual", "private", "event"]
+        "enum": [
+          "day",
+          "individual",
+          "private",
+          "event"
+        ]
       },
       "adults": {
         "type": "integer",
@@ -236,7 +288,13 @@
         }
       }
     },
-    "required": ["id", "expectedVersion", "arrival", "departure", "guests"]
+    "required": [
+      "id",
+      "expectedVersion",
+      "arrival",
+      "departure",
+      "guests"
+    ]
   },
   "change-request": {
     "type": "object",
@@ -255,7 +313,11 @@
         "maxLength": 100
       }
     },
-    "required": ["id", "expectedVersion", "quoteId"]
+    "required": [
+      "id",
+      "expectedVersion",
+      "quoteId"
+    ]
   },
   "settings": {
     "type": "object",
@@ -391,7 +453,10 @@
         "maximum": 10
       },
       "rate": {
-        "type": ["integer", "null"],
+        "type": [
+          "integer",
+          "null"
+        ],
         "minimum": 10000,
         "maximum": 100000000
       },
@@ -406,7 +471,13 @@
         "type": "boolean"
       }
     },
-    "required": ["id", "expectedVersion", "capacity", "rate", "active"]
+    "required": [
+      "id",
+      "expectedVersion",
+      "capacity",
+      "rate",
+      "active"
+    ]
   },
   "promo": {
     "type": "object",
@@ -418,7 +489,10 @@
       },
       "kind": {
         "type": "string",
-        "enum": ["percent", "fixed"]
+        "enum": [
+          "percent",
+          "fixed"
+        ]
       },
       "value": {
         "type": "integer",
@@ -445,7 +519,9 @@
         "minimum": 1
       }
     },
-    "required": ["code"]
+    "required": [
+      "code"
+    ]
   },
   "block": {
     "type": "object",
@@ -468,7 +544,12 @@
         "maxLength": 120
       }
     },
-    "required": ["arrival", "departure", "unitId", "reason"]
+    "required": [
+      "arrival",
+      "departure",
+      "unitId",
+      "reason"
+    ]
   },
   "unblock": {
     "type": "object",
@@ -479,12 +560,16 @@
         "maxLength": 100
       }
     },
-    "required": ["id"]
+    "required": [
+      "id"
+    ]
   },
   "guest-contact": {
     "type": "object",
     "additionalProperties": false,
-    "required": ["id"],
+    "required": [
+      "id"
+    ],
     "properties": {
       "id": {
         "type": "string",
@@ -495,7 +580,11 @@
   "readiness": {
     "type": "object",
     "additionalProperties": false,
-    "required": ["id", "expectedVersion", "ready"],
+    "required": [
+      "id",
+      "expectedVersion",
+      "ready"
+    ],
     "properties": {
       "id": {
         "type": "string",
@@ -513,11 +602,50 @@
   "reservation-detail": {
     "type": "object",
     "additionalProperties": false,
-    "required": ["id"],
+    "required": [
+      "id"
+    ],
     "properties": {
       "id": {
         "type": "string",
         "maxLength": 100
+      }
+    }
+  },
+  "profile": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "phone",
+      "expectedVersion"
+    ],
+    "properties": {
+      "name": {
+        "type": "string",
+        "maxLength": 120
+      },
+      "phone": {
+        "type": "string",
+        "maxLength": 32
+      },
+      "expectedVersion": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 1000000000
+      }
+    }
+  },
+  "guest-profile": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "guestId"
+    ],
+    "properties": {
+      "guestId": {
+        "type": "string",
+        "maxLength": 128
       }
     }
   }
