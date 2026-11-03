@@ -1,3 +1,7 @@
+## Website 0.17.2 — issue54
+
+Header appearance only: shared top transparency through24px, solid forest masthead after scroll, transparent homepage masthead when the full header band is over the cinematic farm journey, solid on exit. Existing RAF/geometry and cleanup are reused; no new observer. Reduced-motion/text tour and map Reading View keep solid contrast while scrolled. Both atmospheres covered. API/CMS/booking/index/rules/secrets/browser theme-color unchanged. Verify boundaries/reverse/restored scroll, application/foundation/build/current-head integration and exact-source observed Hosting release with pinned Natura0.6.1. Rollback Hosting only, preserving all live data. Actual browser/phone acceptance remains separate.
+
 ## Website 0.17.1 — issue52
 
 Booking navigation only: omit booking from header quick links, retain full Menu entry and expose explicit booking/history anchors in the signed-in account popover. Account link styles share existing controls. No API, CMS, inventory, rules, indexes, secrets, consent or telemetry schema change. Validate application/foundation checks and build, merge linked PR, compose pinned Natura0.6.1 and verify exact-source Hosting hashes/observed deployment. Rollback Hosting only; preserve all live booking/CMS data. Actual account/device acceptance stays separate.

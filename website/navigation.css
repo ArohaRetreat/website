@@ -577,12 +577,15 @@ body.public-menu-open {
 .nature-menu[data-menu-phase="closing"] .menu-water i,
 .nature-menu[data-menu-phase="closing"] .water-drop { animation-play-state: paused; }
 
-/* One persistent forest masthead on both routes, with a clearly legible mark. */
+/* Fixed geometry; controllers expose photography at the top and farm journey. */
 .public-header.field-header, .public-header.map-header {
   position: fixed; inset: 0 0 auto; height: 96px; z-index: 40;
   padding: 12px 4vw; gap: 20px; color: #fff;
   background: #163e2df5; border-bottom: 1px solid #b8c8a540;
   backdrop-filter: blur(12px); box-sizing: border-box;
+}
+.public-header.field-header.is-transparent, .public-header.map-header.is-transparent {
+  background: transparent; border-bottom-color: transparent; backdrop-filter: none;
 }
 .public-header .field-brand img { display: block; width: 225px; height: auto; }
 .public-header.on-paper { color: #fff; }
@@ -601,4 +604,10 @@ html { scroll-padding-top: 112px; }
   .public-header .public-menu-toggle > span:last-child { display: none; }
   .public-header .public-header-actions { gap: 8px; }
   .public-header .guest-account-trigger { max-width: 88px; }
+}
+
+/* Shade the scene, leaving the header itself fully transparent. */
+:is(.field-hero-shade, .tour-vignette)::after {
+  content: ""; position: absolute; inset: 0 0 auto; height: 160px;
+  background: linear-gradient(#071c15b3, transparent); pointer-events: none;
 }

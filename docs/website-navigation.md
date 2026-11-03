@@ -47,3 +47,7 @@ Both routes use the fixed forest masthead and a prominent white Aroha logo in th
 ## Booking menu placement — 0.17.1
 
 Book a stay remains in the full Menu; its registry quickLink:false omits it from desktop header links. Signed-in guest account popovers contain native Book a stay (/book/) and My bookings (/book/#visits) links, followed by Sign out. Signed-out account controls retain Google sign-in. Shared link styles keep touch targets and visible focus.
+
+## Contextual header — 0.17.2
+
+Header geometry remains fixed. Existing public scroll paint loops set is-transparent within24px of the top. The homepage also clears the forest surface while the full84/96px header band sits inside the immersive #journey; the botanical story stays solid. On exiting the journey or returning through other content the header becomes green. No blur or divider in transparent mode; white logo/actions retain the photograph’s existing shade. Sunset uses the same rule. Reduced-motion/simple tour and map Reading View keep a solid header over readable text. Controllers recompute at startup, scroll, resize and restoration; visibility return refreshes the homepage geometry. No-JS retains the solid default.

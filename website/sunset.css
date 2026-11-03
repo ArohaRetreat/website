@@ -138,3 +138,5 @@ html[data-atmosphere="sunset"] .stop-nearby button { background: var(--dusk-rais
 html[data-atmosphere="sunset"] :is(.public-header.field-header,.public-header.map-header) { background: #163e2df5; color: #fff; }
 html[data-atmosphere="sunset"] .public-header.on-paper { color: #fff; }
 html[data-atmosphere="sunset"] .public-header.on-paper .field-brand img { filter: none; }
+
+html[data-atmosphere="sunset"] :is(.public-header.field-header,.public-header.map-header).is-transparent { background: transparent; }

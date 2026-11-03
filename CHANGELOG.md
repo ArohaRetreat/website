@@ -1,3 +1,7 @@
+## 0.17.2 — 3 November 2026
+
+Transparent public headers at the top, forest-green after scrolling, and transparent again over the full-screen farm journey. Reverse scroll and restored positions recalculate the surface; readable fallbacks retain contrast.
+
 ## 0.17.1 — 3 November 2026
 
 Keep Book a stay in the main menu and add Book a stay / My bookings to the signed-in account menu. Remove the separate header booking link.
