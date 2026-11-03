@@ -343,6 +343,8 @@ input[type="checkbox"] {
   margin-top: 2px;
 }
 .date-calendar {
+  --date-leaf: #163e2d;
+  --date-leaf-ink: #fff;
   padding: 14px 12px 20px;
 }
 .calendar-heading {
@@ -402,10 +404,34 @@ input[type="checkbox"] {
   border-radius: 0;
 }
 .date-cell.endpoint {
-  background: var(--forest);
-  color: white;
-  border-radius: 50%;
+  position: relative;
+  isolation: isolate;
+  background: transparent;
+  color: var(--date-leaf-ink);
+  border-radius: 7px;
+  font-weight: 600;
 }
+.date-cell.endpoint:hover:enabled { background: transparent; }
+.date-cell.endpoint::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  background: var(--date-leaf);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M8 56C2 28 15 5 56 8C62 36 49 59 8 56Z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.date-cell:focus-visible { outline: 2px solid var(--date-leaf); outline-offset: 2px; }
+html[data-atmosphere="sunset"] .date-calendar {
+  --date-leaf: #fff;
+  --date-leaf-ink: #163e2d;
+  background: #163e2d;
+  color: #fffefa;
+  border-radius: 12px;
+}
+html[data-atmosphere="sunset"] .date-calendar :is(.weekday, .calendar-hint, .date-cell.outside) { color: #c5d2c4; }
+html[data-atmosphere="sunset"] .date-calendar :is(.icon-button:hover, .date-cell:hover:enabled, .date-cell.in-range) { background: #ffffff1f; }
+html[data-atmosphere="sunset"] .date-calendar .date-cell.endpoint { color: var(--date-leaf-ink); background: transparent; }
+
 .button,
 .outline-button {
   display: inline-flex;

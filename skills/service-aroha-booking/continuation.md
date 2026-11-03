@@ -1,3 +1,7 @@
+## Calendar leaf refinement — 3 November 2026
+
+Issue56 / website0.17.3 changes guest calendar endpoint appearance and restores existing IST atmosphere before paint on /book/. Green leaf/white date in daylight, white leaf/green date on dark calendar in sunset. Selection/typed dates/range/keyboard/aria behavior stays intact; no API/CMS/booking/host changes. Source booking.css and scripts/build-website.mjs. Header0.17.2 source80dff7b / Hostingea0a5fdef222e794 is retained. Exact merge/deployment/check/browser receipts in local/release-evidence/aroha-0.17.3. Chrome extension became available after earlier Work-settings browser denial; fresh inventory required. Do not infer OAuth/booking writes/physical-device acceptance from calendar visual checks.
+
 # Production booking continuation — 3 November 2026
 
 Issue50 / PR51 now include production activation authorised by the owner after the local prototype. Owner confirmed no existing offline commitments and selected host-agreed pricing. Website0.17.0 / API0.4.0 are prepared; source merge, index readiness, provider deployment and live verification must be checked from actual release receipts, not inferred from this note.
