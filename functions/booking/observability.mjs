@@ -1,9 +1,8 @@
 import {
   collectionName,
   sharedCollectionName,
-  environment,
   environmentFields,
-  serviceName,
+  runtimeServiceName,
 } from "../environment.mjs";
 import { recordBusinessEvent } from "../telemetry.mjs";
 import { createHash, randomUUID } from "node:crypto";
@@ -97,7 +96,7 @@ export function bookingEvent({
     "event.authority": authority,
     "schema.version": 2,
     "service.namespace": "aroha-retreat",
-    "service.name": serviceName("aroha-api"),
+    "service.name": runtimeServiceName(),
     ...environmentFields(),
     "service.version": "0.7.0",
     timestamp: new Date(at).toISOString(),

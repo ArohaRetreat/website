@@ -33,3 +33,13 @@ export function isTester(token) {
   );
   return allow.has(String(token.email || "").toLowerCase());
 }
+
+export function runtimeServiceName(target = process.env.FUNCTION_TARGET || "") {
+  return serviceName(
+    target.includes("Email")
+      ? "aroha-booking-emails"
+      : target.includes("BookingEvents")
+        ? "aroha-booking-events"
+        : "aroha-api",
+  );
+}

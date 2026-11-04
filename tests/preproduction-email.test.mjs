@@ -13,9 +13,8 @@ Object.assign(process.env, {
 const { environmentProfile } = await import(
   "../functions/environment-profile.mjs"
 );
-const { environment, collectionName, isTester } = await import(
-  "../functions/environment.mjs"
-);
+const { environment, collectionName, isTester, runtimeServiceName } =
+  await import("../functions/environment.mjs");
 const { visitWindow } = await import("../functions/email/visit-window.mjs");
 const { mailSettings } = await import("../functions/email/config.mjs");
 const {
@@ -161,6 +160,14 @@ test("environment identity is validated and isolates every booking namespace whi
   assert.equal(environment.name, "pre-prod");
   assert.equal(collectionName("bookings"), "aroha_preprod_bookings");
   assert.equal(environment.serviceSuffix, "-pre-prod");
+  assert.equal(
+    runtimeServiceName("arohaBookingEmailDispatchPreprod"),
+    "aroha-booking-emails-pre-prod",
+  );
+  assert.equal(
+    runtimeServiceName("arohaBookingEventsPreprod"),
+    "aroha-booking-events-pre-prod",
+  );
   assert.throws(() => environmentProfile("preprod"));
   assert.equal(environmentProfile("production").prefix, "aroha_");
   process.env.PREPROD_TESTER_EMAILS = "owner@example.test";

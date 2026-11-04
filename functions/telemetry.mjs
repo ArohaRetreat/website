@@ -1,6 +1,10 @@
 import { RuntimeExporter } from "./runtime-exporter.mjs";
 import { activeTelemetryConfig } from "./observability-config.mjs";
-import { environment, environmentFields, serviceName } from "./environment.mjs";
+import {
+  environmentFields,
+  serviceName,
+  runtimeServiceName,
+} from "./environment.mjs";
 import { classifyError } from "./domain.mjs";
 import {
   context,
@@ -47,13 +51,7 @@ function initialize() {
   )
     return;
   const resource = resourceFromAttributes({
-    "service.name": serviceName(
-      String(process.env.FUNCTION_TARGET || "").includes("Email")
-        ? "aroha-booking-emails"
-        : String(process.env.FUNCTION_TARGET || "").includes("BookingEvents")
-          ? "aroha-booking-events"
-          : "aroha-api",
-    ),
+    "service.name": runtimeServiceName(),
     "service.namespace": "aroha-retreat",
     "service.version": "0.7.0",
     ...environmentFields(),
