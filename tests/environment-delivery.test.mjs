@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
-import {deliveryTarget,assertArtifact,assertPullRequest} from "../scripts/delivery/environment-policy.mjs";
+import {deliveryTarget,assertArtifact,assertPullRequest,branchChecks} from "../scripts/delivery/environment-policy.mjs";
 import {verifyDesignPreserved} from "../scripts/delivery/preserve-design.mjs";
 import {mkdtemp,mkdir,writeFile,rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
@@ -11,6 +11,19 @@ test("only exact environment branches can select a deployment target",()=>{
   assert.equal(deliveryTarget("refs/heads/main").site,"aroha-retreat");
   assert.equal(deliveryTarget("refs/heads/preprod").site,"aroha-retreat-preprod");
   for(const ref of ["main","refs/tags/main","refs/pull/2/merge","refs/heads/pre-prod","refs/heads/preprod/feature",undefined])assert.throws(()=>deliveryTarget(ref));
+});
+test('deployment gate isolates same-SHA PR failures and the opposite branch from matching push checks',()=>{
+  const sha='a'.repeat(40),app={slug:'github-actions'};
+  const runs=[['Website application checks',1],['Foundation checks',2],['Environment branch policy',3]].map(([name,id])=>({name,id,check_suite_id:id,event:'push',head_branch:'preprod',head_sha:sha}));
+  const checks=['application','website-integration','foundation','branch-policy'].map((name,i)=>({id:i+1,name,app,status:'completed',conclusion:'success',check_suite:{id:i<2?1:i===2?2:3}}));
+  runs.push({...runs[2],id:10,check_suite_id:10,event:'pull_request_target'}, {...runs[0],id:11,check_suite_id:11,head_branch:'main'});
+  checks.push({...checks[3],id:100,conclusion:'failure',check_suite:{id:10}},{...checks[0],id:101,conclusion:'failure',check_suite:{id:11}});
+  assert(branchChecks(checks,runs,'preprod',sha).every(c=>c.conclusion==='success'));
+  assert(branchChecks(checks,runs,'preprod','b'.repeat(40)).every(c=>c===undefined));
+  runs.push({...runs[0],id:12,check_suite_id:12});
+  assert.equal(branchChecks(checks,runs,'preprod',sha)[0],undefined);
+  checks.push({...checks[0],id:102,conclusion:'failure',check_suite:{id:12}});
+  assert.equal(branchChecks(checks,runs,'preprod',sha)[0].conclusion,'failure');
 });
 test("cross-environment artifacts, demo builds and source mismatches cannot deploy",()=>{
   const revision="a".repeat(40);
