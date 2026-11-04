@@ -91,6 +91,7 @@ test("pre-prod HTTP booking, approval, private invoice and webhook stay inside t
       .doc(owner.localId)
       .set({ role: "superadmin", active: true, email: "owner@example.test" });
     const canary = { marker: "DO_NOT_CHANGE", version: 99 };
+    assert.equal((await call(null, "/draft")).httpStatus, 401);
     await db.collection("aroha_booking_config").doc("settings").set(canary);
     await db.collection("aroha_bookings").doc("canary").set(canary);
     assert.equal((await call(outsider, "/booking/state")).httpStatus, 403);
