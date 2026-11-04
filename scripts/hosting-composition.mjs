@@ -1,6 +1,7 @@
 import { readFile, writeFile, readdir, cp, rm } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { resolve, relative, sep } from "node:path";
+import { hostingHashes } from "./hosting-compression.mjs";
 
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 async function inventory(directory, base = directory) {
@@ -30,7 +31,9 @@ export async function composeHosting(root, designDirectory) {
   await inventory(source); // Refuse symlinks before copying any files.
   await rm(resolve(dist, "design"), { recursive: true, force: true });
   await cp(source, resolve(dist, "design"), { recursive: true });
-  const composition = { schemaVersion: 1, website, design, files: await inventory(dist) };
+  const files=await inventory(dist);
+  const designHostingFiles=await hostingHashes(dist,files.filter(f=>f.path.startsWith('design/')).map(f=>'/'+f.path));
+  const composition = { schemaVersion: 1, website, design, files, designHostingFiles };
   await writeFile(resolve(dist, "hosting-composition.json"), JSON.stringify(composition, null, 2) + "\n");
   return composition;
 }
@@ -43,6 +46,8 @@ export async function verifyHostingComposition(root, revision) {
   if (website.name !== "Aroha Retreat" || website.revision !== revision || JSON.stringify(website) !== JSON.stringify(composition.website) || JSON.stringify(design) !== JSON.stringify(composition.design) || design.revision !== expected.revision || design.version !== expected.version)
     throw Error("Hosting artifact revision mismatch; rebuild both applications.");
   const actual = await inventory(dist);
+  if(composition.designHostingFiles && JSON.stringify(composition.designHostingFiles)!==JSON.stringify(await hostingHashes(dist,actual.filter(f=>f.path.startsWith('design/')).map(f=>'/'+f.path))))
+    throw Error("Hosting compressed artifact mismatch.");
   if (!actual.some(f => f.path === "index.html") || !actual.some(f => f.path === "admin/index.html") || !actual.some(f => f.path === "design/index.html") || JSON.stringify(actual) !== JSON.stringify(composition.files))
     throw Error("Hosting artifact is incomplete or changed after composition.");
   return composition;

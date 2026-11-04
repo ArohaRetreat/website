@@ -1,6 +1,5 @@
 import {readFile, writeFile, mkdir} from "node:fs/promises";
 import {createHash} from "node:crypto";
-import {gzipSync} from "node:zlib";
 import {spawnSync} from "node:child_process";
 import {resolve} from "node:path";
 const pin=JSON.parse(await readFile("config/natura-hosting.json"));
@@ -23,10 +22,10 @@ run("npm",["run","build"]);
 const archives=JSON.parse(await readFile("config/natura-export-archives.json"));
 if(archives.revision!==pin.revision)throw Error("ARCHIVE_PIN_MISMATCH");
 for(const file of archives.files){
-  if(!/^\/design\/downloads\/[A-Za-z0-9_.-]+\.zip$/.test(file.path) || !/^[a-f0-9]{64}$/.test(file.hostingHash))throw Error("INVALID_ARCHIVE_PIN");
+  if(!/^\/design\/downloads\/[A-Za-z0-9_.-]+\.zip$/.test(file.path) || !/^[a-f0-9]{64}$/.test(file.hostingHash) || !/^[a-f0-9]{64}$/.test(file.sha256))throw Error("INVALID_ARCHIVE_PIN");
   const cache=resolve("local",file.hostingHash+".zip");let bytes;
   try{bytes=await readFile(cache);}catch(e){if(e.code!=="ENOENT")throw e;const r=await fetch("https://aroharetreat.com"+file.path,{signal:AbortSignal.timeout(120000)});if(!r.ok)throw Error("PINNED_ARCHIVE_UNAVAILABLE");bytes=Buffer.from(await r.arrayBuffer());}
-  if(createHash("sha256").update(gzipSync(bytes,{level:9})).digest("hex")!==file.hostingHash)throw Error("PUBLISHED_ARCHIVE_CHANGED");
+  if(createHash("sha256").update(bytes).digest("hex")!==file.sha256)throw Error("PUBLISHED_ARCHIVE_CHANGED");
   await writeFile(cache,bytes);await writeFile(resolve(directory,"dist",file.path.slice(1)),bytes);
 }
 const {composeHosting}=await import("./hosting-composition.mjs");
