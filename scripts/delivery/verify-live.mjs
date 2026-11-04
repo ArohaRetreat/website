@@ -55,6 +55,12 @@ export async function verifyLive(
     "/assets/sunset.css",
     "/assets/footer.css",
   ];
+  const bookingDocument = await readFile(
+    root + directory + "/book/index.html",
+    "utf8",
+  );
+  if (bookingDocument.includes("/assets/booking-concierge.js"))
+    paths.push("/assets/booking-concierge.js", "/assets/booking-concierge.css");
   paths.push(
     "/assets/retreat/pool-completion-impression-v1.webp",
     "/assets/retreat/library-impression-v1.webp",
@@ -92,8 +98,7 @@ export async function verifyLive(
     headers: { Origin: origin },
     signal: AbortSignal.timeout(15000),
   });
-  if (denied.status !== 401)
-    throw Error("LIVE_ACCESS_CHECK_FAILED");
+  if (denied.status !== 401) throw Error("LIVE_ACCESS_CHECK_FAILED");
   const bookingDenied = await fetchImpl(origin + "/api/v1/booking/state", {
     headers: { Origin: origin },
     signal: AbortSignal.timeout(15000),
