@@ -86,6 +86,37 @@ for (const group of new Set(required.map((i) => i.collectionGroup))) {
     )
       throw Error("PREPROD_INDEX_NOT_READY:" + group);
 }
+const exemptions = JSON.parse(
+  await readFile("firestore.indexes.json", "utf8"),
+).fieldOverrides.filter((f) => f.collectionGroup.startsWith("aroha_preprod_"));
+for (let offset = 0; offset < exemptions.length; offset += 4) {
+  await Promise.all(
+    exemptions.slice(offset, offset + 4).map(async (f) => {
+      const actual = (
+        await client.get(
+          base +
+            "/collectionGroups/" +
+            f.collectionGroup +
+            "/fields/" +
+            encodeURIComponent(f.fieldPath),
+        )
+      ).body;
+      if (
+        !actual.indexConfig ||
+        actual.indexConfig?.usesAncestorConfig ||
+        actual.indexConfig?.reverting ||
+        (actual.indexConfig?.indexes || []).length ||
+        (f.ttl && actual.ttlConfig?.state !== "ACTIVE")
+      )
+        throw Error(
+          "PREPROD_FIELD_METADATA_NOT_READY:" +
+            f.collectionGroup +
+            ":" +
+            f.fieldPath,
+        );
+    }),
+  );
+}
 const field = (name, op, value) => ({
   fieldFilter: { field: { fieldPath: name }, op, value },
 });

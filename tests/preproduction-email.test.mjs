@@ -338,6 +338,38 @@ test("provider rate limits retain retry state and old uncertain sends require re
   );
   assert.equal(calls, 0);
   assert.equal((await ref.get()).data().status, "needs_reconciliation");
+  const uncertainDb = fakeDB(),
+    [uncertainId] = await queue(uncertainDb),
+    uncertainRef = mailCollection(uncertainDb).doc(uncertainId);
+  await uncertainRef.update({ nextAttemptAt: now });
+  await deliverEmail(uncertainDb, uncertainRef, async () => ({ error: {} }), {
+    now,
+  });
+  assert.equal((await uncertainRef.get()).data().uncertain, true);
+  await uncertainRef.update({ nextAttemptAt: now });
+  await deliverEmail(
+    uncertainDb,
+    uncertainRef,
+    async () => ({ error: { statusCode: 400 } }),
+    { now },
+  );
+  assert.equal(
+    (await uncertainRef.get()).data().uncertain,
+    true,
+    "A later rejection cannot erase an earlier uncertain acceptance",
+  );
+  const conflictDb = fakeDB(),
+    [conflictId] = await queue(conflictDb),
+    conflictRef = mailCollection(conflictDb).doc(conflictId);
+  await conflictRef.update({ nextAttemptAt: now });
+  await deliverEmail(
+    conflictDb,
+    conflictRef,
+    async () => ({ error: { statusCode: 409 } }),
+    { now },
+  );
+  assert.equal((await conflictRef.get()).data().status, "needs_reconciliation");
+  assert.equal((await conflictRef.get()).data().nextAttemptAt, undefined);
 });
 test("confirmation attaches its own private invoice and a cancelled booking suppresses stale confirmation", async () => {
   const db = fakeDB(),

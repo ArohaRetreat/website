@@ -97,6 +97,7 @@ export async function captureEmailWebhook(
     if ((rank[status] || 0) >= (rank[j.status] || 0))
       tx.update(ref, {
         status,
+        uncertain: false,
         providerMessageId: id,
         version: (j.version || 0) + 1,
         lease: FieldValue.delete(),

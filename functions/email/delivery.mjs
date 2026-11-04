@@ -144,11 +144,13 @@ export async function deliverEmail(
             if (result.error) {
               const status = Number(result.error.statusCode) || 0;
               errorCode =
-                status === 429
-                  ? "MAIL_RATE_LIMIT"
-                  : status >= 500 || !status
-                    ? "MAIL_PROVIDER_UNAVAILABLE"
-                    : "MAIL_PROVIDER_REJECTED";
+                status === 409
+                  ? "MAIL_IDEMPOTENCY_CONFLICT"
+                  : status === 429
+                    ? "MAIL_RATE_LIMIT"
+                    : status >= 500 || !status
+                      ? "MAIL_PROVIDER_UNAVAILABLE"
+                      : "MAIL_PROVIDER_REJECTED";
               const wait = String(result.headers?.["retry-after"] || ""),
                 delay = /^\d+$/.test(wait)
                   ? Number(wait) * 1000
@@ -158,7 +160,8 @@ export async function deliverEmail(
                 : 30000;
               throw Object.assign(new DomainError(errorCode, status || 503), {
                 terminal: status >= 400 && status < 500 && status !== 429,
-                uncertain: !status,
+                uncertain: !status || status === 409,
+                reconcile: status === 409,
               });
             }
             if (
@@ -176,8 +179,12 @@ export async function deliverEmail(
         );
     }
   } catch (e) {
-    uncertain = e.uncertain === true;
-    const status = e.terminal ? "failed" : "retry";
+    uncertain = job.uncertain === true || e.uncertain === true;
+    const status = e.reconcile
+      ? "needs_reconciliation"
+      : e.terminal
+        ? "failed"
+        : "retry";
     await db.runTransaction(async (tx) => {
       const d = await tx.get(ref),
         v = d.data();
@@ -190,7 +197,7 @@ export async function deliverEmail(
         errorCode,
         lease: FieldValue.delete(),
         version: (v.version || 0) + 1,
-        ...(status === "failed"
+        ...(["failed", "needs_reconciliation"].includes(status)
           ? { nextAttemptAt: FieldValue.delete() }
           : {
               nextAttemptAt:
@@ -235,13 +242,18 @@ export async function deliverEmail(
     });
     return { failed: true };
   }
-  const status = suppressed ? "suppressed" : "accepted";
+  const status = suppressed
+    ? job.uncertain === true
+      ? "needs_reconciliation"
+      : "suppressed"
+    : "accepted";
   await db.runTransaction(async (tx) => {
     const d = await tx.get(ref),
       v = d.data();
     if (v?.lease !== lease) return false;
     tx.update(ref, {
       status,
+      uncertain: suppressed ? job.uncertain === true : false,
       attempts: (v.attempts || 0) + 1,
       ...(messageId ? { providerMessageId: messageId, acceptedAt: now } : {}),
       lease: FieldValue.delete(),
