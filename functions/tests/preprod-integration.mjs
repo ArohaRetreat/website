@@ -283,21 +283,36 @@ test("pre-prod HTTP booking, approval, private invoice and webhook stay inside t
     );
     assert.ok(messages.at(-1).body.subject.includes("updated"));
     assert.ok(messages.every((m) => m.body.to[0] === "owner@example.test"));
-    const cancelled = await call(guest, "/booking/booking-action", {
-      id: booking.id,
-      expectedVersion: 4,
-      action: "cancel",
-    });
-    assert.equal(cancelled.httpStatus, 200, JSON.stringify(cancelled));
-    assert.equal(
-      (
-        await db
-          .collection("aroha_preprod_invoices")
-          .doc(current.invoiceId)
-          .get()
-      ).data().status,
-      "void",
-    );
+    // Maintenance mode must preserve billing even when outgoing mail is paused.
+    process.env.AROHA_ENVIRONMENT = "pre-prod";
+    process.env.MAIL_ENABLED = "false";
+    process.env.DT_EXPORT_ENABLED = "false";
+    const { bookingCommand } = await import("../booking/store.mjs");
+    const pausedGuest = { uid: guest.localId, email: "guest@example.test" };
+    const pausedHost = { uid: owner.localId, email: "owner@example.test" };
+    const pausedQuote = await bookingCommand(db, pausedGuest, "change-quote", {
+      id: booking.id, expectedVersion: 4, kind: "day",
+      arrival, departure, adults: 2, childrenAges: [], guests: 2,
+    }, randomUUID());
+    await bookingCommand(db, pausedGuest, "change-request", {
+      id: booking.id, expectedVersion: 4, quoteId: pausedQuote.id,
+    }, randomUUID());
+    const pausedApproval = await bookingCommand(db, pausedHost, "booking-action", {
+      id: booking.id, expectedVersion: 5, action: "approve_change",
+    }, randomUUID(), { admin: true });
+    const pausedInvoice = (await db.collection("aroha_preprod_invoices")
+      .doc(pausedApproval.invoiceId).get()).data();
+    assert.equal(pausedInvoice.version, 3);
+    assert.equal(pausedInvoice.test, true);
+    assert.deepEqual(pausedInvoice.issuer, revision.issuer);
+    assert.equal((await db.collection("aroha_preprod_invoices")
+      .doc(current.invoiceId).get()).data().status, "superseded");
+    await bookingCommand(db, pausedGuest, "booking-action", {
+      id: booking.id, expectedVersion: 6, action: "cancel",
+    }, randomUUID());
+    assert.equal((await db.collection("aroha_preprod_invoices")
+      .doc(pausedApproval.invoiceId).get()).data().status, "void");
+    assert.equal((await db.collection("aroha_preprod_notifications").get()).size, 4);
     assert.equal(
       (await call(guest, "/booking/invoice-download", { id: booking.id }))
         .httpStatus,

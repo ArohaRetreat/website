@@ -633,7 +633,7 @@ export async function bookingCommand(
     if (operation === "block" && s.blocks.length >= 100) fail("BLOCK_LIMIT");
     const emailConfig = mailSettings();
     const invoiceApproval =
-      emailConfig.enabled &&
+      (emailConfig.enabled || !!target?.invoiceId) &&
       operation === "booking-action" &&
       ["approve", "approve_change"].includes(input.action);
     const counterRef = db
@@ -641,7 +641,7 @@ export async function bookingCommand(
       .doc(String(invoiceYear(now)));
     const counterSnap = invoiceApproval ? await tx.get(counterRef) : null;
     const previousInvoice =
-      emailConfig.enabled && target?.invoiceId
+      target?.invoiceId
         ? (await tx.get(invoiceCollection(db).doc(target.invoiceId))).data()
         : null;
     let contact;
@@ -673,7 +673,9 @@ export async function bookingCommand(
           result,
           ownerProfile,
           (counterSnap.data()?.sequence || 0) + 1,
-          emailConfig,
+          !emailConfig.enabled && previousInvoice
+            ? { ...emailConfig, issuer: previousInvoice.issuer }
+            : emailConfig,
           now,
           previousInvoice,
         );

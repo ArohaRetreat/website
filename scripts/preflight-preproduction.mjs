@@ -66,7 +66,7 @@ for (const group of new Set(required.map((i) => i.collectionGroup))) {
   do {
     const r = await client.get(
       base + "/collectionGroups/" + group + "/indexes",
-      { queryParams: { pageSize: 100, ...(pageToken ? { pageToken } : {}) } },
+      { queryParams: { ...(pageToken ? { pageToken } : {}) } },
     );
     actual.push(...(r.body.indexes || []));
     pageToken = r.body.nextPageToken;

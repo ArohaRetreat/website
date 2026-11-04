@@ -63,6 +63,11 @@ let state,
   lastFocus,
   submitting = false;
 const errors = {
+  PREPROD_TESTER_REQUIRED: "This test site is available only to approved test accounts.",
+  INVOICE_NOT_FOUND: "An invoice is not available for this booking yet.",
+  INVOICE_NOT_PAYABLE: "This invoice was cancelled or replaced. Review the current booking details.",
+  INVOICE_PRICE_REQUIRED: "Agree and record the booking price before approving it with an invoice.",
+  MAIL_RECONCILIATION_REQUIRED: "Check this email with Resend before retrying; it may already have been sent.",
   CONTACT_REQUIRED:
     "Add your contact details before sending this booking request.",
   INVALID_CONTACT:
@@ -959,7 +964,7 @@ function extendDetail() {
   }
 
   if (!b) return;
-  if(emailEnabled()){
+  if(emailEnabled() || b.invoiceId){
     const communications=document.createElement("button");communications.type="button";communications.className="outline-button";communications.textContent="Email updates & invoice";
     communications.onclick=()=>run(()=>showCommunications(b));dialog.querySelector(".detail-actions")?.append(communications);
   }
