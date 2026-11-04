@@ -401,9 +401,7 @@ test("profile saves versioned contact; actor changes mask private UI and reject 
     ui.close();
   }
 });
-test("new frontend is scoped to preprod and contains no fixture service, fixed dates or sample identities", async () => {
-  const s = await readFile("scripts/build-website.mjs", "utf8");
-  assert.match(s, /deploymentEnvironment.preprod\s*\?\s*\{/);
+test("guest concierge contains no fixture service, fixed dates or sample identities", async () => {
   const source = await readFile("website/booking-concierge.mjs", "utf8");
   assert.doesNotMatch(
     source,

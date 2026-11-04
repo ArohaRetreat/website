@@ -1,3 +1,9 @@
+# 0.21.1
+
+- Promote the approved booking concierge to production guest builds; preserve Host Studio and server-authoritative pricing, inventory and approval.
+- Add protected main/preprod delivery policy, direct environment merge denial, branch-specific Hosting workflows with short-lived identity, immutable source checks and separate runtime gates.
+- Backend upgrades, database changes and email activation remain explicit releases; production mail stays disabled pending issuer/payment setup. Preserve existing CMS, reservations and pinned Natura.
+
 ## 0.21.0 — Guest booking concierge (pre-production)
 
 - Dates-and-party planning, server-priced private/individual recommendations, adaptive day/exclusive paths and complete price breakdowns.

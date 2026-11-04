@@ -1,0 +1,25 @@
+name: Environment branch policy
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+    branches: [main, preprod]
+  push:
+    branches: [main, preprod]
+permissions: {}
+jobs:
+  branch-policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      # Trusted inline code only: no PR checkout, execution, secrets or interpolation.
+      - name: Reject direct cross-environment merges
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const event=JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH));
+          const pr=event.pull_request;
+          if (pr && ['main','preprod'].includes(pr.head.ref) && ['main','preprod'].includes(pr.base.ref)) {
+            console.error('Direct environment-branch merges are blocked. Use a reviewed promotion PR with selected commits.');
+            process.exit(1);
+          }
+          NODE
