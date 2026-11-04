@@ -1,3 +1,7 @@
+# 0.21.3
+
+- Bind deployment checks to push workflows on the exact environment branch/revision; an intentionally blocked promotion PR cannot poison another branch's deployment gate.
+
 # 0.21.2
 
 - Do not declare Resend SecretParams when mail is disabled, so production deployment requires no sending credentials or dummy secrets. Verify actual Firebase parameter discovery in both environments.
