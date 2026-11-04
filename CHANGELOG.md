@@ -1,3 +1,7 @@
+# 0.21.5
+
+- Restore platform-dependent Natura build outputs only from the published export when their pinned raw SHA256 matches; cache verified bytes and retain the full pre-publication inventory guard.
+
 # 0.21.4
 
 - Preserve pinned Natura raw content across macOS/Linux uploads; track runtime-specific compressed Hosting hashes separately and retain both published original-art ZIPs exactly.
