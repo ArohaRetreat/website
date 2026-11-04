@@ -1,3 +1,7 @@
+# 0.21.7
+
+- Promote the selected guest startup and account-privacy fixes: match the build environment, clear private dialogs on identity loss, and reject stale account-state responses. Booking policy and the isolated preprod backend are unchanged.
+
 # 0.21.3
 
 - Bind deployment checks to push workflows on the exact environment branch/revision; an intentionally blocked promotion PR cannot poison another branch's deployment gate.
