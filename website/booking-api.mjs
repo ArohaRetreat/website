@@ -121,6 +121,7 @@ async function request(
   if (!response.ok) {
     const e = Error(result.error?.code || "REQUEST_FAILED");
     e.code = result.error?.code;
+    e.status = response.status;
     throw e;
   }
   if (operation === "state" && result.activeBookings)

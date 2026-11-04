@@ -23,3 +23,5 @@ Recovery: read docs/delivery-observability.md. Keep original execution and repor
 Website 0.13.0 extends live immutable hash verification to hrudhi-gate.css and the five gate/guide web assets. Transport, event identities and replay policy are unchanged.
 
 Website 0.14.0 extends immutable live hashes to guest-experience.css, hrudhi-guide.css, v2 gate films and the transparent guide walk sheet. Backend prerequisite is API 0.2.2; no exporter identity/transport change.
+
+Website0.21.0 preprod concierge release adds exact hash checks for booking-concierge.js/css when selected by the built booking document. Existing production paths and protected401 checks remain. Synthetic verifier tests reject stale concierge bytes. This is verifier coverage, not deployment evidence; read local/release-evidence/aroha-concierge-preprod/handoff.md and immutable provider receipts for actual release state.

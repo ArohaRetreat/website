@@ -1,3 +1,9 @@
+## 0.21.0 — Guest booking concierge (pre-production)
+
+- Dates-and-party planning, server-priced private/individual recommendations, adaptive day/exclusive paths and complete price breakdowns.
+- Real Google/profile contact, idempotent request recovery, own booking history/cancellation/offers/date changes and private invoice access through the existing API0.7.0.
+- Preprod-only guest entry; production, Host Studio, host-edited CMS, inventory policy and frozen correspondence designs preserved. No data migration or production promotion.
+
 ## 0.20.0 — Pre-production booking communications (prepared)
 
 - Isolate test bookings, inventory, profiles, email jobs and private invoices within the existing Firebase project; use a separate preprod Functions codebase/site.

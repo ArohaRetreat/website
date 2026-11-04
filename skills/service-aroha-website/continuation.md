@@ -1,3 +1,7 @@
+## Website0.21.0 / API0.7.0 — issue70, preprod guest concierge (prepared)
+
+Owner approved the dates/party → recommended options → contact/review prototype for preprod integration. Read [guest contract](../../docs/booking-concierge-v1.md). New guest entry booking-concierge-entry.mjs/mjs/css and booking-options.mjs is selected only in a pre-prod build at /book/. Uses existing authenticated API config/availability/quotes/profile/create/detail/cancel/offers/date-change/communications; no fixture service or seed state. Production guest/Studio entries remain unchanged. Email/PDF design snapshots frozen; new mail lifecycle, payment ledger and feedback scheduling are not part of this guest release. Deployment state/evidence must be read from local/release-evidence/aroha-concierge-preprod/handoff.md and provider receipts; this note alone is not proof of deployment.
+
 ## Website0.20.0 / API0.7.0 — issue65 (pre-production only, prepared)
 
 Add isolated pre-production collections, tester-only booking API, separate Functions codebase/Hosting site, forced test inbox and separate RUM tag. Request acknowledgement/host review messages and approval confirmations with private versioned invoice PDFs use atomic jobs, idempotency, bounded retries and signed status webhooks. Central versioned runtime metadata controls environment-specific RUM/server destinations. Read [contract](../../docs/preproduction-email-contract.md) and [operations](../../docs/preproduction-email-operations.md).
