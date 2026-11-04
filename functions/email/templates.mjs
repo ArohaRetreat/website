@@ -1,3 +1,4 @@
+import { visitWindow } from "./visit-window.mjs";
 import { environment } from "../environment.mjs";
 const esc = (v) =>
   String(v ?? "").replace(
@@ -10,12 +11,6 @@ const esc = (v) =>
 export function emailTemplate(job) {
   const b = job.snapshot,
     kind = b.kind === "event" ? "exclusive retreat enquiry" : "booking request";
-  const end =
-    b.kind === "event"
-      ? new Date(Date.parse(b.departure + "T00:00:00Z") - 86400000)
-          .toISOString()
-          .slice(0, 10)
-      : b.departure;
   const subject =
     job.channel === "guest_acknowledgement"
       ? `We have received your ${kind}`
@@ -55,7 +50,7 @@ export function emailTemplate(job) {
     (job.channel === "host_notification"
       ? "/admin/#bookings"
       : "/book/#visits");
-  const summary = `Reference: ${b.reference}\nDates: ${b.arrival} to ${end}\nGuests: ${b.guests}`;
+  const summary = `Reference: ${b.reference}\nDates: ${visitWindow(b)}\nGuests: ${b.guests}`;
   const text = [
     test,
     ...lines,

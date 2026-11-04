@@ -16,6 +16,7 @@ const { environmentProfile } = await import(
 const { environment, collectionName, isTester } = await import(
   "../functions/environment.mjs"
 );
+const { visitWindow } = await import("../functions/email/visit-window.mjs");
 const { mailSettings } = await import("../functions/email/config.mjs");
 const {
   invoiceSnapshot,
@@ -250,6 +251,21 @@ test("runtime metadata projects only the matching RUM tag and switches all expor
 });
 test("invoice snapshots reconcile integer amounts, preserve version history and render Kannada with embedded fonts", async () => {
   assert.equal(invoiceYear(Date.parse("2026-12-31T20:00:00Z")), 2027);
+  assert.equal(
+    visitWindow({
+      kind: "day",
+      arrival: "2026-12-04",
+      departure: "2026-12-05",
+    }),
+    "2026-12-04",
+  );
+  const window = visitWindow({
+    kind: "day",
+    startsAt: Date.parse("2026-12-04T02:30:00Z"),
+    endsAt: Date.parse("2026-12-04T12:30:00Z"),
+  });
+  assert.match(window, /18:00.*IST/);
+  assert.ok(!window.includes("5 Dec"));
   const one = invoiceSnapshot(booking, profile, 1, mailSettings(), Date.now());
   const two = invoiceSnapshot(
     { ...booking, version: 2, total: 1100000, discount: 100000 },

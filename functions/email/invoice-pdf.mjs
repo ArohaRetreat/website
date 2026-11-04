@@ -1,3 +1,4 @@
+import { visitWindow } from "./visit-window.mjs";
 import { fileURLToPath } from "node:url";
 import PDFDocument from "pdfkit";
 const fontPath = (n) =>
@@ -74,12 +75,7 @@ export async function renderInvoicePdf(invoice) {
       y += Math.max(64, nameHeight + 42);
       doc.fillColor("#52634e").fontSize(10);
       text(
-        "Booking " +
-          invoice.reference +
-          "  |  " +
-          invoice.arrival +
-          " to " +
-          invoice.departure,
+        "Booking " + invoice.reference + "  |  " + visitWindow(invoice),
         48,
         y,
         { width: 499 },
