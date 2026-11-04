@@ -92,7 +92,7 @@ export async function verifyLive(
     headers: { Origin: origin },
     signal: AbortSignal.timeout(15000),
   });
-  if (denied.status !== (includeDesign ? 401 : 403))
+  if (denied.status !== 401)
     throw Error("LIVE_ACCESS_CHECK_FAILED");
   const bookingDenied = await fetchImpl(origin + "/api/v1/booking/state", {
     headers: { Origin: origin },
