@@ -91,6 +91,8 @@ async function mount({
   quoteStale = false,
   settings = {},
   deferDetail = false,
+  environment = "pre-prod",
+  serverEnvironment = environment,
 } = {}) {
   const s = initialState();
   Object.assign(s.settings.products, settings);
@@ -123,7 +125,7 @@ async function mount({
   const api = async (op, body, key, opts = {}) => {
     if (op === "state")
       return structuredClone({
-        environment: "pre-prod",
+        environment: serverEnvironment,
         actor: signed ? actor : null,
         profile: signed ? profile : null,
         settings: s.settings,
@@ -169,10 +171,12 @@ async function mount({
     }
     return structuredClone(mutate(s, actor, op, body));
   };
-  const portal = await w.Concierge.startConcierge({
+  let portal;
+  try { portal = await w.Concierge.startConcierge({
     api,
     journeyStep: (...a) => steps.push(a),
-  });
+    expectedEnvironment: environment,
+  }); } catch(error) { dom.window.close(); throw error; }
   const d = w.document;
   const click = (selector) => {
     const b = d.querySelector(selector);
@@ -481,3 +485,13 @@ test("invalid profile and child-age forms emit bounded failure observations with
     ui.close();
   }
 });
+
+for (const environment of ['production','pre-prod']) {
+  test('matching '+environment+' service boots anonymously and continues to real-domain quotes',async()=>{
+    const ui=await mount({environment,anonymous:true});
+    try{assert.match(ui.d.body.textContent,/Make time/);await ui.dates();assert.match(ui.d.body.textContent,/Here’s what fits your plans/);assert.match(ui.d.body.textContent,/₹6,000/);}finally{ui.close();}
+  });
+  test(environment+' rejects a response from the opposite booking environment',async()=>{
+    await assert.rejects(mount({environment,serverEnvironment:environment==='production'?'pre-prod':'production'}),error=>error.code==='WRONG_ENVIRONMENT');
+  });
+}

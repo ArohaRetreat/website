@@ -15,9 +15,12 @@ try {
     setAtmosphere,
     watchAtmosphere,
     getIdentity: () => auth.currentUser?.uid,
+    expectedEnvironment: __AROHA_ENVIRONMENT__,
   });
   observeAuth((user) => void portal.identity(user));
 } catch (error) {
+  console.warn(JSON.stringify({service:"aroha-booking-ui",code:["WRONG_ENVIRONMENT","PREPROD_TESTER_REQUIRED"].includes(error?.code)?error.code:"BOOKING_STARTUP_FAILED"}));
+  journeyStep("plan", "failed");
   document.querySelector("#app").innerHTML =
     '<main id="main" class="wrap" tabindex="-1"><h1>We couldn’t open booking just now.</h1><p class="lead">Please reload this page or return to the retreat website. Your existing bookings are unchanged.</p><div class="inline-actions"><button class="primary" id="reload-booking">Try again</button><a href="/">Explore Aroha ↗</a></div></main>';
   document.querySelector("#reload-booking").onclick = () => location.reload();

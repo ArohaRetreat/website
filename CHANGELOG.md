@@ -1,3 +1,7 @@
+# 0.21.6
+
+- Match concierge startup to its build environment; production and pre-production both accept their own service and reject the opposite environment. Add real-domain startup regression tests and bounded startup failure diagnostics.
+
 # 0.21.5
 
 - Restore platform-dependent Natura build outputs only from the published export when their pinned raw SHA256 matches; cache verified bytes and retain the full pre-publication inventory guard.
