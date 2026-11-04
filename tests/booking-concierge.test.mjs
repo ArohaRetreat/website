@@ -91,6 +91,8 @@ async function mount({
   quoteStale = false,
   settings = {},
   deferDetail = false,
+  environment = "pre-prod",
+  serverEnvironment = environment,
 } = {}) {
   const s = initialState();
   Object.assign(s.settings.products, settings);
@@ -118,12 +120,13 @@ async function mount({
   };
   w.eval(bundled.outputFiles[0].text);
   const steps = [];
+  let holdState = false, stateRelease;
   let creates = 0,
     firstBody;
   const api = async (op, body, key, opts = {}) => {
-    if (op === "state")
-      return structuredClone({
-        environment: "pre-prod",
+    if (op === "state") {
+      const snapshot = structuredClone({
+        environment: serverEnvironment,
         actor: signed ? actor : null,
         profile: signed ? profile : null,
         settings: s.settings,
@@ -132,6 +135,9 @@ async function mount({
         loyalty: tier(s, actor.id),
         delivery: "email_enabled",
       });
+      if (holdState) { holdState = false; await new Promise(resolve => stateRelease = resolve); }
+      return snapshot;
+    }
     if (op === "session") {
       signed = true;
       if (authEvent) await portal.identity({ uid: actor.id });
@@ -169,10 +175,12 @@ async function mount({
     }
     return structuredClone(mutate(s, actor, op, body));
   };
-  const portal = await w.Concierge.startConcierge({
+  let portal;
+  try { portal = await w.Concierge.startConcierge({
     api,
     journeyStep: (...a) => steps.push(a),
-  });
+    expectedEnvironment: environment,
+  }); } catch(error) { dom.window.close(); throw error; }
   const d = w.document;
   const click = (selector) => {
     const b = d.querySelector(selector);
@@ -230,6 +238,9 @@ async function mount({
     createCalls,
     setSigned: (v) => (signed = v),
     releaseDetail: () => detailRelease?.(),
+    holdNextState: () => { holdState = true; },
+    statePending: () => typeof stateRelease === "function",
+    releaseState: () => stateRelease?.(),
     close: () => {
       portal.destroy();
       w.close();
@@ -480,4 +491,25 @@ test("invalid profile and child-age forms emit bounded failure observations with
   } finally {
     ui.close();
   }
+});
+
+for (const environment of ['production','pre-prod']) {
+  test('matching '+environment+' service boots anonymously and continues to real-domain quotes',async()=>{
+    const ui=await mount({environment,anonymous:true});
+    try{assert.match(ui.d.body.textContent,/Make time/);await ui.dates();assert.match(ui.d.body.textContent,/Here’s what fits your plans/);assert.match(ui.d.body.textContent,/₹6,000/);}finally{ui.close();}
+  });
+  test(environment+' rejects a response from the opposite booking environment',async()=>{
+    await assert.rejects(mount({environment,serverEnvironment:environment==='production'?'pre-prod':'production'}),error=>error.code==='WRONG_ENVIRONMENT');
+  });
+}
+
+test('account loss clears private account dialogs immediately',async()=>{
+  const ui=await mount();
+  try{ui.click('#account');assert.match(ui.d.querySelector('#sheet-content').textContent,/guest@example.test/);ui.setSigned(false);await ui.portal.identity(null);assert.equal(ui.d.querySelector('#sheet').open,false);assert(!ui.d.querySelector('#sheet-content').textContent.includes('guest@example.test'));}finally{ui.close();}
+});
+
+
+test('late account-state responses cannot restore a signed-out profile',async()=>{
+  const ui=await mount();
+  try{ui.holdNextState();ui.click('#visits');for(let i=0;i<50&&!ui.statePending();i++)await new Promise(r=>setTimeout(r,2));assert(ui.statePending());ui.setSigned(false);await ui.portal.identity(null);ui.releaseState();await ui.wait();assert.equal(ui.d.querySelector('#account').textContent,'Sign in');}finally{ui.releaseState();ui.close();}
 });
