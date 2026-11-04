@@ -62,6 +62,9 @@ export async function startConcierge({
     const result = await transport(...args);
     if (privateCall && (generation !== identityGeneration || uid !== current()))
       throw { code: "SESSION_CHANGED" };
+    if (op === "state" && (generation !== identityGeneration ||
+      (getIdentity && (result.actor?.id || null) !== (getIdentity() || null))))
+      throw { code: "SESSION_CHANGED" };
     return result;
   };
   const esc = (v) =>
@@ -343,6 +346,8 @@ export async function startConcierge({
   function clearPrivate() {
     identityGeneration++;
     requestVersion++;
+    if ($("#sheet").open) $("#sheet").close();
+    $("#sheet-content").replaceChildren();
     if (S.account)
       S.account = {
         ...S.account,
@@ -1310,7 +1315,7 @@ export async function startConcierge({
     async identity(user) {
       if ((S.account.actor?.id || null) === (user?.uid || null)) return;
       if (S.account.actor) clearPrivate();
-      else requestVersion++;
+      else { identityGeneration++; requestVersion++; }
       render();
       try {
         await refresh();

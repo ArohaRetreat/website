@@ -1,3 +1,7 @@
+# 0.21.7
+
+- Clear private dialogs on account loss and reject delayed account-state responses after identity changes, preserving anonymous planning during a first sign-in.
+
 # 0.21.6
 
 - Match concierge startup to its build environment; production and pre-production both accept their own service and reject the opposite environment. Add real-domain startup regression tests and bounded startup failure diagnostics.
