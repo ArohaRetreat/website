@@ -6,7 +6,10 @@ export async function startConcierge({
   setAtmosphere = () => {},
   watchAtmosphere = () => () => {},
   getIdentity,
+  expectedEnvironment = "production",
 }) {
+  if (!["production", "pre-prod"].includes(expectedEnvironment))
+    throw { code: "WRONG_ENVIRONMENT" };
   const today = () =>
     new Date(Date.now() + 19800000).toISOString().slice(0, 10);
   const add = (d, n) =>
@@ -324,7 +327,7 @@ export async function startConcierge({
   async function refresh() {
     const previous = S.account?.actor?.id;
     const account = await api("state");
-    if (account.environment !== "pre-prod") throw { code: "WRONG_ENVIRONMENT" };
+    if (account.environment !== expectedEnvironment) throw { code: "WRONG_ENVIRONMENT" };
     if (previous && previous !== account.actor?.id) {
       clearPrivate();
     }
@@ -924,7 +927,7 @@ export async function startConcierge({
     PREPROD_TESTER_REQUIRED:
       "This test site is available only to approved test accounts.",
     WRONG_ENVIRONMENT:
-      "This booking preview requires the pre-production service.",
+      "This portal is connected to a different booking service. Please reload or return to the retreat website.",
     BOOKINGS_PAUSED:
       "Your hosts have paused new requests. Existing bookings can still be managed.",
     AVAILABILITY_CHANGED:
