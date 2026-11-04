@@ -57,9 +57,14 @@ test("production preservation rejects changed, missing and additional Natura byt
   try{
     await mkdir(root+"/dist/design",{recursive:true});await writeFile(root+"/dist/design/index.html","original");
     const files=[{path:"/design/index.html",hash:createHash("sha256").update(gzipSync("original",{level:9})).digest("hex")}];
-    assert.deepEqual(await verifyDesignPreserved(root+"/",{files}),{designFilesMatched:1});
-    await writeFile(root+"/dist/design/index.html","changed");await assert.rejects(verifyDesignPreserved(root+"/",{files}),/BYTES_CHANGED/);
-    await writeFile(root+"/dist/design/extra.txt","extra");await assert.rejects(verifyDesignPreserved(root+"/",{files}),/FILE_SET_CHANGED/);
-    await rm(root+"/dist/design/index.html");await assert.rejects(verifyDesignPreserved(root+"/",{files}),/FILE_SET_CHANGED/);
+    const pin={version:'0.6.1',revision:'a'.repeat(40),files:[{path:files[0].path,sha256:createHash('sha256').update('original').digest('hex'),hostingHash:files[0].hash}]};
+    assert.deepEqual(await verifyDesignPreserved(root+"/",{files,pin}),{designFilesMatched:1});
+    const linux=[{path:files[0].path,hash:'different-runtime-compression'}];
+    const composition={design:{version:pin.version,revision:pin.revision},files:[{path:'design/index.html',sha256:pin.files[0].sha256}],designHostingFiles:linux};
+    assert.deepEqual(await verifyDesignPreserved(root+'/',{files:linux,pin,composition}),{designFilesMatched:1});
+    await assert.rejects(verifyDesignPreserved(root+'/',{files:[{path:files[0].path,hash:'unexplained-change'}],pin,composition}),/HOSTING_HASH_CHANGED/);
+    await writeFile(root+"/dist/design/index.html","changed");await assert.rejects(verifyDesignPreserved(root+"/",{files,pin}),/BYTES_CHANGED/);
+    await writeFile(root+"/dist/design/extra.txt","extra");await assert.rejects(verifyDesignPreserved(root+"/",{files,pin}),/FILE_SET_CHANGED/);
+    await rm(root+"/dist/design/index.html");await assert.rejects(verifyDesignPreserved(root+"/",{files,pin}),/FILE_SET_CHANGED/);
   }finally{await rm(root,{recursive:true,force:true});}
 });

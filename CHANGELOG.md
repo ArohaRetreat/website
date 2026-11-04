@@ -1,3 +1,7 @@
+# 0.21.4
+
+- Preserve pinned Natura raw content across macOS/Linux uploads; track runtime-specific compressed Hosting hashes separately and retain both published original-art ZIPs exactly.
+
 # 0.21.3
 
 - Bind deployment checks to push workflows on the exact environment branch/revision; an intentionally blocked promotion PR cannot poison another branch's deployment gate.
