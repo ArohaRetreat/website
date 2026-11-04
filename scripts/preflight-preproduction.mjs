@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { isDeepStrictEqual } from "node:util";
 import { validateObservabilityConfig } from "../functions/observability-config.mjs";
 import { firebaseClient } from "./delivery/credentials.mjs";
+import { indexReady } from "./delivery/firestore-index-readiness.mjs";
 const Client = await firebaseClient(),
   client = new Client({
     urlPrefix: "https://firestore.googleapis.com",
@@ -74,15 +75,7 @@ for (const group of new Set(required.map((i) => i.collectionGroup))) {
 
   for (const index of required.filter((i) => i.collectionGroup === group))
     if (
-      !actual.some(
-        (i) =>
-          i.state === "READY" &&
-          i.queryScope === index.queryScope &&
-          isDeepStrictEqual(
-            i.fields.filter((f) => f.fieldPath !== "__name__"),
-            index.fields,
-          ),
-      )
+      !actual.some((i) => indexReady(i, index))
     )
       throw Error("PREPROD_INDEX_NOT_READY:" + group);
 }
