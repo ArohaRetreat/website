@@ -120,11 +120,12 @@ async function mount({
   };
   w.eval(bundled.outputFiles[0].text);
   const steps = [];
+  let holdState = false, stateRelease;
   let creates = 0,
     firstBody;
   const api = async (op, body, key, opts = {}) => {
-    if (op === "state")
-      return structuredClone({
+    if (op === "state") {
+      const snapshot = structuredClone({
         environment: serverEnvironment,
         actor: signed ? actor : null,
         profile: signed ? profile : null,
@@ -134,6 +135,9 @@ async function mount({
         loyalty: tier(s, actor.id),
         delivery: "email_enabled",
       });
+      if (holdState) { holdState = false; await new Promise(resolve => stateRelease = resolve); }
+      return snapshot;
+    }
     if (op === "session") {
       signed = true;
       if (authEvent) await portal.identity({ uid: actor.id });
@@ -234,6 +238,9 @@ async function mount({
     createCalls,
     setSigned: (v) => (signed = v),
     releaseDetail: () => detailRelease?.(),
+    holdNextState: () => { holdState = true; },
+    statePending: () => typeof stateRelease === "function",
+    releaseState: () => stateRelease?.(),
     close: () => {
       portal.destroy();
       w.close();
@@ -495,3 +502,14 @@ for (const environment of ['production','pre-prod']) {
     await assert.rejects(mount({environment,serverEnvironment:environment==='production'?'pre-prod':'production'}),error=>error.code==='WRONG_ENVIRONMENT');
   });
 }
+
+test('account loss clears private account dialogs immediately',async()=>{
+  const ui=await mount();
+  try{ui.click('#account');assert.match(ui.d.querySelector('#sheet-content').textContent,/guest@example.test/);ui.setSigned(false);await ui.portal.identity(null);assert.equal(ui.d.querySelector('#sheet').open,false);assert(!ui.d.querySelector('#sheet-content').textContent.includes('guest@example.test'));}finally{ui.close();}
+});
+
+
+test('late account-state responses cannot restore a signed-out profile',async()=>{
+  const ui=await mount();
+  try{ui.holdNextState();ui.click('#visits');for(let i=0;i<50&&!ui.statePending();i++)await new Promise(r=>setTimeout(r,2));assert(ui.statePending());ui.setSigned(false);await ui.portal.identity(null);ui.releaseState();await ui.wait();assert.equal(ui.d.querySelector('#account').textContent,'Sign in');}finally{ui.releaseState();ui.close();}
+});
