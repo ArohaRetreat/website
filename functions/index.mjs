@@ -61,14 +61,16 @@ import {
 import { BookingError } from "./booking/domain.mjs";
 initializeApp();
 const monitoringSecret = defineSecret("DYNATRACE_PLATFORM_TOKEN");
-const resendSecret = defineSecret(
+// The Firebase deployer resolves every declared SecretParam, even when a worker
+// does not bind it. Disabled mail must not declare or require sending authority.
+const resendSecret = process.env.MAIL_ENABLED === "true" ? defineSecret(
   environment.preprod ? "RESEND_API_KEY_PREPROD" : "RESEND_API_KEY",
-);
-const resendWebhookSecret = defineSecret(
+) : null;
+const resendWebhookSecret = process.env.MAIL_ENABLED === "true" ? defineSecret(
   environment.preprod
     ? "RESEND_WEBHOOK_SECRET_PREPROD"
     : "RESEND_WEBHOOK_SECRET",
-);
+) : null;
 const mailSecrets = () =>
   process.env.MAIL_ENABLED === "true" ? [resendSecret] : [];
 const db = getFirestore(),
@@ -815,7 +817,7 @@ export const arohaApi = onRequest(
             severity: status >= 500 ? "ERROR" : "INFO",
             service: serviceName("aroha-api"),
             ...environmentFields(),
-            version: "0.7.0",
+            version: "0.7.1",
             operation,
             status,
             durationMs: Date.now() - started,

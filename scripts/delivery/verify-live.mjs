@@ -118,7 +118,7 @@ export async function verifyLive(
     ).json();
     if (
       booking.environment !== "pre-prod" ||
-      booking.apiVersion !== "0.7.0" ||
+      !/^0\.7\.\d+$/.test(booking.apiVersion) ||
       booking.delivery !== "email_enabled" ||
       runtime.environment !== "pre-prod" ||
       !Number.isSafeInteger(runtime.configVersion) ||
