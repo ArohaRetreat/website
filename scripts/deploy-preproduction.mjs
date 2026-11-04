@@ -80,6 +80,9 @@ const result = spawnSync(
     "--only",
     "functions:aroha-website-preprod,hosting:aroha-retreat-preprod",
     "--non-interactive",
+    // Acknowledge the reviewed at-least-once policy on the initial email trigger.
+    // The target/codebase guards above keep this scoped to pre-production.
+    "--force",
   ],
   { stdio: "inherit" },
 );
