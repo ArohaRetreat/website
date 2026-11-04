@@ -550,4 +550,18 @@ test("signed webhooks are replay-safe, reject tampering, and cannot downgrade de
       ),
     /ENVIRONMENT_MISMATCH/,
   );
+  await mailCollection(db).doc(id).update({ status: "accepted" });
+  await captureEmailWebhook(
+    db,
+    request("email.suppressed", "msg_suppressed"),
+    secret,
+  );
+  assert.equal(
+    (await mailCollection(db).doc(id).get()).data().status,
+    "failed",
+  );
+  assert.equal(
+    (await mailCollection(db).doc(id).get()).data().errorCode,
+    "MAIL_PROVIDER_SUPPRESSED",
+  );
 });

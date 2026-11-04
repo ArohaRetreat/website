@@ -10,6 +10,7 @@ const statuses = {
   "email.bounced": "bounced",
   "email.complained": "complained",
   "email.failed": "failed",
+  "email.suppressed": "failed",
   "email.delivery_delayed": "delayed",
 };
 const rank = {
@@ -98,6 +99,9 @@ export async function captureEmailWebhook(
       tx.update(ref, {
         status,
         uncertain: false,
+        ...(event.type === "email.suppressed"
+          ? { errorCode: "MAIL_PROVIDER_SUPPRESSED" }
+          : {}),
         providerMessageId: id,
         version: (j.version || 0) + 1,
         lease: FieldValue.delete(),
@@ -120,6 +124,9 @@ export async function captureEmailWebhook(
         jobId: j.id,
         invoiceId: j.invoiceId,
         providerMessageId: id,
+        ...(event.type === "email.suppressed"
+          ? { errorCode: "MAIL_PROVIDER_SUPPRESSED" }
+          : {}),
         outcome: ["failed", "bounced", "complained"].includes(status)
           ? "failed"
           : "succeeded",
