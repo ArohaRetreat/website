@@ -1,11 +1,17 @@
-export const APPROVED_RUM_SCRIPT =
-  "https://js-cdn.dynatrace.com/jstag/18b1df4492a/bf12470wrz/224aa943b980c761_complete.js";
+import { environment } from "./environment.mjs";
+let metadataTag;
 export function monitoringPageAllowed(url) {
   try {
     const u = new URL(url);
     return (
       u.protocol === "https:" &&
-      ["aroharetreat.com", "aroha-retreat.web.app"].includes(u.hostname) &&
+      (environment.preprod
+        ? [
+            "aroha-retreat-preprod.web.app",
+            "aroha-retreat-preprod.firebaseapp.com",
+          ]
+        : ["aroharetreat.com", "aroha-retreat.web.app"]
+      ).includes(u.hostname) &&
       !u.pathname.startsWith("/design/") &&
       !u.searchParams.has("preview")
     );
@@ -13,14 +19,15 @@ export function monitoringPageAllowed(url) {
     return false;
   }
 }
-export function bootstrapRum(url = APPROVED_RUM_SCRIPT) {
+export function bootstrapRum(url = metadataTag) {
   try {
     if (
       !monitoringPageAllowed(location.href) ||
       localStorage.getItem("aroha-monitoring") !== "allowed"
     )
       return;
-    if (url !== APPROVED_RUM_SCRIPT) return;
+    if (typeof url !== "string") return;
+    if (url !== metadataTag) return;
     const previous = document.querySelector("script[data-aroha-rum]");
     if (previous) return previous;
     const script = document.createElement("script");
@@ -47,4 +54,34 @@ export function bootstrapRum(url = APPROVED_RUM_SCRIPT) {
   } catch {
     /* Optional collection cannot block the retreat. */
   }
+}
+
+let metadataRequest;
+export async function bootstrapRuntimeRum() {
+  if (!monitoringPageAllowed(location.href)) return;
+  if (metadataTag) return bootstrapRum(metadataTag);
+  if (!metadataRequest)
+    metadataRequest = (async () => {
+      try {
+        const r = await fetch("/api/v1/runtime-config", {
+          credentials: "omit",
+          signal: AbortSignal.timeout(5000),
+        });
+        if (!r.ok) return;
+        const c = await r.json();
+        if (
+          c.environment !== environment.name ||
+          typeof c.rumScriptUrl !== "string" ||
+          !/^https:\/\/js-cdn\.dynatrace\.com\/jstag\/[a-zA-Z0-9]+\/[a-zA-Z0-9]+\/[a-zA-Z0-9_]+\.js$/.test(
+            c.rumScriptUrl,
+          )
+        )
+          return;
+        metadataTag = c.rumScriptUrl;
+        return bootstrapRum(metadataTag);
+      } catch {
+        /* Missing metadata disables collection; never use the other environment's tag. */
+      }
+    })();
+  return metadataRequest;
 }

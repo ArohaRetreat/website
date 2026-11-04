@@ -2,12 +2,16 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Aroha production booking API",
-    "version": "0.6.0",
-    "description": "Verified Google identities and active hosts. Shared adult site capacity, day outings, shared sleeping places, private family rooms and host-quoted exclusive events. Existing reservations preserve prices and terms. No payments or email. See booking-products-contract.md and contract-notes.md. Profile/contact, continuous event ranges and operational observability are defined in booking-platform-v2.md."
+    "version": "0.7.0",
+    "description": "Verified Google identities and active hosts. Shared adult site capacity, day outings, shared sleeping places, private family rooms and host-quoted exclusive events. Existing reservations preserve prices and terms. No online payments. See booking-products-contract.md and contract-notes.md. Profile/contact, continuous event ranges and operational observability are defined in booking-platform-v2.md. API0.7.0 adds isolated pre-production and optional server-configured Resend/private invoices; see preproduction-email-contract.md. Production remains on0.6.0 until separately promoted."
   },
   "servers": [
     {
       "url": "https://aroharetreat.com/api/v1/booking"
+    },
+    {
+      "url": "https://aroha-retreat-preprod.web.app/api/v1/booking",
+      "description": "Isolated tester-only pre-production"
     }
   ],
   "paths": {
@@ -1967,6 +1971,169 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/communications": {
+      "post": {
+        "operationId": "communications",
+        "summary": "Owner or active host: bounded delivery ledger and current invoice metadata",
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "maxLength": 100
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Bounded authenticated result; no public PDF URL"
+          },
+          "401": {
+            "description": "Verified Google identity required"
+          },
+          "403": {
+            "description": "Permission or pre-production tester denied"
+          },
+          "404": {
+            "description": "Booking/invoice not visible to actor"
+          },
+          "409": {
+            "description": "Stale version, void invoice or delivery reconciliation required"
+          },
+          "422": {
+            "description": "Invalid strict input"
+          }
+        }
+      }
+    },
+    "/invoice-download": {
+      "post": {
+        "operationId": "invoice-download",
+        "summary": "Owner or active host: private current invoice PDF, base64 <=1MB",
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "maxLength": 100
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Bounded authenticated result; no public PDF URL"
+          },
+          "401": {
+            "description": "Verified Google identity required"
+          },
+          "403": {
+            "description": "Permission or pre-production tester denied"
+          },
+          "404": {
+            "description": "Booking/invoice not visible to actor"
+          },
+          "409": {
+            "description": "Stale version, void invoice or delivery reconciliation required"
+          },
+          "422": {
+            "description": "Invalid strict input"
+          }
+        }
+      }
+    },
+    "/email-resend": {
+      "post": {
+        "operationId": "email-resend",
+        "summary": "Active booking manager only: retry definitive unaccepted failure with expected version",
+        "security": [
+          {
+            "firebaseBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "jobId": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "id",
+                  "jobId",
+                  "expectedVersion"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Bounded authenticated result; no public PDF URL"
+          },
+          "401": {
+            "description": "Verified Google identity required"
+          },
+          "403": {
+            "description": "Permission or pre-production tester denied"
+          },
+          "404": {
+            "description": "Booking/invoice not visible to actor"
+          },
+          "409": {
+            "description": "Stale version, void invoice or delivery reconciliation required"
+          },
+          "422": {
+            "description": "Invalid strict input"
           }
         }
       }

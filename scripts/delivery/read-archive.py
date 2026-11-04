@@ -1,6 +1,6 @@
 """Read bounded, allowlisted JSONL reports from an untrusted Actions ZIP; never extract."""
 import io,json,stat,sys,zipfile
-allowed={'application.jsonl','foundation.jsonl','api-integration.jsonl','api-telemetry.jsonl'}
+allowed={'application.jsonl','foundation.jsonl','api-integration.jsonl','api-telemetry.jsonl','api-preprod-telemetry.jsonl','preprod-integration.jsonl'}
 raw=sys.stdin.buffer.read(2*1024*1024+1)
 if len(raw)>2*1024*1024: raise ValueError('ARCHIVE_LIMIT')
 result={}

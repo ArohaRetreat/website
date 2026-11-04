@@ -1,0 +1,20 @@
+{
+  "tool": "fonttools4.60.2/brotli1.2.1",
+  "licence": "SIL OFL1.1; see adjacent original notices; derivative family names avoid reserved names",
+  "fonts": [
+    {
+      "source": "vendor/natura/fonts/SourceSans3/SourceSans3-Variable.woff2",
+      "sourceSha256": "5759e239bbd2142a538cd6e717a78d5eb862a372645e0f5e8069c74b851e6ee1",
+      "export": "functions/assets/invoice-fonts/ArohaInvoiceSans.ttf",
+      "sha256": "93d3342a7dfdb4ece70a73e5600df0f49dd9553667737c845cd4efa5e962201c",
+      "family": "ArohaInvoiceSans"
+    },
+    {
+      "source": "vendor/natura/fonts/NotoSansKannada/NotoSansKannada-Variable.woff2",
+      "sourceSha256": "a954293d118fc3b75512af0ce36194ccdda7d80a1a143c858eab9c6fdfd55f92",
+      "export": "functions/assets/invoice-fonts/ArohaInvoiceKannada.ttf",
+      "sha256": "989cbfb53cbb42257c72fc4eb9d6add85d314d10172ddc378b2b984281d85f42",
+      "family": "ArohaInvoiceKannada"
+    }
+  ]
+}

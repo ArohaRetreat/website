@@ -1,3 +1,15 @@
+import { mailSettings } from "../email/config.mjs";
+import {
+  queueNotifications,
+  invoiceSnapshot,
+  invoiceYear,
+  invoiceCollection,
+} from "../email/jobs.mjs";
+import {
+  collectionName,
+  sharedCollectionName,
+  environment,
+} from "../environment.mjs";
 import { bookingEvent, queueCommitted } from "./observability.mjs";
 import { studioAccess } from "../access.mjs";
 import { contactDetails, ownContact, withoutContact } from "./contact.mjs";
@@ -36,8 +48,9 @@ const stable = (v) =>
         )
     : v;
 const hash = (v) => createHash("sha256").update(v).digest("hex");
-const collection = (db, name) => db.collection("aroha_booking_" + name);
-const reservations = (db) => db.collection("aroha_bookings");
+const collection = (db, name) =>
+  db.collection(collectionName("booking_" + name));
+const reservations = (db) => db.collection(collectionName("bookings"));
 const dates = (arrival, departure) => {
   if (
     typeof arrival !== "string" ||
@@ -148,7 +161,9 @@ const project = (s, actor, profile, bookings, extra = {}) => ({
   users: [],
   blocks: actor?.role === "host" ? s.blocks : [],
   audit: [],
-  delivery: "not_configured",
+  delivery: mailSettings().enabled ? "email_enabled" : "not_configured",
+  environment: environment.name,
+  apiVersion: "0.7.0",
   ...extra,
 });
 export async function publicBookingState(db) {
@@ -162,7 +177,7 @@ export async function bookingState(
 ) {
   const configRef = collection(db, "config").doc("site"),
     profileRef = collection(db, "profiles").doc(token.uid),
-    memberRef = db.collection("aroha_members").doc(token.uid);
+    memberRef = db.collection(sharedCollectionName("members")).doc(token.uid);
   const { s, profile, actor } = await db.runTransaction(async (tx) => {
     const [cs, ms, ps] = await Promise.all([
       tx.get(configRef),
@@ -365,7 +380,7 @@ export async function bookingCommand(
     const now = Date.now(),
       configRef = collection(db, "config").doc("site"),
       profileRef = collection(db, "profiles").doc(token.uid),
-      memberRef = db.collection("aroha_members").doc(token.uid);
+      memberRef = db.collection(sharedCollectionName("members")).doc(token.uid);
     const [cs, ms, ps, rs] = await Promise.all([
       tx.get(configRef),
       tx.get(memberRef),
@@ -616,6 +631,19 @@ export async function bookingCommand(
     )
       fail("PROMO_LIMIT");
     if (operation === "block" && s.blocks.length >= 100) fail("BLOCK_LIMIT");
+    const emailConfig = mailSettings();
+    const invoiceApproval =
+      (emailConfig.enabled || !!target?.invoiceId) &&
+      operation === "booking-action" &&
+      ["approve", "approve_change"].includes(input.action);
+    const counterRef = db
+      .collection(collectionName("invoice_counters"))
+      .doc(String(invoiceYear(now)));
+    const counterSnap = invoiceApproval ? await tx.get(counterRef) : null;
+    const previousInvoice =
+      target?.invoiceId
+        ? (await tx.get(invoiceCollection(db).doc(target.invoiceId))).data()
+        : null;
     let contact;
     if (operation === "create") {
       if (!input.contact && !ownerProfile.contact?.phone)
@@ -638,6 +666,45 @@ export async function bookingCommand(
       "note",
       "change-request",
     ].includes(operation);
+    let invoice;
+    if (invoiceApproval) {
+      try {
+        invoice = invoiceSnapshot(
+          result,
+          ownerProfile,
+          (counterSnap.data()?.sequence || 0) + 1,
+          !emailConfig.enabled && previousInvoice
+            ? { ...emailConfig, issuer: previousInvoice.issuer }
+            : emailConfig,
+          now,
+          previousInvoice,
+        );
+      } catch (e) {
+        if (e.message === "INVOICE_PRICE_REQUIRED")
+          fail("INVOICE_PRICE_REQUIRED", 409);
+        throw e;
+      }
+      tx.create(invoiceCollection(db).doc(invoice.id), invoice);
+      if (previousInvoice)
+        tx.update(invoiceCollection(db).doc(previousInvoice.id), {
+          status: "superseded",
+          supersededBy: invoice.id,
+        });
+      tx.set(counterRef, {
+        sequence: (counterSnap.data()?.sequence || 0) + 1,
+        updatedAt: now,
+      });
+      result.invoiceId = invoice.id;
+    }
+    if (
+      previousInvoice &&
+      operation === "booking-action" &&
+      ["cancel", "decline"].includes(input.action)
+    )
+      tx.update(invoiceCollection(db).doc(previousInvoice.id), {
+        status: "void",
+        voidedAt: now,
+      });
     if (reservationMutation) {
       const b = result;
       if (operation === "create") b.contact = contact;
@@ -721,13 +788,31 @@ export async function bookingCommand(
         guardVersion: (cs.data()?.guardVersion || 0) + 1,
       });
     for (const e of s.audit) {
+      if (
+        emailConfig.enabled &&
+        [
+          "booking.requested",
+          "booking.confirmed",
+          "booking.approve_change",
+        ].includes(e.type)
+      )
+        queueNotifications(tx, db, {
+          event: e,
+          booking: result,
+          profile: ownerProfile,
+          config: emailConfig,
+          invoice,
+          now,
+        });
       const safe = {
         eventId: e.eventId,
         type: e.type,
         entity: e.entity,
         actor: e.actor,
         at: e.at,
-        delivery: "not_configured",
+        delivery: mailSettings().enabled ? "email_enabled" : "not_configured",
+        environment: environment.name,
+        apiVersion: "0.7.0",
         ...(e.bookingKind ? { bookingKind: e.bookingKind } : {}),
       };
       tx.set(collection(db, "audit").doc(e.eventId), safe);

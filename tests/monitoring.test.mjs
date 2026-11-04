@@ -2,10 +2,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 test("RUM loader requires live origin and explicit consent, deduplicates insertion and handles late withdrawal", async () => {
-  const keys = ["window", "document", "localStorage", "location"],
+  const keys = ["window", "document", "localStorage", "location", "fetch"],
     original = Object.fromEntries(
       keys.map((k) => [k, Object.getOwnPropertyDescriptor(globalThis, k)]),
     );
+  const { readFile } = await import("node:fs/promises");
+  const approved = JSON.parse(
+    await readFile(
+      new URL("../config/observability-runtime.json", import.meta.url),
+      "utf8",
+    ),
+  ).environments.production.rumScriptUrl;
   let choice = null;
   const scripts = [];
   try {
@@ -36,8 +43,20 @@ test("RUM loader requires live origin and explicit consent, deduplicates inserti
         head: { append: (s) => scripts.push(s) },
       },
     });
-    const { bootstrapRum, APPROVED_RUM_SCRIPT, monitoringPageAllowed } =
+    Object.defineProperty(globalThis, "fetch", {
+      configurable: true,
+      value: async () => ({
+        ok: true,
+        json: async () => ({
+          environment: "production",
+          configVersion: 1,
+          rumScriptUrl: approved,
+        }),
+      }),
+    });
+    const { bootstrapRum, bootstrapRuntimeRum, monitoringPageAllowed } =
       await import("../website/rum-loader.mjs");
+    await bootstrapRuntimeRum();
     bootstrapRum();
     assert.equal(scripts.length, 0);
     choice = "allowed";
@@ -46,7 +65,7 @@ test("RUM loader requires live origin and explicit consent, deduplicates inserti
     bootstrapRum();
     bootstrapRum();
     assert.equal(scripts.length, 1);
-    assert.equal(scripts[0].src, APPROVED_RUM_SCRIPT);
+    assert.equal(scripts[0].src, approved);
     assert.equal(scripts[0].crossOrigin, "anonymous");
     choice = "denied";
     scripts[0].onload();
@@ -86,8 +105,9 @@ test("map events require consent and allowlisted place/outcome values; extra fie
     },
   });
   try {
-    const { track } =
-      await import("../website/monitoring.mjs?map-contract-test");
+    const { track } = await import(
+      "../website/monitoring.mjs?map-contract-test"
+    );
     track("map.place-opened", { section: "pond", outcome: "selected" });
     assert.equal(events.length, 0);
     consent = "allowed";
@@ -120,6 +140,7 @@ test("map events require consent and allowlisted place/outcome values; extra fie
     assert.deepEqual(events.at(-1).data, {
       "event_properties.action": "map.place-opened",
       "event_properties.authority": "client-observed",
+      "event_properties.environment": "production",
       "event_properties.section": "house",
       "event_properties.outcome": "selected",
     });

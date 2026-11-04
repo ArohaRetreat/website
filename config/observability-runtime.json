@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "version": 1,
+  "environments": {
+    "production": {
+      "rumScriptUrl": "https://js-cdn.dynatrace.com/jstag/18b1df4492a/bf12470wrz/224aa943b980c761_complete.js",
+      "otlpEndpoint": "https://indiacs.live.dynatrace.com/api/v2/otlp",
+      "businessEventsEndpoint": "https://indiacs.live.dynatrace.com/api/v2/bizevents/ingest",
+      "tokenSecretVersion": "projects/aroha-retreat/secrets/DYNATRACE_PLATFORM_TOKEN/versions/latest"
+    },
+    "pre-prod": {
+      "rumScriptUrl": "https://js-cdn.dynatrace.com/jstag/18b1df4492a/bf12470wrz/a3e7eb9a9573a1c9_complete.js",
+      "otlpEndpoint": "https://indiacs.live.dynatrace.com/api/v2/otlp",
+      "businessEventsEndpoint": "https://indiacs.live.dynatrace.com/api/v2/bizevents/ingest",
+      "tokenSecretVersion": "projects/aroha-retreat/secrets/DYNATRACE_PLATFORM_TOKEN/versions/latest"
+    }
+  }
+}

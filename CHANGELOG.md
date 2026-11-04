@@ -1,3 +1,10 @@
+## 0.20.0 — Pre-production booking communications (prepared)
+
+- Isolate test bookings, inventory, profiles, email jobs and private invoices within the existing Firebase project; use a separate preprod Functions codebase/site.
+- Add Resend request acknowledgements, host notifications and approval confirmations with versioned invoice PDFs, durable retry/idempotency and verified webhooks.
+- Add environment-specific runtime observability metadata, separate preprod RUM and explicit test-only recipients/billing.
+- Production promotion and real email delivery remain separate verification gates. No production CMS/media/Natura migration.
+
 ## 0.18.1 — Booking atmosphere and motion
 
 ## 0.19.0 — 4 November 2026

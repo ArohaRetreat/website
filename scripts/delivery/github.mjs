@@ -80,7 +80,7 @@ export async function collectRun(runId, attempt, token, { get = github } = {}) {
     for (const artifact of part.artifacts) {
       if (
         !new RegExp(
-          `^delivery-reports-(application|foundation|website-integration)-${attempt}$`,
+          `^delivery-reports-(application|foundation|website-integration|preprod)-${attempt}$`,
         ).test(artifact.name)
       )
         continue;
@@ -185,6 +185,13 @@ export function runEvents(
     run.name === "Foundation checks"
       ? ["foundation.jsonl"]
       : ["application.jsonl", "api-integration.jsonl", "api-telemetry.jsonl"];
+  if (run.name !== "Foundation checks" && reports["preprod-integration.jsonl"])
+    expected.push("preprod-integration.jsonl");
+  if (
+    run.name !== "Foundation checks" &&
+    reports["api-preprod-telemetry.jsonl"]
+  )
+    expected.push("api-preprod-telemetry.jsonl");
   for (const name of expected) {
     const cases = reports[name];
     if (!cases?.length) {

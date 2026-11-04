@@ -1,3 +1,24 @@
+import { onDocumentCreated } from "firebase-functions/v2/firestore";
+import { sendEmail } from "./email/provider.mjs";
+import { mailSettings } from "./email/config.mjs";
+import { mailCollection } from "./email/jobs.mjs";
+import { deliverEmail, drainEmails } from "./email/delivery.mjs";
+import { communicationCommand } from "./email/api.mjs";
+import { captureEmailWebhook } from "./email/webhook.mjs";
+import {
+  refreshTelemetryConfig,
+  activeTelemetryConfig,
+  validateObservabilityConfig,
+  publicObservabilityConfig,
+} from "./observability-config.mjs";
+import {
+  environment,
+  collectionName,
+  sharedCollectionName,
+  isTester,
+  environmentFields,
+  serviceName,
+} from "./environment.mjs";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import {
   bookingEvent,
@@ -40,9 +61,24 @@ import {
 import { BookingError } from "./booking/domain.mjs";
 initializeApp();
 const monitoringSecret = defineSecret("DYNATRACE_PLATFORM_TOKEN");
+const resendSecret = defineSecret(
+  environment.preprod ? "RESEND_API_KEY_PREPROD" : "RESEND_API_KEY",
+);
+const resendWebhookSecret = defineSecret(
+  environment.preprod
+    ? "RESEND_WEBHOOK_SECRET_PREPROD"
+    : "RESEND_WEBHOOK_SECRET",
+);
+const mailSecrets = () =>
+  process.env.MAIL_ENABLED === "true" ? [resendSecret] : [];
 const db = getFirestore(),
   hash = (v) => createHash("sha256").update(v).digest("hex");
-const collection = (name) => db.collection("aroha_" + name);
+const collection = (name) =>
+  db.collection(
+    ["members", "invitations"].includes(name)
+      ? sharedCollectionName(name)
+      : collectionName(name),
+  );
 const owners = () =>
   new Set(
     (process.env.SUPER_ADMIN_EMAILS || "")
@@ -69,6 +105,26 @@ async function session(token) {
     token.firebase?.sign_in_provider !== "google.com"
   )
     throw new DomainError("VERIFIED_GOOGLE_ACCOUNT_REQUIRED", 403);
+  if (environment.preprod) {
+    if (!isTester(token)) throw new DomainError("PREPROD_TESTER_REQUIRED", 403);
+    const snap = await db
+      .collection(sharedCollectionName("members"))
+      .doc(token.uid)
+      .get();
+    if (!snap.exists || snap.data().active !== true)
+      throw new DomainError("INVITATION_REQUIRED", 403);
+    return {
+      uid: token.uid,
+      email: emailKey(token.email),
+      role: snap.data().role,
+      active: true,
+      modules: {
+        website: false,
+        bookings: studioAccess(snap.data()).bookings,
+        access: false,
+      },
+    };
+  }
   const email = emailKey(token.email),
     ref = collection("members").doc(token.uid);
   return db.runTransaction(async (tx) => {
@@ -188,9 +244,13 @@ export const arohaApi = onRequest(
     maxInstances: 3,
     timeoutSeconds: 30,
     invoker: "public",
-    secrets: process.env.DT_EXPORT_ENABLED === "true" ? [monitoringSecret] : [],
+    secrets: [
+      ...(process.env.DT_EXPORT_ENABLED === "true" ? [monitoringSecret] : []),
+      ...(process.env.MAIL_ENABLED === "true" ? [resendWebhookSecret] : []),
+    ],
   },
   async (req, res) => {
+    await refreshTelemetryConfig(db);
     const payload = await traceRequest(req, res, async () => {
       const requestId = randomUUID(),
         started = Date.now();
@@ -218,6 +278,41 @@ export const arohaApi = onRequest(
           ? bookingPath.slice(9)
           : "";
         if (OPERATIONS.includes(initialOp)) operation = "booking." + initialOp;
+        if (bookingPath === "/email/webhook" && req.method === "POST") {
+          operation = "email.webhook";
+          if (process.env.MAIL_ENABLED !== "true")
+            throw new DomainError("NOT_FOUND", 404);
+          try {
+            return await captureEmailWebhook(
+              db,
+              req,
+              resendWebhookSecret.value(),
+            );
+          } catch (e) {
+            throw new DomainError(
+              e.message === "WEBHOOK_ENVIRONMENT_MISMATCH"
+                ? e.message
+                : "INVALID_WEBHOOK_SIGNATURE",
+              e.status || 400,
+            );
+          }
+        }
+        if (bookingPath === "/runtime-config" && req.method === "GET") {
+          operation = "runtime.config";
+          const conf = await db
+            .collection("aroha_runtime_config")
+            .doc("observability")
+            .get();
+          if (!conf.exists)
+            return {
+              environment: environment.name,
+              configVersion: 0,
+              rumScriptUrl: null,
+            };
+          return publicObservabilityConfig(
+            validateObservabilityConfig(conf.data()),
+          );
+        }
         if (bookingPath === "/booking/public" && req.method === "GET") {
           operation = "booking.public";
           return await publicBookingState(db);
@@ -236,6 +331,8 @@ export const arohaApi = onRequest(
               throw new DomainError("INVALID_SESSION", 401);
             }
           }
+          if (telemetryToken && !isTester(telemetryToken))
+            throw new DomainError("PREPROD_TESTER_REQUIRED", 403);
           await throttleBooking(
             db,
             telemetryToken?.uid ||
@@ -263,6 +360,8 @@ export const arohaApi = onRequest(
         } catch {
           throw new DomainError("INVALID_SESSION", 401);
         }
+        if (!isTester(token))
+          throw new DomainError("PREPROD_TESTER_REQUIRED", 403);
         const path =
           req.path.replace(/^\/api\/v1/, "").replace(/\/$/, "") || "/";
         const b = req.body ?? {};
@@ -270,12 +369,22 @@ export const arohaApi = onRequest(
           throw new DomainError("JSON_REQUIRED", 415);
         if (path === "/session" && req.method === "POST") {
           operation = "access.session";
-          return { session: await session(token), requestId };
+          const admitted = await session(token);
+          if (environment.preprod)
+            admitted.modules = {
+              website: false,
+              bookings: admitted.modules.bookings,
+              access: false,
+            };
+          return { session: admitted, requestId };
         }
         if (path.startsWith("/booking/")) {
           const bookingOp = path.slice(9);
           if (
             ![
+              "communications",
+              "invoice-download",
+              "email-resend",
               "guest-profile",
               "journey-event",
               "profile",
@@ -324,6 +433,43 @@ export const arohaApi = onRequest(
                 cursor: req.query.cursor,
               });
             if (req.method !== "POST") throw new DomainError("NOT_FOUND", 404);
+            if (
+              ["communications", "invoice-download", "email-resend"].includes(
+                bookingOp,
+              )
+            ) {
+              const booking = await bookingCommand(
+                db,
+                token,
+                "reservation-detail",
+                { id: b.id },
+                req.get("Idempotency-Key") || randomUUID(),
+                { admin },
+              );
+              const m = admin
+                ? (
+                    await db
+                      .collection(sharedCollectionName("members"))
+                      .doc(token.uid)
+                      .get()
+                  ).data()
+                : null;
+              const communication = await communicationCommand(
+                db,
+                bookingOp,
+                b,
+                {
+                  booking,
+                  actor: {
+                    id: token.uid,
+                    role: admin ? "host" : "guest",
+                    bookingAccess: studioAccess(m).bookings,
+                  },
+                },
+              );
+              businessResult = { id: booking.id };
+              return communication;
+            }
             const result = await domainSpan(
               "firestore.booking." + bookingOp,
               () =>
@@ -346,6 +492,8 @@ export const arohaApi = onRequest(
             throw e;
           }
         }
+        if (environment.preprod)
+          throw new DomainError("PREPROD_CONTENT_READ_ONLY", 403);
         const actor = await requireMember(
           token,
           /^\/(members|invitations)(\/|$)/.test(path) ? "access" : "read",
@@ -632,26 +780,27 @@ export const arohaApi = onRequest(
                   status,
                 ),
               fallback:
-                process.env.DT_EXPORT_ENABLED === "true"
+                process.env.DT_EXPORT_ENABLED === "true" &&
+                activeTelemetryConfig()
                   ? (event) =>
-                      fetch(
-                        "https://indiacs.live.dynatrace.com/api/v2/bizevents/ingest",
-                        {
-                          method: "POST",
-                          headers: {
-                            Authorization: "Bearer " + monitoringSecret.value(),
-                            "Content-Type": "application/json",
-                          },
-                          body: JSON.stringify([event]),
-                          signal: AbortSignal.timeout(1500),
+                      fetch(activeTelemetryConfig().businessEventsEndpoint, {
+                        method: "POST",
+                        headers: {
+                          Authorization:
+                            "Bearer " + activeTelemetryConfig().token,
+                          "Content-Type": "application/json",
                         },
-                      )
+                        body: JSON.stringify([event]),
+                        signal: AbortSignal.timeout(1500),
+                      })
                   : undefined,
             },
           );
           if (!delivery.queued)
             console.warn(
               JSON.stringify({
+                ...environmentFields(),
+                service: serviceName("aroha-api"),
                 code: delivery.fallbackAccepted
                   ? "BUSINESS_EVENT_CAPTURE_FALLBACK"
                   : "BUSINESS_EVENT_CAPTURE_FAILED",
@@ -664,8 +813,9 @@ export const arohaApi = onRequest(
         console.info(
           JSON.stringify({
             severity: status >= 500 ? "ERROR" : "INFO",
-            service: "aroha-api",
-            version: "0.6.0",
+            service: serviceName("aroha-api"),
+            ...environmentFields(),
+            version: "0.7.0",
             operation,
             status,
             durationMs: Date.now() - started,
@@ -691,12 +841,14 @@ export const arohaBookingEvents = onSchedule(
   },
   async () => {
     if (process.env.DT_EXPORT_ENABLED !== "true") return;
+    await refreshTelemetryConfig(db);
+    if (!activeTelemetryConfig()) return;
     await traceBookingDelivery(() =>
       drainEvents(db, (event) =>
-        fetch("https://indiacs.live.dynatrace.com/api/v2/bizevents/ingest", {
+        fetch(activeTelemetryConfig().businessEventsEndpoint, {
           method: "POST",
           headers: {
-            Authorization: "Bearer " + monitoringSecret.value(),
+            Authorization: "Bearer " + activeTelemetryConfig().token,
             "Content-Type": "application/json",
           },
           body: JSON.stringify([event]),
@@ -705,4 +857,57 @@ export const arohaBookingEvents = onSchedule(
       ),
     );
   },
+);
+
+const emailWorkerOptions = {
+  region: "asia-south2",
+  memory: "256MiB",
+  timeoutSeconds: 120,
+  maxInstances: 1,
+  concurrency: 1,
+  secrets: [
+    ...(process.env.DT_EXPORT_ENABLED === "true" ? [monitoringSecret] : []),
+    ...mailSecrets(),
+  ],
+};
+async function withEmailDelivery(handler, sourceContext) {
+  if (!mailSettings().enabled) return;
+  await refreshTelemetryConfig(db);
+  return traceBookingDelivery(handler, "booking.email.delivery", sourceContext);
+}
+export const arohaBookingEmailDispatch = onDocumentCreated(
+  {
+    ...emailWorkerOptions,
+    document: collectionName("notifications") + "/{jobId}",
+    retry: true,
+  },
+  async (event) => {
+    if (!event.data) return;
+    return withEmailDelivery(async () => {
+      const r = await deliverEmail(
+        db,
+        mailCollection(db).doc(event.params.jobId),
+        (body, options) =>
+          sendEmail(
+            process.env.FUNCTIONS_EMULATOR ? "" : resendSecret.value(),
+            body,
+            options,
+          ),
+      );
+      return { delivered: r.accepted ? 1 : 0, failed: r.failed ? 1 : 0 };
+    }, event.data.data()?.sourceContext);
+  },
+);
+export const arohaBookingEmailRetry = onSchedule(
+  { ...emailWorkerOptions, schedule: "every 1 minutes" },
+  async () =>
+    withEmailDelivery(() =>
+      drainEmails(db, (body, options) =>
+        sendEmail(
+          process.env.FUNCTIONS_EMULATOR ? "" : resendSecret.value(),
+          body,
+          options,
+        ),
+      ),
+    ),
 );

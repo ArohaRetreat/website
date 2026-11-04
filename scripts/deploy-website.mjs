@@ -41,6 +41,17 @@ const args = production
     ];
 const cli = process.env.FIREBASE_CLI_PATH;
 if (production) {
+  const runtime = await fetch(
+    "https://aroharetreat.com/api/v1/runtime-config",
+    { signal: AbortSignal.timeout(10000) },
+  );
+  const metadata = runtime.ok ? await runtime.json() : null;
+  if (
+    metadata?.environment !== "production" ||
+    !Number.isSafeInteger(metadata.configVersion) ||
+    metadata.configVersion < 1
+  )
+    throw Error("UPGRADE_PRODUCTION_API_RUNTIME_CONFIG_BEFORE_FRONTEND");
   if (!cli)
     throw Error(
       "FIREBASE_CLI_PATH is required for observed production deployment.",

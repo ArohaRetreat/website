@@ -12,11 +12,15 @@ export function deploymentEvents(record) {
     "sdlc.source": "firebase-hosting",
     "sdlc.authority": "provider-confirmed",
     "deployment.id": record.id,
-    "deployment.environment": "production",
+    "deployment.environment": record.website.environment || "production",
+    "deployment.environment.name": record.website.environment || "production",
     "deployment.version": record.website.version,
     "git.commit.sha": record.website.revision,
     "deployment.hosting.version": record.after?.version || "unknown",
-    "service.name": "aroha-website",
+    "service.name":
+      record.website.environment === "pre-prod"
+        ? "aroha-website-pre-prod"
+        : "aroha-website",
   };
   const events = [
     event(
@@ -46,7 +50,7 @@ export function deploymentEvents(record) {
     record.status === "deployed"
       ? {
           eventType: "CUSTOM_DEPLOYMENT",
-          title: `Aroha website ${record.website.version}`,
+          title: `Aroha website ${record.website.version}${record.website.environment === "pre-prod" ? " pre-prod" : ""}`,
           startTime: Date.parse(record.after.releaseTime),
           properties: {
             "event.provider": "aroha.sdlc",
@@ -56,6 +60,8 @@ export function deploymentEvents(record) {
             "git.commit.sha": record.website.revision,
             "hosting.version": record.after.version,
             "verification.status": record.verification.status,
+            "deployment.environment.name":
+              record.website.environment || "production",
             "sdlc.event.id": events[0]["sdlc.event.id"],
           },
         }
@@ -64,7 +70,12 @@ export function deploymentEvents(record) {
 }
 export async function reportDeployment(record, token) {
   const { events, marker } = deploymentEvents(record);
-  const otel = telemetry("aroha-delivery", "1.0.0", "production");
+  const target = record.website.environment || "production";
+  const otel = telemetry(
+    target === "pre-prod" ? "aroha-delivery-pre-prod" : "aroha-delivery",
+    "1.0.0",
+    target,
+  );
   const parent = otel.span(
     "deployment.delivery",
     { "sdlc.status": record.status },

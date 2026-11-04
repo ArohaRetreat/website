@@ -5,7 +5,12 @@ const sha = (b) => createHash("sha256").update(b).digest("hex");
 export async function verifyLive(
   root,
   expected,
-  { fetchImpl = fetch, origin = "https://aroharetreat.com" } = {},
+  {
+    fetchImpl = fetch,
+    origin = "https://aroharetreat.com",
+    directory = "dist",
+    includeDesign = true,
+  } = {},
 ) {
   const paths = [
     "/",
@@ -50,11 +55,19 @@ export async function verifyLive(
     "/assets/sunset.css",
     "/assets/footer.css",
   ];
-  paths.push("/assets/retreat/pool-completion-impression-v1.webp","/assets/retreat/library-impression-v1.webp",...new Set(ADDITIONAL_MEDIA.flatMap(m=>[m.image,...(m.src?[m.src]:[])])));
-  for (const name of await readdir(root + "dist/assets/chunks"))
+  paths.push(
+    "/assets/retreat/pool-completion-impression-v1.webp",
+    "/assets/retreat/library-impression-v1.webp",
+    ...new Set(
+      ADDITIONAL_MEDIA.flatMap((m) => [m.image, ...(m.src ? [m.src] : [])]),
+    ),
+  );
+  for (const name of await readdir(root + directory + "/assets/chunks"))
     paths.push("/assets/chunks/" + name);
   const checks = [];
-  for (const path of paths) {
+  for (const path of paths.filter(
+    (p) => includeDesign || !p.startsWith("/design/"),
+  )) {
     const response = await fetchImpl(origin + path, {
       headers: { "Cache-Control": "no-cache" },
       signal: AbortSignal.timeout(15000),
@@ -62,13 +75,13 @@ export async function verifyLive(
     if (!response.ok) throw Error("LIVE_HTTP_FAILED");
     const actual = Buffer.from(await response.arrayBuffer()),
       local = await readFile(
-        root + "dist" + (path.endsWith("/") ? path + "index.html" : path),
+        root + directory + (path.endsWith("/") ? path + "index.html" : path),
       );
     if (sha(actual) !== sha(local)) throw Error("LIVE_HASH_MISMATCH");
     checks.push({ path, status: response.status, sha256: sha(actual) });
   }
   const release = JSON.parse(
-    await readFile(root + "dist/website-release.json", "utf8"),
+    await readFile(root + directory + "/website-release.json", "utf8"),
   );
   if (
     release.revision !== expected.revision ||
@@ -79,15 +92,43 @@ export async function verifyLive(
     headers: { Origin: origin },
     signal: AbortSignal.timeout(15000),
   });
-  if (denied.status !== 401) throw Error("LIVE_ACCESS_CHECK_FAILED");
-  const bookingDenied=await fetchImpl(origin+'/api/v1/booking/state',{headers:{Origin:origin},signal:AbortSignal.timeout(15000)});
-  if(bookingDenied.status!==401)throw Error('LIVE_BOOKING_ACCESS_CHECK_FAILED');
+  if (denied.status !== (includeDesign ? 401 : 403))
+    throw Error("LIVE_ACCESS_CHECK_FAILED");
+  const bookingDenied = await fetchImpl(origin + "/api/v1/booking/state", {
+    headers: { Origin: origin },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (bookingDenied.status !== 401)
+    throw Error("LIVE_BOOKING_ACCESS_CHECK_FAILED");
+  if (!includeDesign) {
+    const booking = await (
+      await fetchImpl(origin + "/api/v1/booking/public", {
+        signal: AbortSignal.timeout(15000),
+      })
+    ).json();
+    const runtime = await (
+      await fetchImpl(origin + "/api/v1/runtime-config", {
+        signal: AbortSignal.timeout(15000),
+      })
+    ).json();
+    if (
+      booking.environment !== "pre-prod" ||
+      booking.apiVersion !== "0.7.0" ||
+      booking.delivery !== "email_enabled" ||
+      runtime.environment !== "pre-prod" ||
+      !Number.isSafeInteger(runtime.configVersion) ||
+      runtime.configVersion < 1 ||
+      !runtime.rumScriptUrl ||
+      runtime.rumScriptUrl.includes("224aa943b980c761")
+    )
+      throw Error("LIVE_PREPROD_RUNTIME_MISMATCH");
+  }
   return {
     status: "verified",
     verifiedAt: new Date().toISOString(),
     release,
     hashMatchedFiles: checks.length,
     checks,
-    protectedDraftStatus: 401,
+    protectedDraftStatus: denied.status,
   };
 }
