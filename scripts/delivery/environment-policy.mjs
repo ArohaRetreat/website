@@ -20,3 +20,14 @@ export function assertArtifact(target, release, revision, config) {
       config.hosting?.site !== target.site || config.hosting?.public !== target.directory)
     throw Error("ENVIRONMENT_ARTIFACT_MISMATCH");
 }
+export function branchChecks(checks, runs, branch, sha) {
+  const suites = new Set();
+  for (const name of ["Website application checks", "Foundation checks", "Environment branch policy"]) {
+    const run = runs.filter(r => r.name === name && r.event === "push" && r.head_branch === branch && r.head_sha === sha)
+      .sort((a,b) => b.id-a.id || b.run_attempt-a.run_attempt)[0];
+    if (run) suites.add(run.check_suite_id);
+  }
+  return ["application", "website-integration", "foundation", "branch-policy"].map(name =>
+    checks.filter(c => c.name === name && c.app.slug === "github-actions" && suites.has(c.check_suite.id))
+      .sort((a,b) => b.id-a.id)[0]);
+}
