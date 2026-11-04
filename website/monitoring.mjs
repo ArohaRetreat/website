@@ -1,4 +1,5 @@
-import { bootstrapRum, monitoringPageAllowed } from "./rum-loader.mjs";
+import {environment} from "./environment.mjs";
+import { bootstrapRuntimeRum, monitoringPageAllowed } from "./rum-loader.mjs";
 import { createRumIdentity } from "./rum-identity.mjs";
 import { preference, setPreference } from "./preferences.mjs";
 const names = new Set([
@@ -50,6 +51,7 @@ export function track(name, attributes = {}) {
     schemaVersion: 1,
     "event.authority": "client-observed",
     "event.provider": "aroha.website",
+    "deployment.environment.name":environment.name,
     ...Object.fromEntries(
       Object.entries(attributes).filter(
         ([k, v]) =>
@@ -66,6 +68,7 @@ export function track(name, attributes = {}) {
       window.dynatrace?.sendEvent?.({
         "event_properties.action": name,
         "event_properties.authority": "client-observed",
+        "event_properties.environment":environment.name,
         ...(safe.section ? { "event_properties.section": safe.section } : {}),
         ...(safe.outcome ? { "event_properties.outcome": safe.outcome } : {}),
       });
@@ -88,7 +91,7 @@ if (
 }
 export const setMonitoringUser = (user) => identity.setUser(user);
 export async function initializeMonitoring() {
-  bootstrapRum();
+  bootstrapRuntimeRum();
   identity.sync();
 }
 export function withdrawMonitoring() {

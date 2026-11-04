@@ -16,3 +16,8 @@ tmp/
 
 # Bounded CI reports are retained as Actions artifacts, not source.
 .delivery-reports/
+
+dist-preprod/
+
+.secret*
+functions/.secret*

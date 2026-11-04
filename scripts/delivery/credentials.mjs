@@ -34,7 +34,9 @@ export async function deliveryToken() {
   if (!token) throw Error("DELIVERY_TOKEN_MISSING");
   return token;
 }
-export async function hostingRelease() {
+export async function hostingRelease(site = "aroha-retreat") {
+  if (!["aroha-retreat", "aroha-retreat-preprod"].includes(site))
+    throw Error("INVALID_HOSTING_SITE");
   const Client = await firebaseClient();
   const client = new Client({
     urlPrefix: "https://firebasehosting.googleapis.com",
@@ -42,7 +44,7 @@ export async function hostingRelease() {
     auth: true,
   });
   const result = await client.get(
-    "/projects/aroha-retreat/sites/aroha-retreat/channels/live",
+    `/projects/aroha-retreat/sites/${site}/channels/live`,
   );
   const release = result.body.release;
   return {

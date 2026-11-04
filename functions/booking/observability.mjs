@@ -1,3 +1,10 @@
+import {
+  collectionName,
+  sharedCollectionName,
+  environment,
+  environmentFields,
+  serviceName,
+} from "../environment.mjs";
 import { recordBusinessEvent } from "../telemetry.mjs";
 import { createHash, randomUUID } from "node:crypto";
 import { trace } from "@opentelemetry/api";
@@ -26,6 +33,9 @@ export const OUTCOMES = [
   "cancelled",
 ];
 export const OPERATIONS = [
+  "communications",
+  "invoice-download",
+  "email-resend",
   "public",
   "state",
   "profile",
@@ -75,6 +85,9 @@ export function bookingEvent({
   errorCode,
   durationMs,
   entity,
+  jobId,
+  invoiceId,
+  providerMessageId,
   at = Date.now(),
 }) {
   const event = {
@@ -84,8 +97,9 @@ export function bookingEvent({
     "event.authority": authority,
     "schema.version": 2,
     "service.namespace": "aroha-retreat",
-    "service.name": "aroha-api",
-    "service.version": "0.6.0",
+    "service.name": serviceName("aroha-api"),
+    ...environmentFields(),
+    "service.version": "0.7.0",
     timestamp: new Date(at).toISOString(),
     ...contextFields(),
   };
@@ -111,10 +125,21 @@ export function bookingEvent({
     event["duration.ms"] = Math.min(30000, Math.max(0, durationMs));
   if (typeof entity === "string" && /^[A-Za-z0-9-]{1,100}$/.test(entity))
     event["booking.entity.id"] = entity;
+  if (typeof jobId === "string" && /^[a-f0-9]{64}$/.test(jobId))
+    event["email.job.id"] = jobId;
+  if (typeof invoiceId === "string" && /^[A-Za-z0-9-]{1,120}$/.test(invoiceId))
+    event["invoice.id"] = invoiceId;
+  if (
+    typeof providerMessageId === "string" &&
+    /^[A-Za-z0-9-]{1,128}$/.test(providerMessageId)
+  )
+    event["email.provider.message.id"] = providerMessageId;
   return event;
 }
 export const eventRef = (db, event) =>
-  db.collection("aroha_observability_outbox").doc(hash(event["event.id"]));
+  db
+    .collection(collectionName("observability_outbox"))
+    .doc(hash(event["event.id"]));
 export const pendingEvent = (event) => ({
   schemaVersion: 2,
   event,
@@ -147,23 +172,31 @@ export async function requestPhone(db, token, body, result, status) {
   if (status < 400 && (body?.id || result?.id)) {
     const id = body?.id || result?.id;
     if (/^[A-Za-z0-9-]{1,100}$/.test(id)) {
-      const b = (await db.collection("aroha_bookings").doc(id).get()).data();
+      const b = (
+        await db.collection(collectionName("bookings")).doc(id).get()
+      ).data();
       if (b) {
         const member = (
-          await db.collection("aroha_members").doc(token.uid).get()
+          await db
+            .collection(sharedCollectionName("members"))
+            .doc(token.uid)
+            .get()
         ).data();
         if (b.owner === token.uid || studioAccess(member).bookings !== "none")
           return (
             b.contact?.phone ||
             (
-              await db.collection("aroha_booking_profiles").doc(b.owner).get()
+              await db
+                .collection(collectionName("booking_profiles"))
+                .doc(b.owner)
+                .get()
             ).data()?.contact?.phone
           );
       }
     }
   }
   return (
-    await db.collection("aroha_booking_profiles").doc(token.uid).get()
+    await db.collection(collectionName("booking_profiles")).doc(token.uid).get()
   ).data()?.contact?.phone;
 }
 export async function captureJourney(db, token, body, requestId) {
@@ -217,7 +250,7 @@ export async function drainEvents(
   { now = Date.now(), limit = 20 } = {},
 ) {
   const rows = await db
-    .collection("aroha_observability_outbox")
+    .collection(collectionName("observability_outbox"))
     .where("nextAttemptAt", "<=", now)
     .orderBy("nextAttemptAt")
     .limit(limit)

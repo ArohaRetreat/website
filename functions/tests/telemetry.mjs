@@ -21,17 +21,38 @@ test("OTLP emits separate protobuf traces, logs and bounded metrics without enqu
   process.env.FUNCTIONS_EMULATOR = "true";
   process.env.OTEL_TEST_ENDPOINT = "http://127.0.0.1:" + server.address().port;
   process.env.DYNATRACE_PLATFORM_TOKEN = "synthetic-test-token";
-  const { traceRequest, recordSummary, domainSpan, shutdownTelemetry, recordBusinessEvent, traceBookingDelivery } =
-    await import("../telemetry.mjs");
+  const {
+    traceRequest,
+    recordSummary,
+    domainSpan,
+    shutdownTelemetry,
+    recordBusinessEvent,
+    traceBookingDelivery,
+  } = await import("../telemetry.mjs");
   try {
     await traceRequest(
       { path: "/api/v1/draft", method: "POST", get: () => "" },
       { statusCode: 200 },
       async () => {
         await domainSpan("firestore.content.saved", async () => {});
-        const {BookingError}=await import("../booking/domain.mjs");
-        await assert.rejects(()=>domainSpan("firestore.booking.create",async()=>{throw new BookingError("AVAILABILITY_CHANGED",409);}),e=>e.code==="AVAILABILITY_CHANGED");
-        recordBusinessEvent({"event.id":"synthetic-event","event.type":"booking.form_step","event.authority":"client-reported","booking.step":"review","booking.outcome":"failed","booking.kind":"private","contact.phone":"+12025550123","name":"PRIVATE_CONTACT_SHOULD_NOT_EXPORT"});
+        const { BookingError } = await import("../booking/domain.mjs");
+        await assert.rejects(
+          () =>
+            domainSpan("firestore.booking.create", async () => {
+              throw new BookingError("AVAILABILITY_CHANGED", 409);
+            }),
+          (e) => e.code === "AVAILABILITY_CHANGED",
+        );
+        recordBusinessEvent({
+          "event.id": "synthetic-event",
+          "event.type": "booking.form_step",
+          "event.authority": "client-reported",
+          "booking.step": "review",
+          "booking.outcome": "failed",
+          "booking.kind": "private",
+          "contact.phone": "+12025550123",
+          name: "PRIVATE_CONTACT_SHOULD_NOT_EXPORT",
+        });
         recordSummary({
           operation: "content.saved",
           status: 200,
@@ -41,24 +62,68 @@ test("OTLP emits separate protobuf traces, logs and bounded metrics without enqu
         });
       },
     );
-    await traceBookingDelivery(async()=>({delivered:1,failed:0}));
-    await assert.rejects(()=>traceBookingDelivery(async()=>{throw Object.assign(Error("PRIVATE_WORKER_FAILURE"),{code:4});}));
+    await traceBookingDelivery(async () => ({ delivered: 1, failed: 0 }));
+    await assert.rejects(() =>
+      traceBookingDelivery(async () => {
+        throw Object.assign(Error("PRIVATE_WORKER_FAILURE"), { code: 4 });
+      }),
+    );
     for (const path of ["/v1/traces", "/v1/logs", "/v1/metrics"]) {
       const req = requests.find((x) => x.path === path);
       assert.ok(req, path + " was not exported");
       assert.match(req.type, /application\/x-protobuf/);
       assert.equal(req.authorization, "Bearer synthetic-test-token");
       assert.ok(req.body.length > 0);
+      assert.ok(req.body.includes(Buffer.from("deployment.environment.name")));
+      assert.ok(
+        req.body.includes(
+          Buffer.from(process.env.AROHA_ENVIRONMENT || "production"),
+        ),
+      );
+      assert.ok(
+        req.body.includes(
+          Buffer.from(
+            process.env.AROHA_ENVIRONMENT === "pre-prod"
+              ? "aroha-api-pre-prod"
+              : "aroha-api",
+          ),
+        ),
+      );
       assert.ok(!req.body.includes(Buffer.from("+12025550123")));
-      assert.ok(!req.body.includes(Buffer.from("PRIVATE_CONTACT_SHOULD_NOT_EXPORT")));
+      assert.ok(
+        !req.body.includes(Buffer.from("PRIVATE_CONTACT_SHOULD_NOT_EXPORT")),
+      );
       assert.ok(
         !req.body.includes(Buffer.from("PRIVATE_ENQUIRY_SHOULD_NOT_EXPORT")),
       );
     }
-    assert.ok(requests.filter(x=>x.path==="/v1/traces").some(x=>x.body.includes(Buffer.from("AVAILABILITY_CHANGED"))));
-    assert.ok(requests.filter(x=>x.path==="/v1/logs").some(x=>x.body.includes(Buffer.from("booking.events.delivery_failed"))));
-    assert.ok(requests.every(x=>!["+12025550123","PRIVATE_WORKER_FAILURE"].some(v=>x.body.includes(Buffer.from(v)))));
-    assert.ok(requests.filter(x=>x.path==="/v1/metrics").some(x=>x.body.includes(Buffer.from("aroha.booking.delivery.runs"))));
+    assert.ok(
+      requests
+        .filter((x) => x.path === "/v1/traces")
+        .some((x) => x.body.includes(Buffer.from("AVAILABILITY_CHANGED"))),
+    );
+    assert.ok(
+      requests
+        .filter((x) => x.path === "/v1/logs")
+        .some((x) =>
+          x.body.includes(Buffer.from("booking.events.delivery_failed")),
+        ),
+    );
+    assert.ok(
+      requests.every(
+        (x) =>
+          !["+12025550123", "PRIVATE_WORKER_FAILURE"].some((v) =>
+            x.body.includes(Buffer.from(v)),
+          ),
+      ),
+    );
+    assert.ok(
+      requests
+        .filter((x) => x.path === "/v1/metrics")
+        .some((x) =>
+          x.body.includes(Buffer.from("aroha.booking.delivery.runs")),
+        ),
+    );
     const metrics = requests.find((x) => x.path === "/v1/metrics").body;
     assert.ok(metrics.includes(Buffer.from("aroha.api.requests")));
     assert.ok(!metrics.includes(Buffer.from("synthetic-request-123")));

@@ -161,6 +161,18 @@
       "dependsOn": [
         "app-launchpad"
       ]
+    },
+    {
+      "id": "service-aroha-booking-email",
+      "kind": "service",
+      "path": "skills/service-aroha-booking-email/SKILL.md",
+      "description": "Maintain the aroha-booking-email service; read its implementation and continuation context.",
+      "dependsOn": [
+        "project-implementation",
+        "project-testing",
+        "project-deployment",
+        "project-observability"
+      ]
     }
   ],
   "services": [
@@ -354,6 +366,38 @@
         "node scripts/delivery/run-node-tests.mjs api-integration"
       ],
       "continuation": "skills/service-booking-observability/continuation.md",
+      "lastReviewedRevision": null
+    },
+    {
+      "id": "aroha-booking-email",
+      "skillId": "service-aroha-booking-email",
+      "sourcePaths": [
+        "functions/email"
+      ],
+      "entrypoints": [
+        "functions/email/delivery.mjs",
+        "functions/email/api.mjs",
+        "functions/email/webhook.mjs",
+        "functions/index.mjs"
+      ],
+      "owner": "ArohaRetreat",
+      "status": "active",
+      "dependsOn": [
+        "aroha-booking",
+        "aroha-api",
+        "aroha-booking-observability"
+      ],
+      "contracts": [
+        "docs/preproduction-email-contract.md",
+        "docs/preproduction-email-operations.md",
+        "docs/api/aroha-booking-v1.json"
+      ],
+      "testCommands": [
+        "npm test",
+        "npm run test:preprod",
+        "node scripts/delivery/run-node-tests.mjs api-telemetry"
+      ],
+      "continuation": "skills/service-aroha-booking-email/continuation.md",
       "lastReviewedRevision": null
     }
   ]

@@ -1,3 +1,6 @@
+import { RuntimeExporter } from "./runtime-exporter.mjs";
+import { activeTelemetryConfig } from "./observability-config.mjs";
+import { environment, environmentFields, serviceName } from "./environment.mjs";
 import { classifyError } from "./domain.mjs";
 import {
   context,
@@ -22,27 +25,42 @@ import {
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-proto";
 import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-proto";
-let providers, logger, counter, duration, tracer, manager, businessCounter, deliveryCounter, deliveryDuration;
+let providers,
+  logger,
+  counter,
+  duration,
+  tracer,
+  manager,
+  businessCounter,
+  deliveryCounter,
+  deliveryDuration;
 const endpoint = () =>
   process.env.FUNCTIONS_EMULATOR && process.env.OTEL_TEST_ENDPOINT
     ? process.env.OTEL_TEST_ENDPOINT
     : "https://indiacs.live.dynatrace.com/api/v2/otlp";
 function initialize() {
-  if (providers || !process.env.DYNATRACE_PLATFORM_TOKEN || (process.env.DT_EXPORT_ENABLED === "false" && !process.env.OTEL_TEST_ENDPOINT)) return;
+  if (
+    providers ||
+    !(process.env.DYNATRACE_PLATFORM_TOKEN || activeTelemetryConfig()?.token) ||
+    (process.env.DT_EXPORT_ENABLED === "false" &&
+      !process.env.OTEL_TEST_ENDPOINT)
+  )
+    return;
   const resource = resourceFromAttributes({
-    "service.name":
-      process.env.FUNCTION_TARGET === "arohaBookingEvents"
-        ? "aroha-booking-events"
-        : "aroha-api",
+    "service.name": serviceName(
+      String(process.env.FUNCTION_TARGET || "").includes("Email")
+        ? "aroha-booking-emails"
+        : String(process.env.FUNCTION_TARGET || "").includes("BookingEvents")
+          ? "aroha-booking-events"
+          : "aroha-api",
+    ),
     "service.namespace": "aroha-retreat",
-    "service.version": "0.6.0",
-    "deployment.environment.name": process.env.FUNCTIONS_EMULATOR
-      ? "emulator"
-      : "production",
+    "service.version": "0.7.0",
+    ...environmentFields(),
     "cloud.provider": "gcp",
     "cloud.platform": "gcp_cloud_run",
     "cloud.region": "asia-south2",
-    "faas.name": process.env.FUNCTION_TARGET === "arohaBookingEvents" ? "arohaBookingEvents" : "arohaApi",
+    "faas.name": process.env.FUNCTION_TARGET || "arohaApi",
     "faas.version": (process.env.K_REVISION || "local").slice(0, 128),
   });
   const opts = (path) => ({
@@ -58,6 +76,14 @@ function initialize() {
     scheduledDelayMillis: 1000,
     exportTimeoutMillis: 1200,
   };
+  const transport = (path, create) =>
+    process.env.OTEL_TEST_ENDPOINT
+      ? create(opts(path))
+      : new RuntimeExporter(create, path, {
+          otlpEndpoint: endpoint(),
+          token: process.env.DYNATRACE_PLATFORM_TOKEN,
+          configVersion: 0,
+        });
   const tp = new TracerProvider({
     resource,
     spanLimits: {
@@ -67,7 +93,10 @@ function initialize() {
     },
     spanProcessors: [
       new BatchSpanProcessor({
-        exporter: new OTLPTraceExporter(opts("/v1/traces")),
+        exporter: transport(
+          "/v1/traces",
+          (options) => new OTLPTraceExporter(options),
+        ),
         ...limits,
       }),
     ],
@@ -76,33 +105,44 @@ function initialize() {
   context.setGlobalContextManager(manager);
   trace.setGlobalTracerProvider(tp);
   propagation.setGlobalPropagator(new W3CTraceContextPropagator());
-  tracer = tp.getTracer("aroha-api", "0.6.0");
+  tracer = tp.getTracer("aroha-api", "0.7.0");
   const lp = new LoggerProvider({
     resource,
     processors: [
       new BatchLogRecordProcessor({
-        exporter: new OTLPLogExporter(opts("/v1/logs")),
+        exporter: transport(
+          "/v1/logs",
+          (options) => new OTLPLogExporter(options),
+        ),
         ...limits,
       }),
     ],
   });
-  logger = lp.getLogger("aroha-api", "0.6.0");
+  logger = lp.getLogger("aroha-api", "0.7.0");
   const mp = new MeterProvider({
     resource,
     readers: [
       new PeriodicExportingMetricReader({
-        exporter: new OTLPMetricExporter({
-          ...opts("/v1/metrics"),
-          temporalityPreference: AggregationTemporality.DELTA,
-        }),
+        exporter: transport(
+          "/v1/metrics",
+          (options) =>
+            new OTLPMetricExporter({
+              ...options,
+              temporalityPreference: AggregationTemporality.DELTA,
+            }),
+        ),
         exportIntervalMillis: 60000,
         exportTimeoutMillis: 1500,
       }),
     ],
   });
-  const meter = mp.getMeter("aroha-api", "0.6.0");
-  deliveryCounter = meter.createCounter("aroha.booking.delivery.runs", {description:"Completed business-event delivery runs"});
-  deliveryDuration = meter.createHistogram("aroha.booking.delivery.duration", {unit:"s"});
+  const meter = mp.getMeter("aroha-api", "0.7.0");
+  deliveryCounter = meter.createCounter("aroha.booking.delivery.runs", {
+    description: "Completed business-event delivery runs",
+  });
+  deliveryDuration = meter.createHistogram("aroha.booking.delivery.duration", {
+    unit: "s",
+  });
   businessCounter = meter.createCounter("aroha.booking.events", {
     description: "Captured booking lifecycle events",
   });
@@ -143,10 +183,15 @@ function route(req) {
       "guest-contact",
       "journey-event",
       "guest-profile",
+      "communications",
+      "invoice-download",
+      "email-resend",
     ].includes(booking[1])
   )
     return "booking." + booking[1];
   for (const s of [
+    "runtime-config",
+    "email/webhook",
     "session",
     "draft",
     "publish",
@@ -171,6 +216,8 @@ export async function flushTelemetry() {
     console.warn(
       JSON.stringify({
         severity: "WARNING",
+        service: serviceName("aroha-telemetry"),
+        ...environmentFields(),
         code: "TELEMETRY_EXPORT_FAILED",
         signals: failed,
       }),
@@ -240,10 +287,19 @@ export async function traceRequest(req, res, handler) {
   );
 }
 export async function domainSpan(name, handler) {
+  return operationSpan(name, handler, {
+    attributes: { "db.system.name": "gcp.firestore" },
+  });
+}
+export async function operationSpan(
+  name,
+  handler,
+  { attributes = {}, client = false } = {},
+) {
   if (!tracer) return handler();
   return tracer.startActiveSpan(
     name,
-    { attributes: { "db.system.name": "gcp.firestore" } },
+    { attributes, kind: client ? SpanKind.CLIENT : SpanKind.INTERNAL },
     async (span) => {
       try {
         return await handler();
@@ -290,12 +346,33 @@ export function recordBusinessEvent(event, stage = "captured") {
   });
 }
 
-export async function traceBookingDelivery(handler) {
+export async function traceBookingDelivery(
+  handler,
+  operation = "booking.events.delivery",
+  sourceContext,
+) {
   initialize();
   if (!tracer) return handler();
   return tracer.startActiveSpan(
-    "booking.events.delivery",
-    { kind: SpanKind.INTERNAL },
+    operation,
+    {
+      kind: SpanKind.INTERNAL,
+      links:
+        sourceContext &&
+        /^[a-f0-9]{32}$/.test(sourceContext.trace_id || "") &&
+        /^[a-f0-9]{16}$/.test(sourceContext.span_id || "")
+          ? [
+              {
+                context: {
+                  traceId: sourceContext.trace_id,
+                  spanId: sourceContext.span_id,
+                  traceFlags: 1,
+                },
+                attributes: { "link.role": "booking.commit" },
+              },
+            ]
+          : [],
+    },
     async (span) => {
       const started = Date.now();
       let outcome = "failed";
@@ -310,7 +387,7 @@ export async function traceBookingDelivery(handler) {
         logger?.emit({
           severityNumber: result.failed ? 13 : 9,
           severityText: result.failed ? "WARN" : "INFO",
-          body: "booking.events.delivery",
+          body: operation,
           attributes: {
             "delivery.delivered": result.delivered,
             "delivery.failed": result.failed,
@@ -320,13 +397,19 @@ export async function traceBookingDelivery(handler) {
         return result;
       } catch (error) {
         const failure = classifyError(error);
-        span.setStatus({code: SpanStatusCode.ERROR});
+        span.setStatus({ code: SpanStatusCode.ERROR });
         span.setAttribute("error.type", failure.code);
-        logger?.emit({severityNumber:17,severityText:"ERROR",body:"booking.events.delivery_failed",attributes:{"error.type":failure.code},context:context.active()});
+        logger?.emit({
+          severityNumber: 17,
+          severityText: "ERROR",
+          body: operation + "_failed",
+          attributes: { "error.type": failure.code },
+          context: context.active(),
+        });
         throw error;
       } finally {
-        deliveryCounter?.add(1,{outcome});
-        deliveryDuration?.record((Date.now()-started)/1000,{outcome});
+        deliveryCounter?.add(1, { outcome });
+        deliveryDuration?.record((Date.now() - started) / 1000, { outcome });
         span.end();
         await flushTelemetry();
       }

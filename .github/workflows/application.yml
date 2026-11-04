@@ -59,12 +59,29 @@ jobs:
       - name: Remove synthetic owner configuration
         if: always()
         run: node -e "require('node:fs').rmSync('functions/.env.local',{force:true})"
+      - name: Verify isolated pre-production booking emails and invoices
+        run: |
+          AROHA_ENVIRONMENT=pre-prod node scripts/delivery/run-node-tests.mjs api-preprod-telemetry
+          node scripts/test-preproduction.mjs
       - name: Retain bounded API test reports
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: delivery-reports-website-integration-${{ github.run_attempt }}
-          path: .delivery-reports/*.jsonl
+          path: |
+            .delivery-reports/api-integration.jsonl
+            .delivery-reports/api-telemetry.jsonl
+          include-hidden-files: true
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Retain bounded pre-production test reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: delivery-reports-preprod-${{ github.run_attempt }}
+          path: |
+            .delivery-reports/preprod-integration.jsonl
+            .delivery-reports/api-preprod-telemetry.jsonl
           include-hidden-files: true
           retention-days: 14
           if-no-files-found: warn

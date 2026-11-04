@@ -95,6 +95,102 @@
           "order": "ASCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "aroha_preprod_bookings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "owner",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "aroha_preprod_bookings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "promo",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "aroha_preprod_bookings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "promo",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "expiresAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "aroha_preprod_bookings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "departure",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "aroha_preprod_bookings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "expiresAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "aroha_preprod_booking_credits",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "owner",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "active",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "arrival",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "departure",
+          "order": "ASCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": [
@@ -155,6 +251,167 @@
     {
       "collectionGroup": "aroha_bookings",
       "fieldPath": "contact",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_preprod_booking_quotes",
+      "fieldPath": "expireAt",
+      "ttl": true,
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_preprod_booking_requests",
+      "fieldPath": "expireAt",
+      "ttl": true,
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_preprod_booking_cursors",
+      "fieldPath": "expireAt",
+      "ttl": true,
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_preprod_booking_days",
+      "fieldPath": "entries",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_preprod_booking_requests",
+      "fieldPath": "result",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_preprod_bookings",
+      "fieldPath": "note",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_preprod_bookings",
+      "fieldPath": "history",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_preprod_observability_outbox",
+      "fieldPath": "expireAt",
+      "ttl": true,
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_preprod_observability_outbox",
+      "fieldPath": "event",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_preprod_booking_profiles",
+      "fieldPath": "contact",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_preprod_bookings",
+      "fieldPath": "contact",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_notifications",
+      "fieldPath": "snapshot",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_notifications",
+      "fieldPath": "sourceContext",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_notifications",
+      "fieldPath": "to",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_notifications",
+      "fieldPath": "replyTo",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_notifications",
+      "fieldPath": "from",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_preprod_notifications",
+      "fieldPath": "snapshot",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_preprod_notifications",
+      "fieldPath": "sourceContext",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_preprod_notifications",
+      "fieldPath": "to",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_preprod_notifications",
+      "fieldPath": "replyTo",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_preprod_notifications",
+      "fieldPath": "from",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_invoices",
+      "fieldPath": "guestName",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_invoices",
+      "fieldPath": "guestEmail",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_invoices",
+      "fieldPath": "issuer",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_invoices",
+      "fieldPath": "lineItems",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_preprod_invoices",
+      "fieldPath": "guestName",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_preprod_invoices",
+      "fieldPath": "guestEmail",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_preprod_invoices",
+      "fieldPath": "issuer",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_preprod_invoices",
+      "fieldPath": "lineItems",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_email_webhooks",
+      "fieldPath": "expireAt",
+      "ttl": true,
+      "indexes": []
+    },
+    {
+      "collectionGroup": "aroha_preprod_email_webhooks",
+      "fieldPath": "expireAt",
+      "ttl": true,
       "indexes": []
     }
   ]

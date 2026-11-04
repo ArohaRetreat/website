@@ -169,6 +169,8 @@ test("artifact reader refuses traversal, symlinks and oversized archives without
       encoding: "utf8",
     });
   assert.equal(reader(zip("application.jsonl", "")).status, 0);
+  assert.equal(reader(zip("preprod-integration.jsonl", "")).status, 0);
+  assert.equal(reader(zip("api-preprod-telemetry.jsonl", "")).status, 0);
   for (const name of [
     "../application.jsonl",
     "/tmp/application.jsonl",

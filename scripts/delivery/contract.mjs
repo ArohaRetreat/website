@@ -28,6 +28,8 @@ export const REPORTS = new Set([
   "foundation.jsonl",
   "api-integration.jsonl",
   "api-telemetry.jsonl",
+  "preprod-integration.jsonl",
+  "api-preprod-telemetry.jsonl",
 ]);
 export const digest = (value) =>
   createHash("sha256").update(value).digest("hex");

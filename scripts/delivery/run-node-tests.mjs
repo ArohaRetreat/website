@@ -2,6 +2,8 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync } from "node:fs";
 const suites = {
   application: ["tests/*.test.mjs"],
+  "preprod-integration": ["functions/tests/preprod-integration.mjs"],
+  "api-preprod-telemetry": ["functions/tests/telemetry.mjs"],
   "api-telemetry": ["functions/tests/telemetry.mjs"],
   "api-integration": ["functions/tests/integration.mjs", "functions/tests/booking-integration.mjs"],
 };

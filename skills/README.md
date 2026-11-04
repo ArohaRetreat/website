@@ -37,3 +37,5 @@ Application services: [Website and host studio](service-aroha-website/SKILL.md),
 Review module: [Local booking prototype](service-aroha-booking-prototype/SKILL.md), excluded from production builds. See the [review guide](../docs/booking-prototype-review.md).
 
 Production overnight reservations: [Aroha booking](service-aroha-booking/SKILL.md), distinct from the isolated synthetic prototype.
+
+Booking communications: [Resend email and private invoices](service-aroha-booking-email/SKILL.md). See the isolated pre-production contract and operations guide before activation.

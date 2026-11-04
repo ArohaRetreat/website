@@ -82,7 +82,8 @@
       "ignore": [
         "node_modules",
         ".env*",
-        "*.log"
+        "*.log",
+        ".secret*"
       ]
     }
   ],

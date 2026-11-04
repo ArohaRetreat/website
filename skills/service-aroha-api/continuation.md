@@ -1,3 +1,9 @@
+## Website0.20.0 / API0.7.0 — issue65 (pre-production only, prepared)
+
+Add isolated pre-production collections, tester-only booking API, separate Functions codebase/Hosting site, forced test inbox and separate RUM tag. Request acknowledgement/host review messages and approval confirmations with private versioned invoice PDFs use atomic jobs, idempotency, bounded retries and signed status webhooks. Central versioned runtime metadata controls environment-specific RUM/server destinations. Read [contract](../../docs/preproduction-email-contract.md) and [operations](../../docs/preproduction-email-operations.md).
+
+Source implementation and emulator verification do not establish deployment or real Resend/tenant delivery. Production remains website0.19.0/API0.6.0; CMS8 and Natura0.6.1 remain intact. DNS/key setup awaits the scoped action-time approval. Real billing address/payment instructions remain missing; production mail stays blocked. Current task branch feat/preprod-booking-emails, issue65; evidence local/release-evidence/aroha-preprod-emails. No production records or media were changed. See email continuation for current check/deployment status.
+
 ## Website0.19.0 / API0.6.0 — issue63
 
 One access-controlled `/admin/` shell retains Website changes and Bookings frames and unsaved editor drafts. People & access independently grants website access and booking viewer/manager capability; legacy defaults are preserved, owner/peer protections remain, module edits require expectedVersion, and server/storage checks enforce grants. `/admin/bookings/` redirects to `/admin/#bookings`. Internal module routes are not separate access domains.

@@ -5,7 +5,7 @@ description: Maintain Aroha Retreat's photographic film tour and host content st
 
 # Aroha website and host studio
 
-Owner: ArohaRetreat. Source: website/. Entries: site.mjs, admin.mjs, render.mjs; field-render.mjs owns the public layout and map; field-journey.mjs owns native scrolling and playback; field.css owns its design. Earlier spatial/cinematic renderers remain in source for comparison. Build: npm run build:website; standalone website build: npm run build. Website version 0.18.1 is independent of Natura 0.6.1. Read docs/repository-separation.md for ownership and guarded shared Hosting composition. Read [plan](../../docs/website-plan.md), [API](../../docs/api/aroha-v1.md), [observability](../../docs/website-observability.md) and [continuation](continuation.md).
+Owner: ArohaRetreat. Source: website/. Entries: site.mjs, admin.mjs, render.mjs; field-render.mjs owns the public layout and map; field-journey.mjs owns native scrolling and playback; field.css owns its design. Earlier spatial/cinematic renderers remain in source for comparison. Build: npm run build:website; standalone website build: npm run build. Website0.20.0 source (production0.19.0) is independent of Natura 0.6.1. Read docs/repository-separation.md for ownership and guarded shared Hosting composition. Read [plan](../../docs/website-plan.md), [API](../../docs/api/aroha-v1.md), [observability](../../docs/website-observability.md) and [continuation](continuation.md).
 
 The enquiry-led public website has a photographic film tour and an automatic reduced-motion document fallback, cottages, experiences, packages, gallery and practical information. WhatsApp receives a guest-reviewed enquiry; there is no payment, inventory check, room hold or booking confirmation. Preserve Natura identity/fonts and Hrudhi. Do not fabricate property geometry or label an unrelated photograph as a particular room.
 
@@ -58,3 +58,5 @@ Production booking frontend0.19.0 uses /book/ (including #profile) and one acces
 0.17.1 keeps booking in the full Menu and signed-in account popover; quickLink:false hides only the header registry entry. Native account anchors distinguish new stays from booking history.
 
 0.17.2 header-appearance.mjs supplies contextual transparency to existing homepage/map paint loops. Keep solid default/no-JS and text fallbacks; transparent at top and across full photographic journey header band. Both atmosphere styles must agree; no duplicate scroll controller.
+
+Prepared0.20/API0.7 pre-production uses the separate codebase/site, test collection namespace and separate runtime RUM tag in [email operations](../../docs/preproduction-email-operations.md). Read the email module skill for forced test recipients, private invoices and live billing prerequisites. Production promotion is held.

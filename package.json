@@ -1,6 +1,6 @@
 {
   "name": "aroha-retreat-website",
-  "version": "0.19.0",
+  "version": "0.20.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,7 +13,11 @@
     "dev": "python3 -m http.server 8770 --directory dist",
     "dev:booking": "node prototypes/booking/server.mjs",
     "test:booking": "node --test tests/booking-prototype.test.mjs tests/booking-prototype-ui.test.mjs",
-    "deploy": "node scripts/deploy-website.mjs"
+    "deploy": "node scripts/deploy-website.mjs",
+    "test:preprod": "node scripts/test-preproduction.mjs",
+    "prepare:preprod": "node scripts/prepare-preproduction.mjs",
+    "config:observability": "node scripts/publish-observability-config.mjs",
+    "deploy:preprod": "node scripts/deploy-preproduction.mjs"
   },
   "dependencies": {
     "firebase": "13.1.0",

@@ -1,3 +1,5 @@
+import {environmentProfile} from "../functions/environment-profile.mjs";
+const deploymentEnvironment=environmentProfile(process.env.AROHA_ENVIRONMENT||"production");
 import { welcomeMarkup, natureContent } from "../website/nature-render.mjs";
 import { tourContent } from "../website/field-render.mjs";
 import { build } from "esbuild";
@@ -14,7 +16,7 @@ import {
   validateStoryMap,
 } from "../functions/domain.mjs";
 const root = new URL("../", import.meta.url),
-  dist = new URL("dist/", root),
+  dist = new URL(deploymentEnvironment.preprod ? "dist-preprod/" : "dist/", root),
   assets = new URL("assets/", dist);
 await verifyNaturaAssets(root);
 await verifyBundledFilms(new URL("website/assets/retreat/", root));
@@ -108,6 +110,7 @@ const bundle = await build({
   target: ["es2022"],
   legalComments: "eof",
   define: {
+    __AROHA_ENVIRONMENT__: JSON.stringify(deploymentEnvironment.name),
     __AROHA_EMULATORS__: process.env.AROHA_EMULATORS === "1" ? "true" : "false",
   },
 });
@@ -142,16 +145,10 @@ await writeFile(new URL("local/guest-bundle-analysis.json", root), JSON.stringif
   adminAuthStorageExcluded: true,
   guestAuth: {entry:authEntry, bytes:authBytes, lazy:true, adminApiStorageExcluded:true},
 }, null, 2));
-let runtime = JSON.parse(
-  await readFile(new URL("config/website-runtime.public.json", root), "utf8"),
-);
-try {
-  runtime = JSON.parse(
-    await readFile(new URL("config/website-runtime.json", root), "utf8"),
-  );
-} catch {}
-await writeFile(new URL("runtime-config.json", dist), JSON.stringify(runtime));
-const rumBoot=await build({stdin:{contents:`import {bootstrapRum} from './website/rum-loader.mjs';bootstrapRum(${JSON.stringify(runtime.rumScriptUrl)});`,resolveDir:root.pathname},bundle:true,format:"iife",minify:true,write:false,target:["es2022"]});
+// Both environments resolve tags through the same server-owned runtime document.
+// Legacy build-time override files are deliberately not inputs to this release.
+await writeFile(new URL("runtime-config.json",dist),JSON.stringify({environment:deploymentEnvironment.name,rumScriptUrl:null,runtimeEndpoint:"/api/v1/runtime-config"}));
+const rumBoot=await build({stdin:{contents:`import {bootstrapRuntimeRum} from './website/rum-loader.mjs';bootstrapRuntimeRum();`,resolveDir:root.pathname},bundle:true,format:"iife",minify:true,write:false,target:["es2022"],define:{__AROHA_ENVIRONMENT__:JSON.stringify(deploymentEnvironment.name)}});
 const rumHead=`<script data-aroha-rum-bootstrap>${rumBoot.outputFiles[0].text}</script>`;
 await writeFile(new URL("admin/index.html",dist),(await readFile(new URL("admin/index.html",dist),"utf8")).replace('<meta charset="utf-8" />',`<meta charset="utf-8" />${rumHead}`));
 const transitionBoot = await build({
@@ -176,6 +173,7 @@ await writeFile(
     revision: /^[a-f0-9]{40}$/.test(process.env.AROHA_BUILD_REVISION || "")
       ? process.env.AROHA_BUILD_REVISION
       : null,
+    emulators: process.env.AROHA_EMULATORS === "1",
     contentSchema: 1,
     admin: "/admin/",
     design: "/design/",
@@ -186,7 +184,7 @@ await writeFile(
   new URL("robots.txt", dist),
   `User-agent: *\nAllow: /\nDisallow: /admin/\nSitemap: ${PUBLIC_ORIGIN}/sitemap.xml\n`,
 );
-console.log("Built independent Aroha website and host studio. Compose a pinned Natura export before shared Hosting deployment.");
+console.log(deploymentEnvironment.preprod ? "Built isolated pre-production Aroha frontend." : "Built independent Aroha website and host studio. Compose a pinned Natura export before shared Hosting deployment.");
 
 await writeFile(new URL("sitemap.xml", dist), `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${PUBLIC_ORIGIN}/</loc></url><url><loc>${PUBLIC_ORIGIN}/map/</loc></url></urlset>`);
 
@@ -196,7 +194,7 @@ const bookingAtmosphereHead = `<script data-aroha-booking-atmosphere>${bookingAt
 // Authenticated booking surfaces are distinct documents, with no demo selectors or analytics bootstraps.
 for(const route of ['book','admin/bookings']){
  await mkdir(new URL(route+'/',dist),{recursive:true});
- await writeFile(new URL(route+'/index.html',dist),`<!doctype html><html lang="en"><head><meta charset="utf-8">${route==='book'?bookingAtmosphereHead:''}<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#163e2d"><meta name="robots" content="noindex,nofollow"><title>${route==='book'?'Your stay at Aroha':'Bookings · Aroha Host Studio'}</title><link rel="icon" href="/assets/brand/favicon.svg"><link rel="stylesheet" href="/assets/booking.css"><script type="module" src="/assets/booking.js"></script></head><body><a class="skip" href="#main">Skip to content</a><div class="review-banner">Host-approved reservations · Published visit rates · Events quoted by host · No online payment</div><div id="app" data-dt-mask><main class="loading">Opening a little space for you…</main></div><div id="toast" role="status" aria-live="polite"></div><dialog id="detail" data-dt-mask></dialog><noscript>Sign-in and booking requests need JavaScript. Please contact your hosts to arrange a visit.</noscript></body></html>`);
+ await writeFile(new URL(route+'/index.html',dist),`<!doctype html><html lang="en"><head><meta charset="utf-8">${route==='book'?bookingAtmosphereHead:''}${rumHead}<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#163e2d"><meta name="robots" content="noindex,nofollow"><title>${route==='book'?'Your stay at Aroha':'Bookings · Aroha Host Studio'}</title><link rel="icon" href="/assets/brand/favicon.svg"><link rel="stylesheet" href="/assets/booking.css"><script type="module" src="/assets/booking.js"></script></head><body><a class="skip" href="#main">Skip to content</a><div class="review-banner">Host-approved reservations · Published visit rates · Events quoted by host · No online payment</div><div id="app" data-dt-mask><main class="loading">Opening a little space for you…</main></div><div id="toast" role="status" aria-live="polite"></div><dialog id="detail" data-dt-mask></dialog><noscript>Sign-in and booking requests need JavaScript. Please contact your hosts to arrange a visit.</noscript></body></html>`);
 }
 await copyFile(new URL('website/booking.css',root),new URL('booking.css',assets));
 
@@ -210,3 +208,13 @@ await copyFile(new URL('admin/bookings/index.html',dist),new URL('admin/modules/
 await copyFile(new URL('website/studio.html',root),new URL('admin/index.html',dist));
 await copyFile(new URL('website/studio.css',root),new URL('studio.css',assets));
 await writeFile(new URL('admin/bookings/index.html',dist),'<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex"><title>Host Studio</title><script>location.replace("/admin/#bookings")</script><a href="/admin/#bookings">Open bookings in Host Studio</a>');
+
+for(const file of ['admin/index.html','admin/modules/website/index.html','admin/modules/bookings/index.html']){
+ const p=new URL(file,dist);let html=await readFile(p,'utf8');if(!html.includes('data-aroha-rum-bootstrap'))html=html.replace('</head>',rumHead+'</head>');await writeFile(p,html);
+}
+if(deploymentEnvironment.preprod){
+  const banner='<aside role="status" class="preprod-banner">PRE-PRODUCTION · Test bookings and test emails · No real reservation or payment</aside>';
+  for(const file of ['index.html','map/index.html','book/index.html','admin/index.html','admin/modules/website/index.html','admin/modules/bookings/index.html']){const p=new URL(file,dist);let html=await readFile(p,'utf8');html=html.replace('</head>','<meta name="robots" content="noindex,nofollow"><style>.preprod-banner{position:relative;z-index:9999;padding:10px 16px;background:#f3d38d;color:#163e2d;text-align:center;font:600 14px/1.4 sans-serif}</style></head>').replace(/(<body[^>]*>)/,'$1'+banner);await writeFile(p,html);}
+  await writeFile(new URL('robots.txt',dist),'User-agent: *\nDisallow: /\n');
+}
+const releaseFile=new URL('website-release.json',dist),release=JSON.parse(await readFile(releaseFile,'utf8'));release.environment=deploymentEnvironment.name;await writeFile(releaseFile,JSON.stringify(release,null,2));
