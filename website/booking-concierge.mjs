@@ -743,10 +743,12 @@ export async function startConcierge({
       requestVersion++;
       S.busy = false;
       journeyStep("dates", "selected", apiKind());
-      if (guestDraft.ages.some((x) => x === null))
+      if (guestDraft.ages.some((x) => x === null)) {
+        journeyStep("dates", "failed", apiKind());
         return toast(
           "Choose an age for each child. Guests aged 10 and above count as adults.",
         );
+      }
       S.adults = guestDraft.adults;
       S.ages = [...guestDraft.ages];
       $("#sheet").close();
@@ -992,11 +994,13 @@ export async function startConcierge({
       S.error = message(e);
       toast(S.error);
       journeyStep(
-        S.view === "profile"
-          ? "profile"
-          : S.view === "review"
-            ? "submit"
-            : "visits",
+        S.view === "options"
+          ? "rooms"
+          : S.view === "profile"
+            ? "profile"
+            : S.view === "review"
+              ? "submit"
+              : "visits",
         "failed",
         apiKind(),
       );
@@ -1093,7 +1097,10 @@ export async function startConcierge({
   }
   async function saveProfile() {
     const f = $("#profile-form");
-    if (!f?.reportValidity()) return;
+    if (!f?.reportValidity()) {
+      journeyStep("profile", "failed", apiKind());
+      return;
+    }
     await guarded(async () => {
       journeyStep("profile", "attempted");
       await api("profile", {

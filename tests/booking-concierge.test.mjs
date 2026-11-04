@@ -457,3 +457,29 @@ test("first Google-session completion preserves anonymous dates and party planni
     ui.close();
   }
 });
+
+test("invalid profile and child-age forms emit bounded failure observations without submitting", async () => {
+  const ui = await mount();
+  try {
+    ui.click("#profile");
+    ui.change("#profile-phone", "");
+    ui.click('[data-act="saveprofile"]');
+    assert(
+      ui.steps.some(
+        ([step, outcome]) => step === "profile" && outcome === "failed",
+      ),
+    );
+    ui.click("#home");
+    ui.click('[data-act="guests"]');
+    ui.click('[data-counter="children:1"]');
+    ui.click('[data-act="applyguests"]');
+    assert(
+      ui.steps.some(
+        ([step, outcome]) => step === "dates" && outcome === "failed",
+      ),
+    );
+    assert.equal(ui.s.bookings.length, 0);
+  } finally {
+    ui.close();
+  }
+});
