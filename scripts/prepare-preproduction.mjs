@@ -1,3 +1,5 @@
+import { mailSettings } from "../functions/email/config.mjs";
+import { environmentProfile } from "../functions/environment-profile.mjs";
 import { cp, mkdir, readFile, writeFile, rm, lstat } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import { resolve, basename } from "node:path";
@@ -28,6 +30,7 @@ if (
   Object.values(config).some((v) => typeof v !== "string" || /[\r\n]/.test(v))
 )
   throw Error("INVALID_PREPROD_CONFIGURATION");
+mailSettings(config, environmentProfile("pre-prod"));
 const source = spawnSync("git", ["rev-parse", "HEAD"], {
   encoding: "utf8",
 }).stdout.trim();
@@ -57,7 +60,8 @@ await cp(resolve(root, "functions"), output, {
   filter: (path) =>
     !["node_modules", "tests"].includes(basename(path)) &&
     !/^\.(env|secret)/.test(basename(path)) &&
-    !path.endsWith(".log") && !path.endsWith(".md"),
+    !path.endsWith(".log") &&
+    !path.endsWith(".md"),
 });
 await cp(resolve(output, "index.mjs"), resolve(output, "application.mjs"));
 await writeFile(

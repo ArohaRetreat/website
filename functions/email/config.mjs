@@ -47,6 +47,7 @@ export function mailSettings(env = process.env, profile = environment) {
     c.issuer.configVersion < 1
   )
     throw Error("INVALID_BILLING_CONFIG");
+  if (c.test) c.replyTo = c.testRecipient;
   return c;
 }
 export const validEmail = email;
