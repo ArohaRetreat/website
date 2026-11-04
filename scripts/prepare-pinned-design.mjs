@@ -29,4 +29,8 @@ for(const file of archives.files){
   await writeFile(cache,bytes);await writeFile(resolve(directory,"dist",file.path.slice(1)),bytes);
 }
 const {composeHosting}=await import("./hosting-composition.mjs");
+const rawPin=JSON.parse(await readFile('config/natura-export-files.json'));
+if(rawPin.revision!==pin.revision||rawPin.version!==pin.version)throw Error('EXPORT_REVISION_MISMATCH');
+const {restorePinnedExport}=await import('./restore-pinned-export.mjs');
+console.log(await restorePinnedExport(resolve(directory,'dist'),rawPin,{cache:resolve('local/pinned-export-cache')}));
 await composeHosting(process.cwd(),resolve(directory,"dist/design"));
