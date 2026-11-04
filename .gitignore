@@ -21,3 +21,5 @@ dist-preprod/
 
 .secret*
 functions/.secret*
+gha-creds-*.json
+.production-api.firebase.json

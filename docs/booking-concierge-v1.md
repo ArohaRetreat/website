@@ -1,6 +1,6 @@
 # Guest booking concierge — website 0.21.0, API 0.7.0
 
-Issue70; initial activation is pre-production only. The approved dates/party → suitable options → contact/review flow replaces the preprod guest planner. Production guest and all Host Studio modules retain their existing entry. The service APIs, data schemas, approved capacity/pricing, consent, identities and environment isolation are unchanged. No fixture service, fixed closure, sample identity or in-memory booking write is included in the deployed guest entry.
+Issue70; initial activation was pre-production only. Issue72/website0.21.1 promotes the approved dates/party → suitable options → contact/review flow to both guest environments. Host Studio retains its existing entry. The service APIs, data schemas, approved capacity/pricing, consent, identities and environment isolation are unchanged. No fixture service, fixed closure, sample identity or in-memory booking write is included in the deployed guest entry.
 
 ## Interaction and authority
 
@@ -25,6 +25,6 @@ The guest entry uses `journeyStep` and existing bookingApi instrumentation, with
 
 ## Release, validation and rollback
 
-Root application version0.21.0; API remains0.7.0. No database/index/config migration, host CMS publish or original media change. Build includes the new bundle/CSS only for environment `pre-prod` and `/book/`; normal production and unified Studio keep booking.mjs/css. Shared production Natura export remains outside this scoped preprod site. Use current-head CI and the guarded prepare/deploy scripts; compare immutable production Hosting/Functions/CMS baselines before and after. Roll back only preprod Hosting if necessary, retaining test reservations and ledgers. Do not seed/restore data or replay historic outboxes.
+Root application version0.21.1; API remains0.7.0. No booking policy/data migration, host CMS publish or original media change. Build includes the new bundle/CSS for `/book/` in both environments; unified Studio keeps booking.mjs/css. Shared production Natura export remains pinned and independently composed. Read [environment delivery](environment-delivery.md) for the compatible production backend upgrade, branch guards and explicit email activation boundary. Roll back the matching Hosting release if necessary, retaining reservations and ledgers. Do not seed/restore data or replay historic outboxes.
 
-Tests cover policy-parity recommendation/rates/occupancy, party edits, day/exclusive date semantics, contact, cancellation, uncertain retry, stale quote and account-change masking. Existing emulator API/Auth/Storage and synthetic OTLP suites remain required. Local emulator UI and actual Google/device/inbox/RUM acceptance are separate. Production activation is not authorised by this preprod release.
+Tests cover policy-parity recommendation/rates/occupancy, party edits, day/exclusive date semantics, contact, cancellation, uncertain retry, stale quote and account-change masking. Existing emulator API/Auth/Storage and synthetic OTLP suites remain required. Local emulator UI and actual Google/device/inbox/RUM acceptance are separate. Production activation is explicitly authorised in issue72; deployment evidence is separate from this source contract.

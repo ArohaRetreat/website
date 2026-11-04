@@ -5,7 +5,7 @@ description: Maintain trusted GitHub execution and Firebase Hosting delivery tel
 
 # Aroha delivery observability
 
-Owner ArohaRetreat. Sources `scripts/delivery/`, observer workflow and bounded source report hooks. Contract [delivery observability](../../docs/delivery-observability.md); [continuation](continuation.md). Read app-launchpad and dt-obs for the owning delivery/privacy rules.
+Owner ArohaRetreat. Sources `scripts/delivery/`, observer workflow and bounded source report hooks. Contract [delivery observability](../../docs/delivery-observability.md); [branch delivery](../../docs/environment-delivery.md); [continuation](continuation.md). Read app-launchpad and dt-obs for the owning delivery/privacy rules.
 
 Entries: report-run.mjs for automatic/exact-attempt replay, deployment.mjs through the guarded deploy script, transport.mjs for separate ingest receipts. CI identity aroha-ci-observer; release identity aroha-delivery; namespace aroha-retreat, version 1.0.0. Reuse API's pinned OTel SDK dependencies and explicitly pinned protobuf transformer; no additional network agent or production API migration is required.
 

@@ -1,6 +1,6 @@
 # Pre-production booking communications
 
-One repository, feature PRs and immutable tested revisions. Use the separate Firebase site `aroha-retreat-preprod` and codebase `aroha-website-preprod` in project `aroha-retreat`. Do not create a second repository or permanent environment branch. Production Hosting/functions remain independently deployed. The preprod site contains the Aroha frontend; the production Natura `/design` export is neither copied into preprod nor modified.
+One repository, feature PRs and immutable tested revisions. Use the separate Firebase site `aroha-retreat-preprod` and codebase `aroha-website-preprod` in project `aroha-retreat`. The owner now explicitly requests permanent `main`/`preprod` branches; [environment delivery](environment-delivery.md) supersedes the earlier branch recommendation. Production Hosting/functions remain independently deployed. The preprod site contains the Aroha frontend; the production Natura `/design` export is neither copied into preprod nor modified.
 
 ## Resend setup
 
