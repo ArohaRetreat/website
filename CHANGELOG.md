@@ -1,3 +1,8 @@
+# 0.21.2
+
+- Do not declare Resend SecretParams when mail is disabled, so production deployment requires no sending credentials or dummy secrets. Verify actual Firebase parameter discovery in both environments.
+- API0.7.1; compatible frontend runtime gate accepts patch releases of API0.7.
+
 # 0.21.1
 
 - Promote the approved booking concierge to production guest builds; preserve Host Studio and server-authoritative pricing, inventory and approval.
