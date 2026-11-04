@@ -214,7 +214,14 @@ for(const file of ['admin/index.html','admin/modules/website/index.html','admin/
 }
 if(deploymentEnvironment.preprod){
   const banner='<aside role="status" class="preprod-banner">PRE-PRODUCTION · Test bookings and test emails · No real reservation or payment</aside>';
-  for(const file of ['index.html','map/index.html','book/index.html','admin/index.html','admin/modules/website/index.html','admin/modules/bookings/index.html']){const p=new URL(file,dist);let html=await readFile(p,'utf8');html=html.replace('</head>','<meta name="robots" content="noindex,nofollow"><style>.preprod-banner{position:relative;z-index:9999;padding:10px 16px;background:#f3d38d;color:#163e2d;text-align:center;font:600 14px/1.4 sans-serif}</style></head>').replace(/(<body[^>]*>)/,'$1'+banner);await writeFile(p,html);}
+  for(const file of ['index.html','map/index.html','book/index.html','admin/index.html','admin/modules/website/index.html','admin/modules/bookings/index.html']){
+    const p=new URL(file,dist),publicPage=['index.html','map/index.html'].includes(file);
+    let html=await readFile(p,'utf8');
+    const status=publicPage?'<aside role="status" class="preprod-banner">PRE-PRODUCTION · TEST ONLY · No real reservations</aside>':banner;
+    const publicStyle=publicPage?'.preprod-banner{position:fixed;left:0;right:0;bottom:0;padding:6px 16px;font-size:12px;pointer-events:none}':'';
+    html=html.replace('</head>','<meta name="robots" content="noindex,nofollow"><style>.preprod-banner{position:relative;z-index:9999;padding:10px 16px;background:#f3d38d;color:#163e2d;text-align:center;font:600 14px/1.4 sans-serif}'+publicStyle+'</style></head>').replace(/(<body[^>]*>)/,'$1'+status);
+    await writeFile(p,html);
+  }
   await writeFile(new URL('robots.txt',dist),'User-agent: *\nDisallow: /\n');
 }
 const releaseFile=new URL('website-release.json',dist),release=JSON.parse(await readFile(releaseFile,'utf8'));release.environment=deploymentEnvironment.name;await writeFile(releaseFile,JSON.stringify(release,null,2));
