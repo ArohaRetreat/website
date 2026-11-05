@@ -123,7 +123,7 @@ async function session(token) {
       role: snap.data().role,
       active: true,
       modules: {
-        website: false,
+        website: studioAccess(snap.data()).website,
         bookings: studioAccess(snap.data()).bookings,
         access: false,
       },
@@ -383,7 +383,7 @@ export const arohaApi = onRequest(
           const admitted = await session(token);
           if (environment.preprod)
             admitted.modules = {
-              website: false,
+              website: admitted.modules.website,
               bookings: admitted.modules.bookings,
               access: false,
             };
@@ -503,8 +503,8 @@ export const arohaApi = onRequest(
             throw e;
           }
         }
-        if (environment.preprod)
-          throw new DomainError("PREPROD_CONTENT_READ_ONLY", 403);
+        if (environment.preprod && /^\/(members|invitations)(\/|$)/.test(path))
+          throw new DomainError("PREPROD_ACCESS_READ_ONLY", 403);
         const actor = await requireMember(
           token,
           /^\/(members|invitations)(\/|$)/.test(path) ? "access" : "read",

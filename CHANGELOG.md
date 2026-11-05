@@ -237,3 +237,7 @@ Keep Book a stay in the main menu and add Book a stay / My bookings to the signe
 ## [0.8.0] — 2026-11-01
 
 Five-print paged album with all 35 photos and 21 films; consistent filters/viewer controls. Pricing paper surfaces, shadows and aligned rows. Earlier experience and deployment evidence is retained under release-evidence.
+
+## 0.23.3 — pre-production Website changes
+
+Restore the existing Website changes module with isolated draft, publication and history, while preserving shared role checks, production host content and denied pre-production access administration.
