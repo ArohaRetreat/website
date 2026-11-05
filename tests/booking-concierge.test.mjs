@@ -547,6 +547,14 @@ test("calendar fails closed, retries and disables blocked range before submissio
   assert(ui.d.querySelector('[data-target="a"]').textContent.includes('Choose a date'));
  } finally{ui.close();}
 });
+test("private exclusive dates show an honest booked marker without exposing customer details",async()=>{
+ const ui=await mount();
+ try{
+  ui.s.bookings.push({id:'private-reservation',owner:'external-private',kind:'event',source:'host_private',status:'confirmed',arrival:from,departure:until,adults:0,guests:0,children:0,units:[],allocations:[],startsAt:Date.parse(from+'T06:00:00+05:30'),endsAt:Date.parse(until+'T18:00:00+05:30')-86400000});
+  ui.click('[data-act="dates"]');await ui.wait(()=>!ui.d.body.textContent.includes('Checking dates'));
+  const cell=ui.d.querySelector(`[data-day="${from}"]`);assert(cell.disabled);assert.equal(cell.title,'Already booked');assert.ok(cell.classList.contains('booked'));assert.match(cell.textContent,/Booked/);assert.match(cell.getAttribute('aria-label'),/already booked/);assert.ok(!ui.d.body.textContent.includes('external-private'));
+ }finally{ui.close();}
+});
 test("late calendar response cannot reopen a dismissed dialog",async()=>{
  const ui=await mount({deferCalendar:true});
  try{

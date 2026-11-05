@@ -149,6 +149,11 @@ export async function renderInvoicePdf(invoice) {
         y = doc.y + 18;
         text(invoice.issuer.address, 48, y, { width: 499 });
       }
+      if (invoice.issuer.registrationNumber) {
+        y = doc.y + 12;
+        if (y > 735) { doc.addPage(); y = 58; }
+        text("Establishment registration: " + invoice.issuer.registrationNumber, 48, y, {width:499});
+      }
       doc.end();
     } catch (e) {
       doc.destroy();

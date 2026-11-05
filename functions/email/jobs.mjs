@@ -102,7 +102,7 @@ export function queueNotifications(
       target = channel === "host_notification" ? config.hostTo : profile.email;
     const job = {
       schemaVersion: 1,
-      templateVersion: "email-v3",
+      templateVersion: booking.source === "host_private" ? "email-v3-private" : "email-v3",
       id,
       owner: booking.owner,
       bookingId: booking.id,
@@ -119,6 +119,7 @@ export function queueNotifications(
       subjectPrefix: config.test ? "[PRE-PROD TEST] " : "",
       snapshot: {
         reference: booking.reference,
+        ...(booking.source === "host_private" ? {privateReservation:true,guestCountPending:booking.guestCountPending===true} : {}),
         guestName:
           booking.contact?.name ||
           profile.contact?.name ||

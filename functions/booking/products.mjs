@@ -461,6 +461,7 @@ export function calendarSummary(state, date, now = Date.now()) {
       id: b.id,
       reference: b.reference || "",
       kind: b.kind || "legacy",
+      ...(b.source === "host_private" ? {source:b.source,guestCountPending:true} : {}),
       adults: b.adults ?? b.guests,
       children: b.children ?? 0,
       units: b.units,
@@ -505,6 +506,9 @@ export function availabilityCalendar(state, input, now = Date.now()) {
   return {settingsVersion:state.settings.version,asOf:now,days:Array.from({length:input.days},(_,n)=>{
     const date=addDays(input.start,n),arrival=input.arrival||date;
     const departure=input.arrival ? (input.kind==='event'?addDays(date,1):date) : addDays(date,1);
-    return {date,available:canFit(arrival,departure)};
+    const available=canFit(arrival,departure);
+    const p=productPolicy(state),start=local(arrival,input.kind==='stay'?p.stayStart:p.dayStart),end=local(input.kind==='stay'?departure:addDays(departure,-1),input.kind==='stay'?p.stayEnd:p.dayEnd);
+    const booked=!available && end>start && state.bookings.some(b=>b.source==='host_private'&&reservesCapacity(b,now)&&intersects(interval(b,state,now),{start,end}));
+    return {date,available,...(booked?{reason:'already_booked'}:{})};
   })};
 }

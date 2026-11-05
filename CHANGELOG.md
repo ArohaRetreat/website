@@ -1,3 +1,10 @@
+## 0.24.0 / API 0.9.0 — production booking promotion and private reservations
+
+- Promote approved exclusive pricing/calendar, signed-in enquiry, homepage sign-in return and branded booking emails through an independent main release.
+- Add host-recorded confirmed private-exclusive reservations with unknown attendance, inclusive daily prices, transactional conflicts/idempotency/audit, and a separately queued private confirmation/invoice. No guest identity or payment is fabricated.
+- Host Studio labels private reservations; public date picker greys booked dates with a finite Already booked explanation, without customer details.
+- Production preparation validates real billing details and explicitly enables only the required email exports. Keep old queues, CMS, Natura and preprod intact; new-event-only activation.
+
 ## 0.23.2 / API 0.8.3 — approved email templates (preprod)
 
 - Actual booking emails now use the approved v3 logo, photograph, website fonts with inbox fallbacks, graphical six-stage journey and stage-specific copy.

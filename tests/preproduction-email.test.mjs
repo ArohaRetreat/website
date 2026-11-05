@@ -593,3 +593,9 @@ test("booking-mode test emails use verified guest and host recipients while pres
   assert.throws(()=>mailSettings({...process.env,MAIL_RECIPIENT_MODE:"bad"}));
  } finally {if(oldMode===undefined)delete process.env.MAIL_RECIPIENT_MODE;else process.env.MAIL_RECIPIENT_MODE=oldMode;}
 });
+
+test("live issuer preserves a separate establishment registration without inferring GST or payment",()=>{
+ const c=mailSettings({MAIL_ENABLED:'true',MAIL_FROM:'sender@example.test',MAIL_REPLY_TO:'host@example.test',MAIL_HOST_TO:'host@example.test',BILLING_DISPLAY_NAME:'Aroha Retreat',BILLING_ADDRESS:'Sample business address',BILLING_PAYMENT_INSTRUCTIONS:'Arrange payment with hosts',BILLING_REGISTRATION_NUMBER:'REG/EXAMPLE/2026'},environmentProfile('production'));
+ assert.equal(c.issuer.registrationNumber,'REG/EXAMPLE/2026');assert.equal(c.test,false);assert.equal(c.issuer.gstin,undefined);
+ assert.throws(()=>mailSettings({MAIL_ENABLED:'true',MAIL_FROM:'sender@example.test',MAIL_REPLY_TO:'host@example.test',MAIL_HOST_TO:'host@example.test',BILLING_DISPLAY_NAME:'Aroha Retreat',BILLING_ADDRESS:'Sample business address',BILLING_PAYMENT_INSTRUCTIONS:'Arrange payment with hosts',BILLING_REGISTRATION_NUMBER:'<script>'},environmentProfile('production')),/INVALID_BILLING_CONFIG/);
+});

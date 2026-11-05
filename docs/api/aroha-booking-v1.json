@@ -2200,7 +2200,7 @@
         },
         "responses": {
           "200": {
-            "description": "settingsVersion, asOf and days with date/available only"
+            "description": "settingsVersion, asOf and days with date/available; optional reason=already_booked for unavailable host-private exclusive inventory, without customer identifiers"
           },
           "422": {
             "description": "Invalid bounded calendar input"

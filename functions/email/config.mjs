@@ -19,6 +19,7 @@ export function mailSettings(env = process.env, profile = environment) {
       address: env.BILLING_ADDRESS || "",
       paymentInstructions: env.BILLING_PAYMENT_INSTRUCTIONS || "",
       configVersion: Number(env.BILLING_CONFIG_VERSION || 1),
+      ...(env.BILLING_REGISTRATION_NUMBER ? {registrationNumber:env.BILLING_REGISTRATION_NUMBER} : {}),
     },
   };
   if(!["booking","test-inbox"].includes(c.recipientMode) || (!c.test && c.recipientMode!=="booking")) throw Error("INVALID_MAIL_RECIPIENT_MODE");
@@ -41,6 +42,7 @@ export function mailSettings(env = process.env, profile = environment) {
   )
     throw Error("LIVE_BILLING_CONFIG_INCOMPLETE");
   if (
+    (c.issuer.registrationNumber && !/^[A-Za-z0-9/.-]{1,80}$/.test(c.issuer.registrationNumber)) ||
     !c.issuer.name ||
     c.issuer.name.length > 120 ||
     c.issuer.address.length > 500 ||

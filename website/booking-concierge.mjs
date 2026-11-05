@@ -536,7 +536,7 @@ export async function startConcierge({
       (_, i) => {
         let d = iso(y, m, i + 1),
           sel = d === dateDraft.a || (S.kind !== "day" && d === dateDraft.b);
-        return `<button data-day="${d}" class="${sel ? "sel" : d > dateDraft.a && d < dateDraft.b ? "between" : ""}" aria-label="${d}${sel ? ", selected" : ""}" aria-pressed="${sel}" tabindex="${d === focusDate ? "0" : "-1"}" ${d < today() || d > add(today(), 365) || !dateDraft.availability?.get(d) ? 'disabled title="Unavailable for this party or date range"' : ""}>${sel ? '<svg viewBox="0 0 60 50" aria-hidden="true"><path fill="currentColor" d="M5 31C2 11 24 6 53 3c-2 18-6 39-27 41-10 2-17-3-21-13Z"/><path d="M9 41 43 13M17 34l-3-12m13 3 0-12m0 12 13 0" stroke="var(--paper)" opacity=".3" fill="none" stroke-width="1"/></svg>' : ""}${i + 1}</button>`;
+        return `<button data-day="${d}" class="${sel ? "sel" : d > dateDraft.a && d < dateDraft.b ? "between" : ""}${dateDraft.reasons?.get(d)==='already_booked'?" booked":""}" aria-label="${d}${sel ? ", selected" : ""}${dateDraft.reasons?.get(d)==='already_booked'?", already booked":""}" aria-pressed="${sel}" tabindex="${d === focusDate ? "0" : "-1"}" ${d < today() || d > add(today(), 365) || !dateDraft.availability?.get(d) ? `disabled title="${dateDraft.reasons?.get(d)==='already_booked'?'Already booked':'Unavailable for this party or date range'}"` : ""}>${sel ? '<svg viewBox="0 0 60 50" aria-hidden="true"><path fill="currentColor" d="M5 31C2 11 24 6 53 3c-2 18-6 39-27 41-10 2-17-3-21-13Z"/><path d="M9 41 43 13M17 34l-3-12m13 3 0-12m0 12 13 0" stroke="var(--paper)" opacity=".3" fill="none" stroke-width="1"/></svg>' : ""}${dateDraft.reasons?.get(d)==='already_booked'?'<span class="booked-number">'+(i+1)+'</span><small class="booked-label" aria-hidden="true">Booked</small>':i+1}</button>`;
       },
     ).join("")}</div></section>`;
   }
@@ -554,6 +554,7 @@ export async function startConcierge({
       void api("calendar",body).then(result=>{
         if(sequence!==calendarSequence || !$("#sheet").open || !$("[data-act=applydates]") || dateDraft.calendarKey!==key) return;
         dateDraft.availability=new Map(result.days.map(d=>[d.date,d.available]));
+        dateDraft.reasons=new Map(result.days.map(d=>[d.date,d.reason]));
         journeyStep("dates","succeeded",apiKind()); drawDates();
       }).catch(()=>{
         if(sequence!==calendarSequence || !$("#sheet").open || !$("[data-act=applydates]") || dateDraft.calendarKey!==key) return;
