@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { build } from "esbuild";
 import { JSDOM } from "jsdom";
+import { availabilityCalendar } from "../functions/booking/products.mjs";
 import { recommendPrivate } from "../website/booking-options.mjs";
 import {
   initialState,
@@ -85,12 +86,15 @@ const bundled = await build({
 });
 async function mount({
   anonymous = false,
+  sessionRedirect = false,
   authEvent = false,
   failCreate = false,
   failStatus = 0,
   quoteStale = false,
   settings = {},
   deferDetail = false,
+  failCalendar = false,
+  deferCalendar = false,
   environment = "pre-prod",
   serverEnvironment = environment,
 } = {}) {
@@ -103,7 +107,7 @@ async function mount({
       email: "guest@example.test",
       version: 0,
     },
-    detailRelease,
+    detailRelease, calendarRelease,
     createCalls = [];
   const dom = new JSDOM('<div id="app" data-dt-mask></div>', {
       url: "https://aroha-retreat-preprod.web.app/book/",
@@ -123,7 +127,9 @@ async function mount({
   let holdState = false, stateRelease;
   let creates = 0,
     firstBody;
+  const operations=[];
   const api = async (op, body, key, opts = {}) => {
+    operations.push(op);
     if (op === "state") {
       const snapshot = structuredClone({
         environment: serverEnvironment,
@@ -141,11 +147,17 @@ async function mount({
     if (op === "session") {
       signed = true;
       if (authEvent) await portal.identity({ uid: actor.id });
-      return {};
+      return sessionRedirect ? {redirecting:true} : {};
     }
     if (op === "logout") {
       signed = false;
       return {};
+    }
+    if(op === "calendar") {
+      if(failCalendar) { failCalendar=false; throw Error("offline"); }
+      const result=availabilityCalendar(s,body);
+      if(deferCalendar) { deferCalendar=false; await new Promise(r=>calendarRelease=r); }
+      return result;
     }
     if (!signed) throw { code: "SIGN_IN_REQUIRED" };
     if (op === "availability") return structuredClone(availability(s, body));
@@ -205,7 +217,10 @@ async function mount({
   const dates = async (kind = "stay") => {
     click(`[data-kind="${kind}"]`);
     click('[data-act="dates"]');
+    if(kind!=="day") click('[data-target="a"]');
+    await wait(()=>d.querySelector(`[data-day="${from}"]`) && !d.querySelector(`[data-day="${from}"]`).disabled);
     click(`[data-day="${from}"]`);
+    await wait(()=>d.querySelector(`[data-day="${until}"]`) && !d.querySelector(`[data-day="${until}"]`).disabled);
     if (kind !== "day") click(`[data-day="${until}"]`);
     click('[data-act="applydates"]');
     click('[data-act="search"]');
@@ -236,6 +251,8 @@ async function mount({
     change,
     terms,
     createCalls,
+    operations,
+    releaseCalendar:()=>calendarRelease?.(),
     setSigned: (v) => (signed = v),
     releaseDetail: () => detailRelease?.(),
     holdNextState: () => { holdState = true; },
@@ -316,7 +333,7 @@ for (const kind of ["day", "event"])
           assert.match(ui.d.body.textContent, /₹3,500/);
           assert.match(ui.d.body.textContent, /07:00/);
         } else {
-          assert.match(ui.d.body.textContent, /Host quote/);
+          assert.match(ui.d.body.textContent, /₹60,000/);
           assert.match(ui.d.body.textContent, /17:30/);
         }
         ui.click('[data-act="review"]');
@@ -326,7 +343,7 @@ for (const kind of ["day", "event"])
         const b = ui.s.bookings[0];
         assert.equal(b.kind, kind);
         assert.equal(b.departure, kind === "event" ? addDays(until, 1) : until);
-        assert.equal(b.total, kind === "event" ? null : 350000);
+        assert.equal(b.total, kind === "event" ? 6000000 : 350000);
       } finally {
         ui.close();
       }
@@ -512,4 +529,51 @@ test('account loss clears private account dialogs immediately',async()=>{
 test('late account-state responses cannot restore a signed-out profile',async()=>{
   const ui=await mount();
   try{ui.holdNextState();ui.click('#visits');for(let i=0;i<50&&!ui.statePending();i++)await new Promise(r=>setTimeout(r,2));assert(ui.statePending());ui.setSigned(false);await ui.portal.identity(null);ui.releaseState();await ui.wait();assert.equal(ui.d.querySelector('#account').textContent,'Sign in');}finally{ui.releaseState();ui.close();}
+});
+
+test("calendar fails closed, retries and disables blocked range before submission",async()=>{
+ const ui=await mount({failCalendar:true});
+ try {
+  ui.s.blocks.push({unitId:"site",arrival:from,departure:until});
+  ui.click('[data-act="dates"]');
+  await ui.wait(()=>ui.d.querySelector('[data-act="retrycalendar"]'));
+  assert(ui.d.querySelector(`[data-day="${from}"]`).disabled);
+  assert(ui.d.querySelector('[data-act="applydates"]').disabled);
+  ui.click('[data-act="retrycalendar"]');
+  await ui.wait(()=>!ui.d.querySelector('[data-act="retrycalendar"]') && !ui.d.body.textContent.includes('Checking dates'));
+  assert(ui.d.querySelector(`[data-day="${from}"]`).disabled);
+  assert(!ui.d.querySelector(`[data-day="${until}"]`).disabled);
+  ui.click(`[data-day="${from}"]`);
+  assert(ui.d.querySelector('[data-target="a"]').textContent.includes('Choose a date'));
+ } finally{ui.close();}
+});
+test("private exclusive dates show an honest booked marker without exposing customer details",async()=>{
+ const ui=await mount();
+ try{
+  ui.s.bookings.push({id:'private-reservation',owner:'external-private',kind:'event',source:'host_private',status:'confirmed',arrival:from,departure:until,adults:0,guests:0,children:0,units:[],allocations:[],startsAt:Date.parse(from+'T06:00:00+05:30'),endsAt:Date.parse(until+'T18:00:00+05:30')-86400000});
+  ui.click('[data-act="dates"]');await ui.wait(()=>!ui.d.body.textContent.includes('Checking dates'));
+  const cell=ui.d.querySelector(`[data-day="${from}"]`);assert(cell.disabled);assert.equal(cell.title,'Already booked');assert.ok(cell.classList.contains('booked'));assert.match(cell.textContent,/Booked/);assert.match(cell.getAttribute('aria-label'),/already booked/);assert.ok(!ui.d.body.textContent.includes('external-private'));
+ }finally{ui.close();}
+});
+test("late calendar response cannot reopen a dismissed dialog",async()=>{
+ const ui=await mount({deferCalendar:true});
+ try{
+  ui.click('[data-act="dates"]');ui.d.querySelector('#sheet').close();ui.releaseCalendar();
+  await new Promise(r=>setTimeout(r,5));assert.equal(ui.d.querySelector('#sheet').open,false);
+ }finally{ui.close();}
+});
+
+test("homepage return link is visible and a completed sign-in redirect stops booking work",async()=>{
+ const ui=await mount({anonymous:true,sessionRedirect:true});
+ try{
+  assert.equal(ui.d.querySelector('.website-return a').getAttribute('href'),'/');
+  assert.match(ui.d.querySelector('.website-return').textContent,/Back to website/);
+  ui.click('[data-act="search"]'); // no dates: date picker first
+  await ui.wait(()=>!ui.d.body.textContent.includes('Checking dates'));
+  ui.click(`[data-day="${from}"]`);
+  await ui.wait(()=>!ui.d.querySelector(`[data-day="${until}"]`).disabled);
+  ui.click(`[data-day="${until}"]`);ui.click('[data-act="applydates"]');ui.click('[data-act="search"]');
+  await ui.wait(()=>ui.operations.includes('session'));
+  assert(!ui.operations.includes('availability'));assert(!ui.operations.includes('quote'));assert.equal(ui.s.bookings.length,0);
+ }finally{ui.close();}
 });

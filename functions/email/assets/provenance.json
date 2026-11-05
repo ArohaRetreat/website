@@ -1,0 +1,20 @@
+{
+  "design": "email-v3",
+  "approvedOn": "2026-11-04",
+  "issue": 70,
+  "sourceHashes": {
+    "assets/farm.webp": "34d512c4bf692e5744934784527447ba3f1d3641ba968dbd205b7205a8717f59",
+    "assets/logo-forest.svg": "707f5b8ff307999de30712a754c237061c598b4d4d7340eeb96e9a2d3b38b307",
+    "build.py": "3a94db172b89f476ccd42cca370ce632c24d83e79399a18c246b77faaa024f8f",
+    "confirmed.html": "23c07a937ae8d8438ca17244561bb2fcf892e918587ae9c624e187adc6d539c2",
+    "email.css": "97090402832054db6b37a72d5d97e3bf89c7650e5d7e698e4f1687606aa5abc6",
+    "request.html": "36aafa9fb99582bd41e6dd8de9230db3d0e1702a7a81b25e46d7caf279ca3101"
+  },
+  "renderer": "@resvg/resvg-js 2.6.2; derivative graph nodes and icons from approved v3; PNG at 2x; no guest data in artwork",
+  "derivatives": {
+    "journey-confirmed.png": "93a9af95c664026d17872e510cb0b970d1f7da332f293715d75be8a9417dfbed",
+    "farm.jpg": "7529bca503ca5f00efb72e3db71a6582c631c8db409953abe17a3de6f3d2500d",
+    "journey-request.png": "355283ef9b5f49f3449e19c8d8a3ccfef1c6a4cceff6ba8fa5fc8b8e374a3a24",
+    "logo-forest.png": "f3a6498e7f1dfea26835dad0dc6b64be8aa9e9777c7e0e68ecb7df940c864f5b"
+  }
+}

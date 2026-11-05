@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
-import {deliveryTarget,assertArtifact,assertPullRequest,branchChecks} from "../scripts/delivery/environment-policy.mjs";
+import {compatibleBookingApi,deliveryTarget,assertArtifact,assertPullRequest,branchChecks} from "../scripts/delivery/environment-policy.mjs";
 import {verifyDesignPreserved} from "../scripts/delivery/preserve-design.mjs";
 import {mkdtemp,mkdir,writeFile,rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
@@ -67,4 +67,15 @@ test("production preservation rejects changed, missing and additional Natura byt
     await writeFile(root+"/dist/design/extra.txt","extra");await assert.rejects(verifyDesignPreserved(root+"/",{files,pin}),/FILE_SET_CHANGED/);
     await rm(root+"/dist/design/index.html");await assert.rejects(verifyDesignPreserved(root+"/",{files,pin}),/FILE_SET_CHANGED/);
   }finally{await rm(root,{recursive:true,force:true});}
+});
+
+test("publication and live verification share the website-to-API version contract",()=>{
+ assert.equal(compatibleBookingApi("0.21.7","0.7.1"),true);
+ assert.equal(compatibleBookingApi("0.22.0","0.8.0"),true);
+ assert.equal(compatibleBookingApi("0.22.1","0.8.2"),true);
+ assert.equal(compatibleBookingApi("0.23.0","0.8.0"),false);
+ assert.equal(compatibleBookingApi("0.23.0","0.8.1"),true);
+ assert.equal(compatibleBookingApi("0.22.0","0.7.1"),false);
+ assert.equal(compatibleBookingApi("0.21.7","0.8.0"),false);
+ assert.equal(compatibleBookingApi("bad","0.8.0"),false);
 });

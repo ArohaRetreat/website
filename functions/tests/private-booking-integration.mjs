@@ -1,0 +1,60 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import {initializeApp} from 'firebase-admin/app';
+import {getFirestore} from 'firebase-admin/firestore';
+import {initialState,addDays,todayIST} from '../booking/domain.mjs';
+import {recordPrivateReservations,confirmPrivateReservationByEmail} from '../booking/host-private.mjs';
+import {bookingState,publicBookingCalendar,bookingCommand} from '../booking/store.mjs';
+import {emailTemplate} from '../email/templates.mjs';
+if(!process.env.FIRESTORE_EMULATOR_HOST)throw Error('EMULATOR_REQUIRED');
+const db=getFirestore(initializeApp({projectId:'demo-aroha-private-bookings'},'private-booking-tests'));
+const actor='private-host',start=addDays(todayIST(),40);
+const request=()=>({name:'Synthetic Customer',email:'private@example.test',ranges:[{arrival:start,lastDay:addDays(start,12),dayRate:3000000},{arrival:addDays(start,20),lastDay:addDays(start,36),dayRate:3000000}]});
+const init=async()=>{await db.collection('aroha_members').doc(actor).set({active:true,role:'superadmin'});const s=initialState();await db.collection('aroha_booking_config').doc('site').set({settings:s.settings,units:s.units,blocks:[],promos:[]});};
+test('private reservations are manager-only, conflict-safe, inclusive, idempotent, private and visible to hosts',async()=>{
+ await init();const input=request(),key=randomUUID();
+ await assert.rejects(recordPrivateReservations(db,{hostId:'unknown',key,input}),e=>e.code==='FORBIDDEN');
+ const dry=await recordPrivateReservations(db,{hostId:actor,key,input,dryRun:true});assert.equal(dry[0].total,39000000);assert.equal(dry[1].total,51000000);assert.equal((await db.collection('aroha_bookings').get()).size,0);
+ const [a,b]=await Promise.all([recordPrivateReservations(db,{hostId:actor,key,input}),recordPrivateReservations(db,{hostId:actor,key,input})]);assert.deepEqual(a,b);assert.equal((await db.collection('aroha_bookings').get()).size,2);
+ await assert.rejects(recordPrivateReservations(db,{hostId:actor,key,input:{...input,name:'Changed'}}),e=>e.code==='IDEMPOTENCY_CONFLICT');
+ await assert.rejects(recordPrivateReservations(db,{hostId:actor,key:randomUUID(),input}),e=>e.code==='AVAILABILITY_CHANGED');
+ const state=await bookingState(db,{uid:actor,name:'Host',email:'host@example.test'},{admin:true,start});
+ assert.equal(state.bookings.length,2);assert.equal(state.bookings[0].source,'host_private');assert.equal(state.bookings[0].guestCountPending,true);assert.equal(state.bookings[0].contact,undefined);
+ const cal=await publicBookingCalendar(db,{start,days:40,kind:'day',adults:2,childrenAges:[]});
+ assert.equal(cal.days.filter(d=>d.reason==='already_booked').length,30);assert.equal(cal.days[13].available,true);assert.ok(!JSON.stringify(cal).includes('Synthetic'));assert.ok(!JSON.stringify(cal).includes('private@example'));assert.ok(!JSON.stringify(cal).includes('reference'));
+ const confirmed=await db.collection('aroha_bookings').doc(a[0].id).get();assert.equal(confirmed.data().guests,0);assert.equal(confirmed.data().total,39000000);assert.equal(confirmed.data().source,'host_private');
+ const config={enabled:true,test:false,environment:'production',recipientMode:'booking',from:'sender@example.test',replyTo:'host@example.test',hostTo:'host@example.test',issuer:{name:'Aroha Retreat',address:'Synthetic lane',paymentInstructions:'Arrange payment with hosts',configVersion:1}};
+ const args={hostId:actor,id:a[0].id,expectedVersion:1,key:randomUUID(),config};
+ const result=await confirmPrivateReservationByEmail(db,args);assert.deepEqual(await confirmPrivateReservationByEmail(db,args),result);
+ assert.equal((await db.collection('aroha_notifications').get()).size,1);
+ const j=(await db.collection('aroha_notifications').doc(result.jobIds[0]).get()).data();assert.equal(j.to,input.email);assert.equal(j.templateVersion,'email-v3-private');
+ const m=emailTemplate(j);assert.match(m.html,/Guest count to be arranged/);assert.ok(!m.text.includes('0 guests'));assert.match(m.text,/Reply to this email/);assert.match(m.text,/Explore Aroha Retreat/);assert.ok(!m.html.includes('/book/#visits'));assert.ok(!m.subject.includes('PRE-PROD'));
+ const invoice=(await db.collection('aroha_invoices').doc(result.invoiceId).get()).data();assert.equal(invoice.amountPaid,0);assert.equal(invoice.balanceDue,39000000);
+ await assert.rejects(confirmPrivateReservationByEmail(db,{...args,key:randomUUID()}),e=>e.code==='VERSION_CONFLICT');
+ await bookingCommand(db,{uid:actor,email:'host@example.test'},'booking-action',{id:a[0].id,action:'cancel',expectedVersion:2},randomUUID(),{admin:true});
+ assert.equal((await publicBookingCalendar(db,{start,days:1,kind:'day',adults:2,childrenAges:[]})).days[0].available,true);
+ assert.equal((await db.collection('aroha_invoices').doc(result.invoiceId).get()).data().status,'void');
+ assert.equal((await db.collection('aroha_notifications').get()).size,1);
+
+});
+test('explicit pending conversion retains old snapshot/profile and releases only its linked offer hold',async()=>{
+ const arrival=addDays(start,50),lastDay=addDays(arrival,2),oldId=randomUUID(),owner='old-owner';
+ const s=initialState(),old={id:oldId,owner,reference:'AR-IMPORT',kind:'event',arrival,departure:addDays(lastDay,1),startsAt:Date.parse(arrival+'T06:00:00+05:30'),endsAt:Date.parse(lastDay+'T18:00:00+05:30'),status:'pending_approval',version:4,expiresAt:Date.now()+86400000,guests:2,adults:2,children:0,units:[],allocations:[],history:[],createdAt:Date.now(),total:6000000};
+ await db.collection('aroha_bookings').doc(oldId).set(old);await db.collection('aroha_booking_profiles').doc(owner).set({activeIds:[oldId],name:'Previous',email:'old@example.test'});
+ await db.collection('aroha_booking_config').doc('site').update({blocks:[{id:'old-hold',unitId:'site',bookingId:oldId,arrival,departure:old.departure,reason:'Exclusive event offer'}]});
+ const input={name:'Synthetic Customer',email:'private@example.test',ranges:[{arrival,lastDay,dayRate:3000000,existingId:oldId,expectedVersion:3}]};
+ await assert.rejects(recordPrivateReservations(db,{hostId:actor,key:randomUUID(),input}),e=>e.code==='VERSION_CONFLICT');input.ranges[0].expectedVersion=4;
+ const result=await recordPrivateReservations(db,{hostId:actor,key:randomUUID(),input});assert.equal(result[0].id,oldId);assert.equal(result[0].total,9000000);
+ assert.equal((await db.collection('aroha_booking_private_audit').get()).size,1);assert.equal((await db.collection('aroha_booking_profiles').doc(owner).get()).data().activeIds.length,0);assert.equal((await db.collection('aroha_booking_config').doc('site').get()).data().blocks.length,0);
+});
+
+test('privileged operator provenance is distinct from its rechecked authorising host',async()=>{
+ const input={name:'Synthetic Operator Guest',email:'operator-guest@example.test',ranges:[{arrival:addDays(start,80),lastDay:addDays(start,80),dayRate:3000000}]},operatorId='a'.repeat(64);
+ const result=await recordPrivateReservations(db,{hostId:actor,operatorId,key:randomUUID(),input});
+ const booking=(await db.collection('aroha_bookings').doc(result[0].id).get()).data();assert.equal(booking.recordedBy,'operator-'+operatorId);assert.equal(booking.authorisingHost,actor);assert.equal(booking.acceptanceSource,'host_instruction');
+ const events=await db.collection('aroha_observability_outbox').get();
+ const records=events.docs.map(d=>d.data());assert.ok(JSON.stringify(records).includes('aroha-booking-operator'));
+ await db.collection('aroha_members').doc(actor).update({active:false});
+ await assert.rejects(recordPrivateReservations(db,{hostId:actor,operatorId,key:randomUUID(),input}),e=>e.code==='FORBIDDEN');
+});

@@ -1278,3 +1278,11 @@ html[data-booking-keyboard] .reveal {
     scroll-margin-bottom: 120px;
   }
 }
+
+.calendar-status{font-size:12px;line-height:1.5;color:var(--muted);margin:12px 0}.grid button:disabled{opacity:.3;cursor:not-allowed;text-decoration:line-through}.account-choices{display:grid;gap:12px;margin:24px 0}.account-choices button{text-align:left;color:var(--ink);font:inherit;cursor:pointer}.account-choices strong,.account-choices span{display:block}.account-choices span{font-size:14px;line-height:1.5;margin-top:8px;color:var(--muted)}#sheet .enquiry-form{display:grid;gap:16px;margin-top:24px}#sheet .enquiry-form label{display:grid;gap:8px}#sheet .enquiry-form input,#sheet .enquiry-form select,#sheet .enquiry-form textarea{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:12px;width:100%;box-sizing:border-box}#sheet .enquiry-form button,#sheet .google-signin{font:inherit;background:var(--button);color:var(--on);border:0;padding:14px;border-radius:8px;cursor:pointer}
+#sheet .enquiry-form [hidden]{display:none!important}
+
+.website-return{padding:4px 5vw;background:var(--paper);border-bottom:1px solid var(--line);font-size:14px;line-height:1.5}.website-return a{display:inline-flex;align-items:center;min-height:44px;font-weight:600;text-decoration:underline;text-underline-offset:4px}.website-return a:focus-visible{outline-offset:3px}
+@media(max-width:700px){.website-return{padding:4px 22px}}
+
+.grid button.booked:disabled{opacity:1;color:var(--muted);text-decoration:none;background:var(--soft);border-radius:6px}.grid .booked-number{text-decoration:line-through}.grid .booked-label{display:block;font-size:9px;line-height:1.2;margin-top:2px}

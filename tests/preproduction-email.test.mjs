@@ -16,7 +16,7 @@ const { environmentProfile } = await import(
 const { environment, collectionName, isTester, runtimeServiceName } =
   await import("../functions/environment.mjs");
 const { visitWindow } = await import("../functions/email/visit-window.mjs");
-const { mailSettings } = await import("../functions/email/config.mjs");
+const { mailSettings, recipientAllowed } = await import("../functions/email/config.mjs");
 const {
   invoiceSnapshot,
   invoiceYear,
@@ -404,7 +404,7 @@ test("confirmation attaches its own private invoice and a cancelled booking supp
     db,
     mailCollection(db).doc(id),
     async (b) => {
-      attached = b.attachments?.[0]?.content?.toString() === "PDF-BYTES";
+      attached = b.attachments?.some(a => a.filename.endsWith(".pdf") && a.content?.toString() === "PDF-BYTES");
       return { data: { id: "confirm-message" }, error: null };
     },
     {
@@ -564,4 +564,38 @@ test("signed webhooks are replay-safe, reject tampering, and cannot downgrade de
     (await mailCollection(db).doc(id).get()).data().errorCode,
     "MAIL_PROVIDER_SUPPRESSED",
   );
+});
+
+test("booking-mode test emails use verified guest and host recipients while preserving legacy jobs",async()=>{
+ const oldMode=process.env.MAIL_RECIPIENT_MODE;
+ try {
+  delete process.env.MAIL_RECIPIENT_MODE;
+  const legacy=fakeDB(), legacyIds=await queue(legacy);
+  process.env.MAIL_RECIPIENT_MODE="booking";
+  const c=mailSettings({...process.env,MAIL_REPLY_TO:"hosts@example.test"});
+  assert.equal(c.replyTo,"hosts@example.test");assert.equal(c.test,true);
+  assert.doesNotThrow(()=>mailSettings({...process.env,MAIL_TEST_RECIPIENT:""}));
+  const db=fakeDB(),ids=await queue(db), sent=[];
+  for(const id of ids){const j=(await mailCollection(db).doc(id).get()).data();assert.equal(j.recipientMode,"booking");assert.equal(j.to,j.channel==="host_notification"?"host@example.test":"guest@example.test");await deliverEmail(db,mailCollection(db).doc(id),async body=>{sent.push(body);return{id:randomBytes(8).toString("hex")};});}
+  assert.equal(sent.length,2);assert(sent.every(m=>m.subject.startsWith("[PRE-PROD TEST]")));
+  const old=(await mailCollection(legacy).doc(legacyIds[0]).get()).data();delete old.recipientMode;
+  assert(recipientAllowed(old,mailSettings()));assert.equal(old.to,"owner@example.test");
+  await mailCollection(legacy).doc(old.id).set(old);
+  let legacyTarget;await deliverEmail(legacy,mailCollection(legacy).doc(old.id),async b=>{legacyTarget=b.to[0];return{id:"legacy-preserved"};});assert.equal(legacyTarget,"owner@example.test");
+  const rollback=fakeDB(),rollbackIds=await queue(rollback);
+  process.env.MAIL_RECIPIENT_MODE="test-inbox";
+  let rollbackSent=false;await deliverEmail(rollback,mailCollection(rollback).doc(rollbackIds[0]),async()=>{rollbackSent=true;return{id:"must-not-send"};});
+  assert.equal(rollbackSent,false);const refused=(await mailCollection(rollback).doc(rollbackIds[0]).get()).data();assert.equal(refused.errorCode,"MAIL_RECIPIENT_BOUNDARY");assert.equal(refused.to,"guest@example.test");
+  process.env.MAIL_RECIPIENT_MODE="booking";
+  const newJob=(await mailCollection(db).doc(ids[0]).get()).data();
+  assert.equal(recipientAllowed(newJob,mailSettings({...process.env,MAIL_RECIPIENT_MODE:"test-inbox"})),false);
+  assert.equal(recipientAllowed({...old,to:"arbitrary@example.test"},mailSettings()),false);
+  assert.throws(()=>mailSettings({...process.env,MAIL_RECIPIENT_MODE:"bad"}));
+ } finally {if(oldMode===undefined)delete process.env.MAIL_RECIPIENT_MODE;else process.env.MAIL_RECIPIENT_MODE=oldMode;}
+});
+
+test("live issuer preserves a separate establishment registration without inferring GST or payment",()=>{
+ const c=mailSettings({MAIL_ENABLED:'true',MAIL_FROM:'sender@example.test',MAIL_REPLY_TO:'host@example.test',MAIL_HOST_TO:'host@example.test',BILLING_DISPLAY_NAME:'Aroha Retreat',BILLING_ADDRESS:'Sample business address',BILLING_PAYMENT_INSTRUCTIONS:'Arrange payment with hosts',BILLING_REGISTRATION_NUMBER:'REG/EXAMPLE/2026'},environmentProfile('production'));
+ assert.equal(c.issuer.registrationNumber,'REG/EXAMPLE/2026');assert.equal(c.test,false);assert.equal(c.issuer.gstin,undefined);
+ assert.throws(()=>mailSettings({MAIL_ENABLED:'true',MAIL_FROM:'sender@example.test',MAIL_REPLY_TO:'host@example.test',MAIL_HOST_TO:'host@example.test',BILLING_DISPLAY_NAME:'Aroha Retreat',BILLING_ADDRESS:'Sample business address',BILLING_PAYMENT_INSTRUCTIONS:'Arrange payment with hosts',BILLING_REGISTRATION_NUMBER:'<script>'},environmentProfile('production')),/INVALID_BILLING_CONFIG/);
 });

@@ -1,3 +1,4 @@
+import { apiVersion } from "./version.mjs";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { sendEmail } from "./email/provider.mjs";
 import { mailSettings } from "./email/config.mjs";
@@ -54,6 +55,7 @@ import {
 } from "./domain.mjs";
 import {
   publicBookingState,
+  publicBookingCalendar,
   bookingState,
   bookingCommand,
   throttleBooking,
@@ -318,6 +320,13 @@ export const arohaApi = onRequest(
         if (bookingPath === "/booking/public" && req.method === "GET") {
           operation = "booking.public";
           return await publicBookingState(db);
+        }
+        if (bookingPath === "/booking/calendar" && req.method === "POST") {
+          operation = "booking.calendar";
+          if (!req.is("application/json")) throw new DomainError("JSON_REQUIRED",415);
+          if (req.rawBody?.length > 2000) throw new DomainError("PAYLOAD_TOO_LARGE",413);
+          await throttleBooking(db,"calendar:"+hash(String(req.ip||"unknown")));
+          return await publicBookingCalendar(db,req.body);
         }
         if (bookingPath === "/booking/journey-event" && req.method === "POST") {
           operation = "booking.journey-event";
@@ -817,7 +826,7 @@ export const arohaApi = onRequest(
             severity: status >= 500 ? "ERROR" : "INFO",
             service: serviceName("aroha-api"),
             ...environmentFields(),
-            version: "0.7.1",
+            version: apiVersion,
             operation,
             status,
             durationMs: Date.now() - started,

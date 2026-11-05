@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Aroha production booking API",
-    "version": "0.7.0",
-    "description": "Verified Google identities and active hosts. Shared adult site capacity, day outings, shared sleeping places, private family rooms and host-quoted exclusive events. Existing reservations preserve prices and terms. No online payments. See booking-products-contract.md and contract-notes.md. Profile/contact, continuous event ranges and operational observability are defined in booking-platform-v2.md. API0.7.0 adds isolated pre-production and optional server-configured Resend/private invoices; see preproduction-email-contract.md. Production remains on0.6.0 until separately promoted."
+    "version": "0.8.0",
+    "description": "Verified Google identities and active hosts. Shared adult site capacity, day outings, shared sleeping places, private family rooms and host-quoted exclusive events. Existing reservations preserve prices and terms. No online payments. See booking-products-contract.md and contract-notes.md. Profile/contact, continuous event ranges and operational observability are defined in booking-platform-v2.md. API0.7.0 adds isolated pre-production and optional server-configured Resend/private invoices; see preproduction-email-contract.md. Production remains on0.6.0 until separately promoted. API0.8.0 adds published exclusive daily rates and a throttled anonymous aggregate calendar; see booking-refinements-v1.md. Existing legacy event offers retained."
   },
   "servers": [
     {
@@ -2134,6 +2134,82 @@
           },
           "422": {
             "description": "Invalid strict input"
+          }
+        }
+      }
+    },
+    "/calendar": {
+      "post": {
+        "operationId": "calendar",
+        "summary": "Throttled anonymous date availability only; no booking or customer details",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "start",
+                  "days",
+                  "kind",
+                  "adults",
+                  "childrenAges"
+                ],
+                "properties": {
+                  "start": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "days": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 62
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "stay",
+                      "day",
+                      "event"
+                    ]
+                  },
+                  "adults": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100
+                  },
+                  "childrenAges": {
+                    "type": "array",
+                    "maxItems": 100,
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9
+                    }
+                  },
+                  "arrival": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "settingsVersion, asOf and days with date/available; optional reason=already_booked for unavailable host-private exclusive inventory, without customer identifiers"
+          },
+          "422": {
+            "description": "Invalid bounded calendar input"
+          },
+          "429": {
+            "description": "Rate limit"
+          },
+          "409": {
+            "description": "Reconciliation needed"
           }
         }
       }

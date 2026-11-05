@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { environment, collectionName } from "../environment.mjs";
-import { mailSettings, validEmail } from "./config.mjs";
+import { mailSettings, validEmail, recipientMode } from "./config.mjs";
 import {
   contextFields,
   bookingEvent,
@@ -102,6 +102,7 @@ export function queueNotifications(
       target = channel === "host_notification" ? config.hostTo : profile.email;
     const job = {
       schemaVersion: 1,
+      templateVersion: booking.source === "host_private" ? "email-v3-private" : "email-v3",
       id,
       owner: booking.owner,
       bookingId: booking.id,
@@ -109,7 +110,8 @@ export function queueNotifications(
       sourceEventId: event.eventId,
       sourceContext: contextFields(),
       channel,
-      to: config.test ? config.testRecipient : target,
+      to: recipientMode(config) === "test-inbox" ? config.testRecipient : target,
+      recipientMode: recipientMode(config),
       from: config.from,
       replyTo: config.replyTo,
       test: config.test,
@@ -117,6 +119,7 @@ export function queueNotifications(
       subjectPrefix: config.test ? "[PRE-PROD TEST] " : "",
       snapshot: {
         reference: booking.reference,
+        ...(booking.source === "host_private" ? {privateReservation:true,guestCountPending:booking.guestCountPending===true} : {}),
         guestName:
           booking.contact?.name ||
           profile.contact?.name ||
@@ -127,6 +130,7 @@ export function queueNotifications(
         startsAt: booking.startsAt || 0,
         endsAt: booking.endsAt || 0,
         kind: booking.kind || "legacy",
+        pricingVersion: booking.pricingVersion || 0,
         guests: booking.guests,
         total: booking.total,
         bookingVersion: booking.version,

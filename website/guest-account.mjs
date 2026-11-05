@@ -1,3 +1,4 @@
+import {finishGuestSignIn} from "./guest-signin-return.mjs";
 import { createConsentNotice } from "./consent-notice.mjs";
 import { esc } from "./render.mjs";
 let modulePromise;
@@ -37,7 +38,7 @@ export function guestAvatar(user) {
 
 export function createGuestAccount(
   root,
-  { show, close, closeMenu = async () => {} },
+  { show, close, closeMenu = async () => {}, onEnquire },
 ) {
   let disposed = false,
     generation = 0,
@@ -61,7 +62,7 @@ export function createGuestAccount(
   function showLeaf(trigger) {
     hideMenu();
     menuTrigger = trigger;
-    leaf.innerHTML = `<svg class="account-leaf-watermark" viewBox="0 0 100 150" aria-hidden="true"><path d="M10 140C-5 65 45 0 95 5C99 69 68 129 10 140Z" fill="currentColor"/><path d="M12 137L84 20M36 102L25 65M53 77L75 74" stroke="currentColor" fill="none" stroke-width="2"/></svg><p class="eyebrow">YOUR CORNER OF AROHA</p>${guestAvatar(signedUser)}<p class="account-leaf-name" data-dt-mask>${esc(guestDisplayName(signedUser))}</p><nav aria-label="Your account"><a href="/book/" data-dt-name="Book a stay">Book a stay <span aria-hidden="true">↗</span></a><a href="/book/#visits" data-dt-name="My bookings">My bookings <span aria-hidden="true">↗</span></a><a href="/book/#profile" data-dt-name="Guest profile">My profile <span aria-hidden="true">↗</span></a><button data-account-signout data-dt-name="Sign out">Sign out <span aria-hidden="true">↗</span></button></nav><p class="account-leaf-note" role="status">Your next visit starts with a conversation.</p>`;
+    leaf.innerHTML = `<svg class="account-leaf-watermark" viewBox="0 0 100 150" aria-hidden="true"><path d="M10 140C-5 65 45 0 95 5C99 69 68 129 10 140Z" fill="currentColor"/><path d="M12 137L84 20M36 102L25 65M53 77L75 74" stroke="currentColor" fill="none" stroke-width="2"/></svg><p class="eyebrow">YOUR CORNER OF AROHA</p>${guestAvatar(signedUser)}<p class="account-leaf-name" data-dt-mask>${esc(guestDisplayName(signedUser))}</p><nav aria-label="Your account"><button data-account-enquire>Enquire on WhatsApp <span aria-hidden="true">↗</span></button><a href="/book/" data-dt-name="Book a stay">Book a stay <span aria-hidden="true">↗</span></a><a href="/book/#visits" data-dt-name="My bookings">My bookings <span aria-hidden="true">↗</span></a><a href="/book/#profile" data-dt-name="Guest profile">My profile <span aria-hidden="true">↗</span></a><button data-account-signout data-dt-name="Sign out">Sign out <span aria-hidden="true">↗</span></button></nav><p class="account-leaf-note" role="status">Your next visit starts with a conversation.</p>`;
     const anchor = root.querySelector("#guest-account-header") || trigger,
       r = anchor.getBoundingClientRect();
     leaf.style.top = Math.max(12, r.bottom + 12) + "px";
@@ -73,6 +74,7 @@ export function createGuestAccount(
     }
     leaf.showPopover();
     trigger.setAttribute("aria-expanded", "true");
+    leaf.querySelector("[data-account-enquire]").onclick=()=>{hideMenu();onEnquire?.();};
     leaf.querySelector("[data-account-signout]").onclick = async (e) => {
       e.currentTarget.disabled = true;
       try {
@@ -158,7 +160,7 @@ export function createGuestAccount(
         if (!current()) return;
         const user = m.auth.currentUser;
         body.innerHTML = user
-          ? `<div class="guest-account-person" data-dt-mask>${guestAvatar(user)}<div><strong>${esc(user.displayName || "Welcome to Aroha")}</strong><p>${esc(user.email || "")}</p></div></div><p>You’re signed in. Your hosts review every stay request personally. Open the booking portal to request a stay or manage your visits.</p><div class="guest-account-actions"><a class="button" href="/book/">Book a stay ↗</a><button class="text-link" id="guest-signout">Sign out</button></div>`
+          ? `<div class="guest-account-person" data-dt-mask>${guestAvatar(user)}<div><strong>${esc(user.displayName || "Welcome to Aroha")}</strong><p>${esc(user.email || "")}</p></div></div><p>You’re signed in. Your hosts review every stay request personally. Choose a conversation or a booking request. Enquiries open WhatsApp; bookings need host approval.</p><div class="guest-account-actions"><button class="button" id="guest-enquire">Enquire on WhatsApp ↗</button><a class="button" href="/book/">Book a stay ↗</a><button class="text-link" id="guest-signout">Sign out</button></div>`
           : `<p>A familiar welcome, with one secure Google sign-in.</p><button type="button" class="google-signin" id="guest-google-login">Continue with Google <span aria-hidden="true">↗</span></button><p class="guest-auth-note">We use your Google name and email for your account. Signing in does not confirm a booking or give access to the host studio.</p>`;
         const status = document.createElement("p");
         status.setAttribute("role", "status");
@@ -166,6 +168,7 @@ export function createGuestAccount(
         root
           .querySelector("#guest-account-done")
           ?.addEventListener("click", close);
+        root.querySelector("#guest-enquire")?.addEventListener("click",()=>onEnquire?.());
         const login = root.querySelector("#guest-google-login");
         login?.addEventListener("click", () => {
           login.disabled = true;
@@ -174,7 +177,7 @@ export function createGuestAccount(
           m.login()
             .then(() => {
               labels(m.auth.currentUser);
-              location.assign('/book/');
+              if(current()) finishGuestSignIn();
             })
             .catch((e) => {
               if (current()) {
@@ -207,6 +210,8 @@ export function createGuestAccount(
           '<p role="alert">Sign-in could not load. Please close this window and try again.</p>';
     }
   }
+  const authReady=()=>{loadAuth().then(m=>{if(!disposed){authModule=m;if(!unsubscribe)unsubscribe=m.observeAuth(labels);}}).catch(()=>{});};
+  document.addEventListener("aroha-auth-ready",authReady);
   buttons.forEach((b) => b.addEventListener("click", accountAction));
   try {
     if (sessionStorage.getItem("aroha-guest-session") === "1")
@@ -224,6 +229,7 @@ export function createGuestAccount(
       disposed = true;
       generation++;
       unsubscribe?.();
+      document.removeEventListener("aroha-auth-ready",authReady);
       hideMenu();
       leaf.remove();
       notice.destroy();

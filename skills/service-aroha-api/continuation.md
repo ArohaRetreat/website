@@ -1,3 +1,7 @@
+## Preprod0.22.0 / API0.8.0 — issue83 (prepared)
+
+Read [booking refinement contract](../../docs/booking-refinements-v1.md). New exclusive rate/one-approval flow, signed-in WhatsApp enquiry/account choices and privacy-safe availability calendar are preprod-only. Production remains0.21.7/API0.7.1. Use local/release-evidence/aroha-booking-refinements/handoff.md and actual provider receipts for deployment state. Preserve CMS/reservations/media and frozen email/PDF snapshots; full stage communications stay issue70.
+
 ## Website0.20.0 / API0.7.0 — issue65 (pre-production only, prepared)
 
 Add isolated pre-production collections, tester-only booking API, separate Functions codebase/Hosting site, forced test inbox and separate RUM tag. Request acknowledgement/host review messages and approval confirmations with private versioned invoice PDFs use atomic jobs, idempotency, bounded retries and signed status webhooks. Central versioned runtime metadata controls environment-specific RUM/server destinations. Read [contract](../../docs/preproduction-email-contract.md) and [operations](../../docs/preproduction-email-operations.md).

@@ -1,3 +1,33 @@
+## 0.24.0 / API 0.9.0 — production booking promotion and private reservations
+
+- Promote approved exclusive pricing/calendar, signed-in enquiry, homepage sign-in return and branded booking emails through an independent main release.
+- Add host-recorded confirmed private-exclusive reservations with unknown attendance, inclusive daily prices, transactional conflicts/idempotency/audit, and a separately queued private confirmation/invoice. No guest identity or payment is fabricated.
+- Host Studio labels private reservations; public date picker greys booked dates with a finite Already booked explanation, without customer details.
+- Production preparation validates real billing details and explicitly enables only the required email exports. Keep old queues, CMS, Natura and preprod intact; new-event-only activation.
+
+## 0.23.2 / API 0.8.3 — approved email templates (preprod)
+
+- Actual booking emails now use the approved v3 logo, photograph, website fonts with inbox fallbacks, graphical six-stage journey and stage-specific copy.
+- Inline CID artwork travels with the email; confirmation keeps its private invoice attachment. New jobs snapshot the template version; legacy jobs retain their original provider payload for safe retries.
+- Preserve actual verified recipients, host notifications, isolated preprod inventory, test identity and production state. Remaining lifecycle triggers and frozen PDF integration stay under issue70.
+
+# 0.23.0 (pre-production)
+
+- Completed guest sign-in returns to the website homepage; Host Studio authentication is unchanged. Booking has a visible Back to website link on desktop and phones.
+- Preprod can deliver acknowledgement/confirmation to the verified booking guest and notifications to the configured host, preserving TEST subjects/documents and isolated inventory. Queued recipients are immutable; no historical replay.
+- API0.8.1 adds explicit server-owned recipient policy with legacy inbox compatibility and rollback denial. Payment gateway remains deferred.
+
+# 0.22.1 (pre-production)
+
+- Share API compatibility checks between publication and live verification so API0.8.0 is correctly verified for website0.22.
+
+# 0.22.0 (pre-production)
+
+- Exclusive retreat: configurable ₹30000 per selected day, complete upfront price and a single host availability approval. Pending priced requests hold the continuous range; legacy offers/prices remain intact.
+- Signed-in account separates WhatsApp enquiries and bookings. Both public enquiry entrypoints require current sign-in, preserving guest-reviewed messages without creating a reservation.
+- Calendar disables unavailable dates using a bounded privacy-safe server availability read for the party and entire selected range. Loading/retry, stale response and checkout-boundary behavior retain authoritative transaction checks.
+- API0.8.0. Preprod-only delivery; production mail and frozen lifecycle designs remain separately pending.
+
 # 0.21.7
 
 - Clear private dialogs on account loss and reject delayed account-state responses after identity changes, preserving anonymous planning during a first sign-in.

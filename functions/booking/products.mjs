@@ -6,6 +6,7 @@ const fail = (code, status = 422) => {
 export const productDefaults = Object.freeze({
   siteAdults: 35,
   nightAdults: 10,
+  eventDayRate: 3000000,
   dayAdultRate: 120000,
   dayChildRate: 70000,
   individualRate: 350000,
@@ -41,7 +42,7 @@ export function interval(b, state, now) {
   };
 }
 export const reservesCapacity = (b, now) =>
-  occupies(b, now) && !(b.kind === "event" && b.status === "pending_approval");
+  occupies(b, now) && !(b.kind === "event" && b.status === "pending_approval" && !b.pricingVersion);
 const intersects = (a, b) => a.start < b.end && b.start < a.end;
 export function productSelection(state, input, now = Date.now()) {
   const p = productPolicy(state),
@@ -373,13 +374,16 @@ export function productPrice(state, uid, input, now = Date.now(), exclude) {
         amount: a.extraChildren * p.extraChildRate * a.nights,
       },
     ];
-  if (a.kind !== "event")
-    subtotal = lineItems.reduce((n, x) => n + x.amount, 0);
+  if (a.kind === "event") {
+    const days = Math.round((Date.parse(a.departure) - Date.parse(a.arrival)) / 86400000);
+    lineItems = [{ label: `Exclusive retreat × ${days} day(s)`, amount: days * p.eventDayRate }];
+  }
+  subtotal = lineItems.reduce((n, x) => n + x.amount, 0);
   const code = String(input.promo || "")
     .trim()
     .toUpperCase();
   let discount = 0,
-    offer = a.kind === "event" ? "Host quote required" : "Published rate";
+    offer = "Published rate";
   if (a.kind === "event" && code) fail("PROMO_NOT_VALID");
   if (subtotal !== null) {
     const loyalty = tier(state, uid);
@@ -427,7 +431,8 @@ export function productPrice(state, uid, input, now = Date.now(), exclude) {
     cancelHours: state.settings.cancelHours,
     currency: "INR",
     policy: { ...p },
-    quoteAccepted: a.kind !== "event",
+    quoteAccepted: true,
+    ...(a.kind === "event" ? { pricingVersion: 1 } : {}),
   };
 }
 export function assertLegacyCapacity(state, b, now, exclude) {
@@ -456,6 +461,7 @@ export function calendarSummary(state, date, now = Date.now()) {
       id: b.id,
       reference: b.reference || "",
       kind: b.kind || "legacy",
+      ...(b.source === "host_private" ? {source:b.source,guestCountPending:true} : {}),
       adults: b.adults ?? b.guests,
       children: b.children ?? 0,
       units: b.units,
@@ -472,3 +478,37 @@ export const bookingOnDate = (state, b, d) =>
     start: local(d, "00:00"),
     end: local(addDays(d, 1), "00:00"),
   });
+
+// Privacy-safe date-picker read. No reservation, room or customer data is projected.
+export function calendarWindow(input, now = Date.now()) {
+  const validDate = d => typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d) && Number.isFinite(Date.parse(d+'T00:00:00Z')) && new Date(d+'T00:00:00Z').toISOString().slice(0,10) === d;
+  if (!validDate(input.start) || !Number.isInteger(input.days) || input.days < 1 || input.days > 62 || !['stay','day','event'].includes(input.kind) || !Number.isInteger(input.adults) || input.adults < 1 || input.adults > 100 || !Array.isArray(input.childrenAges) || input.childrenAges.length > 100 || input.childrenAges.some(a=>!Number.isInteger(a)||a<0||a>9) || (input.arrival !== undefined && !validDate(input.arrival))) fail('INVALID_CALENDAR');
+  const today = todayIST(now), last = addDays(input.start,input.days-1);
+  if (input.start < addDays(today,-31) || input.start > addDays(today,365) || last > addDays(today,427) || (input.arrival && (input.arrival < today || input.arrival > addDays(today,365) || input.arrival > last || input.arrival < addDays(input.start,-31)))) fail('INVALID_CALENDAR');
+  return {start: addDays(input.arrival && input.arrival < input.start ? input.arrival : input.start,-1), end:addDays(last,1)};
+}
+export function availabilityCalendar(state, input, now = Date.now()) {
+  calendarWindow(input,now);
+  function canFit(arrival, departure) {
+    const selection = {arrival,departure,adults:input.adults,childrenAges:input.childrenAges,guests:input.adults+input.childrenAges.length,units:[]};
+    try {
+      if(input.kind !== 'stay') return productAvailability(state,{...selection,kind:input.kind},now).available;
+      if(!input.childrenAges.length && productAvailability(state,{...selection,kind:'individual'},now).available) return true;
+      const a = productAvailability(state,{...selection,kind:'private'},now);
+      const rooms = a.units.filter(u=>u.available).sort((a,b)=>b.capacity-a.capacity);
+      for(let n=Math.max(1,Math.ceil(input.adults/2),Math.ceil(input.childrenAges.length/2)); n<=Math.min(rooms.length,input.adults); n++) if(privateAllocation(rooms.slice(0,n),input.adults,input.childrenAges.length)) return true;
+      return false;
+    } catch(e) {
+      if(['INVALID_STAY_DATES','INVALID_TIME_WINDOW','INVALID_NUMBER'].includes(e.code)) return false;
+      throw e;
+    }
+  }
+  return {settingsVersion:state.settings.version,asOf:now,days:Array.from({length:input.days},(_,n)=>{
+    const date=addDays(input.start,n),arrival=input.arrival||date;
+    const departure=input.arrival ? (input.kind==='event'?addDays(date,1):date) : addDays(date,1);
+    const available=canFit(arrival,departure);
+    const p=productPolicy(state),start=local(arrival,input.kind==='stay'?p.stayStart:p.dayStart),end=local(input.kind==='stay'?departure:addDays(departure,-1),input.kind==='stay'?p.stayEnd:p.dayEnd);
+    const booked=!available && end>start && state.bookings.some(b=>b.source==='host_private'&&reservesCapacity(b,now)&&intersects(interval(b,state,now),{start,end}));
+    return {date,available,...(booked?{reason:'already_booked'}:{})};
+  })};
+}
