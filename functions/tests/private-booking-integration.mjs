@@ -48,3 +48,13 @@ test('explicit pending conversion retains old snapshot/profile and releases only
  const result=await recordPrivateReservations(db,{hostId:actor,key:randomUUID(),input});assert.equal(result[0].id,oldId);assert.equal(result[0].total,9000000);
  assert.equal((await db.collection('aroha_booking_private_audit').get()).size,1);assert.equal((await db.collection('aroha_booking_profiles').doc(owner).get()).data().activeIds.length,0);assert.equal((await db.collection('aroha_booking_config').doc('site').get()).data().blocks.length,0);
 });
+
+test('privileged operator provenance is distinct from its rechecked authorising host',async()=>{
+ const input={name:'Synthetic Operator Guest',email:'operator-guest@example.test',ranges:[{arrival:addDays(start,80),lastDay:addDays(start,80),dayRate:3000000}]},operatorId='a'.repeat(64);
+ const result=await recordPrivateReservations(db,{hostId:actor,operatorId,key:randomUUID(),input});
+ const booking=(await db.collection('aroha_bookings').doc(result[0].id).get()).data();assert.equal(booking.recordedBy,'operator-'+operatorId);assert.equal(booking.authorisingHost,actor);assert.equal(booking.acceptanceSource,'host_instruction');
+ const events=await db.collection('aroha_observability_outbox').get();
+ const records=events.docs.map(d=>d.data());assert.ok(JSON.stringify(records).includes('aroha-booking-operator'));
+ await db.collection('aroha_members').doc(actor).update({active:false});
+ await assert.rejects(recordPrivateReservations(db,{hostId:actor,operatorId,key:randomUUID(),input}),e=>e.code==='FORBIDDEN');
+});

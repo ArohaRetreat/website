@@ -1,5 +1,6 @@
 // Privileged operator only; never bundled into the browser or exposed as an HTTP route.
-import {readFile,writeFile} from 'node:fs/promises';
+import {readFile,writeFile,unlink} from 'node:fs/promises';
+import {randomUUID,createHash} from 'node:crypto';
 import {createRequire} from 'node:module';
 import {spawnSync} from 'node:child_process';
 import {resolve,dirname} from 'node:path';
@@ -23,17 +24,21 @@ async function main(){
  const cliRequire=createRequire(process.env.FIREBASE_CLI_PATH),lib=dirname(dirname(process.env.FIREBASE_CLI_PATH)),auth=cliRequire(lib+'/auth.js');
  const account=auth.getProjectDefaultAccount(process.cwd())||auth.getGlobalDefaultAccount();
  const owners=(cfg.SUPER_ADMIN_EMAILS||'').toLowerCase().split(',').map(s=>s.trim());
- if(!account||!owners.includes(String(account.user?.email||'').toLowerCase()))throw Error('CONFIGURED_OWNER_CREDENTIAL_REQUIRED');
- const require=createRequire(new URL('../functions/package.json',import.meta.url)),{initializeApp}=require('firebase-admin/app'),{getFirestore}=require('firebase-admin/firestore');
- const app=initializeApp({projectId:'aroha-retreat',credential:{async getAccessToken(){const t=await auth.getAccessToken(account.tokens.refresh_token,['https://www.googleapis.com/auth/cloud-platform']);return {access_token:t.access_token,expires_in:Math.max(60,Math.floor(((t.expires_at||Date.now()+3600000)-Date.now())/1000))}}}},'private-reservation-operator');
- const db=getFirestore(app);
+ if(!account?.user?.email||!owners.length)throw Error('AUTHENTICATED_PROJECT_CREDENTIAL_REQUIRED');
+ const operatorId=createHash('sha256').update(account.user.email.toLowerCase()).digest('hex');
+ const require=createRequire(new URL('../functions/package.json',import.meta.url)),{initializeApp,applicationDefault}=require('firebase-admin/app'),{getFirestore}=require('firebase-admin/firestore');
+ const api=cliRequire(lib+'/api.js'),credentialFile=resolve('local/operator-credentials-'+randomUUID()+'.tmp'),previousCredentials=process.env.GOOGLE_APPLICATION_CREDENTIALS;
+ await writeFile(credentialFile,JSON.stringify({type:'authorized_user',client_id:api.clientId(),client_secret:api.clientSecret(),refresh_token:account.tokens.refresh_token,quota_project_id:'aroha-retreat'}),{mode:0o600,flag:'wx'});
+ process.env.GOOGLE_APPLICATION_CREDENTIALS=credentialFile;
+ let db;
  try{
-  const members=await db.collection('aroha_members').where('email','==',account.user.email.toLowerCase()).limit(2).get();if(members.size!==1)throw Error('OWNER_MEMBERSHIP_REQUIRED');const hostId=members.docs[0].id;
+  const app=initializeApp({projectId:'aroha-retreat',credential:applicationDefault()},'private-reservation-operator');db=getFirestore(app);
+  const members=await db.collection('aroha_members').where('email','in',owners.slice(0,30)).limit(31).get();const hosts=members.docs.filter(d=>d.data().active===true&&d.data().role==='superadmin');if(hosts.length!==1)throw Error('UNAMBIGUOUS_AUTHORISING_HOST_REQUIRED');const hostId=hosts[0].id;
   const {recordPrivateReservations,confirmPrivateReservationByEmail}=await import('../functions/booking/host-private.mjs');
   const {mailSettings}=await import('../functions/email/config.mjs');
-  const result=mode==='notify'?(apply?await confirmPrivateReservationByEmail(db,{hostId,key,id:input.id,expectedVersion:input.expectedVersion,config:mailSettings({...cfg,MAIL_RECIPIENT_MODE:'booking'})}):{notificationNotSent:true}):await recordPrivateReservations(db,{hostId,key,input,dryRun:!apply});
+  const result=mode==='notify'?(apply?await confirmPrivateReservationByEmail(db,{hostId,operatorId,key,id:input.id,expectedVersion:input.expectedVersion,config:mailSettings({...cfg,MAIL_RECIPIENT_MODE:'booking'})}):{notificationNotSent:true}):await recordPrivateReservations(db,{hostId,operatorId,key,input,dryRun:!apply});
   if(receipt)await writeFile(receipt,JSON.stringify({source,environment:'production',mode,applied:apply,at:new Date().toISOString(),result},null,2),{mode:0o600});
   console.log(JSON.stringify({mode,applied:apply,result}));
- }finally{await db.terminate()}
+ }finally{if(db)await db.terminate();await unlink(credentialFile);if(previousCredentials===undefined)delete process.env.GOOGLE_APPLICATION_CREDENTIALS;else process.env.GOOGLE_APPLICATION_CREDENTIALS=previousCredentials;}
 }
-main().catch(e=>{console.error(/^[A-Z_]+$/.test(e.code||e.message||'')?(e.code||e.message):'PRIVATE_RESERVATION_COMMAND_FAILED');process.exitCode=1});
+main().catch(e=>{console.error(Number.isInteger(e.code)?'OPERATOR_DEPENDENCY_ERROR_'+e.code:/^[A-Z_]+$/.test(e.code||e.message||'')?(e.code||e.message):'PRIVATE_RESERVATION_COMMAND_FAILED');process.exitCode=1});

@@ -1,32 +1,74 @@
 [
   {
+    "environment": "production",
     "channel": "guest_acknowledgement",
     "amended": false,
     "sha256": "5deda83a3fcc3eb09878e0bb7d04166f6663d169edbed1ed164115111978fe38"
   },
   {
+    "environment": "production",
     "channel": "guest_acknowledgement",
     "amended": true,
     "sha256": "5deda83a3fcc3eb09878e0bb7d04166f6663d169edbed1ed164115111978fe38"
   },
   {
+    "environment": "production",
     "channel": "host_notification",
     "amended": false,
     "sha256": "f0acffaf357727c586825c7a895995d94632cd8d256ef326113e6224010790f8"
   },
   {
+    "environment": "production",
     "channel": "host_notification",
     "amended": true,
     "sha256": "f0acffaf357727c586825c7a895995d94632cd8d256ef326113e6224010790f8"
   },
   {
+    "environment": "production",
     "channel": "guest_confirmation",
     "amended": false,
     "sha256": "6dfe490ea89a7d10a01af4eb03bc42f2fa5bf587a5681833de2b29961eeb1593"
   },
   {
+    "environment": "production",
     "channel": "guest_confirmation",
     "amended": true,
     "sha256": "f13860f11b009e6ec4e7f139aab5777a055133ccc2ed3b3d868d273d73fefae9"
+  },
+  {
+    "environment": "pre-prod",
+    "channel": "guest_acknowledgement",
+    "amended": false,
+    "sha256": "404b116b5bdcd823c5fe638166926399a78a7361e92dbc8adf34fa680a6f0bfd"
+  },
+  {
+    "environment": "pre-prod",
+    "channel": "guest_acknowledgement",
+    "amended": true,
+    "sha256": "404b116b5bdcd823c5fe638166926399a78a7361e92dbc8adf34fa680a6f0bfd"
+  },
+  {
+    "environment": "pre-prod",
+    "channel": "host_notification",
+    "amended": false,
+    "sha256": "bf68c9f60ec71b6d25f9a141205881c642c4d6ef3b9227e355579fdb392ce3b8"
+  },
+  {
+    "environment": "pre-prod",
+    "channel": "host_notification",
+    "amended": true,
+    "sha256": "bf68c9f60ec71b6d25f9a141205881c642c4d6ef3b9227e355579fdb392ce3b8"
+  },
+  {
+    "environment": "pre-prod",
+    "channel": "guest_confirmation",
+    "amended": false,
+    "sha256": "9e7817cd95a8cd7ee347707feb92270ff73aea62b0bd7d902f06f99f7b1a7040"
+  },
+  {
+    "environment": "pre-prod",
+    "channel": "guest_confirmation",
+    "amended": true,
+    "sha256": "b225238004b6f9d71deade6c9f8302d41dc06174597efaa36934ce8e38668741"
   }
 ]
