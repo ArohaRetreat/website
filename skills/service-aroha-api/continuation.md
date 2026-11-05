@@ -70,3 +70,5 @@ Website 0.7 adds optional nature heroEveningImage/heroEveningAlt under the same 
 API 0.2.1 adds optional tour.nature.hrudhi validation; prior content remains valid. Existing permissions/expectedVersion/telemetry unchanged. See docs/api/aroha-v1.md; deploy before website 0.13.0 studio.
 
 API 0.2.2 accepts optional package availability, visit address/Google embed and guide walkSheet. Prior records remain valid. See docs/api/aroha-v1.md. Host auth/rules remain independent of new public Google sessions; deploy validator before website 0.14.0.
+
+Issue93 restores preprod Website changes in API0.8.4, using existing environment-specific content/public/revisions/audit selection. Shared members remain read-only; access routes remain denied. Read docs/preproduction-cms-v1.md. One-time baseline copy must preserve current host publication and existing preprod documents, never the seed. Deployment and real-account checks need release evidence.

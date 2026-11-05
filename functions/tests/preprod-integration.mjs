@@ -1,4 +1,7 @@
 import test from "node:test";
+import { readFile } from "node:fs/promises";
+import { initializeTestEnvironment, assertFails, assertSucceeds } from "@firebase/rules-unit-testing";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { randomUUID, createHmac } from "node:crypto";
@@ -100,7 +103,40 @@ test("pre-prod HTTP booking, approval, private invoice and webhook stay inside t
     assert.ok(!JSON.stringify(metadata).includes("tokenSecretVersion"));
     const session = await call(owner, "/session", {});
     assert.equal(session.httpStatus, 200, JSON.stringify(session));
-    assert.equal((await call(owner, "/draft", {})).httpStatus, 403);
+    assert.equal(session.session.modules.website, true);
+    assert.equal(session.session.modules.access, false);
+    assert.equal((await call(owner, "/members")).httpStatus, 403);
+    assert.equal((await call(owner, "/invitations", {email:"nobody@example.test",role:"viewer"})).httpStatus, 403);
+    const content = JSON.parse(await readFile("website/content.json", "utf8"));
+    for (const [collection, id] of [["aroha_content","draft"],["aroha_public","site"],["aroha_revisions","1"]])
+      await db.collection(collection).doc(id).set(canary);
+    assert.equal((await call(guest, "/draft")).httpStatus, 403);
+    assert.equal((await call(owner, "/draft", {content,expectedVersion:0})).version, 1);
+    assert.equal((await call(owner, "/draft", {content,expectedVersion:0})).httpStatus, 409);
+    assert.equal((await call(owner, "/publish", {expectedVersion:1})).httpStatus, 200);
+    assert.equal((await call(owner, "/revisions")).revisions[0].version, 1);
+    const changed = structuredClone(content);changed.brand.welcome="Preprod-only synthetic welcome";
+    assert.equal((await call(owner, "/draft", {content:changed,expectedVersion:1})).version, 2);
+    assert.equal((await call(owner, "/restore", {revision:1,expectedVersion:2})).version, 3);
+    assert.deepEqual((await call(owner, "/draft")).draft.content, content);
+    assert.equal((await call(owner, "/publish", {expectedVersion:3})).httpStatus, 200);
+    for (const [collection,id] of [["aroha_content","draft"],["aroha_public","site"],["aroha_revisions","1"]])
+      assert.deepEqual((await db.collection(collection).doc(id).get()).data(), canary);
+    const sharedMember=await db.collection("aroha_members").doc(owner.localId).get();
+    assert.equal(sharedMember.data().role,"superadmin");
+    const rules=await initializeTestEnvironment({projectId:project,firestore:{host:"127.0.0.1",port:8080,rules:await readFile("firestore.rules","utf8")}});
+    try {const anon=rules.unauthenticatedContext().firestore();
+      const published=await assertSucceeds(getDoc(doc(anon,"aroha_preprod_public/site")));
+      assert.deepEqual(published.data().content,content);
+      await assertFails(getDoc(doc(anon,"aroha_preprod_content/draft")));
+      await assertFails(getDoc(doc(anon,"aroha_preprod_revisions/1")));
+      await assertFails(setDoc(doc(anon,"aroha_preprod_public/site"),{content}));
+    }finally{await rules.cleanup();}
+    await db.collection("aroha_members").doc(owner.localId).update({websiteAccess:false,role:"admin"});
+    assert.equal((await call(owner,"/session",{})).session.modules.website,false);
+    assert.equal((await call(owner,"/draft",{content,expectedVersion:3})).httpStatus,403);
+    assert.equal((await call(owner,"/publish",{expectedVersion:3})).httpStatus,403);
+    await db.collection("aroha_members").doc(owner.localId).update({websiteAccess:true,role:"superadmin"});
     const arrival = new Date(Date.now() + 30 * 86400000)
         .toISOString()
         .slice(0, 10),
