@@ -1,3 +1,8 @@
+# 0.23.7 (pre-production) — acceptance evidence integrity
+
+- Keep report-processing root spans open until their child processing spans finish, using real SDK parent context and timing; verify the emitted protobuf relationships independently.
+- Publish the coverage catalog with automated, live and blocked acceptance boundaries. Booking policy, approved email/PDF design and production remain unchanged.
+
 # 0.23.6 (pre-production) — observable booking acceptance
 
 - Correct single-day visit labels in guest history/detail and host review; inventory date boundaries remain unchanged.
