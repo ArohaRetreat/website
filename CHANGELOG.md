@@ -1,3 +1,9 @@
+## 0.23.1 / API 0.8.2 — approved email templates (preprod)
+
+- Actual booking emails now use the approved v3 logo, photograph, website fonts with inbox fallbacks, graphical six-stage journey and stage-specific copy.
+- Inline CID artwork travels with the email; confirmation keeps its private invoice attachment. New jobs snapshot the template version; legacy jobs retain their original provider payload for safe retries.
+- Preserve actual verified recipients, host notifications, isolated preprod inventory, test identity and production state. Remaining lifecycle triggers and frozen PDF integration stay under issue70.
+
 # 0.23.0 (pre-production)
 
 - Completed guest sign-in returns to the website homepage; Host Studio authentication is unchanged. Booking has a visible Back to website link on desktop and phones.

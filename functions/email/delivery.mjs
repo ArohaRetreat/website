@@ -79,8 +79,8 @@ export async function deliverEmail(
     suppressed = !isCurrent(booking);
     if (suppressed) errorCode = "MAIL_SUPPRESSED";
     else {
-      const message = emailTemplate(job),
-        attachments = [];
+      const { attachments: inline = [], ...message } = emailTemplate(job),
+        attachments = [...inline];
       if (job.channel === "guest_confirmation") {
         const ref = invoiceCollection(db).doc(job.invoiceId),
           invoice = (await ref.get()).data();
