@@ -245,3 +245,7 @@ Restore the existing Website changes module with isolated draft, publication and
 ## 0.23.4 — phone calendar width
 
 Keep date labels inside all seven calendar columns on narrow screens, preserving disabled dates and leaf selection markers.
+
+## 0.23.5 — approved document delivery
+
+Use the owner-frozen PDF-v4 for new invoices and preserve immutable legacy documents and retry attachments. Add an audited design-only correction with unchanged financial identity.

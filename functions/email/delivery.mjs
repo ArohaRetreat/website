@@ -92,7 +92,7 @@ export async function deliverEmail(
           throw Object.assign(Error("INVOICE_NOT_FOUND"), { terminal: true });
         let pdf;
         try {
-          pdf = await makePdf(invoice);
+          pdf = await makePdf(invoice,{designVersion:job.documentTemplateVersion||invoice.documentTemplateVersion||'legacy'});
         } catch {
           errorCode = "INVOICE_DOCUMENT_FAILED";
           throw Error(errorCode);
@@ -101,7 +101,7 @@ export async function deliverEmail(
           filename: invoice.number + ".pdf",
           content: pdf.buffer,
         });
-        await ref.update({ documentStatus: "ready", object: pdf.object });
+        await ref.update({ documentStatus: "ready", object: pdf.object, documentDesignVersion:job.documentTemplateVersion||invoice.documentTemplateVersion||'legacy' });
         await queueEvent(
           db,
           bookingEvent({
