@@ -39,3 +39,5 @@ Readiness correction under issue65: Firestore index listing returned production 
 ## Approved email-v3 integration — issue88
 
 Website0.23.2/API0.8.3 integrates the frozen email body into real new-job delivery. Read [contract](../../docs/approved-email-templates-v1.md). New jobs snapshot templateVersion=email-v3; old jobs keep their original body/idempotency payload. CID logo/photo/stage artwork coexist with confirmation PDF. Preprod only; production unchanged. Remaining lifecycle triggers and frozen PDF renderer remain issue70. Read actual local/release-evidence/aroha-approved-email-templates/HANDOFF.md for deployment and inbox limits.
+
+Issue98 integrates frozen PDF-v4 into preprod operational delivery. Read docs/approved-document-delivery-v1.md. Preserve current CMS namespace, shared access, tester allowlist, original PDFs and invoice financial identity. Exact rendered/provider evidence is required before production correction.

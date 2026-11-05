@@ -18,6 +18,10 @@ const allowed = [
   "MAIL_TEST_RECIPIENT",
   "MAIL_RECIPIENT_MODE",
   "BILLING_DISPLAY_NAME",
+  "BILLING_ADDRESS",
+  "BILLING_PAYMENT_INSTRUCTIONS",
+  "BILLING_CONFIG_VERSION",
+  "BILLING_REGISTRATION_NUMBER",
 ];
 if (Object.keys(config).some((k) => !allowed.includes(k)))
   throw Error("UNKNOWN_PREPROD_CONFIGURATION");
