@@ -401,8 +401,8 @@ function productChoices() {
     [
       "event",
       "Exclusive retreat",
-      "A personal host quote",
-      "Private use · event enquiries do not hold the property",
+      money(p.eventDayRate) + " / day",
+      "Private use · one host availability approval",
     ],
   ]
     .map(
@@ -1161,7 +1161,7 @@ function manualReservation() {
         promo: "",
       });
       open(
-        `<h2>Review host request</h2><p>${kindLabel(kind)} · ${format(q.arrival)} · ${q.adults} adults · ${q.children} children</p><h3>${money(q.total)}</h3><p>Creates a pending request. Events require a host offer and guest acceptance before approval.</p><button class="button" id="create-manual">Create request</button>`,
+        `<h2>Review host request</h2><p>${kindLabel(kind)} · ${format(q.arrival)} · ${q.adults} adults · ${q.children} children</p><h3>${money(q.total)}</h3><p>Creates a pending request at the published price. Approve availability once; no separate event offer is needed.</p><button class="button" id="create-manual">Create request</button>`,
       );
       dialog.querySelector("#create-manual").onclick = () =>
         run(async () => {
