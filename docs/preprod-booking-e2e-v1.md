@@ -12,3 +12,5 @@ Coverage includes day/shared/private/exclusive pricing and capacity, children/ro
 
 
 When the actual tester already has two active reservations, preserve both. Run sequential fixtures under the normal three-active limit. The mixed capacity case reports `held-and-quoted`: hold ten overnight adults, allow a quote for25day adults plus two children and deny26day adults. This verifies live capacity evaluation without falsely claiming two new committed holds. With sufficient headroom, `two-held` commits both allocations then denies another adult. Keep the variant in test events and evidence. Three existing active reservations block new fixture creation; never cancel them or raise the limit to make tests pass.
+
+Completed runs automatically download the sanitized JSON report, so results can be retrieved without another login if the Mac locks. Keep the Safari tab open; browser/OS suspension can still delay execution. The manual download button remains available. This exports no authentication tokens or contact details.
