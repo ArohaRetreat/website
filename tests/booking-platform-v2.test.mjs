@@ -43,7 +43,8 @@ test("exclusive range spans first morning through last inclusive evening, holds 
       { id: b.id, expectedVersion: b.version, action, ...extra },
       now,
     );
-  action("offer_event", { amount: 5000000, holdHours: 24 });
+  assert.equal(b.total,9000000);
+  assert.equal(b.quoteAccepted,true);
   assert.throws(
     () =>
       productAvailability(
@@ -65,7 +66,7 @@ test("exclusive range spans first morning through last inclusive evening, holds 
   const afterEvent = {kind:"private",arrival:"2026-11-10",departure:"2026-11-11",adults:2,childrenAges:[],guests:2,units:["cottage-1"]};
   assert.equal(productAvailability(s,afterEvent,now).available,true,"an exclusive offer ends at18:00, not the following midnight");
   s.settings.products.stayStart = "11:00";
-  action("accept_event", {}, guest);
+
   action("approve");
   assert.equal(
     productAvailability(

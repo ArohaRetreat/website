@@ -681,61 +681,21 @@ test("mixed products share atomic site/room capacity, checkout morning, event co
     ).httpStatus,
     200,
   );
+  const openCalendar=await call(null,"calendar",{start:plus(0),days:3,kind:"event",adults:25,childrenAges:[]});
+  assert.equal(openCalendar.httpStatus,200,JSON.stringify(openCalendar));
+  assert.equal(openCalendar.days[0].available,true);
+  assert.deepEqual(Object.keys(openCalendar.days[0]).sort(),["available","date"]);
+  assert.equal((await call(null,"calendar",{start:plus(0),days:63,kind:"event",adults:25,childrenAges:[]})).httpStatus,422);
   const event = await create(a, selection("event", 25));
-  assert.equal(event.total, null);
-  const offered = await call(
-    host,
-    "booking-action",
-    {
-      id: event.id,
-      expectedVersion: 1,
-      action: "offer_event",
-      amount: 6000000,
-      holdHours: 24,
-    },
-    { admin: true },
-  );
-  assert.equal(offered.httpStatus, 200);
-  assert.equal(
-    (await call(b, "availability", selection("day", 1))).available,
-    false,
-  );
-  assert.equal(
-    (
-      await call(
-        host,
-        "booking-action",
-        { id: event.id, expectedVersion: 2, action: "approve" },
-        { admin: true },
-      )
-    ).httpStatus,
-    409,
-  );
-  const accepted = await call(a, "booking-action", {
-    id: event.id,
-    expectedVersion: 2,
-    action: "accept_event",
-  });
-  assert.equal(accepted.httpStatus, 200);
-  const approved = await call(
-    host,
-    "booking-action",
-    { id: event.id, expectedVersion: 3, action: "approve" },
-    { admin: true },
-  );
-  assert.equal(approved.httpStatus, 200, JSON.stringify(approved));
-  assert.equal(approved.total, 6000000);
-  assert.equal(
-    (
-      await call(
-        host,
-        "booking-action",
-        { id: event.id, expectedVersion: 4, action: "cancel" },
-        { admin: true },
-      )
-    ).httpStatus,
-    200,
-  );
+  const heldCalendar=await call(null,"calendar",{start:plus(0),days:3,kind:"day",adults:1,childrenAges:[]});
+  assert.equal(heldCalendar.httpStatus,200,JSON.stringify(heldCalendar));assert.equal(heldCalendar.days[0].available,false);
+  assert.equal(event.total,3000000);
+  assert.equal(event.quoteAccepted,true);
+  assert.equal((await call(b,"availability",selection("day",1))).available,false);
+  const approved=await call(host,"booking-action",{id:event.id,expectedVersion:1,action:"approve"},{admin:true});
+  assert.equal(approved.httpStatus,200,JSON.stringify(approved));
+  assert.equal(approved.total,3000000);
+  assert.equal((await call(host,"booking-action",{id:event.id,expectedVersion:2,action:"cancel"},{admin:true})).httpStatus,200);
   // Complete a synthetic past day visit through the API; it must never award an overnight credit.
   const pastDate = new Date(Date.now() + 19800000 - 2 * 86400000)
       .toISOString()
@@ -1024,46 +984,15 @@ test("module access, private profiles, contact snapshots, multi-day events and b
     note: "",
   });
   assert.equal(event.httpStatus, 200);
-  const offer = await call(
-    manager,
-    "booking-action",
-    {
-      id: event.id,
-      expectedVersion: 1,
-      action: "offer_event",
-      amount: 3000000,
-      holdHours: 24,
-    },
-    { admin: true },
-  );
-  assert.equal(offer.httpStatus, 200);
+  assert.equal(event.total,9000000);
+  assert.equal(event.quoteAccepted,true);
   const conflict = await call(peer, "quote", {
     ...pick,
     arrival: add(7),
     departure: add(8),
   });
   assert.equal(conflict.httpStatus, 409);
-  assert.equal(
-    (
-      await call(guest, "booking-action", {
-        id: event.id,
-        expectedVersion: 2,
-        action: "accept_event",
-      })
-    ).httpStatus,
-    200,
-  );
-  assert.equal(
-    (
-      await call(
-        manager,
-        "booking-action",
-        { id: event.id, expectedVersion: 3, action: "approve" },
-        { admin: true },
-      )
-    ).httpStatus,
-    200,
-  );
+  assert.equal((await call(manager,"booking-action",{id:event.id,expectedVersion:1,action:"approve"},{admin:true})).httpStatus,200);
   const step = {
     eventId: randomUUID(),
     journeyId: randomUUID(),

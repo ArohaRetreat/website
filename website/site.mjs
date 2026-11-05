@@ -85,7 +85,7 @@ function render() {
     track,
     enter: () => journey.go(0),
   });
-  guestAccount = createGuestAccount(root,{show,close:()=>root.querySelector("#details-dialog").close(),closeMenu:()=>menu.whenClosed()});
+  guestAccount = createGuestAccount(root,{onEnquire:()=>openEnquiry(content,show),show,close:()=>root.querySelector("#details-dialog").close(),closeMenu:()=>menu.whenClosed()});
   locationMap = createLocationMap(root);
   album = createAlbum(root, tourContent(content).media, {
     resume: albumState,

@@ -48,6 +48,7 @@ export async function bookingApi(
     return { signedOut: true };
   }
   if (operation === "state" && !auth.currentUser) return request("public");
+  if (operation === "calendar") return request(operation,body);
   if (!auth.currentUser) throw Error("Sign in with Google to continue.");
   try {
     return await request(operation, body, key, { admin, start, cursor });

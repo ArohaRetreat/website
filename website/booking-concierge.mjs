@@ -1,6 +1,7 @@
 import { recommendPrivate } from "./booking-options.mjs";
 export async function startConcierge({
   api,
+  onEnquire,
   journeyStep = () => {},
   getAtmosphere = () => "day",
   setAtmosphere = () => {},
@@ -53,7 +54,7 @@ export async function startConcierge({
   const transport = api;
   api = async (...args) => {
     const op = args[0],
-      privateCall = !["state", "public", "session", "logout"].includes(op),
+      privateCall = !["state", "public", "session", "logout", "calendar"].includes(op),
       uid = S.account?.actor?.id,
       generation = identityGeneration;
     const current = () => (getIdentity ? getIdentity() : S.account?.actor?.id);
@@ -177,14 +178,14 @@ export async function startConcierge({
       )
       .join(
         "",
-      )}</div><div class="searchfields"><button class="fieldbutton" data-act="dates"><small>${S.kind === "day" ? "Your day" : S.kind === "event" ? "First day → last day" : "Arrival → departure"}</small><strong>${tripDates()}</strong></button><button class="fieldbutton" data-act="guests"><small>Who’s coming?</small><strong>${party()}</strong></button></div>${primary(S.kind === "day" ? "Plan my day →" : S.kind === "event" ? "Plan my gathering →" : "Find my stay →", "search")}<p class="planner-note">${S.kind === "day" ? cash(policy().dayAdultRate) + " / adult · " + cash(policy().dayChildRate) + " / child under 10. Breakfast & lunch included." : S.kind === "event" ? "A personal host quote. Continuous dates, exclusively for your group." : "Individual places from " + cash(policy().individualRate) + ". Private rooms from " + cash(policy().roomRate) + " / night."}</p></div><div class="trust"><span>Host-reviewed requests</span><span>No online payment</span><span>Clear prices before you send</span></div></div><div class="welcome-photo"><img src="/assets/retreat/hero-desktop.webp" alt="A moment around Aroha Retreat"><span>AWAY FROM THE HURRY. CLOSER TO EACH OTHER.</span></div></div><div class="how"><div><b>Tell us your plans.</b><p>Dates and guests. No need to work out rooms yourself.</p></div><div><b>Choose what feels right.</b><p>Compare privacy, space and the complete price.</p></div><div><b>Your hosts take it from here.</b><p>Send a request. Receive confirmation after host review.</p></div></div></section>`;
+      )}</div><div class="searchfields"><button class="fieldbutton" data-act="dates"><small>${S.kind === "day" ? "Your day" : S.kind === "event" ? "First day → last day" : "Arrival → departure"}</small><strong>${tripDates()}</strong></button><button class="fieldbutton" data-act="guests"><small>Who’s coming?</small><strong>${party()}</strong></button></div>${primary(S.kind === "day" ? "Plan my day →" : S.kind === "event" ? "Plan my gathering →" : "Find my stay →", "search")}<p class="planner-note">${S.kind === "day" ? cash(policy().dayAdultRate) + " / adult · " + cash(policy().dayChildRate) + " / child under 10. Breakfast & lunch included." : S.kind === "event" ? cash(policy().eventDayRate) + " per day. Continuous dates, exclusively for your group." : "Individual places from " + cash(policy().individualRate) + ". Private rooms from " + cash(policy().roomRate) + " / night."}</p></div><div class="trust"><span>Host-reviewed requests</span><span>No online payment</span><span>Clear prices before you send</span></div></div><div class="welcome-photo"><img src="/assets/retreat/hero-desktop.webp" alt="A moment around Aroha Retreat"><span>AWAY FROM THE HURRY. CLOSER TO EACH OTHER.</span></div></div><div class="how"><div><b>Tell us your plans.</b><p>Dates and guests. No need to work out rooms yourself.</p></div><div><b>Choose what feels right.</b><p>Compare privacy, space and the complete price.</p></div><div><b>Your hosts take it from here.</b><p>Send a request. Receive confirmation after host review.</p></div></div></section>`;
   }
   function tripbar() {
     return `<div class="tripbar"><div><span>${kindLabel()}</span><button data-act="dates">${tripDates()} · Edit dates</button><button data-act="guests">${party()} · Edit guests</button></div><button data-act="find">Change visit type</button></div>`;
   }
   function bill(q = offer()) {
     if (!q) return "<p>Choose an option to see your total.</p>";
-    return `<div class="eyebrow">YOUR VISIT, WITHOUT THE GUESSWORK</div><h3>${S.kind === "event" ? "A personal host quote" : S.selected === "private" ? q.units.length + " private room" + (q.units.length > 1 ? "s" : "") : S.kind === "day" ? "A day at Aroha" : "Individual accommodation"}</h3>${q.lineItems
+    return `<div class="eyebrow">YOUR VISIT, WITHOUT THE GUESSWORK</div><h3>${S.kind === "event" ? "Exclusive retreat, at the published rate" : S.selected === "private" ? q.units.length + " private room" + (q.units.length > 1 ? "s" : "") : S.kind === "day" ? "A day at Aroha" : "Individual accommodation"}</h3>${q.lineItems
       .filter((l) => l.amount > 0)
       .map(
         (l) =>
@@ -192,10 +193,10 @@ export async function startConcierge({
       )
       .join(
         "",
-      )}${q.discount ? `<div class="billrow"><span>${esc(q.offer)}</span><span>−${cash(q.discount)}</span></div>` : ""}<div class="billtotal"><span>${q.total === null ? "Price" : "Total for your visit"}</span><strong>${cash(q.total)}</strong></div><p class="detailnote">${S.kind === "event" ? "Your hosts quote the complete date range. Overnight accommodation and special arrangements are agreed separately." : S.kind === "stay" ? nights() + " night" + (nights() > 1 ? "s" : "") + " · Check in " + policy().stayStart + " · check out " + policy().stayEnd + " IST." : "Breakfast & lunch included · " + policy().dayStart + "–" + policy().dayEnd + " IST."}</p><p class="detailnote">No online payment. Your request needs host approval. Prices and availability are rechecked when you send.</p>`;
+      )}${q.discount ? `<div class="billrow"><span>${esc(q.offer)}</span><span>−${cash(q.discount)}</span></div>` : ""}<div class="billtotal"><span>${q.total === null ? "Price" : "Total for your visit"}</span><strong>${cash(q.total)}</strong></div><p class="detailnote">${S.kind === "event" ? "The published daily rate covers every selected day. Overnight accommodation and special arrangements are agreed separately." : S.kind === "stay" ? nights() + " night" + (nights() > 1 ? "s" : "") + " · Check in " + policy().stayStart + " · check out " + policy().stayEnd + " IST." : "Breakfast & lunch included · " + policy().dayStart + "–" + policy().dayEnd + " IST."}</p><p class="detailnote">No online payment. Your request needs host approval. Prices and availability are rechecked when you send.</p>`;
   }
   function sidebar(review = false) {
-    return `<aside class="quote">${bill()}${primary(review ? (S.needsQuote ? "Refresh options →" : S.submissionUnknown ? "Retry same request →" : "Send request →") : S.kind === "event" ? "Review enquiry →" : "Review request →", review ? "submit" : "review", !offer() || S.roomDirty || S.busy)}<p class="detailnote">${review ? "Acknowledgement first. Confirmation follows host review." : "You can edit your plans on the next screen."}</p></aside>`;
+    return `<aside class="quote">${bill()}${primary(review ? (S.needsQuote ? "Refresh options →" : S.submissionUnknown ? "Retry same request →" : "Send request →") : S.kind === "event" ? "Review request →" : "Review request →", review ? "submit" : "review", !offer() || S.roomDirty || S.busy)}<p class="detailnote">${review ? "Acknowledgement first. Confirmation follows host review." : "You can edit your plans on the next screen."}</p></aside>`;
   }
   function privateCard(q) {
     const recommended = S.data.recommended === "private",
@@ -217,7 +218,7 @@ export async function startConcierge({
   }
   function simpleOffer(q) {
     let day = S.kind === "day";
-    return `<article class="offer selected"><span class="badge">${day ? "EVERYONE, IN ONE SIMPLE REQUEST" : "PERSONAL PLANNING WITH YOUR HOSTS"}</span><h3>${day ? "A day outside, together." : "The retreat, just for your people."}</h3><p>${day ? "Arrive from " + policy().dayStart + " IST, enjoy breakfast and lunch, and finish your visit by " + policy().dayEnd + " IST. No room selection needed." : "Your enquiry covers the whole retreat continuously from " + policy().dayStart + " IST on the first day to " + policy().dayEnd + " IST on your last selected day."}</p><ul class="offerlist"><li>${tripDates()}</li><li>${party()}</li><li>${day ? "Breakfast & lunch" : "Continuous date range"}</li></ul><div class="help-line">${day ? "No overnight room is included. Children under 10 are " + cash(policy().dayChildRate) + " each; guests aged 10 and above are " + cash(policy().dayAdultRate) + "." : "An exclusive enquiry does not block the retreat. Your hosts prepare a quote; you accept it before they can approve the booking."}</div>${day ? `<div class="offerrate"><strong>${cash(q.total)}</strong><small>entire party · one day</small></div>` : "<p>Overnight accommodation, meals and special arrangements will be agreed in the quote.</p>"}</article>`;
+    return `<article class="offer selected"><span class="badge">${day ? "EVERYONE, IN ONE SIMPLE REQUEST" : "PERSONAL PLANNING WITH YOUR HOSTS"}</span><h3>${day ? "A day outside, together." : "The retreat, just for your people."}</h3><p>${day ? "Arrive from " + policy().dayStart + " IST, enjoy breakfast and lunch, and finish your visit by " + policy().dayEnd + " IST. No room selection needed." : "Your booking covers the whole retreat continuously from " + policy().dayStart + " IST on the first day to " + policy().dayEnd + " IST on your last selected day."}</p><ul class="offerlist"><li>${tripDates()}</li><li>${party()}</li><li>${day ? "Breakfast & lunch" : "Continuous date range"}</li></ul><div class="help-line">${day ? "No overnight room is included. Children under 10 are " + cash(policy().dayChildRate) + " each; guests aged 10 and above are " + cash(policy().dayAdultRate) + "." : "Your request holds these dates until the review deadline. Your host checks availability and approves once."}</div>${day ? `<div class="offerrate"><strong>${cash(q.total)}</strong><small>entire party · one day</small></div>` : `<div class="offerrate"><strong>${cash(q.total)}</strong><small>${cash(policy().eventDayRate)} per day · entire selected range</small></div><p>Overnight accommodation and special arrangements are agreed with your hosts.</p>`}</article>`;
   }
   function options() {
     if (S.busy)
@@ -260,7 +261,7 @@ export async function startConcierge({
     const cancelled = ["cancelled", "declined", "expired", "no_show"].includes(
       r.status,
     );
-    return `<section class="confirmation reveal"><div class="emblem">${cancelled ? "×" : r.status === "pending_approval" ? "✓" : "⌂"}</div><span class="eyebrow">${esc(r.reference)} · ${esc(statusLabel(r.status))}</span><h1>${cancelled ? "Your plans, updated." : r.status === "pending_approval" ? "Your hosts take it from here." : "Your time at Aroha."}</h1><p>${r.status === "pending_approval" ? (r.kind === "event" ? "Your enquiry is with your hosts. It holds no inventory. A host quote needs your acceptance before approval." : "Your request is awaiting host review. Capacity is held until the review deadline; this is not yet a confirmed booking.") : esc(statusLabel(r.status))}</p><div class="reviewpanel" style="margin-top:25px"><h3>${esc(productLabel(r.kind))}</h3><p>${dateLabel(r.arrival)} – ${dateLabel(r.kind === "event" ? add(r.departure, -1) : r.departure)} · ${r.adults ?? r.guests} adults · ${r.children ?? 0} under 10s</p><p>${esc(r.unitNames?.join(" · ") || "")}</p><div class="billrow"><span>Visit total</span><span>${cash(r.total)}</span></div>${r.note ? '<p style="margin-top:15px">' + esc(r.note) + "</p>" : ""}${r.expiresAt && r.status === "pending_approval" ? '<p style="margin-top:15px">Host review by ' + esc(new Date(r.expiresAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })) + " IST.</p>" : ""}</div>${r.kind === "event" && r.status === "pending_approval" && r.total !== null && !r.quoteAccepted ? `<div class="reviewpanel"><h3>Your host’s offer.</h3><p>${cash(r.total)} for the exclusive date range. Review the host’s arrangements before accepting. Approval still checks exclusivity.</p><div class="inline-actions">${primary("Accept host offer", "acceptoffer")}</div></div>` : ""}${r.changeRequest ? `<div class="reviewpanel"><h3>Date change awaiting host review.</h3><p>${dateLabel(r.changeRequest.arrival)} – ${dateLabel(r.changeRequest.departure)} · ${cash(r.changeRequest.total)}</p><p>Your original booking remains valid until the host approves.</p></div>` : ""}<div class="inline-actions">${["pending_approval", "confirmed"].includes(r.status) ? '<button class="secondary" data-act="changedates">Request date change</button><button class="textbutton" data-act="editnote">Edit private note</button><button class="textbutton" data-act="cancel">Cancel booking</button>' : ""}<button class="secondary" data-act="communications">Email updates & invoice</button><button class="textbutton" data-act="visits">All visits</button></div><small>Self-service cancellation ${cutoff(r.cancelHours ?? S.account.settings.cancelHours)}; contact your host for later cancellations. No online payment is collected.</small></section>`;
+    return `<section class="confirmation reveal"><div class="emblem">${cancelled ? "×" : r.status === "pending_approval" ? "✓" : "⌂"}</div><span class="eyebrow">${esc(r.reference)} · ${esc(statusLabel(r.status))}</span><h1>${cancelled ? "Your plans, updated." : r.status === "pending_approval" ? "Your hosts take it from here." : "Your time at Aroha."}</h1><p>${r.status === "pending_approval" ? (r.kind === "event" && !r.pricingVersion ? "Your legacy enquiry is with your hosts. A host quote needs your acceptance before approval." : "Your request is awaiting host review. Capacity is held until the review deadline; this is not yet a confirmed booking.") : esc(statusLabel(r.status))}</p><div class="reviewpanel" style="margin-top:25px"><h3>${esc(productLabel(r.kind))}</h3><p>${dateLabel(r.arrival)} – ${dateLabel(r.kind === "event" ? add(r.departure, -1) : r.departure)} · ${r.adults ?? r.guests} adults · ${r.children ?? 0} under 10s</p><p>${esc(r.unitNames?.join(" · ") || "")}</p><div class="billrow"><span>Visit total</span><span>${cash(r.total)}</span></div>${r.note ? '<p style="margin-top:15px">' + esc(r.note) + "</p>" : ""}${r.expiresAt && r.status === "pending_approval" ? '<p style="margin-top:15px">Host review by ' + esc(new Date(r.expiresAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })) + " IST.</p>" : ""}</div>${r.kind === "event" && r.status === "pending_approval" && r.total !== null && !r.quoteAccepted ? `<div class="reviewpanel"><h3>Your host’s offer.</h3><p>${cash(r.total)} for the exclusive date range. Review the host’s arrangements before accepting. Approval still checks exclusivity.</p><div class="inline-actions">${primary("Accept host offer", "acceptoffer")}</div></div>` : ""}${r.changeRequest ? `<div class="reviewpanel"><h3>Date change awaiting host review.</h3><p>${dateLabel(r.changeRequest.arrival)} – ${dateLabel(r.changeRequest.departure)} · ${cash(r.changeRequest.total)}</p><p>Your original booking remains valid until the host approves.</p></div>` : ""}<div class="inline-actions">${["pending_approval", "confirmed"].includes(r.status) ? '<button class="secondary" data-act="changedates">Request date change</button><button class="textbutton" data-act="editnote">Edit private note</button><button class="textbutton" data-act="cancel">Cancel booking</button>' : ""}<button class="secondary" data-act="communications">Email updates & invoice</button><button class="textbutton" data-act="visits">All visits</button></div><small>Self-service cancellation ${cutoff(r.cancelHours ?? S.account.settings.cancelHours)}; contact your host for later cancellations. No online payment is collected.</small></section>`;
   }
   function visits() {
     const a = S.account;
@@ -277,7 +278,7 @@ export async function startConcierge({
     return `<section class="wrap reveal"><span class="eyebrow">YOUR AROHA VISITS</span><h1 style="font-size:42px;margin-top:12px">Something to look forward to.</h1><p class="lead">${esc(t?.name || "Visitor")} · ${t?.stays || 0} completed stays.${t?.nextAt ? " " + Math.max(0, t.nextAt - t.stays) + " more stays to your next tier." : ""}${t?.discount ? " " + t.discount + "% overnight benefit." : ""}</p><div class="inline-actions">${primary("Plan another visit", "find")}${["upcoming", "past", "cancelled"].map((f) => `<button class="secondary" data-filter="${f}" aria-pressed="${S.filter === f}">${f[0].toUpperCase() + f.slice(1)}</button>`).join("")}</div>${rows.length ? rows.map((b) => `<article class="reviewpanel visit-item"><span class="pill">${esc(statusLabel(b.status))}</span><h3>${esc(productLabel(b.kind))}</h3><p>${dateLabel(b.arrival)} – ${dateLabel(b.kind === "event" ? add(b.departure, -1) : b.departure)} · ${b.adults ?? b.guests} adults · ${b.children ?? 0} under 10s</p><p>${esc(b.reference)} · ${cash(b.total)}</p><div class="inline-actions"><button class="textbutton" data-booking="${esc(b.id)}">View booking ↗</button></div></article>`).join("") : '<div class="empty"><h2>No visits in this category yet.</h2><p>New requests and confirmed visits will appear here.</p></div>'}${a.nextCursor ? '<button class="secondary" data-act="morevisits">Load more history</button>' : ""}</section>`;
   }
   function profile() {
-    return `<section class="wrap"><span class="eyebrow">YOUR GUEST PROFILE</span><h1 style="font-size:42px;margin-top:12px">So we can welcome you.</h1><form id="profile-form" class="reviewpanel" style="margin-top:25px"><div class="columns"><label class="field">Full name<input id="profile-name" minlength="2" maxlength="120" autocomplete="name" required value="${esc(S.account.profile?.name || S.account.actor?.name)}"></label><label class="field">Phone with country code<input id="profile-phone" type="tel" autocomplete="tel" required maxlength="32" placeholder="+91 98765 43210" value="${esc(S.account.profile?.phone)}"></label></div><label class="field">Verified Google email<input type="email" readonly value="${esc(S.account.profile?.email)}"></label><p class="planner-note">Your phone is used by authorised hosts and included in operational booking business events in Dynatrace. Names, private notes and child ages are not sent. Existing booking contacts stay unchanged.</p><div class="inline-actions">${primary("Save profile", "saveprofile")}</div></form></section>`;
+    return `<section class="wrap"><span class="eyebrow">YOUR GUEST PROFILE</span><h1 style="font-size:42px;margin-top:12px">So we can welcome you.</h1><div class="inline-actions"><button class="secondary" data-act="enquire">Enquire on WhatsApp ↗</button><button class="primary" data-act="find">Book a visit →</button></div><form id="profile-form" class="reviewpanel" style="margin-top:25px"><div class="columns"><label class="field">Full name<input id="profile-name" minlength="2" maxlength="120" autocomplete="name" required value="${esc(S.account.profile?.name || S.account.actor?.name)}"></label><label class="field">Phone with country code<input id="profile-phone" type="tel" autocomplete="tel" required maxlength="32" placeholder="+91 98765 43210" value="${esc(S.account.profile?.phone)}"></label></div><label class="field">Verified Google email<input type="email" readonly value="${esc(S.account.profile?.email)}"></label><p class="planner-note">Your phone is used by authorised hosts and included in operational booking business events in Dynatrace. Names, private notes and child ages are not sent. Existing booking contacts stay unchanged.</p><div class="inline-actions">${primary("Save profile", "saveprofile")}</div></form></section>`;
   }
   function render() {
     $("#pending-request").innerHTML = S.submissionUnknown
@@ -293,7 +294,7 @@ export async function startConcierge({
       ["options", "review"].includes(S.view) && S.data?.available && !S.busy;
     $("#mobile-action").className = visible ? "active" : "";
     $("#mobile-action").innerHTML = visible
-      ? `<button class="mobile-price" data-act="bill"><strong>${offer() ? cash(offer().total) : "Choose an option"}</strong>${S.kind === "event" ? "Quote details" : "Total · price details"}</button>${primary(S.view === "review" ? (S.needsQuote ? "Refresh options →" : S.submissionUnknown ? "Retry same request →" : "Send request →") : S.kind === "event" ? "Review enquiry →" : "Review request →", S.view === "review" ? "submit" : "review", !offer() || S.roomDirty)}`
+      ? `<button class="mobile-price" data-act="bill"><strong>${offer() ? cash(offer().total) : "Choose an option"}</strong>${S.kind === "event" ? "Quote details" : "Total · price details"}</button>${primary(S.view === "review" ? (S.needsQuote ? "Refresh options →" : S.submissionUnknown ? "Retry same request →" : "Send request →") : S.kind === "event" ? "Review request →" : "Review request →", S.view === "review" ? "submit" : "review", !offer() || S.roomDirty)}`
       : "";
     updateAccount();
   }
@@ -498,17 +499,21 @@ export async function startConcierge({
       toast(S.error);
     }
   }
-  let dateDraft, guestDraft;
+  let dateDraft, guestDraft, calendarSequence = 0;
   function modal(html) {
     syncContact();
     $("#sheet-content").innerHTML = html;
     if (!$("#sheet").open) $("#sheet").showModal();
   }
   function openDates() {
+    calendarSequence++;
     dateDraft = {
+      availability: null,
+      calendarKey: null,
+      calendarError: false,
       a: S.hasDates ? S.arrival : "",
       b: S.hasDates ? (S.kind === "event" ? S.lastDay : S.departure) : "",
-      target: "a",
+      target: S.hasDates && S.kind !== "day" ? "b" : "a",
       month: +S.arrival.slice(5, 7) - 1,
       year: +S.arrival.slice(0, 4),
     };
@@ -523,19 +528,44 @@ export async function startConcierge({
   function month(y, m) {
     const start = (new Date(Date.UTC(y, m, 1)).getUTCDay() + 6) % 7,
       last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+    const preferred=dateDraft.target==='b'?dateDraft.b:dateDraft.a;
+    const focusDate=dateDraft.availability?.get(preferred) && preferred?.startsWith(iso(y,m,1).slice(0,7)) ? preferred : [...(dateDraft.availability||new Map())].find(([d,available])=>available && d.startsWith(iso(y,m,1).slice(0,7)))?.[0];
     return `<section class="month"><h3>${new Intl.DateTimeFormat("en-IN", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(Date.UTC(y, m, 1)))}</h3><div class="grid">${["M", "T", "W", "T", "F", "S", "S"].map((d) => `<span>${d}</span>`).join("")}${"<span></span>".repeat(start)}${Array.from(
       { length: last },
       (_, i) => {
         let d = iso(y, m, i + 1),
           sel = d === dateDraft.a || (S.kind !== "day" && d === dateDraft.b);
-        return `<button data-day="${d}" class="${sel ? "sel" : d > dateDraft.a && d < dateDraft.b ? "between" : ""}" aria-label="${d}${sel ? ", selected" : ""}" aria-pressed="${sel}" tabindex="${d === (dateDraft.a || iso(y, m, 1)) ? "0" : "-1"}" ${d < today() || d > add(today(), 365) ? "disabled" : ""}>${sel ? '<svg viewBox="0 0 60 50" aria-hidden="true"><path fill="currentColor" d="M5 31C2 11 24 6 53 3c-2 18-6 39-27 41-10 2-17-3-21-13Z"/><path d="M9 41 43 13M17 34l-3-12m13 3 0-12m0 12 13 0" stroke="var(--paper)" opacity=".3" fill="none" stroke-width="1"/></svg>' : ""}${i + 1}</button>`;
+        return `<button data-day="${d}" class="${sel ? "sel" : d > dateDraft.a && d < dateDraft.b ? "between" : ""}" aria-label="${d}${sel ? ", selected" : ""}" aria-pressed="${sel}" tabindex="${d === focusDate ? "0" : "-1"}" ${d < today() || d > add(today(), 365) || !dateDraft.availability?.get(d) ? 'disabled title="Unavailable for this party or date range"' : ""}>${sel ? '<svg viewBox="0 0 60 50" aria-hidden="true"><path fill="currentColor" d="M5 31C2 11 24 6 53 3c-2 18-6 39-27 41-10 2-17-3-21-13Z"/><path d="M9 41 43 13M17 34l-3-12m13 3 0-12m0 12 13 0" stroke="var(--paper)" opacity=".3" fill="none" stroke-width="1"/></svg>' : ""}${i + 1}</button>`;
       },
     ).join("")}</div></section>`;
   }
   function drawDates() {
+    const focusedDay=document.activeElement?.dataset?.day;
+    const focusedTarget=document.activeElement?.dataset?.target;
+    const start=iso(dateDraft.year,dateDraft.month,1), end=iso(dateDraft.year,dateDraft.month+2,1);
+    const arrival=dateDraft.target==='b' && dateDraft.a ? dateDraft.a : undefined;
+    const body={start,days:Math.round((Date.parse(end)-Date.parse(start))/86400000),kind:S.kind,adults:S.adults,childrenAges:S.ages,...(arrival?{arrival}:{})};
+    const key=JSON.stringify(body);
+    if(dateDraft.calendarKey!==key) {
+      dateDraft.calendarKey=key; dateDraft.availability=null; dateDraft.calendarError=false;
+      const sequence=++calendarSequence;
+      journeyStep("dates","attempted",apiKind());
+      void api("calendar",body).then(result=>{
+        if(sequence!==calendarSequence || !$("#sheet").open || !$("[data-act=applydates]") || dateDraft.calendarKey!==key) return;
+        dateDraft.availability=new Map(result.days.map(d=>[d.date,d.available]));
+        journeyStep("dates","succeeded",apiKind()); drawDates();
+      }).catch(()=>{
+        if(sequence!==calendarSequence || !$("#sheet").open || !$("[data-act=applydates]") || dateDraft.calendarKey!==key) return;
+        dateDraft.calendarError=true; journeyStep("dates","failed",apiKind()); drawDates();
+      });
+    }
     modal(
-      `<span class="eyebrow">${S.kind === "day" ? "ONE GOOD DAY" : "A LITTLE TIME AWAY"}</span><h2>${S.kind === "day" ? "Which day is yours?" : "When would you like to visit?"}</h2><p class="sheet-intro">${S.kind === "stay" ? "Choose arrival, then departure. Check in " + policy().stayStart + " · check out " + policy().stayEnd + " IST." : S.kind === "event" ? "Choose the first and last day. Your enquiry covers the continuous range through " + policy().dayEnd + " IST on the last day." : "Arrive from " + policy().dayStart + " IST. Breakfast and lunch are included; your visit finishes by " + policy().dayEnd + " IST."}</p><div class="date-tabs"><button data-target="a" aria-pressed="${dateDraft.target === "a"}"><small>${S.kind === "day" ? "Visit date" : "Arrival"}</small>${dateLabel(dateDraft.a)}</button>${S.kind === "day" ? "" : `<button data-target="b" aria-pressed="${dateDraft.target === "b"}"><small>${S.kind === "event" ? "Last day" : "Departure"}</small>${dateLabel(dateDraft.b)}</button>`}</div><div class="calendar-top"><button data-act="previousmonth" aria-label="Previous month">←</button><small>${S.kind === "day" ? "Select your visit date" : dateDraft.target === "a" ? "Select arrival" : "Select " + (S.kind === "event" ? "last day" : "departure")}</small><button data-act="nextmonth" aria-label="Next month">→</button></div><div class="calendars">${month(dateDraft.year, dateDraft.month)}${month(dateDraft.month === 11 ? dateDraft.year + 1 : dateDraft.year, (dateDraft.month + 1) % 12)}</div><div class="sheet-foot"><span>${S.kind === "day" ? "One day" : dateDraft.a && dateDraft.b ? (S.kind === "event" ? "Continuous date range" : Math.round((Date.parse(dateDraft.b) - Date.parse(dateDraft.a)) / 86400000) + " night(s)") : "Select your dates"}</span>${primary("Use these dates", "applydates", !dateDraft.a || (S.kind !== "day" && !dateDraft.b))}</div>`,
+      `<span class="eyebrow">${S.kind === "day" ? "ONE GOOD DAY" : "A LITTLE TIME AWAY"}</span><h2>${S.kind === "day" ? "Which day is yours?" : "When would you like to visit?"}</h2><p class="sheet-intro">${S.kind === "stay" ? "Choose arrival, then departure. Check in " + policy().stayStart + " · check out " + policy().stayEnd + " IST." : S.kind === "event" ? "Choose the first and last day. Your booking covers the continuous range through " + policy().dayEnd + " IST on the last day." : "Arrive from " + policy().dayStart + " IST. Breakfast and lunch are included; your visit finishes by " + policy().dayEnd + " IST."}</p><div class="date-tabs"><button data-target="a" aria-pressed="${dateDraft.target === "a"}"><small>${S.kind === "day" ? "Visit date" : "Arrival"}</small>${dateLabel(dateDraft.a)}</button>${S.kind === "day" ? "" : `<button data-target="b" aria-pressed="${dateDraft.target === "b"}"><small>${S.kind === "event" ? "Last day" : "Departure"}</small>${dateLabel(dateDraft.b)}</button>`}</div><div class="calendar-top"><button data-act="previousmonth" aria-label="Previous month" ${iso(dateDraft.year,dateDraft.month,1) <= (arrival || today()).slice(0,7)+"-01" ? "disabled" : ""}>←</button><small>${S.kind === "day" ? "Select your visit date" : dateDraft.target === "a" ? "Select arrival" : "Select " + (S.kind === "event" ? "last day" : "departure")}</small><button data-act="nextmonth" aria-label="Next month" ${iso(dateDraft.year,dateDraft.month+1,1) > add(arrival || today(),arrival ? 31 : 365) ? "disabled" : ""}>→</button></div><p class="calendar-status" role="status">${dateDraft.calendarError ? 'Availability could not load. Dates are disabled until you retry.' : !dateDraft.availability ? 'Checking dates for your party…' : 'Faded dates are unavailable for your party or selected range. Availability is rechecked when you send.'}</p>${dateDraft.calendarError ? primary("Retry availability","retrycalendar") : ""}<div class="calendars">${month(dateDraft.year, dateDraft.month)}${month(dateDraft.month === 11 ? dateDraft.year + 1 : dateDraft.year, (dateDraft.month + 1) % 12)}</div><div class="sheet-foot"><span>${S.kind === "day" ? "One day" : dateDraft.a && dateDraft.b ? (S.kind === "event" ? "Continuous date range" : Math.round((Date.parse(dateDraft.b) - Date.parse(dateDraft.a)) / 86400000) + " night(s)") : "Select your dates"}</span>${primary("Use these dates", "applydates", !dateDraft.a || (S.kind !== "day" && (!dateDraft.b || dateDraft.target !== "b")) || !dateDraft.availability?.get(S.kind === "day" ? dateDraft.a : dateDraft.b))}</div>`,
     );
+    if(focusedDay || focusedTarget) {
+      const candidate=focusedTarget ? $('[data-target="'+focusedTarget+'"]') : $('[data-day="'+focusedDay+'"]');
+      (candidate && !candidate.disabled ? candidate : ($('#sheet-content [data-day]:not(:disabled)') || $('[data-target="'+dateDraft.target+'"]')))?.focus({preventScroll:true});
+    }
   }
   function openGuests() {
     guestDraft = { adults: S.adults, ages: [...S.ages] };
@@ -655,11 +685,13 @@ export async function startConcierge({
     }
     if (b.dataset.target) {
       dateDraft.target = b.dataset.target;
+      if(dateDraft.target === "b" && dateDraft.a) { dateDraft.year=+dateDraft.a.slice(0,4); dateDraft.month=+dateDraft.a.slice(5,7)-1; }
       drawDates();
       return;
     }
     if (b.dataset.day) {
       let d = b.dataset.day;
+      if(!dateDraft.availability?.get(d)) return;
       if (S.kind === "day") {
         dateDraft.a = d;
       } else if (dateDraft.target === "a") {
@@ -701,6 +733,7 @@ export async function startConcierge({
       if ($("#sheet").open) $("#sheet").close();
       view("find");
     }
+    if (a === "retrycalendar") { dateDraft.calendarKey=null; drawDates(); }
     if (a === "dates" && !S.submissionUnknown) openDates();
     if (a === "guests" && !S.submissionUnknown) openGuests();
     if (a === "search") await search();
@@ -725,6 +758,7 @@ export async function startConcierge({
       drawDates();
     }
     if (a === "applydates") {
+      if((S.kind !== "day" && dateDraft.target !== "b") || !dateDraft.availability?.get(S.kind === "day" ? dateDraft.a : dateDraft.b)) return;
       requestVersion++;
       S.busy = false;
       journeyStep("dates", "selected", apiKind());
@@ -813,15 +847,15 @@ export async function startConcierge({
       view("profile");
     }
     if (a === "account") {
-      if (!S.account.actor) await signIn();
-      else
-        modal(
-          "<h2>Your Aroha account.</h2><p>" +
-            esc(S.account.actor.name) +
-            "</p><p>" +
-            esc(S.account.profile?.email) +
-            '</p><div class="inline-actions"><button class="secondary" data-act="profile">Guest profile</button><button class="textbutton" data-act="logout">Sign out</button></div>',
-        );
+      if (!S.account.actor && !(await signIn())) return;
+      modal("<h2>Your Aroha account.</h2><p>" + esc(S.account.actor.name) + "</p><p>" + esc(S.account.profile?.email) + '</p><div class="account-choices"><button class="reviewpanel" data-act="enquire"><strong>Enquire on WhatsApp ↗</strong><span>A conversation with your hosts. No dates reserved.</span></button><button class="reviewpanel" data-act="find"><strong>Book a visit →</strong><span>Choose dates and a clear price. Your host approves availability.</span></button></div><div class="inline-actions"><button class="secondary" data-act="profile">Guest profile</button><button class="textbutton" data-act="logout">Sign out</button></div>');
+    }
+    if (a === "enquire") {
+      if (!S.account.actor && !(await signIn())) return;
+      const uid=S.account.actor.id, generation=identityGeneration;
+      await guarded(async()=>{
+        await onEnquire?.(html=>{if(generation===identityGeneration && S.account.actor?.id===uid) modal(html);});
+      });
     }
     if (a === "logout") {
       await guarded(async () => {
@@ -898,7 +932,7 @@ export async function startConcierge({
     }
     if (a === "help")
       modal(
-        `<span class="eyebrow">A LITTLE CLARITY</span><h2>Let’s make it easy.</h2><div class="reviewpanel"><h3>Do I get a private room?</h3><p>Private rooms are reserved for your party. Individual stays are ${cash(policy().individualRate)} per adult per night, allocated by hosts and potentially shared.</p></div><div class="reviewpanel"><h3>How are children charged?</h3><p>Under 10s are ${cash(policy().dayChildRate)} for a day outing. A private room starts at ${cash(policy().roomRate)} per night and includes two occupants; additional child places are ${cash(policy().extraChildRate)} per night, with at most 2 adults and 2 children per room.</p></div><div class="reviewpanel"><h3>When is my visit confirmed?</h3><p>After host approval. Exclusive enquiries need a host quote and your acceptance first. No online payment is taken.</p></div><p>All times are in India Standard Time. Return to the main website for host contact and retreat information.</p><div class="inline-actions"><a href="/">Explore Aroha ↗</a></div>`,
+        `<span class="eyebrow">A LITTLE CLARITY</span><h2>Let’s make it easy.</h2><div class="reviewpanel"><h3>Do I get a private room?</h3><p>Private rooms are reserved for your party. Individual stays are ${cash(policy().individualRate)} per adult per night, allocated by hosts and potentially shared.</p></div><div class="reviewpanel"><h3>How are children charged?</h3><p>Under 10s are ${cash(policy().dayChildRate)} for a day outing. A private room starts at ${cash(policy().roomRate)} per night and includes two occupants; additional child places are ${cash(policy().extraChildRate)} per night, with at most 2 adults and 2 children per room.</p></div><div class="reviewpanel"><h3>When is my visit confirmed?</h3><p>After host approval. Exclusive requests show the complete published price and need one host availability approval. No online payment is taken.</p></div><p>All times are in India Standard Time. Return to the main website for host contact and retreat information.</p><div class="inline-actions"><a href="/">Explore Aroha ↗</a></div>`,
       );
   });
 
@@ -1213,8 +1247,8 @@ export async function startConcierge({
     }
     if (b.kind === "event") {
       modal(
-        '<h2>A new exclusive date range.</h2><p>Exclusive date changes require a fresh enquiry and accepted host quote. Keep or cancel the current enquiry, then plan the new range; no dates change automatically.</p><div class="inline-actions">' +
-          primary("Plan a new enquiry", "find") +
+        '<h2>A new exclusive date range.</h2><p>Exclusive date changes require a fresh request at the current published price. Keep or cancel the current enquiry, then plan the new range; no dates change automatically.</p><div class="inline-actions">' +
+          primary("Plan a new request", "find") +
           "</div>",
       );
       return;
@@ -1297,6 +1331,7 @@ export async function startConcierge({
     objectUrls.clear();
   });
   $("#sheet").addEventListener("close", () => {
+    calendarSequence++;
     if (
       !document.activeElement?.isConnected ||
       document.activeElement === document.body
