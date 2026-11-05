@@ -1,6 +1,6 @@
 # Approved email body integration / issue88
 
-Website0.23.1 / API0.8.2 integrates the frozen 4 November email-v3 visual baseline into the real worker. This corrects the earlier design-only artifact gap; it does not implement the remaining lifecycle triggers or approved PDF renderer under issue70.
+Website0.23.2 / API0.8.3 integrates the frozen 4 November email-v3 visual baseline into the real worker. This corrects the earlier design-only artifact gap; it does not implement the remaining lifecycle triggers or approved PDF renderer under issue70.
 
 New notification jobs snapshot templateVersion=email-v3. Acknowledgement and host notification show Request sent as current, with review/confirmation/check-in/check-out/feedback upcoming. Host-approved confirmation completes Request sent and Review, marking Confirmed current. Amendments use the same actual confirmed state with updated copy. No stage is marked complete merely because an email was delivered. Acknowledgement retains pending review/hold semantics, including legacy unpriced exclusive-enquiry exceptions. Confirmation retains the payable-invoice distinction, not a paid receipt.
 

@@ -1,3 +1,4 @@
+import { apiVersion } from "../version.mjs";
 import { mailSettings } from "../email/config.mjs";
 import {
   queueNotifications,
@@ -165,7 +166,7 @@ const project = (s, actor, profile, bookings, extra = {}) => ({
   audit: [],
   delivery: mailSettings().enabled ? "email_enabled" : "not_configured",
   environment: environment.name,
-  apiVersion: "0.8.2",
+  apiVersion: apiVersion,
   ...extra,
 });
 export async function publicBookingState(db) {
@@ -835,7 +836,7 @@ export async function bookingCommand(
         at: e.at,
         delivery: mailSettings().enabled ? "email_enabled" : "not_configured",
         environment: environment.name,
-        apiVersion: "0.8.2",
+        apiVersion: apiVersion,
         ...(e.bookingKind ? { bookingKind: e.bookingKind } : {}),
       };
       tx.set(collection(db, "audit").doc(e.eventId), safe);

@@ -1,4 +1,4 @@
-## 0.23.1 / API 0.8.2 — approved email templates (preprod)
+## 0.23.2 / API 0.8.3 — approved email templates (preprod)
 
 - Actual booking emails now use the approved v3 logo, photograph, website fonts with inbox fallbacks, graphical six-stage journey and stage-specific copy.
 - Inline CID artwork travels with the email; confirmation keeps its private invoice attachment. New jobs snapshot the template version; legacy jobs retain their original provider payload for safe retries.
