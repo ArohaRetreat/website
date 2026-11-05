@@ -40,6 +40,8 @@ test('approved confirmation distinguishes amendment, payment invoice, actual tim
  const prod=emailTemplate({...job,test:false,subjectPrefix:''});assert.ok(!prod.text.includes('PRE-PRODUCTION'));assert.ok(!prod.subject.startsWith('[PRE-PROD'));
 });
 test('approved-email frontend release requires matching template-capable API',()=>{
+ assert.equal(compatibleBookingApi('0.23.2','0.8.2'),false);
+ assert.equal(compatibleBookingApi('0.23.2','0.8.3'),true);
  assert.equal(compatibleBookingApi('0.23.1','0.8.1'),false);
  assert.equal(compatibleBookingApi('0.23.1','0.8.2'),true);
  assert.equal(compatibleBookingApi('0.23.0','0.8.1'),true);

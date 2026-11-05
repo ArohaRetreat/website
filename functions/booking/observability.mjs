@@ -1,3 +1,4 @@
+import { apiVersion } from "../version.mjs";
 import {
   collectionName,
   sharedCollectionName,
@@ -99,7 +100,7 @@ export function bookingEvent({
     "service.namespace": "aroha-retreat",
     "service.name": runtimeServiceName(),
     ...environmentFields(),
-    "service.version": "0.8.1",
+    "service.version": apiVersion,
     timestamp: new Date(at).toISOString(),
     ...contextFields(),
   };

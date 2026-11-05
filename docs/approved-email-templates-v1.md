@@ -1,6 +1,6 @@
 # Approved email body integration / issue88
 
-Website0.23.1 / API0.8.2 integrates the frozen 4 November email-v3 visual baseline into the real worker. This corrects the earlier design-only artifact gap; it does not implement the remaining lifecycle triggers or approved PDF renderer under issue70.
+Website0.23.2 / API0.8.3 integrates the frozen 4 November email-v3 visual baseline into the real worker. This corrects the earlier design-only artifact gap; it does not implement the remaining lifecycle triggers or approved PDF renderer under issue70.
 
 New notification jobs snapshot templateVersion=email-v3. Acknowledgement and host notification show Request sent as current, with review/confirmation/check-in/check-out/feedback upcoming. Host-approved confirmation completes Request sent and Review, marking Confirmed current. Amendments use the same actual confirmed state with updated copy. No stage is marked complete merely because an email was delivered. Acknowledgement retains pending review/hold semantics, including legacy unpriced exclusive-enquiry exceptions. Confirmation retains the payable-invoice distinction, not a paid receipt.
 
@@ -8,7 +8,7 @@ Layout uses presentation tables and inline styles, the original Natura logo/farm
 
 Email delivery merges inline assets with the confirmation PDF, preserving cancellation/replacement checks, recipient policy, test identity, private invoices, provider idempotency and environment telemetry. There is no data/index/permission/secret/CMS migration. Existing jobs without templateVersion use the original renderer so a previously attempted provider idempotency key is never reused with changed content. Unknown versions/channels fail closed. Do not replay old accepted mail or bulk-edit old jobs. Template revisions require a new immutable template version and retained previous renderer.
 
-Preprod rollout targets only the four existing preprod Functions and preprod Hosting. Website publication refuses API older than0.8.2; production remains unchanged. Rollback stops new v3 job creation first, then retains v3-capable workers until those jobs settle/reconcile. Reverting workers to code that lacks v3 support before queued work completes can send an incorrect body and is not a safe standalone rollback.
+Preprod rollout targets only the four existing preprod Functions and preprod Hosting. Website publication refuses API older than0.8.3; production remains unchanged. Rollback stops new v3 job creation first, then retains v3-capable workers until those jobs settle/reconcile. Reverting workers to code that lacks v3 support before queued work completes can send an incorrect body and is not a safe standalone rollback.
 
 Verification: tests assert channel-specific stage, text alternative, correct CID attachment matching, image signatures/payload bounds, escaped guest data, invoice and image coexistence, exclusive actual interval, amended copy and legacy payload stability. The opt-in AROHA_EMAIL_REVIEW=1 demo-emulator integration saves actual synthetic worker provider payloads to ignored local/release-evidence/aroha-approved-email-templates/rendered for browser review. No real mail is sent by emulators. Deployment evidence and actual-inbox evidence remain separate.
 
