@@ -1,3 +1,9 @@
+# 0.23.8 (pre-production) — preserve active tester reservations
+
+- Permit the acceptance runner to keep two pre-existing active guest reservations while creating only one test reservation at a time. Normal three-active-booking policy is unchanged.
+- Label the mixed-capacity variant: two held reservations when account headroom permits, or one held overnight reservation plus the day quote when only one slot is free. Do not claim a second committed reservation in the quoted variant.
+- HTTP emulator coverage retains two canary reservations unchanged through the complete test run; cleanup retires only run-owned fixtures.
+
 # 0.23.7 (pre-production) — acceptance evidence integrity
 
 - Keep report-processing root spans open until their child processing spans finish, using real SDK parent context and timing; verify the emitted protobuf relationships independently.

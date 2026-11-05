@@ -13,6 +13,8 @@ Use [the execution contract](preprod-booking-e2e-v1.md) and [test commands](test
 - Concurrent overnight/day adult capacity, exclusive conflicts, occupied private rooms, run-owned promo discount and redemption limits.
 - Saved-profile inheritance/integrity, anonymous invoice denial, run-owned reservation/promo cleanup and unchanged pre-existing bookings.
 
+The runner preserves up to two existing active reservations and never raises the normal three-active limit. With only one free slot, the mixed-capacity result explicitly says held-and-quoted; the two-held variant needs two free slots. The HTTP emulator verifies that both canary reservations remain unchanged.
+
 The live runner additionally waits for delivered acknowledgement, host notification and confirmation before retiring approved fixtures. Tests use an empty future window and normal prices. A run cannot alter unrelated reservations, profiles, room readiness, CMS or production.
 
 ## Additional executable boundaries
