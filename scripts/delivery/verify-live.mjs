@@ -1,3 +1,4 @@
+import {compatibleBookingApi} from "./environment-policy.mjs";
 import { ADDITIONAL_MEDIA } from "../content/farm-media-refresh.mjs";
 import { readFile, readdir } from "node:fs/promises";
 import { createHash } from "node:crypto";
@@ -118,7 +119,7 @@ export async function verifyLive(
     ).json();
     if (
       booking.environment !== "pre-prod" ||
-      !/^0\.7\.\d+$/.test(booking.apiVersion) ||
+      !compatibleBookingApi(release.version,booking.apiVersion) ||
       booking.delivery !== "email_enabled" ||
       runtime.environment !== "pre-prod" ||
       !Number.isSafeInteger(runtime.configVersion) ||

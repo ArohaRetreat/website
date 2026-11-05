@@ -31,3 +31,11 @@ export function branchChecks(checks, runs, branch, sha) {
     checks.filter(c => c.name === name && c.app.slug === "github-actions" && suites.has(c.check_suite.id))
       .sort((a,b) => b.id-a.id)[0]);
 }
+
+// Both publication and independent live verification use the same API contract.
+export function compatibleBookingApi(websiteVersion, apiVersion) {
+  const website=/^0\.(\d+)\.\d+$/.exec(websiteVersion || "");
+  if(!website) return false;
+  const minor=Number(website[1])>=22 ? 8 : 7;
+  return new RegExp("^0\\."+minor+"\\.\\d+$").test(apiVersion || "");
+}
