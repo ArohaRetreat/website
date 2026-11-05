@@ -10,7 +10,7 @@ const esc = (v) =>
   );
 export function emailTemplate(job) {
   const b = job.snapshot,
-    kind = b.kind === "event" ? "exclusive retreat enquiry" : "booking request";
+    kind = b.kind === "event" && !b.pricingVersion ? "exclusive retreat enquiry" : "booking request";
   const subject =
     job.channel === "guest_acknowledgement"
       ? `We have received your ${kind}`
@@ -25,9 +25,9 @@ export function emailTemplate(job) {
           `Hello ${b.guestName},`,
           `Your ${kind} has been received and is under consideration by your hosts.`,
           "Host approval is still required. This message does not confirm a reservation.",
-          b.kind === "event"
+          b.kind === "event" && !b.pricingVersion
             ? "An exclusive retreat enquiry does not hold the retreat. Your host will send an offer for your acceptance."
-            : "You can follow the host response in Your visits.",
+            : "Your requested capacity is held until the host review deadline. Follow the host response in Your visits.",
         ]
       : job.channel === "host_notification"
         ? [

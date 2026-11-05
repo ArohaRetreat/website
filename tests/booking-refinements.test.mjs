@@ -1,3 +1,4 @@
+import {emailTemplate} from '../functions/email/templates.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {initialState,mutate,addDays} from '../functions/booking/domain.mjs';
@@ -61,4 +62,10 @@ test('enquiry sign-in wall preserves hints, rejects cancelled login, clears iden
   auth.currentUser=null;listener();assert.equal(document.querySelector('.enquiry-form'),null);assert(document.querySelector('#enquiry-signin'));
   let release;const delayed=createEnquiryAccess(()=>new Promise(r=>release=r));const pending=delayed({},show,'stay','tree',render);show('<h2>A newer dialog</h2>');release(m);await pending;assert.match(document.body.textContent,/newer dialog/);
  }finally{Object.assign(globalThis,old);dom.window.close();}
+});
+
+test("priced exclusive acknowledgement does not request a second quote acceptance",()=>{
+ const job={channel:"guest_acknowledgement",test:true,subjectPrefix:"[PRE-PROD TEST] ",snapshot:{kind:"event",pricingVersion:1,guestName:"Synthetic",reference:"AR-TEST",arrival:date,departure:addDays(date,1),guests:20,total:3000000}};
+ assert.match(emailTemplate(job).text,/held until/);assert.doesNotMatch(emailTemplate(job).text,/send an offer/);
+ delete job.snapshot.pricingVersion;assert.match(emailTemplate(job).text,/send an offer/);
 });
