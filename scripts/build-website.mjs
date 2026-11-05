@@ -90,10 +90,17 @@ await copyFile(
   new URL("website/admin.html", root),
   new URL("admin/index.html", dist),
 );
+if (deploymentEnvironment.preprod) {
+  await mkdir(new URL("admin/testing/", dist), {recursive:true});
+  const revision=process.env.AROHA_BUILD_REVISION || "local-validation";
+  if(!/^(?:[a-f0-9]{40}|local-validation)$/.test(revision)) throw Error("INVALID_TEST_SOURCE");
+  await writeFile(new URL("admin/testing/index.html", dist), (await readFile(new URL("website/testing/index.html",root),"utf8")).replace("__SOURCE__",revision));
+}
 // This directory is owned by the website bundler; retire stale hashed chunks.
 await rm(new URL("chunks/", assets), { recursive: true, force: true });
 const bundle = await build({
   entryPoints: {
+    ...(deploymentEnvironment.preprod ? {"booking-e2e": new URL("website/testing/booking-e2e.mjs", root).pathname} : {}),
     site: new URL("website/site.mjs", root).pathname,
     admin: new URL("website/admin.mjs", root).pathname,
     map: new URL("website/map.mjs", root).pathname,

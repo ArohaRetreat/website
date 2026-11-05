@@ -24,6 +24,9 @@ jobs:
         run: |
           node scripts/delivery/run-node-tests.mjs application
           npm run build
+          node scripts/testing/verify-build.mjs production
+          AROHA_ENVIRONMENT=pre-prod npm run build
+          node scripts/testing/verify-build.mjs pre-prod
       - name: Retain bounded application test reports
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

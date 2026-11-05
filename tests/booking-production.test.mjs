@@ -1,3 +1,4 @@
+import {visitDateLabel} from "../website/booking-visit-label.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -131,6 +132,7 @@ test("production guest UI presents published private-room pricing without sample
       runScripts: "outside-only",
     }),
     w = dom.window;
+  w.testVisitDateLabel=visitDateLabel;
   w.scrollTo = () => {};
   w.HTMLDialogElement.prototype.showModal = function () {
     this.setAttribute("open", "");
@@ -166,6 +168,7 @@ test("production guest UI presents published private-room pricing without sample
     new URL("../website/booking.mjs", import.meta.url),
     "utf8",
   );
+  source = source.replace(/import \{visitDateLabel\} from "\.\/booking-visit-label.mjs";/, "const visitDateLabel=window.testVisitDateLabel;");
   source = source.replace(
     /import \{ bookingApi \} from "\.\/booking-api.mjs";/,
     "const bookingApi=window.testBookingApi;",

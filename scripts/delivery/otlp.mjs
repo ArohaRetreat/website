@@ -16,7 +16,8 @@ const {
   ProtobufLogsSerializer,
   ProtobufMetricsSerializer,
 } = require("@opentelemetry/otlp-transformer");
-export function telemetry(service, version, environment) {
+export function telemetry(service, version, environment, {namespace="delivery"} = {}) {
+  if(!["delivery","testing"].includes(namespace))throw Error("INVALID_TELEMETRY_NAMESPACE");
   const resource = resourceFromAttributes({
     "service.name": service,
     "service.namespace": "aroha-retreat",
@@ -61,11 +62,11 @@ export function telemetry(service, version, environment) {
   }
   const reader = new Reader(),
     mp = new MeterProvider({ resource, readers: [reader] });
-  const tracer = tp.getTracer("aroha-delivery", "1.0.0"),
-    logger = lp.getLogger("aroha-delivery", "1.0.0"),
-    meter = mp.getMeter("aroha-delivery", "1.0.0");
-  const count = meter.createCounter("aroha.delivery.outcomes"),
-    duration = meter.createHistogram("aroha.delivery.duration", { unit: "s" });
+  const tracer = tp.getTracer("aroha-"+namespace, "1.0.0"),
+    logger = lp.getLogger("aroha-"+namespace, "1.0.0"),
+    meter = mp.getMeter("aroha-"+namespace, "1.0.0");
+  const count = meter.createCounter("aroha."+namespace+".outcomes"),
+    duration = meter.createHistogram("aroha."+namespace+".duration", { unit: "s" });
   return {
     span(name, attributes, start, end, parent) {
       const s = tracer.startSpan(
@@ -86,7 +87,7 @@ export function telemetry(service, version, environment) {
       logger.emit({
         severityNumber: 9,
         severityText: "INFO",
-        body: "delivery.outcome",
+        body: namespace+".outcome",
         attributes,
         context: parent
           ? trace.setSpanContext(ROOT_CONTEXT, parent)

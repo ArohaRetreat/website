@@ -4,17 +4,18 @@ export async function request(
   body,
   token,
   {
+    origin = INGEST_ORIGIN,
     fetchImpl = fetch,
     contentType = "application/json",
     sleep = (ms) => new Promise((r) => setTimeout(r, ms)),
   } = {},
 ) {
-  if (!token || !path.startsWith("/api/v2/"))
+  if (!token || !path.startsWith("/api/v2/") || !/^https:\/\/[a-z0-9-]+\.live\.dynatrace\.com$/.test(origin))
     throw Error("DELIVERY_CONFIGURATION");
   for (let attempt = 1; attempt <= 3; attempt++) {
     let response;
     try {
-      response = await fetchImpl(INGEST_ORIGIN + path, {
+      response = await fetchImpl(origin + path, {
         method: "POST",
         headers: {
           Authorization: "Bearer " + token,

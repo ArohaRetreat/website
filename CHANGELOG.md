@@ -1,3 +1,10 @@
+# 0.23.6 (pre-production) — observable booking acceptance
+
+- Correct single-day visit labels in guest history/detail and host review; inventory date boundaries remain unchanged.
+- Add an internal preprod-only acceptance console using ordinary Google authentication and existing manager permissions; test guest and host API scopes, preserve existing reservations/profile and retire only run-owned fixtures.
+- Add live read-only probes, reusable HTTP emulator scenarios and privacy-allowlisted test business events/logs/metrics/report-processing traces. Explicit execution labels separate live API, guest UI, emulator and unit evidence.
+- Read active server-owned preprod telemetry metadata; no credential enters browser assets. Production builds exclude the test console. Checkout receipts and feedback scheduling remain incomplete under issue70.
+
 ## 0.23.2 / API 0.8.3 — approved email templates (preprod)
 
 - Actual booking emails now use the approved v3 logo, photograph, website fonts with inbox fallbacks, graphical six-stage journey and stage-specific copy.

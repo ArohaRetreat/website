@@ -1,3 +1,4 @@
+import {visitDateLabel} from "../website/booking-visit-label.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -25,6 +26,7 @@ async function mount(s, role = "guest", hash = "") {
       },
     ),
     w = dom.window;
+  w.testVisitDateLabel=visitDateLabel;
   w.scrollTo = () => {};
   w.HTMLDialogElement.prototype.showModal = function () {
     this.setAttribute("open", "");
@@ -76,7 +78,7 @@ async function mount(s, role = "guest", hash = "") {
       /import \{ bookingApi \} from "\.\/booking-api.mjs";/,
       "const bookingApi=window.testBookingApi;",
     );
-  await w.eval("(async()=>{" + source + "})()");
+  await w.eval("(async()=>{" + source.replace(/import \{visitDateLabel\} from "\.\/booking-visit-label.mjs";/, "const visitDateLabel=window.testVisitDateLabel;") + "})()");
   const wait = async () => {
     for (let i = 0; i < 100 && w.document.querySelector("#app[aria-busy]"); i++)
       await new Promise((r) => setTimeout(r, 3));
