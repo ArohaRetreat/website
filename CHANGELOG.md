@@ -1,3 +1,7 @@
+# 0.22.1 (pre-production)
+
+- Share API compatibility checks between publication and live verification so API0.8.0 is correctly verified for website0.22.
+
 # 0.22.0 (pre-production)
 
 - Exclusive retreat: configurable ₹30000 per selected day, complete upfront price and a single host availability approval. Pending priced requests hold the continuous range; legacy offers/prices remain intact.

@@ -1,7 +1,7 @@
 import {readFile,writeFile,mkdir} from "node:fs/promises";
 import {spawnSync} from "node:child_process";
 import {randomUUID} from "node:crypto";
-import {deliveryTarget,assertArtifact,repository} from "./delivery/environment-policy.mjs";
+import {compatibleBookingApi,deliveryTarget,assertArtifact,repository} from "./delivery/environment-policy.mjs";
 import {verifyHostingComposition} from "./hosting-composition.mjs";
 import {verifyDesignPreserved} from "./delivery/preserve-design.mjs";
 import {hostingRelease,deliveryToken} from "./delivery/credentials.mjs";
@@ -20,7 +20,7 @@ assertArtifact(target,website,process.env.GITHUB_SHA,config);
 if(target.branch==="main"){await verifyHostingComposition(root,website.revision);await verifyDesignPreserved(root);}
 const request=async path=>{const r=await fetch(target.origin+path,{signal:AbortSignal.timeout(15000)});if(!r.ok)throw Error("API_COMPATIBILITY_CHECK_FAILED");return r.json();};
 const runtime=await request("/api/v1/runtime-config"),booking=await request("/api/v1/booking/public");
-if(runtime.environment!==target.environment || booking.environment!==target.environment || !/^0\.8\.\d+$/.test(booking.apiVersion) || !Number.isSafeInteger(runtime.configVersion))throw Error("UPGRADE_MATCHING_BACKEND_BEFORE_FRONTEND");
+if(runtime.environment!==target.environment || booking.environment!==target.environment || !compatibleBookingApi(website.version,booking.apiVersion) || !Number.isSafeInteger(runtime.configVersion))throw Error("UPGRADE_MATCHING_BACKEND_BEFORE_FRONTEND");
 const otherSite=target.branch==="main"?"aroha-retreat-preprod":"aroha-retreat";
 const otherBefore=await hostingRelease(otherSite),token=await deliveryToken();
 const record={schemaVersion:1,id:randomUUID(),website,before:await hostingRelease(target.site),startedAt:new Date().toISOString(),status:"pending",verification:{status:"not-run"}};
