@@ -18,3 +18,7 @@ Email worker service aroha-booking-emails[-pre-prod]; all runtime signals carry 
 Run npm test, npm run test:preprod (demo emulators, local collector only), synthetic OTLP and foundation checks. CI also runs the existing production-contract emulator suite with mail disabled. Render/inspect PDFs including Kannada and multi-page cases. Prepare/deploy via the scoped scripts in operations; exact source and independent production baseline checks precede preprod publication. Stop new sends for provider/config failure, retain jobs, inspect signed status, repair then resume; do not redeploy Hosting solely to repair delivery telemetry.
 
 Website0.23.0/API0.8.1 issue86: read [guest navigation/mail parity](../../docs/guest-mail-parity-v1.md). Recipient policy is snapshotted per new job; old jobs retain their addresses. Production activation stays separate; same provider account/sender/host inbox is reusable.
+
+## Approved email-v3 integration — issue88
+
+Website0.23.1/API0.8.2 integrates the frozen email body into real new-job delivery. Read [contract](../../docs/approved-email-templates-v1.md). New jobs snapshot templateVersion=email-v3; old jobs keep their original body/idempotency payload. CID logo/photo/stage artwork coexist with confirmation PDF. Preprod only; production unchanged. Remaining lifecycle triggers and frozen PDF renderer remain issue70. Read actual local/release-evidence/aroha-approved-email-templates/HANDOFF.md for deployment and inbox limits.

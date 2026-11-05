@@ -34,9 +34,9 @@ export function branchChecks(checks, runs, branch, sha) {
 
 // Both publication and independent live verification use the same API contract.
 export function compatibleBookingApi(websiteVersion, apiVersion) {
-  const website=/^0\.(\d+)\.\d+$/.exec(websiteVersion || "");
+  const website=/^0\.(\d+)\.(\d+)$/.exec(websiteVersion || "");
   if(!website) return false;
   const minor=Number(website[1])>=22 ? 8 : 7;
   const api=/^0\.(\d+)\.(\d+)$/.exec(apiVersion || "");
-  return !!api && Number(api[1])===minor && Number(api[2]) >= (Number(website[1])>=23 ? 1 : 0);
+  return !!api && Number(api[1])===minor && Number(api[2]) >= (Number(website[1])>23 || (Number(website[1])===23 && Number(website[2])>=1) ? 2 : Number(website[1])>=23 ? 1 : 0);
 }

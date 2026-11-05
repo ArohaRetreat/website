@@ -404,7 +404,7 @@ test("confirmation attaches its own private invoice and a cancelled booking supp
     db,
     mailCollection(db).doc(id),
     async (b) => {
-      attached = b.attachments?.[0]?.content?.toString() === "PDF-BYTES";
+      attached = b.attachments?.some(a => a.filename.endsWith(".pdf") && a.content?.toString() === "PDF-BYTES");
       return { data: { id: "confirm-message" }, error: null };
     },
     {
