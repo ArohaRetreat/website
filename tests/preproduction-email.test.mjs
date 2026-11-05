@@ -293,6 +293,7 @@ test("invoice snapshots reconcile integer amounts, preserve version history and 
   const pdf = await renderInvoicePdf({ ...one, guestName: "ಪರೀಕ್ಷಾ ಅತಿಥಿ" });
   assert.equal(pdf.subarray(0, 5).toString(), "%PDF-");
   assert.ok(pdf.length > 5000 && pdf.length < 1048576);
+  assert.equal((pdf.toString("latin1").match(/\/Type \/Page\b/g)||[]).length,1,"The ordinary approved invoice remains one page");
 });
 test("atomic request jobs route guest and host messages only to the approved test inbox and retries do not double-send", async () => {
   const db = fakeDB(),
