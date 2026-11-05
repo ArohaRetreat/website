@@ -41,6 +41,7 @@ export function invoiceSnapshot(
     throw Error("INVOICE_PRICE_REQUIRED");
   const v = {
     schemaVersion: 1,
+    documentTemplateVersion: "pdf-v4",
     id: booking.id + "-v" + ((previous?.version || 0) + 1),
     bookingId: booking.id,
     owner: booking.owner,
@@ -80,6 +81,7 @@ export function queueNotifications(
     profile,
     config = mailSettings(),
     invoice,
+    documentCorrection = false,
     now = Date.now(),
   },
 ) {
@@ -102,7 +104,8 @@ export function queueNotifications(
       target = channel === "host_notification" ? config.hostTo : profile.email;
     const job = {
       schemaVersion: 1,
-      templateVersion: booking.source === "host_private" ? "email-v3-private" : "email-v3",
+      templateVersion: documentCorrection ? (booking.source === "host_private" ? "email-v3-private-correction" : "email-v3-correction") : booking.source === "host_private" ? "email-v3-private" : "email-v3",
+      ...(invoice?.documentTemplateVersion ? {documentTemplateVersion:invoice.documentTemplateVersion} : {}),
       id,
       owner: booking.owner,
       bookingId: booking.id,

@@ -260,3 +260,7 @@ Five-print paged album with all 35 photos and 21 films; consistent filters/viewe
 ## 0.24.1 — phone calendar width
 
 Keep booked-date labels inside all seven calendar columns on narrow screens, preserving disabled dates and leaf selection markers.
+
+## 0.24.2 — approved document delivery
+
+Use the frozen PDF-v4 design for new invoices, including the Natura logo, Lora typography and Hrudhi memory panel. Preserve legacy PDFs and retry payloads, and provide an audited design-only correction without reissuing financial invoices or changing reservations.

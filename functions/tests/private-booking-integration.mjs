@@ -1,8 +1,9 @@
 import test from 'node:test';
+import {queueApprovedDocumentCorrection} from '../email/document-corrections.mjs';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import {initializeApp} from 'firebase-admin/app';
-import {getFirestore} from 'firebase-admin/firestore';
+import {getFirestore,FieldValue} from 'firebase-admin/firestore';
 import {initialState,addDays,todayIST} from '../booking/domain.mjs';
 import {recordPrivateReservations,confirmPrivateReservationByEmail} from '../booking/host-private.mjs';
 import {bookingState,publicBookingCalendar,bookingCommand} from '../booking/store.mjs';
@@ -32,10 +33,26 @@ test('private reservations are manager-only, conflict-safe, inclusive, idempoten
  const m=emailTemplate(j);assert.match(m.html,/Guest count to be arranged/);assert.ok(!m.text.includes('0 guests'));assert.match(m.text,/Reply to this email/);assert.match(m.text,/Explore Aroha Retreat/);assert.ok(!m.html.includes('/book/#visits'));assert.ok(!m.subject.includes('PRE-PROD'));
  const invoice=(await db.collection('aroha_invoices').doc(result.invoiceId).get()).data();assert.equal(invoice.amountPaid,0);assert.equal(invoice.balanceDue,39000000);
  await assert.rejects(confirmPrivateReservationByEmail(db,{...args,key:randomUUID()}),e=>e.code==='VERSION_CONFLICT');
- await bookingCommand(db,{uid:actor,email:'host@example.test'},'booking-action',{id:a[0].id,action:'cancel',expectedVersion:2},randomUUID(),{admin:true});
+ assert.equal(invoice.documentTemplateVersion,'pdf-v4');
+ const legacy={...invoice};delete legacy.documentTemplateVersion;
+ await db.collection('aroha_invoices').doc(result.invoiceId).set(legacy);
+ await db.collection('aroha_notifications').doc(j.id).update({status:'delivered',documentTemplateVersion:FieldValue.delete()});
+ const counterBefore=(await db.collection('aroha_invoice_counters').get()).docs.map(d=>d.data());
+ const correctionArgs={hostId:actor,operatorId:'b'.repeat(64),id:a[0].id,expectedVersion:2,key:randomUUID(),config};
+ const correction=await queueApprovedDocumentCorrection(db,correctionArgs);
+ assert.deepEqual(await queueApprovedDocumentCorrection(db,correctionArgs),correction);
+ assert.equal(correction.invoiceId,result.invoiceId);
+ assert.equal((await db.collection('aroha_notifications').get()).size,2);
+ const correctionJob=(await db.collection('aroha_notifications').doc(correction.jobIds[0]).get()).data();
+ assert.equal(correctionJob.documentTemplateVersion,'pdf-v4');assert.equal(correctionJob.templateVersion,'email-v3-private-correction');
+ assert.match(emailTemplate(correctionJob).text,/not a new booking or an additional charge/);
+ assert.deepEqual((await db.collection('aroha_invoices').doc(result.invoiceId).get()).data(),legacy);
+ assert.deepEqual((await db.collection('aroha_invoice_counters').get()).docs.map(d=>d.data()),counterBefore);
+ await assert.rejects(queueApprovedDocumentCorrection(db,{...correctionArgs,key:randomUUID()}),e=>e.code==='VERSION_CONFLICT');
+ await bookingCommand(db,{uid:actor,email:'host@example.test'},'booking-action',{id:a[0].id,action:'cancel',expectedVersion:3},randomUUID(),{admin:true});
  assert.equal((await publicBookingCalendar(db,{start,days:1,kind:'day',adults:2,childrenAges:[]})).days[0].available,true);
  assert.equal((await db.collection('aroha_invoices').doc(result.invoiceId).get()).data().status,'void');
- assert.equal((await db.collection('aroha_notifications').get()).size,1);
+ assert.equal((await db.collection('aroha_notifications').get()).size,2);
 
 });
 test('explicit pending conversion retains old snapshot/profile and releases only its linked offer hold',async()=>{
@@ -46,7 +63,7 @@ test('explicit pending conversion retains old snapshot/profile and releases only
  const input={name:'Synthetic Customer',email:'private@example.test',ranges:[{arrival,lastDay,dayRate:3000000,existingId:oldId,expectedVersion:3}]};
  await assert.rejects(recordPrivateReservations(db,{hostId:actor,key:randomUUID(),input}),e=>e.code==='VERSION_CONFLICT');input.ranges[0].expectedVersion=4;
  const result=await recordPrivateReservations(db,{hostId:actor,key:randomUUID(),input});assert.equal(result[0].id,oldId);assert.equal(result[0].total,9000000);
- assert.equal((await db.collection('aroha_booking_private_audit').get()).size,1);assert.equal((await db.collection('aroha_booking_profiles').doc(owner).get()).data().activeIds.length,0);assert.equal((await db.collection('aroha_booking_config').doc('site').get()).data().blocks.length,0);
+ assert.equal((await db.collection('aroha_booking_private_audit').where('bookingId','==',oldId).get()).size,1);assert.equal((await db.collection('aroha_booking_profiles').doc(owner).get()).data().activeIds.length,0);assert.equal((await db.collection('aroha_booking_config').doc('site').get()).data().blocks.length,0);
 });
 
 test('privileged operator provenance is distinct from its rechecked authorising host',async()=>{
