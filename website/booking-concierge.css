@@ -693,8 +693,11 @@ dialog h2 {
 }
 .calendars {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 25px;
+}
+.month {
+  min-width: 0;
 }
 .month h3 {
   text-align: center;
@@ -703,7 +706,7 @@ dialog h2 {
 }
 .grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   text-align: center;
   gap: 3px;
 }
@@ -713,6 +716,8 @@ dialog h2 {
   padding: 7px 0;
 }
 .grid button {
+  min-width: 0;
+  padding-inline: 0;
   position: relative;
   min-height: 40px;
   font-size: 14px;

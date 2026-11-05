@@ -241,3 +241,7 @@ Five-print paged album with all 35 photos and 21 films; consistent filters/viewe
 ## 0.23.3 — pre-production Website changes
 
 Restore the existing Website changes module with isolated draft, publication and history, while preserving shared role checks, production host content and denied pre-production access administration.
+
+## 0.23.4 — phone calendar width
+
+Keep date labels inside all seven calendar columns on narrow screens, preserving disabled dates and leaf selection markers.
