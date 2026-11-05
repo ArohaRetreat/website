@@ -3,6 +3,9 @@ name: service-aroha-booking
 description: Maintain Aroha's authenticated overnight reservations and host inventory.
 ---
 
+Current state and test workflow: read the first section of [continuation](continuation.md) and [preprod acceptance contract](../../docs/preprod-booking-e2e-v1.md). Earlier version/disabled-email statements below describe historical releases.
+
+
 # Aroha production booking
 
 Owner ArohaRetreat. API0.6.0 / website0.19.0. Domain `functions/booking/domain.mjs`; Firestore adapter `store.mjs`; request schema `contract.json`; API entry `functions/index.mjs`. Guest frontend `website/booking.mjs` / `booking-api.mjs` / `booking.css`; `/book/` and `/admin/#bookings`. Read [API contract](../../docs/api/aroha-booking-v1.json), [policy notes](../../functions/booking/contract-notes.md), [continuation](continuation.md) and [plan](../../docs/booking-module-plan.md).

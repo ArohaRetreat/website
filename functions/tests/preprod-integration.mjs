@@ -7,6 +7,8 @@ import { createServer } from "node:http";
 import { randomUUID, createHmac } from "node:crypto";
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
+import {runBookingScenarios} from '../../website/testing/booking-scenarios.mjs';
+import {writeFile,mkdir} from 'node:fs/promises';
 if (
   !process.env.FIRESTORE_EMULATOR_HOST ||
   !process.env.FIREBASE_AUTH_EMULATOR_HOST ||
@@ -408,4 +410,27 @@ test("pre-prod HTTP booking, approval, private invoice and webhook stay inside t
   } finally {
     await new Promise((r) => server.close(r));
   }
+});
+
+test('reusable acceptance scenarios use real HTTP contracts and retire only their own emulator fixtures', async()=>{
+  const server=createServer(async(req,res)=>{for await(const _ of req){}res.setHeader('Content-Type','application/json');res.end(JSON.stringify({data:{id:randomUUID()},error:null}));});
+  await new Promise(r=>server.listen(17881,'127.0.0.1',r));
+  const user=await google('owner@example.test'), runId=randomUUID();
+  assert.equal((await call(user,'/booking/profile',{name:'Internal emulator host',phone:'+12025550123',expectedVersion:0})).httpStatus,200);
+  let last=0;
+  try {
+    const report=await runBookingScenarios({runId,execution:'emulator',source:process.env.AROHA_TEST_SOURCE||'local-validation',call:async(op,body,{admin=false,anonymous=false,start,key=randomUUID()}={})=>{
+      await new Promise(r=>setTimeout(r,Math.max(0,last+1100-Date.now())));last=Date.now();
+      const q=new URLSearchParams();if(admin)q.set('admin','1');if(start)q.set('start',start);
+      const r=await fetch(base+'/booking/'+op+(q.size?'?'+q:''),{method:body===undefined?'GET':'POST',headers:{'Content-Type':'application/json','Idempotency-Key':key,'X-Aroha-Journey':runId,...(anonymous?{}:{Authorization:'Bearer '+user.idToken})},...(body===undefined?{}:{body:JSON.stringify(body)}),signal:AbortSignal.timeout(30000)});
+      const b=await r.json();return{status:r.status,body:b,code:b.error?.code,requestId:r.headers.get('X-Request-Id')};
+    }});
+    report.project='demo-aroha';
+    await mkdir('local/test-evidence',{recursive:true});await writeFile('local/test-evidence/emulator-scenarios.json',JSON.stringify(report,null,2),{mode:0o600});
+    assert.deepEqual(report.cases.filter(c=>c.status==='failed').map(c=>({id:c.id,code:c.code})),[]);
+    assert.equal(report.cleanup.status,'passed');
+    const retained=await db.collection('aroha_preprod_bookings').get();
+    for(const d of retained.docs.filter(d=>report.createdIds.includes(d.id)))assert.ok(['cancelled','declined'].includes(d.data().status));
+    assert.equal((await db.collection('aroha_bookings').get()).size,1);
+  }finally{await new Promise(r=>server.close(r));}
 });

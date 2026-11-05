@@ -2,6 +2,9 @@
 name: service-booking-observability
 description: Maintain private booking business-event capture, durable delivery and real trace correlation.
 ---
+
+Current state and test workflow: read the first section of [continuation](continuation.md) and [preprod acceptance contract](../../docs/preprod-booking-e2e-v1.md). Earlier version/disabled-email statements below describe historical releases.
+
 # Aroha booking business observability
 
 Owner ArohaRetreat; API/worker0.6.0, website0.19.0. Read app-launchpad, dt-obs business-events/OTel instructions, docs/booking-platform-v2.md and continuation.md. Source functions/booking/observability.mjs, functions/index.mjs scheduled arohaBookingEvents, functions/telemetry.mjs and website/booking-journey.mjs. Provider aroha.booking, namespace aroha-retreat. API identity aroha-api; worker aroha-booking-events via FUNCTION_TARGET. No fake browser parents: events retain real capture trace/span and request/journey/transaction correlation; worker delivery is a distinct internal span.

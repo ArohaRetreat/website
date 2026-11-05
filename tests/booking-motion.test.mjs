@@ -1,3 +1,4 @@
+import {visitDateLabel} from "../website/booking-visit-label.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -16,6 +17,7 @@ async function mount(reduced = false) {
     d = w.document,
     s = initialState(),
     animations = [];
+  w.testVisitDateLabel=visitDateLabel;
   w.scrollTo = () => {};
   const media = new w.EventTarget();
   media.matches = reduced;
@@ -71,7 +73,7 @@ async function mount(reduced = false) {
       /import \{ bookingApi \} from "\.\/booking-api.mjs";/,
       "const bookingApi=window.testBookingApi;",
     );
-  await w.eval("(async()=>{" + source + "})()");
+  await w.eval("(async()=>{" + source.replace(/import \{visitDateLabel\} from "\.\/booking-visit-label.mjs";/, "const visitDateLabel=window.testVisitDateLabel;") + "})()");
   await new Promise((r) => setTimeout(r, 5));
   for (const a of animations) a.finish();
   return {

@@ -1,3 +1,9 @@
+## Current operating baseline — 5 November 2026
+
+Production is website0.24.2/API0.9.1 at83eba94b15ec1741925cb0f1c909ef7c1e61480d. Preprod baseline is website0.23.5/API0.8.5 at7a22e36458e192382e5391a4a32d707b030b4b21. Both environments have Website changes and Bookings under the same access-controlled Host Studio, approved email-v3 and operational PDF-v4. Email uses the actual verified booking recipient and configured host, with TEST subjects/documents in preprod. Shared members and isolated preprod booking/CMS collections remain separate. Main and preprod are permanent protected environment branches; direct cross-environment merges are forbidden.
+
+Issue101 adds observable preprod acceptance tools; read [test contract](../../docs/preprod-booking-e2e-v1.md). Run reports distinguish emulator/unit/API/browser outcomes; no synthetic production booking, custom-token Google impersonation or replay of Mithun confirmations is authorized. Keep incomplete checkout receipt/payment ledger/feedback automation under issue70 visible. Current local evidence: local/test-evidence/. Historical notes below are retained as history and do not override this baseline. Verify live release metadata before relying on these revisions.
+
 ## Website0.20.0 / API0.7.0 — issue65 (pre-production only, prepared)
 
 Add isolated pre-production collections, tester-only booking API, separate Functions codebase/Hosting site, forced test inbox and separate RUM tag. Request acknowledgement/host review messages and approval confirmations with private versioned invoice PDFs use atomic jobs, idempotency, bounded retries and signed status webhooks. Central versioned runtime metadata controls environment-specific RUM/server destinations. Read [contract](../../docs/preproduction-email-contract.md) and [operations](../../docs/preproduction-email-operations.md).
