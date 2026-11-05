@@ -1,0 +1,20 @@
+{
+  "design": "pdf-v4",
+  "approvedOn": "2026-11-04",
+  "approvalIssue": 70,
+  "operationalIntegrationIssue": 98,
+  "source": "owner-frozen PDF-v4 specimen; original artwork unchanged",
+  "sha256": {
+    "SourceSans3-OFL.txt": "09746787287a289323b0ec3cff4d1a4a801331b82b7207c1e186f5d26619a392",
+    "Lora-Semibold.ttf": "8026209004865fe180dcabbfc9f8c78c871cf9ff9c91523c6e25990ab8883713",
+    "SourceSans3-Regular.ttf": "d3fdc326492ee29884b414ecb278a07980250a8309a81ab78bfaab12285de641",
+    "NATURA-LICENSE.txt": "37e19cce6c36e075304c93ea1a2df21c8315e5c16506bc876f57f39377e09716",
+    "Lora-OFL.txt": "1d9a970809ac804b582a6ce7f0ebc4e7fefcbfd7ff6299cad35ee656a21be716",
+    "hrudhi-guide-v1.webp": "1cc5b97bbe9afd91ca610cdc9a8922c220dd73f0347a35bb840ac562643e6c78",
+    "logo-white.png": "ac0e17cdb0a69b0cfd3dc01e5b93b359faa729f0b6153326dcad37b8b831d777",
+    "SourceSans3-Semibold.ttf": "a981106e0de89478267dd84b309f70d3364f3509647eff153bc33e9af5abb473",
+    "hrudhi-guide-v1.png": "59964a922f7b2cc67b8e9ec1cf86503ad7d7dbb2352860abe03cf9e7dbdf50f5",
+    "Lora-Regular.ttf": "6c87c4f444b0957d3431937c694de7fa0144285597f7543442b9eeebed986934",
+    "logo-white.svg": "9628cf781d71cbfeb018172f862b325b09a54ebb9a59a3fa250ea7f8d04af024"
+  }
+}

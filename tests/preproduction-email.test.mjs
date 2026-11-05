@@ -599,3 +599,25 @@ test("live issuer preserves a separate establishment registration without inferr
  assert.equal(c.issuer.registrationNumber,'REG/EXAMPLE/2026');assert.equal(c.test,false);assert.equal(c.issuer.gstin,undefined);
  assert.throws(()=>mailSettings({MAIL_ENABLED:'true',MAIL_FROM:'sender@example.test',MAIL_REPLY_TO:'host@example.test',MAIL_HOST_TO:'host@example.test',BILLING_DISPLAY_NAME:'Aroha Retreat',BILLING_ADDRESS:'Sample business address',BILLING_PAYMENT_INSTRUCTIONS:'Arrange payment with hosts',BILLING_REGISTRATION_NUMBER:'<script>'},environmentProfile('production')),/INVALID_BILLING_CONFIG/);
 });
+
+test("legacy confirmation retries keep their original PDF after a design correction", async()=>{
+ const db=fakeDB(),invoice=invoiceSnapshot(booking,profile,1,mailSettings());delete invoice.documentTemplateVersion;
+ await invoiceCollection(db).doc(invoice.id).set({...invoice,documentDesignVersion:"pdf-v4"});
+ const [id]=await queue(db,"booking.confirmed"),ref=mailCollection(db).doc(id);
+ await ref.update({documentTemplateVersion:FieldValue.delete()});
+ let version;
+ await deliverEmail(db,ref,async()=>({data:{id:"legacy-pinned"},error:null}),{makePdf:async(i,o)=>{version=o.designVersion;return{buffer:Buffer.from("LEGACY"),object:"legacy-object"};}});
+ assert.equal(version,"legacy");assert.equal((await ref.get()).data().status,"accepted");
+});
+
+test("approved document objects coexist with immutable originals and reject snapshot mismatches",async()=>{
+ const {invoicePdf}=await import('../functions/email/documents.mjs');
+ const invoice=invoiceSnapshot(booking,profile,1,mailSettings());delete invoice.documentTemplateVersion;
+ const objects=new Map(),bucket={file:name=>({getMetadata:async()=>{if(!objects.has(name))throw Object.assign(Error('missing'),{code:404});return[objects.get(name).metadata];},download:async()=>[objects.get(name).buffer],save:async(buffer,options)=>{assert.equal(options.preconditionOpts.ifGenerationMatch,0);assert.ok(!objects.has(name));objects.set(name,{buffer,metadata:{...options.metadata,size:String(buffer.length)}});}})};
+ const old=await invoicePdf(invoice,{bucket,designVersion:'legacy'}),approved=await invoicePdf(invoice,{bucket,designVersion:'pdf-v4'});
+ assert.notEqual(old.object,approved.object);assert.equal(objects.size,2);
+ assert.deepEqual((await invoicePdf(invoice,{bucket,designVersion:'legacy'})).buffer,old.buffer);
+ assert.deepEqual((await invoicePdf(invoice,{bucket,designVersion:'pdf-v4'})).buffer,approved.buffer);
+ await assert.rejects(invoicePdf({...invoice,snapshotHash:'changed'},{bucket,designVersion:'pdf-v4'}),/INVOICE_DOCUMENT_MISMATCH/);
+ assert.equal(objects.size,2);assert.deepEqual(objects.get(old.object).buffer,old.buffer);
+});

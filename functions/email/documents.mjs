@@ -6,6 +6,7 @@ import { operationSpan } from "../telemetry.mjs";
 export async function invoicePdf(
   invoice,
   {
+    designVersion = invoice.documentDesignVersion || invoice.documentTemplateVersion || 'legacy',
     bucket = getStorage().bucket(
       process.env.FUNCTIONS_EMULATOR
         ? "demo-aroha.appspot.com"
@@ -15,12 +16,14 @@ export async function invoicePdf(
 ) {
   if (invoice.environment !== environment.name)
     throw Error("INVOICE_ENVIRONMENT_MISMATCH");
-  const object = `billing/${environment.name}/${encodeURIComponent(invoice.owner)}/${invoice.id}.pdf`,
+  if(!['legacy','pdf-v4'].includes(designVersion))throw Error('UNKNOWN_DOCUMENT_TEMPLATE');
+  const object = `billing/${environment.name}/${encodeURIComponent(invoice.owner)}/${invoice.id}${designVersion==='legacy'?'':'-pdf-v4'}.pdf`,
     file = bucket.file(object);
   try {
     const [m] = await file.getMetadata();
     if (
       m.metadata?.snapshotHash !== invoice.snapshotHash ||
+      (designVersion!=='legacy' && m.metadata?.designVersion!==designVersion) ||
       Number(m.size) > 1048576
     )
       throw Error("INVOICE_DOCUMENT_MISMATCH");
@@ -29,7 +32,7 @@ export async function invoicePdf(
     if (Number(e.code) !== 404) throw e;
   }
   const buffer = await operationSpan("invoice.generate", () =>
-    renderInvoicePdf(invoice),
+    renderInvoicePdf(invoice,{designVersion}),
   );
   if (buffer.length > 1048576) throw Error("INVOICE_DOCUMENT_TOO_LARGE");
   try {
@@ -41,6 +44,7 @@ export async function invoicePdf(
         cacheControl: "private,no-store",
         metadata: {
           snapshotHash: invoice.snapshotHash,
+          designVersion,
           sha256: createHash("sha256").update(buffer).digest("hex"),
           environment: environment.name,
         },
@@ -52,6 +56,7 @@ export async function invoicePdf(
     const [m] = await file.getMetadata();
     if (
       m.metadata?.snapshotHash !== invoice.snapshotHash ||
+      (designVersion!=='legacy' && m.metadata?.designVersion!==designVersion) ||
       Number(m.size) > 1048576
     )
       throw Error("INVOICE_DOCUMENT_MISMATCH");
