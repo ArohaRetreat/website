@@ -102,6 +102,7 @@ export function queueNotifications(
       target = channel === "host_notification" ? config.hostTo : profile.email;
     const job = {
       schemaVersion: 1,
+      templateVersion: "email-v3",
       id,
       owner: booking.owner,
       bookingId: booking.id,

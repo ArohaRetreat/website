@@ -153,8 +153,31 @@ test("pre-prod HTTP booking, approval, private invoice and webhook stay inside t
       new Set(messages.map((m) => m.options.idempotencyKey)).size,
       3,
     );
-    const confirmation = messages.find((m) => m.body.attachments);
-    assert.equal(confirmation.body.attachments.length, 1);
+    const confirmation = messages.find((m) => m.body.attachments?.some(a=>a.filename.endsWith(".pdf")));
+    assert.equal(confirmation.body.attachments.length, 4);
+    for (const m of messages) {
+      assert.match(m.body.html, /YOUR AROHA JOURNEY/);
+      assert.equal(m.body.attachments.filter(a=>a.contentId).length,3);
+      assert.match(m.body.html, /cid:aroha-journey/);
+    }
+    // Opt-in local visual review of the actual synthetic provider payloads.
+    // This file refuses non-emulator execution and only uses example.test users.
+    if (process.env.AROHA_EMAIL_REVIEW === "1") {
+      const {mkdir,writeFile}=await import("node:fs/promises");
+      const root="local/release-evidence/aroha-approved-email-templates/rendered/";
+      await mkdir(root,{recursive:true});
+      for(const m of messages) {
+        const channel=m.body.tags.find(t=>t.name==="channel").value;
+        let html=m.body.html;
+        for(const a of m.body.attachments.filter(a=>a.contentId)) {
+          await writeFile(root+a.filename,Buffer.from(a.content.data));
+          html=html.replaceAll("cid:"+a.contentId,a.filename);
+        }
+        await writeFile(root+channel+".html",html);
+        await writeFile(root+channel+"-no-images.html",html.replace(/<img[^>]*alt="([^"]*)"[^>]*>/g,'<p style="font:13px/1.6 Arial;color:#263e2d">$1</p>'));
+      }
+      await writeFile(root+"provider-payloads.json",JSON.stringify(messages,null,2));
+    }
     const communications = await call(guest, "/booking/communications", {
       id: booking.id,
     });

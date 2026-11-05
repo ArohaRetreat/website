@@ -825,7 +825,7 @@ export const arohaApi = onRequest(
             severity: status >= 500 ? "ERROR" : "INFO",
             service: serviceName("aroha-api"),
             ...environmentFields(),
-            version: "0.8.1",
+            version: "0.8.2",
             operation,
             status,
             durationMs: Date.now() - started,
