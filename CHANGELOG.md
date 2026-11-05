@@ -256,3 +256,7 @@ Keep Book a stay in the main menu and add Book a stay / My bookings to the signe
 ## [0.8.0] — 2026-11-01
 
 Five-print paged album with all 35 photos and 21 films; consistent filters/viewer controls. Pricing paper surfaces, shadows and aligned rows. Earlier experience and deployment evidence is retained under release-evidence.
+
+## 0.24.1 — phone calendar width
+
+Keep booked-date labels inside all seven calendar columns on narrow screens, preserving disabled dates and leaf selection markers.
