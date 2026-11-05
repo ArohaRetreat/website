@@ -1,5 +1,6 @@
 # 0.23.8 (pre-production) — preserve active tester reservations
 
+- Correct the host room timeline so an exclusive retreat hold marks every room reserved until the exclusive departure boundary.
 - Permit the acceptance runner to keep two pre-existing active guest reservations while creating only one test reservation at a time. Normal three-active-booking policy is unchanged.
 - Label the mixed-capacity variant: two held reservations when account headroom permits, or one held overnight reservation plus the day quote when only one slot is free. Do not claim a second committed reservation in the quoted variant.
 - HTTP emulator coverage retains two canary reservations unchanged through the complete test run; cleanup retires only run-owned fixtures.
