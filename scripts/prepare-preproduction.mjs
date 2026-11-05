@@ -16,13 +16,14 @@ const allowed = [
   "MAIL_REPLY_TO",
   "MAIL_HOST_TO",
   "MAIL_TEST_RECIPIENT",
+  "MAIL_RECIPIENT_MODE",
   "BILLING_DISPLAY_NAME",
 ];
 if (Object.keys(config).some((k) => !allowed.includes(k)))
   throw Error("UNKNOWN_PREPROD_CONFIGURATION");
 if (
   config.MAIL_ENABLED !== "true" ||
-  !config.MAIL_TEST_RECIPIENT ||
+  ((config.MAIL_RECIPIENT_MODE || "test-inbox") === "test-inbox" && !config.MAIL_TEST_RECIPIENT) ||
   !config.PREPROD_TESTER_EMAILS
 )
   throw Error("INCOMPLETE_PREPROD_CONFIGURATION");

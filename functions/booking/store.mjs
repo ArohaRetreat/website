@@ -165,7 +165,7 @@ const project = (s, actor, profile, bookings, extra = {}) => ({
   audit: [],
   delivery: mailSettings().enabled ? "email_enabled" : "not_configured",
   environment: environment.name,
-  apiVersion: "0.8.0",
+  apiVersion: "0.8.1",
   ...extra,
 });
 export async function publicBookingState(db) {
@@ -835,7 +835,7 @@ export async function bookingCommand(
         at: e.at,
         delivery: mailSettings().enabled ? "email_enabled" : "not_configured",
         environment: environment.name,
-        apiVersion: "0.8.0",
+        apiVersion: "0.8.1",
         ...(e.bookingKind ? { bookingKind: e.bookingKind } : {}),
       };
       tx.set(collection(db, "audit").doc(e.eventId), safe);

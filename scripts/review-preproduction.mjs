@@ -27,7 +27,7 @@ for (const [command, args, env] of [
 }
 await build({
   stdin: {
-    contents: `import {emulatorLogin} from './website/firebase-auth.mjs';document.querySelector('form').onsubmit=async e=>{e.preventDefault();const email=document.querySelector('select').value;await emulatorLogin(email);location.href='/book/#visits';};`,
+    contents: `import {emulatorLogin} from './website/firebase-auth.mjs';import {finishGuestSignIn} from './website/guest-signin-return.mjs';document.querySelector('form').onsubmit=async e=>{e.preventDefault();const email=document.querySelector('select').value;await emulatorLogin(email);finishGuestSignIn();};`,
     resolveDir: process.cwd(),
   },
   bundle: true,

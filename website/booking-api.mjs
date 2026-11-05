@@ -1,3 +1,4 @@
+import {finishGuestSignIn} from "./guest-signin-return.mjs";
 import {
   bookingJourneyId,
   bookingJourneyKind,
@@ -38,6 +39,7 @@ export async function bookingApi(
       if (!session.ok)
         throw Error("This Google account does not have Host Studio access.");
     }
+    if(!admin) return finishGuestSignIn();
     return request("state", undefined, undefined, { admin, start });
   }
   if (operation === "logout") {

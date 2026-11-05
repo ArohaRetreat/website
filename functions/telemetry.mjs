@@ -53,7 +53,7 @@ function initialize() {
   const resource = resourceFromAttributes({
     "service.name": runtimeServiceName(),
     "service.namespace": "aroha-retreat",
-    "service.version": "0.8.0",
+    "service.version": "0.8.1",
     ...environmentFields(),
     "cloud.provider": "gcp",
     "cloud.platform": "gcp_cloud_run",
@@ -103,7 +103,7 @@ function initialize() {
   context.setGlobalContextManager(manager);
   trace.setGlobalTracerProvider(tp);
   propagation.setGlobalPropagator(new W3CTraceContextPropagator());
-  tracer = tp.getTracer("aroha-api", "0.8.0");
+  tracer = tp.getTracer("aroha-api", "0.8.1");
   const lp = new LoggerProvider({
     resource,
     processors: [
@@ -116,7 +116,7 @@ function initialize() {
       }),
     ],
   });
-  logger = lp.getLogger("aroha-api", "0.8.0");
+  logger = lp.getLogger("aroha-api", "0.8.1");
   const mp = new MeterProvider({
     resource,
     readers: [
@@ -134,7 +134,7 @@ function initialize() {
       }),
     ],
   });
-  const meter = mp.getMeter("aroha-api", "0.8.0");
+  const meter = mp.getMeter("aroha-api", "0.8.1");
   deliveryCounter = meter.createCounter("aroha.booking.delivery.runs", {
     description: "Completed business-event delivery runs",
   });

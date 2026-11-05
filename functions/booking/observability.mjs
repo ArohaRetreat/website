@@ -99,7 +99,7 @@ export function bookingEvent({
     "service.namespace": "aroha-retreat",
     "service.name": runtimeServiceName(),
     ...environmentFields(),
-    "service.version": "0.8.0",
+    "service.version": "0.8.1",
     timestamp: new Date(at).toISOString(),
     ...contextFields(),
   };
