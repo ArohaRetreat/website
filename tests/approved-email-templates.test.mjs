@@ -46,3 +46,11 @@ test('approved-email frontend release requires matching template-capable API',()
  assert.equal(compatibleBookingApi('0.23.1','0.8.2'),true);
  assert.equal(compatibleBookingApi('0.23.0','0.8.1'),true);
 });
+test('already deployed email-v3 payloads retain their exact pre-private-booking bytes for retries',async()=>{
+ const {readFile}=await import('node:fs/promises'),{createHash}=await import('node:crypto');
+ const expected=JSON.parse(await readFile(new URL('./fixtures/email-v3-payload-hashes.json',import.meta.url),'utf8'));
+ for(const {channel,amended,sha256}of expected){
+  const job={channel,templateVersion:'email-v3',test:true,subjectPrefix:'[PRE-PROD TEST] ',snapshot:{kind:'event',pricingVersion:1,guestName:'Synthetic Customer',reference:'AR-IMMUTABLE',arrival:'2026-12-12',departure:'2026-12-14',guests:2,amended}};
+  assert.equal(createHash('sha256').update(JSON.stringify(emailTemplate(job))).digest('hex'),sha256,channel+' '+amended);
+ }
+});

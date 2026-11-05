@@ -5,7 +5,7 @@ import {initializeApp} from 'firebase-admin/app';
 import {getFirestore} from 'firebase-admin/firestore';
 import {initialState,addDays,todayIST} from '../booking/domain.mjs';
 import {recordPrivateReservations,confirmPrivateReservationByEmail} from '../booking/host-private.mjs';
-import {bookingState,publicBookingCalendar} from '../booking/store.mjs';
+import {bookingState,publicBookingCalendar,bookingCommand} from '../booking/store.mjs';
 import {emailTemplate} from '../email/templates.mjs';
 if(!process.env.FIRESTORE_EMULATOR_HOST)throw Error('EMULATOR_REQUIRED');
 const db=getFirestore(initializeApp({projectId:'demo-aroha-private-bookings'},'private-booking-tests'));
@@ -32,6 +32,11 @@ test('private reservations are manager-only, conflict-safe, inclusive, idempoten
  const m=emailTemplate(j);assert.match(m.html,/Guest count to be arranged/);assert.ok(!m.text.includes('0 guests'));assert.match(m.text,/Reply to this email/);assert.match(m.text,/Explore Aroha Retreat/);assert.ok(!m.html.includes('/book/#visits'));assert.ok(!m.subject.includes('PRE-PROD'));
  const invoice=(await db.collection('aroha_invoices').doc(result.invoiceId).get()).data();assert.equal(invoice.amountPaid,0);assert.equal(invoice.balanceDue,39000000);
  await assert.rejects(confirmPrivateReservationByEmail(db,{...args,key:randomUUID()}),e=>e.code==='VERSION_CONFLICT');
+ await bookingCommand(db,{uid:actor,email:'host@example.test'},'booking-action',{id:a[0].id,action:'cancel',expectedVersion:2},randomUUID(),{admin:true});
+ assert.equal((await publicBookingCalendar(db,{start,days:1,kind:'day',adults:2,childrenAges:[]})).days[0].available,true);
+ assert.equal((await db.collection('aroha_invoices').doc(result.invoiceId).get()).data().status,'void');
+ assert.equal((await db.collection('aroha_notifications').get()).size,1);
+
 });
 test('explicit pending conversion retains old snapshot/profile and releases only its linked offer hold',async()=>{
  const arrival=addDays(start,50),lastDay=addDays(arrival,2),oldId=randomUUID(),owner='old-owner';

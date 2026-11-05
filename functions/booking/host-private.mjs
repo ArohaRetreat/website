@@ -16,12 +16,12 @@ const validDate=d=>typeof d==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(d)&&Number.is
 function rangesInput(input,now) {
  if(!input||Object.keys(input).some(k=>!['name','email','ranges'].includes(k))||typeof input.name!=='string'||input.name.trim().length<2||input.name.length>120||/[\x00-\x1f\x7f]/.test(input.name)||!validEmail(input.email)||!Array.isArray(input.ranges)||input.ranges.length<1||input.ranges.length>2)fail('INVALID_PRIVATE_RESERVATION');
  return input.ranges.map(r=>{
-  if(Object.keys(r).some(k=>!['arrival','lastDay','dayRate','existingId','expectedVersion'].includes(k))||!validDate(r.arrival)||!validDate(r.lastDay)||r.lastDay<r.arrival||r.arrival<todayIST(now)||r.lastDay>addDays(r.arrival,30)||r.arrival>addDays(todayIST(now),365)||!Number.isSafeInteger(r.dayRate)||r.dayRate<10000||r.dayRate>100000000||(r.existingId&&(!/^[A-Za-z0-9-]{1,100}$/.test(r.existingId)||!Number.isInteger(r.expectedVersion))))fail('INVALID_PRIVATE_RESERVATION');
+  if(!r||typeof r!=='object'||Array.isArray(r)||Object.keys(r).some(k=>!['arrival','lastDay','dayRate','existingId','expectedVersion'].includes(k))||!validDate(r.arrival)||!validDate(r.lastDay)||r.lastDay<r.arrival||r.arrival<todayIST(now)||r.lastDay>addDays(r.arrival,30)||r.arrival>addDays(todayIST(now),365)||!Number.isSafeInteger(r.dayRate)||r.dayRate<10000||r.dayRate>100000000||(r.existingId!==undefined&&(typeof r.existingId!=='string'||!/^[A-Za-z0-9-]{1,100}$/.test(r.existingId)||!Number.isInteger(r.expectedVersion)))||(r.expectedVersion!==undefined&&!r.existingId))fail('INVALID_PRIVATE_RESERVATION');
   return {...r,departure:addDays(r.lastDay,1),days:Math.round((Date.parse(r.lastDay)-Date.parse(r.arrival))/86400000)+1};
  });
 }
 async function manager(tx,db,hostId) {
- if(typeof hostId!=='string'||!hostId)fail('FORBIDDEN',403);
+ if(typeof hostId!=='string'||!/^[A-Za-z0-9:_-]{1,128}$/.test(hostId))fail('FORBIDDEN',403);
  const m=await tx.get(db.collection(sharedCollectionName('members')).doc(hostId));
  if(!m.exists||studioAccess(m.data()).bookings!=='manager')fail('FORBIDDEN',403);
 }
@@ -68,7 +68,7 @@ export async function recordPrivateReservations(db,{hostId,key,input,now=Date.no
   }
   for(const [uid,snap]of originalProfiles)if(snap.exists)tx.update(col(db,'profiles').doc(uid),{activeIds:(snap.data().activeIds||[]).filter(id=>!targets.some(b=>b?.id===id)),updatedAt:now});
   tx.set(profileRef,{...(ps.data()||{}),id:owner,name:input.name.trim(),email:input.email.toLowerCase(),identitySource:'host_recorded',completedStays:ps.data()?.completedStays||0,activeIds:[...new Set([...(ps.data()?.activeIds||[]),...result.map(b=>b.id)])],createdAt:ps.data()?.createdAt||now,updatedAt:now});
-  const {bookings:unused,...configuration}=cs.data()||{};tx.set(configRef,{...configuration,blocks:state.blocks,guardVersion:(cs.data()?.guardVersion||0)+1});
+  tx.set(configRef,{...cs.data(),blocks:state.blocks,guardVersion:(cs.data()?.guardVersion||0)+1});
   const response=result.map(({id,reference,arrival,departure,total,days,source})=>({id,reference,arrival,departure,total,days,source}));
   tx.create(request,{owner:hostId,hash:fingerprint,result:response,createdAt:now,expireAt:new Date(now+86400000)});return response;
  });
