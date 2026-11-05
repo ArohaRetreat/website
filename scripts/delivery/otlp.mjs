@@ -68,6 +68,10 @@ export function telemetry(service, version, environment, {namespace="delivery"} 
   const count = meter.createCounter("aroha."+namespace+".outcomes"),
     duration = meter.createHistogram("aroha."+namespace+".duration", { unit: "s" });
   return {
+    beginSpan(name, attributes, parent) {
+      const span = tracer.startSpan(name, { attributes }, parent ? trace.setSpanContext(ROOT_CONTEXT,parent) : ROOT_CONTEXT);
+      return { context: span.spanContext(), end: () => span.end() };
+    },
     span(name, attributes, start, end, parent) {
       const s = tracer.startSpan(
         name,

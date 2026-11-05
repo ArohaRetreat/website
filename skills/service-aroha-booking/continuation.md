@@ -1,3 +1,7 @@
+## Issue101 acceptance update — 5 November 2026
+
+Preprod0.23.6 at9b48639ed2f9ab24b2f1903c8a0cee490178b3b3 passed current-head CI and Hosting verification (PR102). Read the [coverage catalog](../../docs/booking-test-coverage.md) before saying all scenarios passed. Live Safari completed a day-request/approval/three delivered emails/private PDF/cancellation flow; 24 reusable HTTP emulator scenarios passed on exact feature source27341dc. The full live matrix and second-identity/inbox gates remain pending. Production and CMS were preserved; do not resend old private-booking confirmations. The0.23.7 report-processing timing correction is separate from live booking/business trace evidence.
+
 ## Current operating baseline — 5 November 2026
 
 Production is website0.24.2/API0.9.1 at83eba94b15ec1741925cb0f1c909ef7c1e61480d. Preprod baseline is website0.23.5/API0.8.5 at7a22e36458e192382e5391a4a32d707b030b4b21. Both environments have Website changes and Bookings under the same access-controlled Host Studio, approved email-v3 and operational PDF-v4. Email uses the actual verified booking recipient and configured host, with TEST subjects/documents in preprod. Shared members and isolated preprod booking/CMS collections remain separate. Main and preprod are permanent protected environment branches; direct cross-environment merges are forbidden.
