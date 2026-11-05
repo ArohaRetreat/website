@@ -24,6 +24,9 @@ const reserve = (s, kind, adults = 2, kids = [], more = {}, actor = guest) => {
   const q = mutate(s, actor, "quote", input(kind, adults, kids, more), now);
   return mutate(s, actor, "create", { quoteId: q.id, note: "" }, now);
 };
+const legacyEvent = (s, adults=20) => {
+ const b=reserve(s,"event",adults); delete b.pricingVersion; b.total=null; b.subtotal=null; b.quoteAccepted=false; b.lineItems=[]; return b;
+};
 const action = (s, b, act, actor = host, more = {}, at = now) =>
   mutate(
     s,
@@ -132,7 +135,7 @@ test("day and shared stays consume the same adult capacity at concurrent times",
 });
 test("event enquiry holds no inventory; accepted host offer is required and approval rechecks exclusivity", () => {
   const s = initialState(),
-    e = reserve(s, "event", 20);
+    e = legacyEvent(s);
   assert.equal(e.total, null);
   assert.equal(productAvailability(s, input("day", 35), now).available, true);
   assert.throws(
@@ -260,7 +263,7 @@ test("site closures and expiring exclusive offers block all other booking kinds 
   );
   assert.equal(productAvailability(s, input("day", 1), now).available, false);
   s.blocks = [];
-  const b = reserve(s, "event", 20);
+  const b = legacyEvent(s);
   action(s, b, "offer_event", host, { amount: 5000000, holdHours: 2 });
   assert.equal(productAvailability(s, input("day", 1), now).available, false);
   assert.equal(
@@ -275,7 +278,7 @@ test("site closures and expiring exclusive offers block all other booking kinds 
 
 test("confirmed event date changes require a fresh accepted host offer", () => {
   const s = initialState(),
-    b = reserve(s, "event", 20);
+    b = legacyEvent(s);
   action(s, b, "offer_event", host, { amount: 2000000 });
   action(s, b, "accept_event", guest);
   action(s, b, "approve");
@@ -299,7 +302,7 @@ test("confirmed event date changes require a fresh accepted host offer", () => {
 });
 test("event offers respect the bounded site-block configuration", () => {
   const s = initialState(),
-    b = reserve(s, "event", 20);
+    b = legacyEvent(s);
   s.blocks = Array.from({ length: 100 }, (_, i) => ({
     id: String(i),
     unitId: "site",

@@ -1,3 +1,7 @@
+## Preprod0.22.0 / API0.8.0 — issue83 (prepared)
+
+Read [booking refinement contract](../../docs/booking-refinements-v1.md). New exclusive rate/one-approval flow, signed-in WhatsApp enquiry/account choices and privacy-safe availability calendar are preprod-only. Production remains0.21.7/API0.7.1. Use local/release-evidence/aroha-booking-refinements/handoff.md and actual provider receipts for deployment state. Preserve CMS/reservations/media and frozen email/PDF snapshots; full stage communications stay issue70.
+
 ## Website0.21.0 / API0.7.0 — issue70, preprod guest concierge (prepared)
 
 Owner approved the dates/party → recommended options → contact/review prototype for preprod integration. Read [guest contract](../../docs/booking-concierge-v1.md). New guest entry booking-concierge-entry.mjs/mjs/css and booking-options.mjs is selected only in a pre-prod build at /book/. Uses existing authenticated API config/availability/quotes/profile/create/detail/cancel/offers/date-change/communications; no fixture service or seed state. Production guest/Studio entries remain unchanged. Email/PDF design snapshots frozen; new mail lifecycle, payment ledger and feedback scheduling are not part of this guest release. Deployment state/evidence must be read from local/release-evidence/aroha-concierge-preprod/handoff.md and provider receipts; this note alone is not proof of deployment.

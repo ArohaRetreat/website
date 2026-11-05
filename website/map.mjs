@@ -189,7 +189,7 @@ function bind() {
   }
   const placePhotos = createPlacePhotos(root);
   guide = createMapHrudhi(root,{motion:!reading && content.theme.motion && !reduced.matches,onPosition:p=>{if(phone.matches&&!overview&&!reading)root.querySelector('.farm-map-plane').style.transform=`translate(-${p.x/10}%, -${p.y/10}%)`;}});
-  const guestAccount = createGuestAccount(root,{show,close:()=>dialog.close(),closeMenu:()=>menu.whenClosed()});
+  const guestAccount = createGuestAccount(root,{onEnquire:()=>openEnquiry(content,show),show,close:()=>dialog.close(),closeMenu:()=>menu.whenClosed()});
   root
     .querySelectorAll("[data-enquire]")
     .forEach((b) =>

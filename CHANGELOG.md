@@ -1,3 +1,10 @@
+# 0.22.0 (pre-production)
+
+- Exclusive retreat: configurable ₹30000 per selected day, complete upfront price and a single host availability approval. Pending priced requests hold the continuous range; legacy offers/prices remain intact.
+- Signed-in account separates WhatsApp enquiries and bookings. Both public enquiry entrypoints require current sign-in, preserving guest-reviewed messages without creating a reservation.
+- Calendar disables unavailable dates using a bounded privacy-safe server availability read for the party and entire selected range. Loading/retry, stale response and checkout-boundary behavior retain authoritative transaction checks.
+- API0.8.0. Preprod-only delivery; production mail and frozen lifecycle designs remain separately pending.
+
 # 0.21.7
 
 - Promote the selected guest startup and account-privacy fixes: match the build environment, clear private dialogs on identity loss, and reject stale account-state responses. Booking policy and the isolated preprod backend are unchanged.
