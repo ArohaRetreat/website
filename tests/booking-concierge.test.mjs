@@ -86,6 +86,7 @@ const bundled = await build({
 });
 async function mount({
   anonymous = false,
+  sessionRedirect = false,
   authEvent = false,
   failCreate = false,
   failStatus = 0,
@@ -126,7 +127,9 @@ async function mount({
   let holdState = false, stateRelease;
   let creates = 0,
     firstBody;
+  const operations=[];
   const api = async (op, body, key, opts = {}) => {
+    operations.push(op);
     if (op === "state") {
       const snapshot = structuredClone({
         environment: serverEnvironment,
@@ -144,7 +147,7 @@ async function mount({
     if (op === "session") {
       signed = true;
       if (authEvent) await portal.identity({ uid: actor.id });
-      return {};
+      return sessionRedirect ? {redirecting:true} : {};
     }
     if (op === "logout") {
       signed = false;
@@ -248,6 +251,7 @@ async function mount({
     change,
     terms,
     createCalls,
+    operations,
     releaseCalendar:()=>calendarRelease?.(),
     setSigned: (v) => (signed = v),
     releaseDetail: () => detailRelease?.(),
@@ -548,5 +552,20 @@ test("late calendar response cannot reopen a dismissed dialog",async()=>{
  try{
   ui.click('[data-act="dates"]');ui.d.querySelector('#sheet').close();ui.releaseCalendar();
   await new Promise(r=>setTimeout(r,5));assert.equal(ui.d.querySelector('#sheet').open,false);
+ }finally{ui.close();}
+});
+
+test("homepage return link is visible and a completed sign-in redirect stops booking work",async()=>{
+ const ui=await mount({anonymous:true,sessionRedirect:true});
+ try{
+  assert.equal(ui.d.querySelector('.website-return a').getAttribute('href'),'/');
+  assert.match(ui.d.querySelector('.website-return').textContent,/Back to website/);
+  ui.click('[data-act="search"]'); // no dates: date picker first
+  await ui.wait(()=>!ui.d.body.textContent.includes('Checking dates'));
+  ui.click(`[data-day="${from}"]`);
+  await ui.wait(()=>!ui.d.querySelector(`[data-day="${until}"]`).disabled);
+  ui.click(`[data-day="${until}"]`);ui.click('[data-act="applydates"]');ui.click('[data-act="search"]');
+  await ui.wait(()=>ui.operations.includes('session'));
+  assert(!ui.operations.includes('availability'));assert(!ui.operations.includes('quote'));assert.equal(ui.s.bookings.length,0);
  }finally{ui.close();}
 });

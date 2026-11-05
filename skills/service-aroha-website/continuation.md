@@ -1,3 +1,7 @@
+## Website0.23.0/API0.8.1 — issue86 (prepared, preprod only)
+
+Owner supersedes forced test inbox: new guest messages go to verified booked guest, host notifications to configured host, same provider account/domain; keep test subjects/PDF identity and isolated inventory. MAIL_RECIPIENT_MODE=booking is explicit; legacy queues retain old recipient/policy and are not replayed. Completed guest sign-in returns home, Host Studio stays, booking Back to website remains visible on phones. Read docs/guest-mail-parity-v1.md and actual ignored local/release-evidence/aroha-guest-mail-parity/handoff.md before claiming deployment. Production unchanged; full lifecycle/ledger/feedback remains issue70.
+
 ## Preprod0.22.0 / API0.8.0 — issue83 (prepared)
 
 Read [booking refinement contract](../../docs/booking-refinements-v1.md). New exclusive rate/one-approval flow, signed-in WhatsApp enquiry/account choices and privacy-safe availability calendar are preprod-only. Production remains0.21.7/API0.7.1. Use local/release-evidence/aroha-booking-refinements/handoff.md and actual provider receipts for deployment state. Preserve CMS/reservations/media and frozen email/PDF snapshots; full stage communications stay issue70.

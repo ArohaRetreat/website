@@ -18,7 +18,7 @@ export async function startConcierge({
       .toISOString()
       .slice(0, 10);
   document.querySelector("#app").innerHTML =
-    '<header class="header"><a href="#plan" id="home" aria-label="Plan a visit at Aroha"><img id="logo" src="/assets/brand/logo-forest.svg" alt="Aroha Retreat"></a><nav aria-label="Your account"><button id="help">Need a hand?</button><button id="visits">Your visits</button><button id="profile">Profile</button><button id="atmosphere" aria-pressed="false">Sunset</button><button id="account" disabled>Opening…</button></nav></header><aside id="pending-request"></aside><main id="main" tabindex="-1"><div class="loading" role="status">Opening your booking portal…</div></main><div id="mobile-action"></div><div id="toast" role="status" aria-live="polite"></div><dialog id="sheet" aria-label="Booking details"><button class="close" aria-label="Close dialog">×</button><div id="sheet-content"></div></dialog><footer><img src="/assets/brand/logo-forest.svg" alt=""><span>Small enough to feel personal.<br>Aroha Retreat · Kanakapura</span><a href="/" >Explore Aroha ↗</a><a href="/admin/#bookings">Host Studio ↗</a></footer>';
+    '<div class="website-return"><a href="/">← Back to website</a></div><header class="header"><a href="#plan" id="home" aria-label="Plan a visit at Aroha"><img id="logo" src="/assets/brand/logo-forest.svg" alt="Aroha Retreat"></a><nav aria-label="Your account"><button id="help">Need a hand?</button><button id="visits">Your visits</button><button id="profile">Profile</button><button id="atmosphere" aria-pressed="false">Sunset</button><button id="account" disabled>Opening…</button></nav></header><aside id="pending-request"></aside><main id="main" tabindex="-1"><div class="loading" role="status">Opening your booking portal…</div></main><div id="mobile-action"></div><div id="toast" role="status" aria-live="polite"></div><dialog id="sheet" aria-label="Booking details"><button class="close" aria-label="Close dialog">×</button><div id="sheet-content"></div></dialog><footer><img src="/assets/brand/logo-forest.svg" alt=""><span>Small enough to feel personal.<br>Aroha Retreat · Kanakapura</span><a href="/" >Explore Aroha ↗</a><a href="/admin/#bookings">Host Studio ↗</a></footer>';
   const $ = (s) => document.querySelector(s),
     $$ = (s) => [...document.querySelectorAll(s)];
   const S = {
@@ -392,7 +392,8 @@ export async function startConcierge({
     if (S.authBusy) return;
     S.authBusy = true;
     try {
-      await api("session", {});
+      const session=await api("session", {});
+      if(session?.redirecting) return false;
       await refresh();
       render();
       return true;

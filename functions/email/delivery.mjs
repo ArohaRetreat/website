@@ -3,7 +3,7 @@ import { operationSpan } from "../telemetry.mjs";
 import { randomUUID } from "node:crypto";
 import { FieldValue } from "firebase-admin/firestore";
 import { environment, collectionName } from "../environment.mjs";
-import { mailSettings } from "./config.mjs";
+import { mailSettings, recipientAllowed } from "./config.mjs";
 import { mailCollection, invoiceCollection } from "./jobs.mjs";
 import { invoicePdf } from "./documents.mjs";
 import { emailTemplate } from "./templates.mjs";
@@ -60,10 +60,11 @@ export async function deliverEmail(
     suppressed = false;
   try {
     if (
-      job.test !== config.test ||
-      (config.test && job.to !== config.testRecipient)
-    )
-      throw Object.assign(Error("RECIPIENT_BOUNDARY"), { terminal: true });
+      !recipientAllowed(job,config)
+    ) {
+      errorCode="MAIL_RECIPIENT_BOUNDARY";
+      throw Object.assign(Error(errorCode), { terminal: true });
+    }
     const booking = (
       await db.collection(collectionName("bookings")).doc(job.bookingId).get()
     ).data();

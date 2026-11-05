@@ -73,6 +73,8 @@ test("publication and live verification share the website-to-API version contrac
  assert.equal(compatibleBookingApi("0.21.7","0.7.1"),true);
  assert.equal(compatibleBookingApi("0.22.0","0.8.0"),true);
  assert.equal(compatibleBookingApi("0.22.1","0.8.2"),true);
+ assert.equal(compatibleBookingApi("0.23.0","0.8.0"),false);
+ assert.equal(compatibleBookingApi("0.23.0","0.8.1"),true);
  assert.equal(compatibleBookingApi("0.22.0","0.7.1"),false);
  assert.equal(compatibleBookingApi("0.21.7","0.8.0"),false);
  assert.equal(compatibleBookingApi("bad","0.8.0"),false);

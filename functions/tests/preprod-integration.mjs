@@ -123,6 +123,7 @@ test("pre-prod HTTP booking, approval, private invoice and webhook stay inside t
         contact: { name: "Synthetic Guest", phone: "+12025550123" },
       },
       key = randomUUID();
+    assert.equal((await call(guest,"/booking/create",{...request,email:"other@example.test"})).httpStatus,422);
     const booking = await call(guest, "/booking/create", request, { key });
     assert.equal(booking.httpStatus, 200, JSON.stringify(booking));
     assert.equal(
@@ -142,10 +143,12 @@ test("pre-prod HTTP booking, approval, private invoice and webhook stay inside t
       messages.every(
         (m) =>
           m.body.to.length === 1 &&
-          m.body.to[0] === "owner@example.test" &&
+          ["guest@example.test","owner@example.test"].includes(m.body.to[0]) &&
           m.body.subject.startsWith("[PRE-PROD TEST]"),
       ),
     );
+    assert.equal(messages.filter(m=>m.body.to[0]==="owner@example.test").length,1);
+    assert.equal(messages.filter(m=>m.body.to[0]==="guest@example.test").length,2);
     assert.equal(
       new Set(messages.map((m) => m.options.idempotencyKey)).size,
       3,
@@ -182,7 +185,7 @@ test("pre-prod HTTP booking, approval, private invoice and webhook stay inside t
         type: "email.delivered",
         data: {
           email_id: job.providerMessageId,
-          to: ["owner@example.test"],
+          to: [job.to],
           tags: { environment: "pre-prod", job_id: job.id },
         },
       },
@@ -204,6 +207,10 @@ test("pre-prod HTTP booking, approval, private invoice and webhook stay inside t
         body: raw,
       });
     }
+    const wrongRaw=JSON.stringify({...event,data:{...event.data,to:["owner@example.test"]}}),wrongId="msg_"+randomUUID();
+    const wrongSignature=createHmac("sha256",Buffer.from("synthetic-webhook-secret")).update(wrongId+"."+timestamp+"."+wrongRaw).digest("base64");
+    assert.equal((await fetch(base+"/email/webhook",{method:"POST",headers:{"Content-Type":"application/json","svix-id":wrongId,"svix-timestamp":timestamp,"svix-signature":"v1,"+wrongSignature},body:wrongRaw})).status,200);
+    assert.notEqual((await db.collection("aroha_preprod_notifications").doc(job.id).get()).data().status,"delivered");
     assert.equal((await webhook("v1,invalid")).status, 400);
     assert.equal((await webhook("v1," + signature)).status, 200);
     assert.equal((await webhook("v1," + signature)).status, 200);
@@ -283,7 +290,8 @@ test("pre-prod HTTP booking, approval, private invoice and webhook stay inside t
       "TEST-AR-" + new Date(Date.now() + 19800000).getUTCFullYear() + "-000002",
     );
     assert.ok(messages.at(-1).body.subject.includes("updated"));
-    assert.ok(messages.every((m) => m.body.to[0] === "owner@example.test"));
+    assert.equal(messages.at(-1).body.to[0],"guest@example.test");
+    assert.equal(messages.filter(m=>m.body.to[0]==="owner@example.test").length,1);
     // Maintenance mode must preserve billing even when outgoing mail is paused.
     process.env.AROHA_ENVIRONMENT = "pre-prod";
     process.env.MAIL_ENABLED = "false";

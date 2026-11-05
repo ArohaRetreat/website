@@ -1,3 +1,9 @@
+# 0.23.0 (pre-production)
+
+- Completed guest sign-in returns to the website homepage; Host Studio authentication is unchanged. Booking has a visible Back to website link on desktop and phones.
+- Preprod can deliver acknowledgement/confirmation to the verified booking guest and notifications to the configured host, preserving TEST subjects/documents and isolated inventory. Queued recipients are immutable; no historical replay.
+- API0.8.1 adds explicit server-owned recipient policy with legacy inbox compatibility and rollback denial. Payment gateway remains deferred.
+
 # 0.22.1 (pre-production)
 
 - Share API compatibility checks between publication and live verification so API0.8.0 is correctly verified for website0.22.

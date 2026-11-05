@@ -1,3 +1,7 @@
+## Website0.23.0/API0.8.1 — issue86 (prepared, preprod only)
+
+Owner supersedes forced test inbox: new guest messages go to verified booked guest, host notifications to configured host, same provider account/domain; keep test subjects/PDF identity and isolated inventory. MAIL_RECIPIENT_MODE=booking is explicit; legacy queues retain old recipient/policy and are not replayed. Completed guest sign-in returns home, Host Studio stays, booking Back to website remains visible on phones. Read docs/guest-mail-parity-v1.md and actual ignored local/release-evidence/aroha-guest-mail-parity/handoff.md before claiming deployment. Production unchanged; full lifecycle/ledger/feedback remains issue70.
+
 ## Current pre-production state — 4 November 2026
 
 Published https://aroha-retreat-preprod.web.app from immutable d4c0bd664f9b370f95b7fcefee0bb894e302da30 (website0.20.0/API0.7.0), after PR66/67/68 merged and current-head CI passed. Separate preprod Functions exports/codebase and isolated collections are active. Production remains website0.19.0/API0.6.0; Hosting b352a6bcd74bdd0d, API arohaapi-00010-xep, worker arohabookingevents-00001-roj, CMS8 hash/update time and Natura0.6.1 preserved. No production booking writes or mail activation.

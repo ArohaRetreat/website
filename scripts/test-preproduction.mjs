@@ -3,7 +3,7 @@ import { writeFile, readFile, unlink } from "node:fs/promises";
 const files = new Map([
   [
     "functions/.env.local",
-    "AROHA_ENVIRONMENT=pre-prod\nDT_EXPORT_ENABLED=false\nSUPER_ADMIN_EMAILS=owner@example.test\nPREPROD_TESTER_EMAILS=owner@example.test,guest@example.test,other@example.test\nMAIL_ENABLED=true\nMAIL_FROM=test@example.test\nMAIL_REPLY_TO=owner@example.test\nMAIL_HOST_TO=owner@example.test\nMAIL_TEST_RECIPIENT=owner@example.test\nMAIL_TEST_COLLECTOR_URL=http://127.0.0.1:17881/email\n",
+    "AROHA_ENVIRONMENT=pre-prod\nDT_EXPORT_ENABLED=false\nSUPER_ADMIN_EMAILS=owner@example.test\nPREPROD_TESTER_EMAILS=owner@example.test,guest@example.test,other@example.test\nMAIL_ENABLED=true\nMAIL_RECIPIENT_MODE=booking\nMAIL_FROM=test@example.test\nMAIL_REPLY_TO=owner@example.test\nMAIL_HOST_TO=owner@example.test\nMAIL_TEST_RECIPIENT=owner@example.test\nMAIL_TEST_COLLECTOR_URL=http://127.0.0.1:17881/email\n",
   ],
   [
     "functions/.secret.local",
