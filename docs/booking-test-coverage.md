@@ -13,6 +13,8 @@ Use [the execution contract](preprod-booking-e2e-v1.md) and [test commands](test
 - Concurrent overnight/day adult capacity, exclusive conflicts, occupied private rooms, run-owned promo discount and redemption limits.
 - Saved-profile inheritance/integrity, anonymous invoice denial, run-owned reservation/promo cleanup and unchanged pre-existing bookings.
 
+The runner preserves up to two existing active reservations and never raises the normal three-active limit. With only one free slot, the mixed-capacity result explicitly says held-and-quoted; the two-held variant needs two free slots. The HTTP emulator verifies that both canary reservations remain unchanged.
+
 The live runner additionally waits for delivered acknowledgement, host notification and confirmation before retiring approved fixtures. Tests use an empty future window and normal prices. A run cannot alter unrelated reservations, profiles, room readiness, CMS or production.
 
 ## Additional executable boundaries
@@ -22,7 +24,7 @@ The live runner additionally waits for delivered acknowledgement, host notificat
 - `functions/tests/preprod-integration.mjs`: actual recipient policy, approved email/PDF version snapshots, invoice revisions/voiding, signed webhooks, preprod rules and production canaries.
 - `tests/preproduction-email.test.mjs`, `tests/booking-platform-v2.test.mjs`: retries, uncertain acceptance, delivery deduplication, lease ownership, environment/runtime metadata and safe event transport.
 - `tests/booking-concierge.test.mjs`, `tests/booking-products-ui.test.mjs`, `tests/booking-motion.test.mjs`: form state, expired quotes, contact persistence, interrupted submits, blocked calendar ranges, sign-out masking, interrupted motion, keyboard focus and reduced motion.
-- `tests/booking-visit-label.test.mjs`: day dates, inclusive exclusive ranges across year boundaries and overnight checkout dates. A live Safari request exposed the original day-label defect; preprod0.23.6 corrects the display without changing inventory boundaries.
+- `tests/booking-visit-label.test.mjs`: day dates, inclusive exclusive ranges across year boundaries and overnight checkout dates. A live Safari request exposed the original day-label defect; preprod0.23.6 corrects the display without changing inventory boundaries. Subsequent live inspection found exclusive retreat holds missing from individual room cells in the host timeline;0.23.8 marks all rooms held and includes a date-boundary regression test.
 - `tests/booking-e2e-report.test.mjs`: private-data allowlist, explicit execution/authority, rejected malformed reports, configured destination restrictions and genuine SDK trace parent/timing relationships.
 - `scripts/testing/verify-build.mjs`: test console present only in preprod; no runner fixture strings in production assets.
 

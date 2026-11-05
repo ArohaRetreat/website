@@ -518,7 +518,7 @@ function hostContent() {
                     ["pending_approval", "confirmed", "checked_in"].includes(
                       b.status,
                     ) &&
-                    b.units.includes(u.id) &&
+                    (b.kind === "event" || b.units.includes(u.id)) &&
                     b.arrival <= d &&
                     (b.departure > d ||
                       (b.status === "checked_in" && b.departure <= day())),
@@ -530,7 +530,7 @@ function hostContent() {
                     b.departure > d &&
                     (!b.expiresAt || b.expiresAt > Date.now()),
                 );
-              return `<td>${rows.length ? rows.map((b) => `<button class="timeline-cell ${b.status}" data-booking="${b.id}"><span>${esc(b.reference || "Open reservation")}</span><small>${b.kind === "individual" ? "Shared" : "Private"} · ${b.allocations?.find((a) => a.unitId === u.id)?.adults ?? b.adults ?? b.guests} adult(s)</small></button>`).join("") : `<button class="timeline-cell ${block ? "blocked" : ""}" ${block ? `data-unblock="${block.id}"` : `data-block-unit="${u.id}" data-block-date="${d}"`} aria-label="${esc(u.name)}, ${format(d)}: ${block ? "closed; select to release" : "available; select to block"}">${block ? "▨" : "·"}</button>`}</td>`;
+              return `<td>${rows.length ? rows.map((b) => `<button class="timeline-cell ${b.status}" data-booking="${b.id}"><span>${esc(b.reference || "Open reservation")}</span><small>${b.kind === "event" ? "Exclusive retreat" : b.kind === "individual" ? "Shared" : "Private"} · ${b.allocations?.find((a) => a.unitId === u.id)?.adults ?? b.adults ?? b.guests} adult(s)</small></button>`).join("") : `<button class="timeline-cell ${block ? "blocked" : ""}" ${block ? `data-unblock="${block.id}"` : `data-block-unit="${u.id}" data-block-date="${d}"`} aria-label="${esc(u.name)}, ${format(d)}: ${block ? "closed; select to release" : "available; select to block"}">${block ? "▨" : "·"}</button>`}</td>`;
             },
           ).join("")}</tr>`,
       )

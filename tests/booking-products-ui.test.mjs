@@ -271,3 +271,17 @@ test("exclusive event end date is inclusive in the UI and exclusive in the API",
     ui.close();
   }
 });
+
+test('host room timeline marks every room held by an exclusive retreat and releases the exclusive boundary',async()=>{
+  const s=initialState(),arrival=addDays(todayIST(),2),departure=addDays(arrival,3);
+  const q=mutate(s,guest,'quote',{kind:'event',arrival,departure,guests:2,adults:2,childrenAges:[],units:[]});
+  const b=mutate(s,guest,'create',{quoteId:q.id}),ui=await mount(s,'host');
+  try{
+    ui.d.querySelector('[data-host-tab="calendar"]').click();await ui.wait();
+    const held=[...ui.d.querySelectorAll('.timeline [data-booking]')].filter(e=>e.dataset.booking===b.id);
+    assert.equal(held.length,s.units.filter(u=>u.active).length*3);
+    assert.ok(held.every(e=>e.textContent.includes('Exclusive retreat')));
+    for(let n=0;n<3;n++)assert.equal(ui.d.querySelectorAll(`.timeline [data-block-date="${addDays(arrival,n)}"]`).length,0);
+    assert.equal(ui.d.querySelectorAll(`.timeline [data-block-date="${departure}"]`).length,5);
+  }finally{ui.close();}
+});

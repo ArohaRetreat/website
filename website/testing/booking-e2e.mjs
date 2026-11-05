@@ -53,6 +53,7 @@ $('#run').onclick=async()=>{
     onProgress:id=>status('Running '+id+' · '+runId),
     onCase:c=>{const li=document.createElement('li');li.textContent=c.status.toUpperCase()+' — '+(SCENARIOS.find(s=>s[0]===c.id)?.[1]||c.id)+(c.code?' ('+c.code+')':'');li.dataset.status=c.status;$('#results').append(li);}
   });if(report.cleanup.status==='passed')localStorage.removeItem(key);$('#download').disabled=false;
+  download(report,'aroha-e2e-'+report.runId+'.json');
   status('Run finished. '+report.cases.filter(c=>c.status==='passed').length+' passed; '+report.cases.filter(c=>c.status==='failed').length+' failed; '+report.cases.filter(c=>c.status==='blocked').length+' blocked. Cleanup: '+report.cleanup.status+'. Download the sanitized report for telemetry export.');
   }catch{status('Run interrupted. Recover run-owned fixtures before running again.');}finally{busy=false;$('#run').disabled=false;}
 };

@@ -417,10 +417,16 @@ test('reusable acceptance scenarios use real HTTP contracts and retire only thei
   await new Promise(r=>server.listen(17881,'127.0.0.1',r));
   const user=await google('owner@example.test'), runId=randomUUID();
   assert.equal((await call(user,'/booking/profile',{name:'Internal emulator host',phone:'+12025550123',expectedVersion:0})).httpStatus,200);
+  const existing=[];
+  const day=n=>new Date(Date.now()+n*86400000).toISOString().slice(0,10);
+  for(const n of [60,70]){
+    const q=await call(user,'/booking/quote',{kind:'day',arrival:day(n),departure:day(n+1),guests:1,adults:1,childrenAges:[],units:[]});assert.equal(q.httpStatus,200);
+    const b=await call(user,'/booking/create',{quoteId:q.id,note:'Pre-existing emulator canary',contact:{name:'Existing emulator reservation',phone:'+12025550123'}});assert.equal(b.httpStatus,200);existing.push(b);
+  }
   let last=0;
   try {
     const report=await runBookingScenarios({runId,execution:'emulator',source:process.env.AROHA_TEST_SOURCE||'local-validation',call:async(op,body,{admin=false,anonymous=false,start,key=randomUUID()}={})=>{
-      await new Promise(r=>setTimeout(r,Math.max(0,last+1100-Date.now())));last=Date.now();
+      await new Promise(r=>setTimeout(r,Math.max(0,last+1500-Date.now())));last=Date.now();
       const q=new URLSearchParams();if(admin)q.set('admin','1');if(start)q.set('start',start);
       const r=await fetch(base+'/booking/'+op+(q.size?'?'+q:''),{method:body===undefined?'GET':'POST',headers:{'Content-Type':'application/json','Idempotency-Key':key,'X-Aroha-Journey':runId,...(anonymous?{}:{Authorization:'Bearer '+user.idToken})},...(body===undefined?{}:{body:JSON.stringify(body)}),signal:AbortSignal.timeout(30000)});
       const b=await r.json();return{status:r.status,body:b,code:b.error?.code,requestId:r.headers.get('X-Request-Id')};
@@ -429,8 +435,11 @@ test('reusable acceptance scenarios use real HTTP contracts and retire only thei
     await mkdir('local/test-evidence',{recursive:true});await writeFile('local/test-evidence/emulator-scenarios.json',JSON.stringify(report,null,2),{mode:0o600});
     assert.deepEqual(report.cases.filter(c=>c.status==='failed').map(c=>({id:c.id,code:c.code})),[]);
     assert.equal(report.cleanup.status,'passed');
+    assert.equal(report.existingActiveCount,2);
+    assert.equal(report.cases.find(c=>c.id==='capacity-overlap').variant,'held-and-quoted');
+    for(const b of existing){const current=await call(user,'/booking/reservation-detail',{id:b.id});assert.equal(current.version,b.version);assert.equal(current.status,b.status);}
     const retained=await db.collection('aroha_preprod_bookings').get();
     for(const d of retained.docs.filter(d=>report.createdIds.includes(d.id)))assert.ok(['cancelled','declined'].includes(d.data().status));
     assert.equal((await db.collection('aroha_bookings').get()).size,1);
-  }finally{await new Promise(r=>server.close(r));}
+  }finally{for(const b of existing)await call(user,'/booking/booking-action',{id:b.id,expectedVersion:b.version,action:'cancel'});await new Promise(r=>server.close(r));}
 });
