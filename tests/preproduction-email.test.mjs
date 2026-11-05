@@ -542,15 +542,10 @@ test("signed webhooks are replay-safe, reject tampering, and cannot downgrade de
     () => captureEmailWebhook(db, bad, secret),
     /INVALID_WEBHOOK_SIGNATURE/,
   );
-  await assert.rejects(
-    () =>
-      captureEmailWebhook(
-        db,
-        request("email.bounced", "msg_cross", "production"),
-        secret,
-      ),
-    /ENVIRONMENT_MISMATCH/,
-  );
+  const beforeCross=(await mailCollection(db).doc(id).get()).data();
+  assert.deepEqual(await captureEmailWebhook(db,request("email.bounced","msg_cross","production"),secret),{accepted:true,ignored:true});
+  assert.deepEqual((await mailCollection(db).doc(id).get()).data(),beforeCross);
+  await assert.rejects(()=>captureEmailWebhook(db,request("email.bounced","msg_unknown","unknown"),secret),/ENVIRONMENT_MISMATCH/);
   await mailCollection(db).doc(id).update({ status: "accepted" });
   await captureEmailWebhook(
     db,

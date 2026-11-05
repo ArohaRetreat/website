@@ -55,8 +55,13 @@ export async function captureEmailWebhook(
   const tags = Array.isArray(event.data?.tags)
     ? Object.fromEntries(event.data.tags.map((t) => [t.name, t.value]))
     : event.data?.tags || {};
-  if (tags.environment && tags.environment !== environment.name)
+  if (tags.environment && tags.environment !== environment.name) {
+    // Both signed webhooks share one Resend account. A verified event for the
+    // other known environment is acknowledged without touching local jobs.
+    if (["production", "pre-prod"].includes(tags.environment))
+      return { accepted: true, ignored: true };
     throw Object.assign(Error("WEBHOOK_ENVIRONMENT_MISMATCH"), { status: 400 });
+  }
   let ref;
   if (/^[a-f0-9]{64}$/.test(tags.job_id || ""))
     ref = mailCollection(db).doc(tags.job_id);
