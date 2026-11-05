@@ -419,6 +419,11 @@
           "stayEnd": {
             "type": "string",
             "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+          },
+          "eventDayRate": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
           }
         }
       }
@@ -646,6 +651,54 @@
       "guestId": {
         "type": "string",
         "maxLength": 128
+      }
+    }
+  },
+  "calendar": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "start",
+      "days",
+      "kind",
+      "adults",
+      "childrenAges"
+    ],
+    "properties": {
+      "start": {
+        "type": "string",
+        "format": "date"
+      },
+      "days": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 62
+      },
+      "kind": {
+        "type": "string",
+        "enum": [
+          "stay",
+          "day",
+          "event"
+        ]
+      },
+      "adults": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100
+      },
+      "childrenAges": {
+        "type": "array",
+        "maxItems": 100,
+        "items": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9
+        }
+      },
+      "arrival": {
+        "type": "string",
+        "format": "date"
       }
     }
   }

@@ -10,6 +10,11 @@ import { startConcierge } from "./booking-concierge.mjs";
 try {
   const portal = await startConcierge({
     api: bookingApi,
+    onEnquire: async show => {
+      const [{openEnquiry},{readPublishedSite}] = await Promise.all([import('./guest-dialogs.mjs'),import('./firebase-public.mjs')]);
+      const content=await readPublishedSite();
+      await openEnquiry(content,show);
+    },
     journeyStep,
     getAtmosphere: atmospherePreference,
     setAtmosphere,

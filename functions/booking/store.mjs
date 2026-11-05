@@ -14,6 +14,8 @@ import { bookingEvent, queueCommitted } from "./observability.mjs";
 import { studioAccess } from "../access.mjs";
 import { contactDetails, ownContact, withoutContact } from "./contact.mjs";
 import {
+  availabilityCalendar,
+  calendarWindow,
   productDefaults,
   reservesCapacity,
   bookingOnDate,
@@ -163,12 +165,32 @@ const project = (s, actor, profile, bookings, extra = {}) => ({
   audit: [],
   delivery: mailSettings().enabled ? "email_enabled" : "not_configured",
   environment: environment.name,
-  apiVersion: "0.7.1",
+  apiVersion: "0.8.0",
   ...extra,
 });
 export async function publicBookingState(db) {
   const snap = await collection(db, "config").doc("site").get();
   return project(loadConfig(snap), null, {}, []);
+}
+export async function publicBookingCalendar(db, input) {
+  validate(schemas.calendar, input);
+  const now = Date.now(), range = calendarWindow(input, now);
+  return db.runTransaction(async tx => {
+    const refs = [];
+    for(let d=range.start;d<=range.end;d=addDays(d,1)) refs.push(collection(db,"days").doc(d));
+    if(refs.length>96) fail("CALENDAR_LIMIT");
+    const [config, ledgers, overdue] = await Promise.all([
+      tx.get(collection(db,"config").doc("site")),
+      tx.getAll(...refs),
+      tx.get(reservations(db).where("status","==","checked_in").where("departure","<=",todayIST(now)).limit(201)),
+    ]);
+    if(overdue.size>200) fail("RECONCILIATION_REQUIRED",409);
+    const state=loadConfig(config), rows=new Map();
+    for(const ledger of ledgers) for(const b of Object.values(ledger.data()?.entries||{})) rows.set(b.id,b);
+    for(const b of overdue.docs) rows.set(b.id,b.data());
+    state.bookings=[...rows.values()];
+    return availabilityCalendar(state,input,now);
+  });
 }
 export async function bookingState(
   db,
@@ -737,6 +759,7 @@ export async function bookingCommand(
             ...(b.kind
               ? {
                   kind: b.kind,
+                  ...(b.pricingVersion ? {pricingVersion:b.pricingVersion} : {}),
                   adults: b.adults,
                   children: b.children,
                   startsAt: b.startsAt,
@@ -812,7 +835,7 @@ export async function bookingCommand(
         at: e.at,
         delivery: mailSettings().enabled ? "email_enabled" : "not_configured",
         environment: environment.name,
-        apiVersion: "0.7.1",
+        apiVersion: "0.8.0",
         ...(e.bookingKind ? { bookingKind: e.bookingKind } : {}),
       };
       tx.set(collection(db, "audit").doc(e.eventId), safe);

@@ -437,6 +437,7 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
         b.expiresAt <= now
       )
         fail("INVALID_TRANSITION", 409);
+      if (b.pricingVersion) fail("PUBLISHED_EVENT_RATE", 409);
       if (input.action === "offer_event") {
         host(actor);
         if (input.holdHours) {
@@ -629,6 +630,7 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
       for (const k of ["siteAdults", "nightAdults"]) int(p[k], 1, 100);
       if (p.nightAdults > p.siteAdults) fail("INVALID_CAPACITY");
       for (const k of [
+        "eventDayRate",
         "dayAdultRate",
         "dayChildRate",
         "individualRate",

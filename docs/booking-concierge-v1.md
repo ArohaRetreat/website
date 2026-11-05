@@ -1,3 +1,7 @@
+## Preprod0.22.0 refinement
+
+Issue83 supersedes event quote/acceptance and calendar restrictions below for new requests: read [refinement contract](booking-refinements-v1.md). API0.8.0 supplies published exclusive daily pricing, one host approval, and an anonymous date/available-only calendar. Existing legacy event terms remain. The shared public enquiry form now requires current sign-in; account separates Enquire/Book. Production remains on0.21.7/API0.7.1 pending owner acceptance.
+
 # Guest booking concierge — website 0.21.0, API 0.7.0
 
 Issue70; initial activation was pre-production only. Issue72/website0.21.1 promotes the approved dates/party → suitable options → contact/review flow to both guest environments. Host Studio retains its existing entry. The service APIs, data schemas, approved capacity/pricing, consent, identities and environment isolation are unchanged. No fixture service, fixed closure, sample identity or in-memory booking write is included in the deployed guest entry.

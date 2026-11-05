@@ -86,7 +86,7 @@ async function mount(s, role = "guest", hash = "") {
 for (const [kind, adults, kids, total] of [
   ["day", 3, [4, 9], 500000],
   ["individual", 2, [], 1400000],
-  ["event", 2, [], null],
+  ["event", 2, [], 6000000],
 ])
   test(
     "guest " +
@@ -137,13 +137,13 @@ for (const [kind, adults, kids, total] of [
         assert.equal(s.bookings[0].status, "pending_approval");
         assert.equal(s.bookings[0].children, kids.length);
         if (kind === "event")
-          assert.match(d.querySelector("#detail").textContent, /does not hold/);
+          assert.match(d.querySelector("#detail").textContent, /held until/);
       } finally {
         ui.close();
       }
     },
   );
-test("host offer and owner acceptance are separate visible event actions", async () => {
+test("legacy host offer and owner acceptance remain separate visible event actions", async () => {
   const s = initialState(),
     arrival = addDays(todayIST(), 5),
     q = mutate(s, guest, "quote", {
@@ -156,6 +156,7 @@ test("host offer and owner acceptance are separate visible event actions", async
       units: [],
     }),
     b = mutate(s, guest, "create", { quoteId: q.id });
+  delete b.pricingVersion; b.total=null; b.subtotal=null; b.quoteAccepted=false; b.lineItems=[];
   let ui = await mount(s, "host");
   try {
     ui.d.querySelector(`[data-booking="${b.id}"]`).click();

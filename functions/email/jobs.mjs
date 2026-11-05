@@ -127,6 +127,7 @@ export function queueNotifications(
         startsAt: booking.startsAt || 0,
         endsAt: booking.endsAt || 0,
         kind: booking.kind || "legacy",
+        pricingVersion: booking.pricingVersion || 0,
         guests: booking.guests,
         total: booking.total,
         bookingVersion: booking.version,

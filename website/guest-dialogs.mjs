@@ -1,10 +1,15 @@
+import { createEnquiryAccess } from "./enquiry-access.mjs";
 import { initializeAnalytics, withdrawAnalytics } from "./analytics.mjs";
 import { preference } from "./preferences.mjs";
 import { esc } from "./render.mjs";
 import { enquiryText, packageAvailability } from "../functions/domain.mjs";
 import { track, initializeMonitoring, withdrawMonitoring, monitoringStatus } from "./monitoring.mjs";
 import { setPreference } from "./preferences.mjs";
-export function openEnquiry(content, show, packageId = "", cottageId = "") {
+const enquiryAccess = createEnquiryAccess();
+export function openEnquiry(content,show,packageId="",cottageId="") {
+  return enquiryAccess(content,show,packageId,cottageId,renderEnquiry);
+}
+function renderEnquiry(content, show, packageId, cottageId, {user,canContinue}) {
   show(
     `<div class="dialog-copy"><p class="eyebrow">LET’S PLAN YOUR VISIT</p><h2 id="dialog-title">A conversation comes first.</h2><p>Tell your hosts a little about your visit. They will personally confirm availability and the details.</p><form class="enquiry-form"><label>How would you like to visit?<select name="package" required><option value="">Choose a package</option>${content.packages.filter(p => packageAvailability(p) === "available").map((p) => `<option value="${esc(p.id)}" ${p.id === packageId ? "selected" : ""}>${esc(p.name)}</option>`).join("")}</select></label><label>Guests<input name="guests" type="number" min="1" max="100" value="2" required></label><label>Visit / check-in date<input name="checkin" type="date" min="${new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" })}" required></label><label data-overnight>Check-out date<input name="checkout" type="date"></label><label data-overnight class="full">Preferred cottage<select name="cottage"><option value="">Please advise</option>${content.cottages.map((x) => `<option value="${esc(x.id)}" ${x.id === cottageId ? "selected" : ""}>${esc(x.name)}</option>`).join("")}</select></label><label>Your name<input name="name" autocomplete="name" maxlength="100" required></label><label>Phone / WhatsApp<input name="phone" type="tel" autocomplete="tel" maxlength="30" required></label><label class="full">Anything you would like us to know? <small>(optional)</small><textarea name="message" rows="3" maxlength="1000"></textarea></label><p class="full form-note">Your details will be included in a WhatsApp message. You review and send it there. This does not reserve a room, confirm a booking or make a payment.</p><p class="full form-error" role="alert" hidden></p><button class="button full" type="submit">Continue to WhatsApp <span aria-hidden="true">↗</span></button></form></div>`,
   );
@@ -23,8 +28,10 @@ export function openEnquiry(content, show, packageId = "", cottageId = "") {
   form.elements.checkin.onchange = () => {
     form.elements.checkout.min = form.elements.checkin.value;
   };
+  form.elements.name.value = user.displayName || "";
   form.onsubmit = (e) => {
     e.preventDefault();
+    if(!canContinue()) return;
     try {
       const data = Object.fromEntries(new FormData(form));
       const text = enquiryText(content, data);
@@ -71,5 +78,10 @@ export function openPrivacy(show) {
 }
 export function openUpcoming(content, show, id) {
  const p=content.packages.find(p=>p.id===id); if(!p)return;
- show(`<div class="dialog-copy"><p class="eyebrow">COMING SOON</p><h2 id="dialog-title">${esc(p.name)}</h2><p>This retreat is being prepared. Ask your hosts about launch plans before making arrangements.</p><a class="button" href="https://wa.me/${esc(content.visit.phone)}?text=${encodeURIComponent("I’m interested in the upcoming "+p.name+". Could you share the launch details?")}" target="_blank" rel="noopener noreferrer">Ask your hosts ↗</a></div>`);
+ show(`<div class="dialog-copy"><p class="eyebrow">COMING SOON</p><h2 id="dialog-title">${esc(p.name)}</h2><p>This retreat is being prepared. Ask your hosts about launch plans before making arrangements.</p><button class="button" id="upcoming-enquire">Ask your hosts ↗</button></div>`);
+ document.querySelector('#upcoming-enquire').onclick=()=>enquiryAccess(content,show,id,"",(content,show,id,room,{canContinue})=>{
+   const text="I’m interested in the upcoming "+p.name+". Could you share the launch details?";
+   show(`<div class="dialog-copy"><p class="eyebrow">A CONVERSATION WITH AROHA</p><h2 id="dialog-title">${esc(p.name)}</h2><p>${esc(text)}</p><p>You review and send this message in WhatsApp. This does not reserve dates.</p><button class="button" id="launch-whatsapp">Continue to WhatsApp ↗</button></div>`);
+   document.querySelector('#launch-whatsapp').onclick=()=>{if(canContinue())window.open('https://wa.me/'+content.visit.phone+'?text='+encodeURIComponent(text),'_blank','noopener,noreferrer');};
+ });
 }

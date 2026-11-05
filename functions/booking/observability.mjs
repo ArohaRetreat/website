@@ -32,6 +32,7 @@ export const OUTCOMES = [
   "cancelled",
 ];
 export const OPERATIONS = [
+  "calendar",
   "communications",
   "invoice-download",
   "email-resend",
@@ -98,7 +99,7 @@ export function bookingEvent({
     "service.namespace": "aroha-retreat",
     "service.name": runtimeServiceName(),
     ...environmentFields(),
-    "service.version": "0.7.1",
+    "service.version": "0.8.0",
     timestamp: new Date(at).toISOString(),
     ...contextFields(),
   };
