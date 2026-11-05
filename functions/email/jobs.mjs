@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { environment, collectionName } from "../environment.mjs";
-import { mailSettings, validEmail } from "./config.mjs";
+import { mailSettings, validEmail, recipientMode } from "./config.mjs";
 import {
   contextFields,
   bookingEvent,
@@ -109,7 +109,8 @@ export function queueNotifications(
       sourceEventId: event.eventId,
       sourceContext: contextFields(),
       channel,
-      to: config.test ? config.testRecipient : target,
+      to: recipientMode(config) === "test-inbox" ? config.testRecipient : target,
+      recipientMode: recipientMode(config),
       from: config.from,
       replyTo: config.replyTo,
       test: config.test,

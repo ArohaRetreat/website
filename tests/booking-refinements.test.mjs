@@ -54,11 +54,12 @@ test('enquiry sign-in wall preserves hints, rejects cancelled login, clears iden
  try{
   let auth={currentUser:null,authStateReady:async()=>{}},listener,failLogin=true,rendered=0;
   const m={auth,observeAuth:fn=>(listener=fn,()=>{listener=null}),login:async()=>{if(failLogin)throw Error();auth.currentUser={uid:'g',displayName:'Guest'};}};
-  const open=createEnquiryAccess(async()=>m),show=html=>document.querySelector('#content').innerHTML=html;
+  let redirected; const open=createEnquiryAccess(async()=>m,path=>{redirected=path;}),show=html=>document.querySelector('#content').innerHTML=html;
   const render=(content,show,pkg,room,{canContinue})=>{rendered++;assert.equal(pkg,'stay');assert.equal(room,'tree');show('<div class="dialog-copy"><form class="enquiry-form"><input value="private"></form></div>');assert(canContinue());};
   await open({},show,'stay','tree',render);assert.equal(rendered,0);assert(document.querySelector('#enquiry-signin'));
   document.querySelector('#enquiry-signin').click();await new Promise(r=>setTimeout(r,0));assert.equal(rendered,0);assert.match(document.body.textContent,/did not finish/);
-  failLogin=false;document.querySelector('#enquiry-signin').click();await new Promise(r=>setTimeout(r,0));assert.equal(rendered,1);
+  failLogin=false;document.querySelector('#enquiry-signin').click();await new Promise(r=>setTimeout(r,0));assert.equal(redirected,'/');assert.equal(rendered,0);
+  await open({},show,'stay','tree',render);assert.equal(rendered,1);
   auth.currentUser=null;listener();assert.equal(document.querySelector('.enquiry-form'),null);assert(document.querySelector('#enquiry-signin'));
   let release;const delayed=createEnquiryAccess(()=>new Promise(r=>release=r));const pending=delayed({},show,'stay','tree',render);show('<h2>A newer dialog</h2>');release(m);await pending;assert.match(document.body.textContent,/newer dialog/);
  }finally{Object.assign(globalThis,old);dom.window.close();}

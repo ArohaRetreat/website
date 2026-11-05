@@ -1,3 +1,7 @@
+## Recipient policy revision — issue86
+
+Owner now authorises actual-recipient internal testing. New preprod jobs use MAIL_RECIPIENT_MODE=booking: verified guest email for guest messages, configured host inbox for host notifications, configured host Reply-To. Keep tester allowlist, isolated collections/inventory and TEST subject/body/PDF identity. Old queued messages retain snapshotted recipient/policy; no replay or rerouting. test-inbox remains compatible default/emergency mode, not the active preprod policy. Read [current contract](guest-mail-parity-v1.md), which supersedes the older forced-inbox instructions below.
+
 # Pre-production booking email contract — issue65
 
 Prepared website0.20.0/API0.7.0. Production currently0.19.0/API0.6.0 is held unchanged until explicit promotion after review. One repository, feature PRs, immutable source promoted between environment deployments; no permanent preprod repository/branch.

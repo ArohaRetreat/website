@@ -1,3 +1,4 @@
+import {finishGuestSignIn} from "./guest-signin-return.mjs";
 import { createConsentNotice } from "./consent-notice.mjs";
 import { esc } from "./render.mjs";
 let modulePromise;
@@ -176,7 +177,7 @@ export function createGuestAccount(
           m.login()
             .then(() => {
               labels(m.auth.currentUser);
-              if(current()) paint();
+              if(current()) finishGuestSignIn();
             })
             .catch((e) => {
               if (current()) {

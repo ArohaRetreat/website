@@ -13,6 +13,7 @@ export function mailSettings(env = process.env, profile = environment) {
     replyTo: env.MAIL_REPLY_TO || "",
     hostTo: env.MAIL_HOST_TO || "",
     testRecipient: env.MAIL_TEST_RECIPIENT || "",
+    recipientMode: env.MAIL_RECIPIENT_MODE || (profile.preprod ? "test-inbox" : "booking"),
     issuer: {
       name: env.BILLING_DISPLAY_NAME || "Aroha Retreat",
       address: env.BILLING_ADDRESS || "",
@@ -20,12 +21,13 @@ export function mailSettings(env = process.env, profile = environment) {
       configVersion: Number(env.BILLING_CONFIG_VERSION || 1),
     },
   };
+  if(!["booking","test-inbox"].includes(c.recipientMode) || (!c.test && c.recipientMode!=="booking")) throw Error("INVALID_MAIL_RECIPIENT_MODE");
   if (!enabled) return c;
   if (
     !email(c.from) ||
     !email(c.replyTo) ||
     !email(c.hostTo) ||
-    (c.test && !email(c.testRecipient))
+    (c.recipientMode === "test-inbox" && !email(c.testRecipient))
   )
     throw Error("MAIL_CONFIG_INCOMPLETE");
   if (
@@ -47,7 +49,15 @@ export function mailSettings(env = process.env, profile = environment) {
     c.issuer.configVersion < 1
   )
     throw Error("INVALID_BILLING_CONFIG");
-  if (c.test) c.replyTo = c.testRecipient;
+  if (c.recipientMode === "test-inbox") c.replyTo = c.testRecipient;
   return c;
 }
 export const validEmail = email;
+
+export function recipientMode(config) { return config.recipientMode || (config.test ? "test-inbox" : "booking"); }
+export function recipientAllowed(job,config) {
+  if(job.test!==config.test || !validEmail(job.to)) return false;
+  const mode=job.recipientMode || (job.test ? "test-inbox" : "booking");
+  if(mode==="test-inbox") return config.test && job.to===config.testRecipient;
+  return mode==="booking" && recipientMode(config)==="booking";
+}
