@@ -21,7 +21,7 @@ export async function renderApprovedInvoicePdf(invoice){
    const line=y=>doc.moveTo(44,y).lineTo(551,y).lineWidth(.65).strokeColor(LINE).stroke();
    const paper=()=>box(0,0,W,H,PAPER);
    const continuation=()=>{doc.addPage();paper();box(0,0,W,86,G);doc.image(asset('logo-white.png'),44,22,{width:122});right(551,32,invoice.number,10,'SourceBold','#fff9ea');caps(44,110,'YOUR ARRANGEMENTS · CONTINUED');return 143;};
-   const ensure=(y,h)=>y+h>635?continuation():y;
+   const ensure=(y,h)=>y+h>641?continuation():y;
    paper();box(0,0,W,210,G);
    for(let i=0;i<4;i++)doc.moveTo(275,210-i*5).bezierCurveTo(369,100-i*9,455,259-i*7,620,151-i*7).lineWidth(.6).strokeColor('#52755a').stroke();
    doc.circle(533,175,16).fill(GOLD);doc.image(asset('logo-white.png'),44,30,{width:146});right(551,35,invoice.number,10,'SourceBold','#f4eddc');right(551,55,date(invoice.createdAt).toUpperCase(),8,'Source','#b7c8af');
