@@ -1,3 +1,4 @@
+import { apiVersion } from "./version.mjs";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { sendEmail } from "./email/provider.mjs";
 import { mailSettings } from "./email/config.mjs";
@@ -825,7 +826,7 @@ export const arohaApi = onRequest(
             severity: status >= 500 ? "ERROR" : "INFO",
             service: serviceName("aroha-api"),
             ...environmentFields(),
-            version: "0.8.2",
+            version: apiVersion,
             operation,
             status,
             durationMs: Date.now() - started,

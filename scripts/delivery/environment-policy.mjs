@@ -38,5 +38,7 @@ export function compatibleBookingApi(websiteVersion, apiVersion) {
   if(!website) return false;
   const minor=Number(website[1])>=22 ? 8 : 7;
   const api=/^0\.(\d+)\.(\d+)$/.exec(apiVersion || "");
-  return !!api && Number(api[1])===minor && Number(api[2]) >= (Number(website[1])>23 || (Number(website[1])===23 && Number(website[2])>=1) ? 2 : Number(website[1])>=23 ? 1 : 0);
+  const requiredPatch = Number(website[1])>23 || (Number(website[1])===23 && Number(website[2])>=2) ? 3
+    : Number(website[1])===23 && Number(website[2])>=1 ? 2 : Number(website[1])>=23 ? 1 : 0;
+  return !!api && Number(api[1])===minor && Number(api[2]) >= requiredPatch;
 }
