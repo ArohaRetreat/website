@@ -48,6 +48,7 @@ export function queueLifecycle(
     startsAt: booking.startsAt || 0,
     endsAt: booking.endsAt || 0,
     status: booking.status,
+    bookingVersion: booking.version,
     total: booking.total,
     pricingPending: booking.checkoutPricingPending === true,
     guests: booking.guests || booking.adults || 0,
@@ -66,7 +67,7 @@ export function queueLifecycle(
     environment: environment.name,
     sourceEventId: id,
     sourceContext: contextFields(),
-    templateVersion: "email-v4-lifecycle",
+    templateVersion: ['guest_cancelled','guest_declined'].includes(channel) ? 'email-v4-status' : "email-v4-lifecycle",
     documentTemplateVersion: document ? "pdf-v4-financial" : null,
     documentId: document?.id || null,
     paymentId: paymentId || null,
@@ -96,10 +97,11 @@ export async function prepareStayLifecycle(
 ) {
   if (
     operation !== "booking-action" ||
-    !["checkin", "complete"].includes(input.action) ||
+    !["checkin", "complete", "cancel", "decline"].includes(input.action) ||
     !booking
   )
     return null;
+  if (['cancel','decline'].includes(input.action)) return {action:input.action};
   if (input.action === "checkin") return { action: "checkin" };
   const ledger = await ledgerRead(tx, db, booking.id);
   if (booking.total === null && !ledger.length)
@@ -126,6 +128,11 @@ export function commitStayLifecycle(
   { prepared, booking, profile, settings, now },
 ) {
   if (!prepared) return;
+  if (['cancel','decline'].includes(prepared.action)) {
+    const status=prepared.action==='cancel'?'cancelled':'declined';
+    booking.lifecycleDelivery={...(booking.lifecycleDelivery||{}),[status]:queueLifecycle(tx,db,{booking,profile,channel:'guest_'+status,now})};
+    return;
+  }
   if (prepared.action === "checkin") {
     booking.checkedInAt = now;
     booking.lifecycleDelivery = {

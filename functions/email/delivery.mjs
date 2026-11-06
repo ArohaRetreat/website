@@ -74,7 +74,9 @@ export async function deliverEmail(
     if(job.channel==='guest_feedback'){feedback=(await db.collection(collectionName('booking_feedback')).doc(job.bookingId).get()).data();feedbackProfile=(await db.collection(collectionName('booking_profiles')).doc(job.owner).get()).data();}
     const isCurrent = (b) =>
       b?.owner === job.owner &&
-      (job.channel === 'guest_checkin'
+      (['guest_cancelled','guest_declined'].includes(job.channel)
+        ? b.status===job.snapshot.status&&b.version===job.snapshot.bookingVersion
+        : job.channel === 'guest_checkin'
         ? b.status==='checked_in'&&b.checkedInAt===job.snapshot.checkedInAt
         : job.channel === 'guest_checkout'
           ? b.status==='completed'&&b.checkedOutAt===job.snapshot.checkedOutAt
