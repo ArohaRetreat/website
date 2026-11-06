@@ -72,3 +72,7 @@ API 0.2.1 adds optional tour.nature.hrudhi validation; prior content remains val
 API 0.2.2 accepts optional package availability, visit address/Google embed and guide walkSheet. Prior records remain valid. See docs/api/aroha-v1.md. Host auth/rules remain independent of new public Google sessions; deploy validator before website 0.14.0.
 
 Issue93 restores preprod Website changes in API0.8.4, using existing environment-specific content/public/revisions/audit selection. Shared members remain read-only; access routes remain denied. Read docs/preproduction-cms-v1.md. One-time baseline copy must preserve current host publication and existing preprod documents, never the seed. Deployment and real-account checks need release evidence.
+
+## External API work6November2026 — issue105
+
+Scoped-token-first implementation is on feat/external-api-v1 from current preprod. Read docs/api/external-v1.md and its OpenAPI;39 facade operations delegate to shared booking policy, nine read MCP capabilities live in separate ArohaRetreat/mcp. No remote OAuth, financial ledger or feedback capability is implied. Synthetic HTTP integration passed locally; source/CI/merge/deployment evidence must be checked. Preserve all production bookings/CMS/media and existing mail; no historical replay.
