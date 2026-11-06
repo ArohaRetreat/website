@@ -136,7 +136,7 @@ for (const [
     operationId,
     summary: operationId,
     security: [{ integrationToken: [] }],
-    "x-required-scopes": [scope],
+    "x-required-scopes": operationId === "getReservationContact" ? [scope,"reservations:read"] : [scope],
     "x-shared-operation": command || "read-projection",
     "x-implementation-status": "implemented-source-not-deployment-evidence",
     parameters,

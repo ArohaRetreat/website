@@ -2848,7 +2848,8 @@
           }
         ],
         "x-required-scopes": [
-          "contacts:read"
+          "contacts:read",
+          "reservations:read"
         ],
         "x-shared-operation": "read-projection",
         "x-implementation-status": "implemented-source-not-deployment-evidence",
