@@ -1,3 +1,7 @@
+## Website 0.28.1 — isolate staff styling
+
+- Scope the booking-desk additions to Host Studio so guest credit cards retain their daylight/sunset colors and mobile layout.
+
 ## Website 0.28.0 — a clearer booking desk
 
 - Open Host Studio on a server-filtered Needs review queue and group navigation by daily work, guest follow-up and retreat settings.
