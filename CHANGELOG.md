@@ -1,3 +1,7 @@
+## Website 0.30.1 — preserve popup privacy boundaries
+
+- Mask calendar, selection, time and confirmation popups explicitly, including when native top-layer placement puts them outside the masked booking container. API0.15 unchanged; preprod review only.
+
 ## Website 0.30.0 / API 0.15.0 — Material 3 Studio and booking review
 
 - Use Aroha Material 3 roles, locally bundled Google Sans/Source Sans 3 and shared controls throughout booking and Studio.
