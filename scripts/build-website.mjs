@@ -70,6 +70,7 @@ await writeFile(new URL("brand/favicon.svg", assets), iconSource.replace(/(<svg[
 await writeFile(new URL("brand/favicon-light.svg", assets), iconSource);
 await writeFile(new URL("brand/favicon-dark.svg", assets), iconSource.replaceAll('#163E2D','#FFFFFF'));
 for (const file of [
+  "material.css",
   "site.css",
   "admin.css",
   "field.css",
@@ -202,7 +203,7 @@ const bookingAtmosphereHead = `<script data-aroha-booking-atmosphere>${bookingAt
 // Authenticated booking surfaces are distinct documents, with no demo selectors or analytics bootstraps.
 for(const route of ['book','admin/bookings']){
  await mkdir(new URL(route+'/',dist),{recursive:true});
- await writeFile(new URL(route+'/index.html',dist),`<!doctype html><html lang="en"><head><meta charset="utf-8">${route==='book'?bookingAtmosphereHead:''}${rumHead}<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#163e2d"><meta name="robots" content="noindex,nofollow"><title>${route==='book'?'Your stay at Aroha':'Bookings · Aroha Host Studio'}</title><link rel="icon" href="/assets/brand/favicon.svg"><link rel="stylesheet" href="/assets/booking.css"><script type="module" src="/assets/booking.js"></script></head><body><a class="skip" href="#main">Skip to content</a><div class="review-banner">Host-approved reservations · Published visit rates · Published exclusive day rate · No online payment</div><div id="app" data-dt-mask><main class="loading">Opening a little space for you…</main></div><div id="toast" role="status" aria-live="polite"></div><dialog id="detail" data-dt-mask></dialog><noscript>Sign-in and booking requests need JavaScript. Please contact your hosts to arrange a visit.</noscript></body></html>`);
+ await writeFile(new URL(route+'/index.html',dist),`<!doctype html><html lang="en"><head><meta charset="utf-8">${route==='book'?bookingAtmosphereHead:''}${rumHead}<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#163e2d"><meta name="robots" content="noindex,nofollow"><title>${route==='book'?'Your stay at Aroha':'Bookings · Aroha Host Studio'}</title><link rel="icon" href="/assets/brand/favicon.svg"><link rel="stylesheet" href="/assets/booking.css"><link rel="stylesheet" href="/assets/material.css"><script type="module" src="/assets/booking.js"></script></head><body><a class="skip" href="#main">Skip to content</a><div class="review-banner">Host-approved reservations · Published visit rates · Published exclusive day rate · No online payment</div><div id="app" data-dt-mask><main class="loading">Opening a little space for you…</main></div><div id="toast" role="status" aria-live="polite"></div><dialog id="detail" data-dt-mask></dialog><noscript>Sign-in and booking requests need JavaScript. Please contact your hosts to arrange a visit.</noscript></body></html>`);
 }
 await copyFile(new URL('website/booking.css',root),new URL('booking.css',assets));
 await copyFile(new URL('website/frontdesk.css',root),new URL('frontdesk.css',assets));

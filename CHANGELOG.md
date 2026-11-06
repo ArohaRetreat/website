@@ -1,3 +1,10 @@
+## Website 0.30.0 / API 0.15.0 — Material 3 Studio and booking review
+
+- Use Aroha Material 3 roles, locally bundled Google Sans/Source Sans 3 and shared controls throughout booking and Studio.
+- Replace native staff selectors/date popups/spinners with labelled menus, keyboard calendars, guest steppers and visible visit choices; group booking detail actions consistently.
+- Add the versioned cancellation email with a subtly disappointed Hrudhi; use the requested Reply-To for new preprod mail while preserving old retries.
+- Isolate shared external API suite fixtures without weakening concurrency assertions (#126). Preprod only; production held. See docs/material-studio-v1.md.
+
 ## Website 0.29.0 / API 0.14.0 — front desk v2 (preprod review)
 
 - Replace booking navigation with the reviewed desktop/mobile front-desk workspace, contextual booking decisions and focused walk-in flow.

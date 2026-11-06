@@ -63,6 +63,10 @@ try {
     providers.some((f) => !isDeepStrictEqual(userEnv(f), env))
   )
     throw Error("CURRENT_RUNTIME_CONFIGURATION_REVIEW_REQUIRED");
+  const replyTo = args.includes('--reply-to') ? args[args.indexOf('--reply-to')+1] : undefined;
+  if(replyTo && replyTo !== 'retreataroha@gmail.com')throw Error('UNREVIEWED_REPLY_TO');
+  const configurationChanges = replyTo && env.MAIL_REPLY_TO !== replyTo ? ['MAIL_REPLY_TO'] : [];
+  if(replyTo)env.MAIL_REPLY_TO=replyTo;
   const output = resolve(
     "local/" + (preprod ? "preprod-functions" : "production-functions"),
   );
@@ -116,6 +120,7 @@ try {
         environment,
         codebase: preprod ? "aroha-website-preprod" : "aroha-website",
         mailEnabled: true,
+        configurationChanges,
         localValidationOnly: false,
         providerRevisions: providers.map((f) => ({
           name: f.name.split("/").at(-1),
@@ -154,7 +159,8 @@ try {
       source,
       environment,
       mailEnabled: true,
-      configurationPreserved: true,
+      configurationPreserved: configurationChanges.length === 0,
+      configurationChanges,
       selectiveDeploymentRequired: [
         "arohaApi" + suffix,
         "arohaBookingEmailDispatch" + suffix,

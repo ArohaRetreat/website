@@ -8,6 +8,7 @@ const source = (
     "utf8",
   )
 )
+  .replace(/import \{[^\n]+\} from ['"]\.\/material-controls.mjs['"];/, 'const installMaterialControls=()=>{},confirmMaterial=async()=>window.confirm();')
   .replaceAll("export async function", "async function")
   .replaceAll("export function", "function");
 async function mount() {

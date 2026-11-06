@@ -625,3 +625,13 @@ test('cancellation mail preserves truthful status and suppresses a stale booking
  const stale=fakeDB();await stale.collection(collectionName('bookings')).doc(b.id).set({...b,version:5});await stale.runTransaction(async tx=>queueLifecycle(tx,stale,{booking:b,profile,channel:'guest_cancelled',now:Date.now()}));
  const staleJob=(await stale.collection(collectionName('notifications')).get()).docs[0];await deliverEmail(stale,staleJob.ref,async()=>{throw Error('STALE_SHOULD_NOT_SEND');});assert.equal((await staleJob.ref.get()).data().status,'suppressed');
 });
+
+test('new status notices embed Hrudhi and preserve the historical v4 retry renderer',async()=>{
+ const {emailTemplate}=await import('../functions/email/templates.mjs');
+ const job={templateVersion:'email-v5-status',channel:'guest_cancelled',test:true,subjectPrefix:'[PRE-PROD TEST] ',snapshot:{reference:'SYNTHETIC-STATUS',guestName:'Synthetic <guest>',arrival:'2026-12-01',departure:'2026-12-03',kind:'individual'}};
+ const current=emailTemplate(job),legacy=emailTemplate({...job,templateVersion:'email-v4-status'});
+ assert.match(current.html,/cid:aroha-hrudhi-cancelled/);assert.match(current.html,/Synthetic &lt;guest&gt;/);assert.doesNotMatch(current.html,/Synthetic <guest>/);assert.match(current.text,/does not record a payment or refund/);assert.doesNotMatch(current.text,/as requested|refund issued|checked out/i);
+ assert.equal(current.attachments.find(a=>a.contentId==='aroha-hrudhi-cancelled').content.subarray(1,4).toString(),'PNG');assert.equal(legacy.attachments.length,0);assert.doesNotMatch(legacy.html,/hrudhi/);assert.match(legacy.html,/Your booking has been cancelled/);
+ const decline=emailTemplate({...job,channel:'guest_declined'});assert.doesNotMatch(decline.html,/aroha-hrudhi-cancelled/);
+ const defaults=mailSettings({...process.env,MAIL_REPLY_TO:'',MAIL_RECIPIENT_MODE:'test-inbox'});assert.equal(defaults.replyTo,'retreataroha@gmail.com');assert.equal(defaults.testRecipient,'owner@example.test');
+});

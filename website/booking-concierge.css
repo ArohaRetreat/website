@@ -1,10 +1,6 @@
 @import url("/assets/host-operations.css");
 @import url("/assets/stay-panel.css");
 @font-face {
-  font-family: Lora;
-  src: url(/assets/fonts/Lora.woff2);
-}
-@font-face {
   font-family: Sans;
   src: url(/assets/fonts/Source.woff2);
 }
@@ -82,7 +78,7 @@ p {
 h1,
 h2,
 h3 {
-  font-family: Lora, Georgia, serif;
+  font-family: 'Google Sans', Arial, sans-serif;
   font-weight: 400;
   letter-spacing: -0.03em;
   line-height: 1.2;
@@ -287,7 +283,7 @@ small {
   padding-top: 25px;
 }
 .how b {
-  font: 22px Lora;
+  font: 22px 'Google Sans';
   display: block;
   margin-bottom: 7px;
 }
@@ -394,7 +390,7 @@ small {
   white-space: nowrap;
 }
 .offerrate strong {
-  font: 28px Lora;
+  font: 28px 'Google Sans';
   display: block;
 }
 .offerrate small {
@@ -474,7 +470,7 @@ small {
   font-size: 13px;
 }
 .billtotal strong {
-  font: 28px Lora;
+  font: 28px 'Google Sans';
 }
 .quote .primary {
   width: 100%;
@@ -1094,7 +1090,7 @@ html[data-atmosphere="sunset"] footer img {
     padding: 0;
   }
   #mobile-action .mobile-price strong {
-    font: 23px Lora;
+    font: 23px 'Google Sans';
     display: block;
   }
   #mobile-action .primary {

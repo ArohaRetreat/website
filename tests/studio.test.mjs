@@ -23,7 +23,7 @@ async function mount(modules, handler) {
   w.confirm = () => false;
   const source = (
     await readFile(new URL("../website/studio.mjs", import.meta.url), "utf8")
-  ).replace(
+  ).replace(/import \{[^\n]+\} from ['"]\.\/material-controls.mjs['"];/, 'const installMaterialControls=()=>{},confirmMaterial=async()=>window.confirm();').replace(
     /import \{[\s\S]*?\} from ["']\.\/firebase.mjs["'];/,
     "const {api,login,logout,observeAuth}=window;",
   );
