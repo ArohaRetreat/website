@@ -73,3 +73,7 @@ API0.12.0/contract1.2.0 and website0.26.0 implement the authorized full-CRUD exp
 ## Host Studio0.28 — issue111
 
 The missing navigation/decision redesign is implemented against existing API0.13/contract1.3: Needs review landing queue, grouped daily/guest/setup navigation, header Add booking, aligned responsive rows, replacing Next/Previous pages, one reviewed acceptance/inline decline and separate utilities/history/allocation. Read docs/host-studio-ux-0.28.md for actual scope and remaining boundaries. No backend/data/CMS/template changes. Production guest concierge is already live; older preprod-only entries above are historical. Verify actual source/Hosting receipts separately; this source note alone is not deployment proof.
+
+## Front desk v2 preprod candidate — issue111
+
+Website0.29/API0.14/contract1.4 implements the approved compact guest-first workspace. Read docs/host-studio-frontdesk-v2.md. Sources website/frontdesk.{mjs,css}, platform/host.mjs, booking/desk.mjs. The derived fields/indexes need preprod readiness/backfill before Hosting. Existing booking actions, manual quote/confirmation and policy remain authoritative. Production is explicitly held for owner review; do not infer approval from green tests or preprod deployment. Verify actual release receipts separately.

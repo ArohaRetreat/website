@@ -336,7 +336,7 @@ export async function queryPage(
   input,
   queries,
   projector = (x) => x,
-  { orderField, descending = false } = {},
+  { orderField, descending = false, secondaryFields = [] } = {},
 ) {
   const limit = input.limit ?? 25;
   let after = null;
@@ -361,13 +361,12 @@ export async function queryPage(
       tx.get(
         (() => {
           let ordered = orderField
-            ? q
-                .orderBy(orderField, descending ? "desc" : "asc")
+            ? [orderField,...secondaryFields].reduce((query,field)=>query.orderBy(field,descending ? "desc" : "asc"),q)
                 .orderBy("__name__", descending ? "desc" : "asc")
             : q.orderBy("__name__");
           if (after)
             ordered = orderField
-              ? ordered.startAfter(after.value, after.id)
+              ? ordered.startAfter(...(after.values||[after.value]), after.id)
               : ordered.startAfter(after);
           return ordered.limit(limit + 1);
         })(),
@@ -377,10 +376,8 @@ export async function queryPage(
   const docs = [
     ...new Map(snapshots.flatMap((s) => s.docs).map((d) => [d.id, d])).values(),
   ].sort((a, b) => {
-    if (orderField && a.data()[orderField] !== b.data()[orderField])
-      return (
-        (a.data()[orderField] - b.data()[orderField]) * (descending ? -1 : 1)
-      );
+    for(const field of orderField?[orderField,...secondaryFields]:[])
+      if(a.data()[field]!==b.data()[field])return (a.data()[field]<b.data()[field]?-1:1)*(descending?-1:1);
     return (
       (a.id < b.id ? -1 : a.id > b.id ? 1 : 0) *
       (orderField && descending ? -1 : 1)
@@ -400,7 +397,7 @@ export async function queryPage(
       view,
       limit,
       last: orderField
-        ? { id: selected.at(-1).id, value: selected.at(-1).data()[orderField] }
+        ? { id: selected.at(-1).id, value: selected.at(-1).data()[orderField], ...(secondaryFields.length?{values:[orderField,...secondaryFields].map(f=>selected.at(-1).data()[f])}:{}) }
         : selected.at(-1).id,
       expiresAt: ctx.now + 900000,
       expireAt: new Date(ctx.now + 900000),

@@ -65,7 +65,7 @@ async function mount(reduced = false) {
   const source = (
     await readFile(new URL("../website/booking.mjs", import.meta.url), "utf8")
   )
-    .replace(/import \{mountHostOperations,mountHostSummary,openManualBooking\} from '\.\/host-operations.mjs';/, 'const mountHostOperations=async()=>{},mountHostSummary=async()=>{},openManualBooking=()=>{};').replace(/import \{auth\} from '\.\/firebase-auth.mjs';/, 'const auth={currentUser:null};').replace(/import \{mountStayPanel\} from '\.\/stay-panel.mjs';/, "").replace(
+    .replace(/import \{hostShell,mountFrontDesk\} from '\.\/frontdesk.mjs';/,'const hostShell=({content})=>content,mountFrontDesk=async()=>{};').replace(/import \{mountHostOperations,mountHostSummary,openManualBooking\} from '\.\/host-operations.mjs';/, 'const mountHostOperations=async()=>{},mountHostSummary=async()=>{},openManualBooking=()=>{};').replace(/import \{auth\} from '\.\/firebase-auth.mjs';/, 'const auth={currentUser:null};').replace(/import \{mountStayPanel\} from '\.\/stay-panel.mjs';/, "").replace(
       /import \{\s*journeyStep\s*\} from "\.\/booking-journey.mjs";/,
       "const journeyStep=()=>{};",
     )

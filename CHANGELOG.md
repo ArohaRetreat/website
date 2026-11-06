@@ -1,3 +1,9 @@
+## Website 0.29.0 / API 0.14.0 — front desk v2 (preprod review)
+
+- Replace booking navigation with the reviewed desktop/mobile front-desk workspace, contextual booking decisions and focused walk-in flow.
+- Add scoped server-side reservation searches with typed filters, bounded cursors and derived query fields; preserve booking, email, ledger and credit policy.
+- Keep production promotion held for owner review. See docs/host-studio-frontdesk-v2.md.
+
 ## Website 0.28.1 — isolate staff styling
 
 - Scope the booking-desk additions to Host Studio so guest credit cards retain their daylight/sunset colors and mobile layout.
