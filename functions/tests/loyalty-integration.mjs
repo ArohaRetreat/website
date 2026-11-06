@@ -402,7 +402,7 @@ test("manual identity, actual nightly rewards and concurrent redemption use real
     const desk=okay(await op(host,'searchHostReservations',{view:'all',reference:b.reference,kind:b.kind,limit:1}));
     assert.equal(desk.items.length,1);assert.equal(desk.items[0].id,b.id);assert.ok(desk.items[0].guestName);assert.equal(desk.items[0].attention,'none');
     assert.ok(Array.isArray(okay(await op(host,'searchHostReservations',{view:'all',status:'expired'})).items));
-    assert.ok(Array.isArray(okay(await op(host,'searchHostReservations',{view:'review'})).items));
+    assert.ok(Array.isArray(okay(await op(host,'searchHostReservations',{view:'review',arrivalFrom:'2025-01-01',arrivalThrough:'2030-12-31'})).items));
     assert.equal((await op(stranger,'searchHostReservations',{view:'review'})).httpStatus,403);
     assert.equal((await op(host,'searchHostReservations',{view:'all',arrivalFrom:'2026-02-02',arrivalThrough:'2026-01-01'})).error.code,'INVALID_DATE_RANGE');
     const totals = okay(await op(host, "getHostBookingSummary"));

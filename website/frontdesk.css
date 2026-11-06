@@ -35,3 +35,5 @@ dialog{color:var(--ink);font-family:inherit;border:1px solid var(--line);padding
 .frontdesk-v2 h1,.frontdesk-v2 h2,.frontdesk-v2 h3{font-family:Source,system-ui,sans-serif}.frontdesk-v2 #app .global-search input{border:0;min-height:24px;padding:0;background:transparent;font:inherit;box-shadow:none}.frontdesk-v2 .booking-panel .panel-tabs{flex:none}.frontdesk-v2 .booking-panel .dialog-head{flex:none}.frontdesk-v2 .ops-dialog .ops-actions{gap:14px}
 
 .frontdesk-v2.studio-embedded .preprod-banner{display:none}
+
+@media(max-width:760px){.frontdesk-v2 .toolbar span.sort-trigger{font-size:12px;background:transparent;border:0;min-width:0;min-height:0;padding:4px 0;margin:0;flex-basis:100%;white-space:normal}.frontdesk-v2 .bottom-nav button{display:flex;flex-direction:column;gap:3px}.frontdesk-v2 .toolbar{gap:8px}.frontdesk-v2 .booking-table .cell-main{font-size:13px}.frontdesk-v2 .task-tabs button{min-height:44px}}

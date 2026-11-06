@@ -28,7 +28,7 @@ export async function hostHandler({ tx, db, ctx, input }) {
     if(input.arrivalThrough) q=q.where('arrival','<=',input.arrivalThrough);
     const orderField=view==='review'?'deskDeadline':'arrival';
     const queries=view==='all'&&input.status==='expired'?[q.where('status','==','expired'),q.where('status','==','pending_approval').where('expiresAt','<=',ctx.now)]:q;
-    const result=await queryPage(tx,db,ctx,'desk:'+digest({...filters,today:view==='arrivals'||view==='departures'?today:null}),input,queries,b=>({...projectReservation(b),guestName:String(b.contact?.name||b.guestName||'Guest').slice(0,120),attention:b.deskAttention||'none',responseDeadline:b.deskDeadline===Number.MAX_SAFE_INTEGER?null:b.deskDeadline}),{orderField});
+    const result=await queryPage(tx,db,ctx,'desk:'+digest({...filters,today:view==='arrivals'||view==='departures'?today:null}),input,queries,b=>({...projectReservation(b),guestName:String(b.contact?.name||b.guestName||'Guest').slice(0,120),attention:b.deskAttention||'none',responseDeadline:b.deskDeadline===Number.MAX_SAFE_INTEGER?null:b.deskDeadline}),{orderField,secondaryFields:view==='review'&&(input.arrivalFrom||input.arrivalThrough)?['arrival']:view==='all'&&['pending_approval','expired'].includes(input.status)?['expiresAt']:[]});
     return {...result,asOf:ctx.now};
   }
   if (ctx.operation === "getHostBookingSummary") {

@@ -56,7 +56,7 @@ export async function mountFrontDesk(target,{tab,call,api,manager,identity,onMan
     const close=()=>{if(!working&&!uncertain)d.close();};
     d.addEventListener('cancel',ev=>{if(working||uncertain)ev.preventDefault();});
     d.addEventListener('close',()=>{d.remove();if(trigger.isConnected)trigger.focus();},{once:true});d.querySelector('[data-close]').onclick=close;
-    async function fetchBooking(){b=await api('reservation-detail',{id});}
+    async function fetchBooking(){const name=s.page?.items.find(x=>x.id===id)?.guestName||b?.guestName;b=await api('reservation-detail',{id});if(name)b.guestName=name;}
     function render(){
       if(!d.isConnected)return;
       const review=b.status==='pending_approval',change=b.status==='confirmed'&&b.changeRequest;
