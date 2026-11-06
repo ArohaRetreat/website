@@ -83,4 +83,6 @@ test("scoped API releases preserve known booking compatibility without accepting
  }
 });
 
-test("CRUD frontends require the deployed lifecycle API",()=>{assert.equal(compatibleBookingApi("0.26.0","0.11.0"),false);assert.equal(compatibleBookingApi("0.26.0","0.12.0"),true);assert.equal(compatibleBookingApi("0.26.0","0.13.0"),false);});
+test("CRUD frontends require the deployed lifecycle API",()=>{assert.equal(compatibleBookingApi("0.26.0","0.11.0"),false);assert.equal(compatibleBookingApi("0.26.0","0.12.0"),true);assert.equal(compatibleBookingApi("0.26.0","0.13.0"),true);});
+
+test("nightly credit UI requires its deployed policy and unknown future versions stay blocked",()=>{assert.equal(compatibleBookingApi("0.27.0","0.12.1"),false);assert.equal(compatibleBookingApi("0.27.0","0.13.0"),true);assert.equal(compatibleBookingApi("0.27.0","0.14.0"),false);assert.equal(compatibleBookingApi("0.28.0","0.13.0"),false);});

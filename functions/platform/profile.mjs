@@ -26,7 +26,9 @@ export async function profileHandler({ tx, db, ctx, input }) {
   version(profile.contactVersion || 0, input.expectedVersion);
   const active = await bounded(
     tx,
-    col(db, "bookings").where("owner", "==", ctx.uid),
+    col(db, "bookings")
+      .where("owner", "in", ctx.ownerIds || [ctx.uid])
+      .where("status", "in", ["pending_approval", "confirmed", "checked_in"]),
   );
   if (
     active.some(
@@ -36,6 +38,13 @@ export async function profileHandler({ tx, db, ctx, input }) {
     )
   )
     fail("ACTIVE_RESERVATIONS_RETAIN_PROFILE", 409);
+  const related = [];
+  for (const owner of (ctx.ownerIds || [ctx.uid]).filter(
+    (id) => id !== ctx.uid,
+  )) {
+    const ref = col(db, "booking_profiles").doc(owner);
+    related.push({ ref, profile: (await tx.get(ref)).data() || {}, id: owner });
+  }
   const id = randomUUID(),
     operation = {
       id,
@@ -50,9 +59,31 @@ export async function profileHandler({ tx, db, ctx, input }) {
         "financial_documents",
         "operational_communications",
         "minimal_audit_and_counters",
+        "loyalty_ledger_and_account_binding",
       ],
     };
   // A tombstone prevents ordinary sign-in/state reads from silently recreating profile PII.
+  const retain = (p) =>
+    Object.fromEntries(
+      [
+        "createdAt",
+        "schemaVersion",
+        "completedStays",
+        "linkedUid",
+        "identitySource",
+        "identityVersion",
+      ]
+        .filter((k) => p[k] !== undefined)
+        .map((k) => [k, p[k]]),
+    );
+  for (const row of related)
+    tx.set(row.ref, {
+      ...retain(row.profile),
+      id: row.id,
+      contactVersion: (row.profile.contactVersion || 0) + 1,
+      erasedAt: ctx.now,
+      updatedAt: ctx.now,
+    });
   const retained = Object.fromEntries(
     ["createdAt", "schemaVersion", "completedStays"]
       .filter((k) => profile[k] !== undefined)

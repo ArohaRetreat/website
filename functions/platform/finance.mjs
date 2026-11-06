@@ -47,14 +47,24 @@ export function financialSummary(booking, ledger) {
     paid > booking.total
   )
     fail("FINANCIAL_RECONCILIATION_REQUIRED", 409);
+  const inactive = ["cancelled", "declined", "expired"].includes(
+    booking.status,
+  );
   return {
     id: booking.id,
     currency: "INR",
     totalPaise: booking.total,
     paidPaise: paid,
-    balanceDuePaise: booking.total - paid,
+    balanceDuePaise: inactive ? 0 : booking.total - paid,
     version: booking.financialVersion || 0,
-    hasOutstandingBalance: paid < booking.total,
+    hasOutstandingBalance: !inactive && paid < booking.total,
+    ...(inactive
+      ? {
+          amountPayablePaise: 0,
+          unappliedPaymentPaise: paid,
+          requiresPaymentReview: paid > 0,
+        }
+      : {}),
   };
 }
 export const ledgerRead = (tx, db, id) =>
@@ -125,6 +135,13 @@ export async function prepareDocument(
     subtotal: booking.subtotal ?? booking.total,
     discount: booking.discount || 0,
     total: booking.total,
+    ...(booking.loyaltyCredits
+      ? {
+          loyaltyCredits: booking.loyaltyCredits,
+          loyaltyDiscount: booking.loyaltyDiscount,
+          priceBenefitDiscount: booking.priceBenefitDiscount || 0,
+        }
+      : {}),
     amountPaid: summary.paidPaise,
     balanceDue: summary.balanceDuePaise,
     status: "issued",
@@ -148,6 +165,35 @@ export function commitDocument(tx, db, prepared, now) {
 }
 export async function financeHandler({ tx, db, ctx, input, booking }) {
   const op = ctx.operation;
+  if (op === "listPaymentLedger") {
+    let query = col(db, "booking_payments");
+    if (input.reference) {
+      const matches = await tx.get(
+        col(db, "bookings")
+          .where("reference", "==", input.reference.trim().toUpperCase())
+          .limit(2),
+      );
+      if (matches.size > 1) fail("BOOKING_REFERENCE_CONFLICT", 409);
+      if (!matches.size) return { items: [], nextCursor: null };
+      query = query.where("bookingId", "==", matches.docs[0].id);
+    }
+    return queryPage(
+      tx,
+      db,
+      ctx,
+      op + ":" + (input.reference || ""),
+      input,
+      query,
+      async (p) => {
+        const b = (await tx.get(col(db, "bookings").doc(p.bookingId))).data();
+        return {
+          ...paymentView(p),
+          bookingReference: b?.reference || "Historical booking",
+        };
+      },
+      { orderField: "createdAt", descending: true },
+    );
+  }
   if (op === "listDocuments") {
     return queryPage(
       tx,

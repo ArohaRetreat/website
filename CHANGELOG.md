@@ -1,3 +1,11 @@
+## 0.27.0 / API 0.13.0 — manual bookings and nightly loyalty
+
+- Add one-review host booking for new or existing guest emails without creating Auth accounts. Verified same-email Google sign-in claims the private customer alias; history, documents, feedback and credits share current ownership policy.
+- Add nightly100/200/300-credit earning, ₹1 redemption, atomic holds/consumption/restoration, reasoned adjustments and separate immutable credit invoice snapshots. Retain6/10 qualifying-stay thresholds; no historical credit import.
+- Replace the customer picker with bounded private search; add customer/credit views, server-filtered reservation pages, global payment ledger/private feedback and read-only snapshot totals. Guest credits have their own page and review-stage price update.
+- Extend canonical contract to1.3.0/121operations and scoped own/all access. Existing read-only MCP grants stay unchanged. Separate MCP/docs release required.
+- Cancelled invoices no longer present historical charges as payable; recorded money remains for review without automatic refund transfers. Existing frozen message/PDF versions and unrelated booking/CMS data are preserved.
+
 ## API 0.12.1 — cancellation and decline emails
 
 - Queue one operational cancellation/decline email in the booking transaction, including manually recorded bookings. Preserve frozen templates, invoice voiding, current mail settings and no historical replay.

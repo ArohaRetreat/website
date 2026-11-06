@@ -195,6 +195,7 @@ const promoUses = (state, code, now, exclude) =>
           (occupies(b, now) || ["completed", "no_show"].includes(b.status)),
       ).length;
 export function price(state, uid, input, now = Date.now(), exclude) {
+  if(input.redeemCredits&&!input.kind)fail('LOYALTY_REQUIRES_OVERNIGHT_PRODUCT');
   if (input.kind) return productPrice(state, uid, input, now, exclude);
   assertLegacyCapacity(state, input, now, exclude);
   const available = availability(state, input, now, exclude);
@@ -300,7 +301,7 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
     operation === "change-request"
   ) {
     const b = state.bookings.find((b) => b.id === input.id);
-    if (!b || b.owner !== actor.id) fail("NOT_FOUND", 404);
+    if (!b || !(actor.ownerIds||[actor.id]).includes(b.owner)) fail("NOT_FOUND", 404);
     version(b, input.expectedVersion);
     if (!["pending_approval", "confirmed"].includes(b.status))
       fail("INVALID_TRANSITION", 409);
@@ -370,7 +371,7 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
     const q = state.quotes.find(
       (q) => q.id === input.quoteId && q.owner === actor.id,
     );
-    if (!q || q.bookingId || q.expiresAt <= now) fail("QUOTE_EXPIRED", 410);
+    if (!q || q.bookingId || q.consumedBy || q.expiresAt <= now) fail("QUOTE_EXPIRED", 410);
     const owner = actor.role === "host" ? q.guestId : actor.id;
     const current = price(state, owner, q, now);
     if (
@@ -379,7 +380,7 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
     )
       fail("QUOTE_CHANGED", 409);
     if (
-      state.bookings.filter((b) => b.owner === owner && occupies(b, now))
+      state.bookings.filter((b) => (actor.customerOwnerIds||[owner]).includes(b.owner) && occupies(b, now))
         .length >= 3
     )
       fail("REQUEST_LIMIT", 429);
@@ -402,12 +403,13 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
       history: [{ status: "pending_approval", at: now }],
     };
     state.bookings.push(b);
+    q.consumedBy=b.id;
     event(state, actor, "booking.requested", b.id, now);
     return b;
   }
   if (operation === "booking-action") {
     const b = state.bookings.find((b) => b.id === input.id);
-    if (!b || (actor.role !== "host" && b.owner !== actor.id))
+    if (!b || (actor.role !== "host" && !(actor.ownerIds||[actor.id]).includes(b.owner)))
       fail("NOT_FOUND", 404);
     version(b, input.expectedVersion);
     if(input.changeId&&input.changeId!==(b.changeRequest?.id||('legacy-change-'+b.changeRequest?.requestedAt)))fail('NOT_FOUND',404);
@@ -479,7 +481,7 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
           { label: "Exclusive retreat · host offer", amount: b.total },
         ];
       } else {
-        if (b.owner !== actor.id) fail("FORBIDDEN", 403);
+        if (!(actor.ownerIds||[actor.id]).includes(b.owner)) fail("FORBIDDEN", 403);
         if (b.total === null) fail("EVENT_QUOTE_REQUIRED", 409);
         b.quoteAccepted = true;
         if(b.currentOffer)b.currentOffer={...b.currentOffer,status:'accepted',acceptedAt:now,version:b.currentOffer.version+1};

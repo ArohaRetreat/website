@@ -1,3 +1,7 @@
+## Prepared manual booking and loyalty — 6 November 2026
+
+Issue114/111: website0.27.0/API0.13.0, external contract1.3.0/121operations. Read [contract](../../docs/api/manual-booking-loyalty-v1.3.md). New customer alias/linking, nightly wallet, search-first host modules and guest redemption share transactional policy. Source prepared; verify CI and actual environment release before claiming deployment. Preprod first, independent selected production promotion; frozen email-v3/PDF-v4, CMS/Natura and unrelated bookings preserved. New credit invoices use pdf-v4-loyalty; manual confirmations email-v4-manual. Never replay historical emails or award bulk historical credits. Matching derived-search migration is CAS guarded and dry-run first. Real guest changes belong only in private delivery receipts.
+
 ## Issue101 acceptance update — 5 November 2026
 
 Preprod0.23.6 at9b48639ed2f9ab24b2f1903c8a0cee490178b3b3 passed current-head CI and Hosting verification (PR102). Read the [coverage catalog](../../docs/booking-test-coverage.md) before saying all scenarios passed. Live Safari completed a day-request/approval/three delivered emails/private PDF/cancellation flow; 24 reusable HTTP emulator scenarios passed on exact feature source27341dc. The full live matrix and second-identity/inbox gates remain pending. Production and CMS were preserved; do not resend old private-booking confirmations. The0.23.7 report-processing timing correction is separate from live booking/business trace evidence.

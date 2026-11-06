@@ -16,7 +16,7 @@ export async function invoicePdf(
 ) {
   if (invoice.environment !== environment.name)
     throw Error("INVOICE_ENVIRONMENT_MISMATCH");
-  if(!['legacy','pdf-v4','pdf-v4-financial'].includes(designVersion))throw Error('UNKNOWN_DOCUMENT_TEMPLATE');
+  if(!['legacy','pdf-v4','pdf-v4-financial','pdf-v4-loyalty'].includes(designVersion))throw Error('UNKNOWN_DOCUMENT_TEMPLATE');
   const object = `billing/${environment.name}/${encodeURIComponent(invoice.owner)}/${invoice.id}${designVersion==='legacy'?'':'-'+designVersion}.pdf`,
     file = bucket.file(object);
   try {

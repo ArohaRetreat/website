@@ -28,6 +28,17 @@
       },
       "hasOutstandingBalance": {
         "type": "boolean"
+      },
+      "amountPayablePaise": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "unappliedPaymentPaise": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "requiresPaymentReview": {
+        "type": "boolean"
       }
     },
     "required": [
@@ -1823,6 +1834,748 @@
       "createdAt",
       "templateVersion",
       "retryAllowed"
+    ]
+  },
+  "Customer": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 0,
+        "maxLength": 128
+      },
+      "name": {
+        "type": "string",
+        "minLength": 0,
+        "maxLength": 120
+      },
+      "email": {
+        "type": "string",
+        "minLength": 0,
+        "maxLength": 254
+      },
+      "phone": {
+        "type": "string",
+        "minLength": 0,
+        "maxLength": 32
+      },
+      "accountConnected": {
+        "type": "boolean"
+      },
+      "version": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "required": [
+      "id",
+      "name",
+      "email",
+      "phone",
+      "accountConnected",
+      "version"
+    ]
+  },
+  "CustomerLookup": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "items": {
+        "type": "array",
+        "maxItems": 10,
+        "items": {
+          "$ref": "#/components/schemas/Customer"
+        }
+      },
+      "hasMore": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "items",
+      "hasMore"
+    ]
+  },
+  "CustomerLink": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "linked": {
+        "type": "boolean"
+      },
+      "customerId": {
+        "type": "string",
+        "minLength": 0,
+        "maxLength": 128
+      },
+      "version": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "required": [
+      "linked",
+      "customerId",
+      "version"
+    ]
+  },
+  "LoyaltyBalance": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 0,
+        "maxLength": 128
+      },
+      "currency": {
+        "type": "string",
+        "const": "INR"
+      },
+      "creditsBalance": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "creditsReserved": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "creditsAvailable": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "availableValuePaise": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "version": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "level": {
+        "type": "integer",
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "name": {
+        "type": "string",
+        "enum": [
+          "Visitor",
+          "Friend",
+          "Family"
+        ]
+      },
+      "earnCreditsPerNight": {
+        "type": "integer",
+        "enum": [
+          100,
+          200,
+          300
+        ]
+      },
+      "completedStays": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "nextLevelAt": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "minimum": 0
+      },
+      "creditValuePaise": {
+        "type": "integer",
+        "const": 100
+      }
+    },
+    "required": [
+      "id",
+      "currency",
+      "creditsBalance",
+      "creditsReserved",
+      "creditsAvailable",
+      "availableValuePaise",
+      "version",
+      "level",
+      "name",
+      "earnCreditsPerNight",
+      "completedStays",
+      "nextLevelAt",
+      "creditValuePaise"
+    ]
+  },
+  "LoyaltyEntry": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 0,
+        "maxLength": 128
+      },
+      "kind": {
+        "type": "string",
+        "enum": [
+          "earn",
+          "hold",
+          "redeem",
+          "release",
+          "restore",
+          "expired_release",
+          "adjustment"
+        ]
+      },
+      "bookingId": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "minLength": 0,
+        "maxLength": 128
+      },
+      "bookingReference": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "minLength": 0,
+        "maxLength": 32
+      },
+      "creditsDelta": {
+        "type": "integer"
+      },
+      "reservedDelta": {
+        "type": "integer"
+      },
+      "balanceAfter": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "createdAt": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "expiresAt": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "minimum": 0
+      },
+      "reason": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "minLength": 0,
+        "maxLength": 200
+      },
+      "date": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "minLength": 0,
+        "maxLength": 10
+      }
+    },
+    "required": [
+      "id",
+      "kind",
+      "bookingId",
+      "bookingReference",
+      "creditsDelta",
+      "reservedDelta",
+      "balanceAfter",
+      "createdAt",
+      "expiresAt",
+      "reason",
+      "date"
+    ]
+  },
+  "LoyaltyEntryPage": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "items": {
+        "type": "array",
+        "maxItems": 50,
+        "items": {
+          "$ref": "#/components/schemas/LoyaltyEntry"
+        }
+      },
+      "nextCursor": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "minLength": 0,
+        "maxLength": 36
+      }
+    },
+    "required": [
+      "items",
+      "nextCursor"
+    ]
+  },
+  "PaymentLedgerPage": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "items": {
+        "type": "array",
+        "maxItems": 50,
+        "items": {
+          "$ref": "#/components/schemas/PaymentLedgerEntry"
+        }
+      },
+      "nextCursor": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "minLength": 0,
+        "maxLength": 36
+      }
+    },
+    "required": [
+      "items",
+      "nextCursor"
+    ]
+  },
+  "FeedbackReviewPage": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "items": {
+        "type": "array",
+        "maxItems": 50,
+        "items": {
+          "$ref": "#/components/schemas/FeedbackReview"
+        }
+      },
+      "nextCursor": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "minLength": 0,
+        "maxLength": 36
+      }
+    },
+    "required": [
+      "items",
+      "nextCursor"
+    ]
+  },
+  "PaymentLedgerEntry": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "bookingId": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "kind": {
+        "enum": [
+          "payment",
+          "reversal"
+        ]
+      },
+      "amountPaise": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "method": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "enum": [
+          "cash",
+          "upi",
+          "bank",
+          null
+        ]
+      },
+      "receivedAt": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "createdAt": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "version": {
+        "const": 1
+      },
+      "reverses": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "bookingReference": {
+        "type": "string",
+        "minLength": 0,
+        "maxLength": 32
+      }
+    },
+    "required": [
+      "id",
+      "bookingId",
+      "kind",
+      "amountPaise",
+      "method",
+      "receivedAt",
+      "createdAt",
+      "version",
+      "bookingReference"
+    ]
+  },
+  "FeedbackReview": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "bookingId": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "rating": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "minimum": 1,
+        "maximum": 5
+      },
+      "comment": {
+        "type": "string",
+        "maxLength": 3000
+      },
+      "withdrawn": {
+        "type": "boolean"
+      },
+      "createdAt": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "updatedAt": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "version": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "bookingReference": {
+        "type": "string",
+        "minLength": 0,
+        "maxLength": 32
+      }
+    },
+    "required": [
+      "id",
+      "bookingId",
+      "rating",
+      "comment",
+      "withdrawn",
+      "createdAt",
+      "updatedAt",
+      "version",
+      "bookingReference"
+    ]
+  },
+  "ManualBookingQuote": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 0,
+        "maxLength": 36
+      },
+      "version": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "customerId": {
+        "type": "string",
+        "minLength": 0,
+        "maxLength": 128
+      },
+      "kind": {
+        "type": "string",
+        "enum": [
+          "day",
+          "individual",
+          "private",
+          "event"
+        ]
+      },
+      "arrival": {
+        "type": "string",
+        "minLength": 0,
+        "maxLength": 10
+      },
+      "departure": {
+        "type": "string",
+        "minLength": 0,
+        "maxLength": 10
+      },
+      "adults": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "childrenCount": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "unitIds": {
+        "type": "array",
+        "maxItems": 9,
+        "items": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 128
+        }
+      },
+      "unitNames": {
+        "type": "array",
+        "maxItems": 9,
+        "items": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 128
+        }
+      },
+      "subtotalPaise": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "priceBenefitDiscountPaise": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "loyaltyCredits": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "loyaltyDiscountPaise": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "totalPaise": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "expiresAt": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "settingsVersion": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "contact": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 120
+          },
+          "phone": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 32
+          },
+          "email": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 254
+          }
+        },
+        "required": [
+          "name",
+          "phone",
+          "email"
+        ]
+      }
+    },
+    "required": [
+      "id",
+      "version",
+      "customerId",
+      "kind",
+      "arrival",
+      "departure",
+      "adults",
+      "childrenCount",
+      "unitIds",
+      "unitNames",
+      "subtotalPaise",
+      "priceBenefitDiscountPaise",
+      "loyaltyCredits",
+      "loyaltyDiscountPaise",
+      "totalPaise",
+      "expiresAt",
+      "settingsVersion",
+      "contact"
+    ]
+  },
+  "HostReservation": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "reference": {
+        "type": "string"
+      },
+      "version": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "kind": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string"
+      },
+      "arrival": {
+        "type": "string"
+      },
+      "departure": {
+        "type": "string"
+      },
+      "adults": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "childrenCount": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "unitIds": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "totalPaise": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "minimum": 0
+      },
+      "currency": {
+        "const": "INR"
+      }
+    },
+    "required": [
+      "id",
+      "reference",
+      "version",
+      "kind",
+      "status",
+      "arrival",
+      "departure",
+      "adults",
+      "childrenCount",
+      "unitIds",
+      "totalPaise",
+      "currency"
+    ]
+  },
+  "HostReservationPage": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "items": {
+        "type": "array",
+        "maxItems": 50,
+        "items": {
+          "$ref": "#/components/schemas/HostReservation"
+        }
+      },
+      "nextCursor": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "items",
+      "nextCursor"
+    ]
+  },
+  "HostBookingSummary": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "pendingReview": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "confirmed": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "checkedIn": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "completed": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "cancelled": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "declined": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "expired": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "noShow": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "asOf": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "required": [
+      "pendingReview",
+      "confirmed",
+      "checkedIn",
+      "completed",
+      "cancelled",
+      "declined",
+      "expired",
+      "noShow",
+      "asOf"
     ]
   }
 }

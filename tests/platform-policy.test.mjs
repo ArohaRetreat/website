@@ -16,3 +16,5 @@ test('actual checkout queues one operational message now and optional private fe
  }finally{for(const[k,v]of Object.entries(old))if(v===undefined)delete process.env[k];else process.env[k]=v;}
 });
 test('media signatures exclude executable markup and cross-type content',()=>{const png=Buffer.from([137,80,78,71,13,10,26,10]);assert.equal(validMediaSignature(png,'image/png'),true);assert.equal(validMediaSignature(png,'image/jpeg'),false);assert.equal(validMediaSignature(Buffer.from('<svg><script/></svg>'),'image/png'),false);assert.equal(validMediaSignature(Buffer.from('0000ftypavif0000'),'video/mp4'),false);});
+
+test('inactive invoices retain historical charges and verified payments without an outstanding balance or automatic refund',()=>{for(const status of ['cancelled','declined','expired']){const result=financialSummary({id:'b',status,total:100000},[{id:'p',kind:'payment',amountPaise:25000}]);assert.equal(result.totalPaise,100000);assert.equal(result.paidPaise,25000);assert.equal(result.balanceDuePaise,0);assert.equal(result.requiresPaymentReview,true);assert.equal(result.unappliedPaymentPaise,25000);assert.equal(result.hasOutstandingBalance,false);}});
