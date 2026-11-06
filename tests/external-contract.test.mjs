@@ -83,3 +83,8 @@ test("mutation grant recheck rejects changed/revoked/expired grants and MCP non-
     }),
   );
 });
+
+test('both environment Hosting configs route external API to the matching function', async()=>{
+ const {readFile}=await import('node:fs/promises');
+ for(const [file,id]of [['firebase.json','arohaApi'],['firebase.preprod.json','arohaApiPreprod']]){const c=JSON.parse(await readFile(new URL('../'+file,import.meta.url)));const r=c.hosting.rewrites.find(r=>r.source==='/api/external/v1/**');assert.equal(r?.function?.functionId,id);}
+});
