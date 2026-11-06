@@ -1,3 +1,5 @@
+> Historical initial-slice record. Current contract1.2.0/API0.12.0 is specified in [platform-v1.2](platform-v1.2.md) and the canonical [OpenAPI](external-v1.json). It adds explicit scoped CRUD, financial/lifecycle/feedback and CMS/access/media/privacy operations; the read-only token ceiling remains unchanged.
+
 # Scoped external API v1 — implementation slice
 
 Issue105. External contract1.1.0; application API0.11.0. Base `/api/external/v1`, matching production/preprod host. The existing `/api/v1/booking/*` remains compatible and owns the same transaction policy.

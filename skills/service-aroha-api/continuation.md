@@ -80,3 +80,7 @@ Scoped-token-first implementation is on feat/external-api-v1 from current prepro
 ## Optional non-expiring integration grants
 
 Contract1.1.0/API0.11.0 accepts explicit expiresInHours:null, returns expiresAt:null and omits the grant TTL field. Default24h and finite1..168h remain. Null is the only permanent sentinel; malformed/missing expiry fails closed. Non-expiring grants count toward20active/50stored caps and remain revocable with current account/provider/role/scope/environment checks. No existing grant is extended or rewritten. Emulator coverage includes finite expiry, permanent read/revoke and permanent cap enforcement.
+
+## Scoped CRUD and lifecycle candidate — issue105/70
+
+API0.12.0/contract1.2.0 and website0.26.0 implement the authorized full-CRUD expansion, including manual payment/reversal ledger, receipts/checkout statements, private feedback and new lifecycle notifications. See docs/api/platform-v1.2.md. Shared platform services also cover CMS/access, profile erasure, media and sponsored clients; existing Studio routes reuse them. Legacy mcp-readonly token ceilings remain unchanged. Source tests and actual deployment are separate; no live customer/booking/payment/email writes are authorized for testing. Deploy ready indexes plus API and affected email workers while preserving provider env/secret bindings and existing CMS/booking/media baselines.

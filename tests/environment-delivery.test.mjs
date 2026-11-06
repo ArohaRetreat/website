@@ -78,7 +78,9 @@ test("publication and live verification share the website-to-API version contrac
 
 test("scoped API releases preserve known booking compatibility without accepting unknown minors", () => {
  for (const website of ["0.23.11", "0.25.1"]) {
-  for (const api of ["0.10.0", "0.11.0"]) assert.equal(compatibleBookingApi(website, api), true);
-  assert.equal(compatibleBookingApi(website, "0.12.0"), false);
+  for (const api of ["0.10.0", "0.11.0", "0.12.0"]) assert.equal(compatibleBookingApi(website, api), true);
+  assert.equal(compatibleBookingApi(website, "0.13.0"), false);
  }
 });
+
+test("CRUD frontends require the deployed lifecycle API",()=>{assert.equal(compatibleBookingApi("0.26.0","0.11.0"),false);assert.equal(compatibleBookingApi("0.26.0","0.12.0"),true);assert.equal(compatibleBookingApi("0.26.0","0.13.0"),false);});

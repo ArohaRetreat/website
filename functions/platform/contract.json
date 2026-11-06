@@ -1,0 +1,2388 @@
+[
+  {
+    "operationId": "getFinancialSummary",
+    "method": "GET",
+    "path": "/reservations/:id/financial-summary",
+    "scope": "payments:read",
+    "policy": "booking-viewer",
+    "booking": true,
+    "handler": "finance",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "description": "getFinancialSummary using shared current-role, ownership and business policy.",
+    "versionKind": "financial",
+    "output": "FinancialSummary"
+  },
+  {
+    "operationId": "listPayments",
+    "method": "GET",
+    "path": "/reservations/:id/payments",
+    "scope": "payments:read",
+    "policy": "booking-viewer",
+    "booking": true,
+    "handler": "finance",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^[a-f0-9-]{36}$",
+          "maxLength": 36
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "description": "listPayments using shared current-role, ownership and business policy.",
+    "output": "PaymentPage"
+  },
+  {
+    "operationId": "recordPayment",
+    "method": "POST",
+    "path": "/reservations/:id/payments",
+    "scope": "payments:record",
+    "policy": "booking-manager",
+    "booking": true,
+    "handler": "finance",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "amountPaise": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000000
+        },
+        "method": {
+          "type": "string",
+          "enum": [
+            "cash",
+            "upi",
+            "bank"
+          ]
+        },
+        "receivedAt": {
+          "type": "integer",
+          "minimum": 946684800000
+        },
+        "reference": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "verified": {
+          "type": "boolean",
+          "enum": [
+            true
+          ]
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "amountPaise",
+        "method",
+        "receivedAt",
+        "verified",
+        "expectedVersion"
+      ]
+    },
+    "description": "recordPayment using shared current-role, ownership and business policy.",
+    "versionKind": "financial",
+    "event": "payment.recorded",
+    "output": "PaymentRecorded"
+  },
+  {
+    "operationId": "reversePayment",
+    "method": "POST",
+    "path": "/reservations/:id/payments/:paymentId/reversals",
+    "scope": "payments:reverse",
+    "policy": "booking-manager",
+    "booking": true,
+    "handler": "finance",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "paymentId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "paymentId",
+        "reason",
+        "expectedVersion"
+      ]
+    },
+    "description": "reversePayment using shared current-role, ownership and business policy.",
+    "versionKind": "financial",
+    "event": "payment.reversed",
+    "output": "PaymentReversed"
+  },
+  {
+    "operationId": "listDocuments",
+    "method": "GET",
+    "path": "/reservations/:id/documents",
+    "scope": "documents:read",
+    "policy": "booking-viewer",
+    "booking": true,
+    "handler": "finance",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^[a-f0-9-]{36}$",
+          "maxLength": 36
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "description": "listDocuments using shared current-role, ownership and business policy.",
+    "output": "DocumentPage"
+  },
+  {
+    "operationId": "getDocument",
+    "method": "GET",
+    "path": "/reservations/:id/documents/:documentId",
+    "scope": "documents:read",
+    "policy": "booking-viewer",
+    "booking": true,
+    "handler": "finance",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "documentId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "id",
+        "documentId"
+      ]
+    },
+    "description": "getDocument using shared current-role, ownership and business policy.",
+    "versionKind": "document",
+    "versionParam": "documentId",
+    "output": "FinancialDocument"
+  },
+  {
+    "operationId": "downloadDocument",
+    "method": "GET",
+    "path": "/reservations/:id/documents/:documentId/content",
+    "scope": "documents:read",
+    "policy": "booking-viewer",
+    "booking": true,
+    "handler": "finance",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "documentId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "id",
+        "documentId"
+      ]
+    },
+    "description": "downloadDocument using shared current-role, ownership and business policy.",
+    "scopes": [
+      "documents:read",
+      "documents:download"
+    ],
+    "binary": true
+  },
+  {
+    "operationId": "submitFeedback",
+    "method": "POST",
+    "path": "/reservations/:id/feedback",
+    "scope": "feedback:submit",
+    "policy": "owner",
+    "booking": true,
+    "handler": "feedback",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "rating": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "comment": {
+          "type": "string",
+          "maxLength": 3000
+        },
+        "consent": {
+          "type": "boolean",
+          "enum": [
+            true
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "rating",
+        "comment",
+        "consent"
+      ]
+    },
+    "description": "submitFeedback using shared current-role, ownership and business policy.",
+    "event": "feedback.submitted",
+    "output": "PrivateFeedback"
+  },
+  {
+    "operationId": "getReservationFeedback",
+    "method": "GET",
+    "path": "/reservations/:id/feedback",
+    "scope": "feedback:read",
+    "policy": "feedback-reader",
+    "booking": true,
+    "handler": "feedback",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "description": "getReservationFeedback using shared current-role, ownership and business policy.",
+    "versionKind": "feedback",
+    "output": "PrivateFeedback"
+  },
+  {
+    "operationId": "editMyFeedback",
+    "method": "PATCH",
+    "path": "/reservations/:id/feedback",
+    "scope": "feedback:submit",
+    "policy": "owner",
+    "booking": true,
+    "handler": "feedback",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "rating": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "comment": {
+          "type": "string",
+          "maxLength": 3000
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "rating",
+        "comment",
+        "expectedVersion"
+      ]
+    },
+    "description": "editMyFeedback using shared current-role, ownership and business policy.",
+    "versionKind": "feedback",
+    "event": "feedback.updated",
+    "output": "PrivateFeedback"
+  },
+  {
+    "operationId": "withdrawMyFeedback",
+    "method": "DELETE",
+    "path": "/reservations/:id/feedback",
+    "scope": "feedback:submit",
+    "policy": "owner",
+    "booking": true,
+    "handler": "feedback",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "expectedVersion"
+      ]
+    },
+    "description": "withdrawMyFeedback using shared current-role, ownership and business policy.",
+    "versionKind": "feedback",
+    "event": "feedback.withdrawn",
+    "output": "PrivateFeedback"
+  },
+  {
+    "operationId": "listPrivateFeedback",
+    "method": "GET",
+    "path": "/feedback",
+    "scope": "feedback:read",
+    "policy": "booking-manager",
+    "booking": false,
+    "handler": "feedback",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^[a-f0-9-]{36}$",
+          "maxLength": 36
+        }
+      },
+      "required": []
+    },
+    "description": "listPrivateFeedback using shared current-role, ownership and business policy.",
+    "output": "FeedbackPage"
+  },
+  {
+    "operationId": "updateReservationContact",
+    "method": "PATCH",
+    "path": "/reservations/:id",
+    "scope": "reservations:update",
+    "policy": "booking-owner-or-manager",
+    "booking": true,
+    "handler": "resources",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "contact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "phone"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            "phone": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            }
+          }
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "contact",
+        "expectedVersion"
+      ]
+    },
+    "description": "updateReservationContact through the shared domain rules.",
+    "versionKind": "reservation"
+  },
+  {
+    "operationId": "listReservationChanges",
+    "method": "GET",
+    "path": "/reservations/:id/changes",
+    "scope": "reservations:read",
+    "policy": "booking-viewer",
+    "booking": true,
+    "handler": "resources",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "description": "listReservationChanges through the shared domain rules."
+  },
+  {
+    "operationId": "withdrawReservationChange",
+    "method": "DELETE",
+    "path": "/reservations/:id/changes/:changeId",
+    "scope": "reservations:change",
+    "policy": "booking-owner-or-manager",
+    "booking": true,
+    "handler": "booking-alias",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "changeId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "changeId",
+        "expectedVersion"
+      ]
+    },
+    "description": "withdrawReservationChange through the shared domain rules.",
+    "versionKind": "reservation",
+    "command": "booking-action",
+    "action": "withdraw_change",
+    "output": "Reservation"
+  },
+  {
+    "operationId": "approveReservationChange",
+    "method": "POST",
+    "path": "/reservations/:id/changes/:changeId/actions/approve",
+    "scope": "reservations:approve",
+    "policy": "booking-manager",
+    "booking": true,
+    "handler": "booking-alias",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "changeId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "changeId",
+        "expectedVersion"
+      ]
+    },
+    "description": "approveReservationChange through the shared domain rules.",
+    "versionKind": "reservation",
+    "command": "booking-action",
+    "action": "approve_change",
+    "output": "Reservation"
+  },
+  {
+    "operationId": "declineReservationChange",
+    "method": "POST",
+    "path": "/reservations/:id/changes/:changeId/actions/decline",
+    "scope": "reservations:approve",
+    "policy": "booking-manager",
+    "booking": true,
+    "handler": "booking-alias",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "changeId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "changeId",
+        "expectedVersion"
+      ]
+    },
+    "description": "declineReservationChange through the shared domain rules.",
+    "versionKind": "reservation",
+    "command": "booking-action",
+    "action": "decline_change",
+    "output": "Reservation"
+  },
+  {
+    "operationId": "listReservationOffers",
+    "method": "GET",
+    "path": "/reservations/:id/offers",
+    "scope": "reservations:read",
+    "policy": "booking-viewer",
+    "booking": true,
+    "handler": "resources",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "description": "listReservationOffers through the shared domain rules."
+  },
+  {
+    "operationId": "createEventOffer",
+    "method": "POST",
+    "path": "/reservations/:id/offers",
+    "scope": "reservations:approve",
+    "policy": "booking-manager",
+    "booking": true,
+    "handler": "booking-alias",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "amount": {
+          "type": "integer",
+          "minimum": 10000,
+          "maximum": 100000000
+        },
+        "holdHours": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 72
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "amount",
+        "expectedVersion"
+      ]
+    },
+    "description": "createEventOffer through the shared domain rules.",
+    "versionKind": "reservation",
+    "command": "booking-action",
+    "action": "offer_event",
+    "output": "Reservation"
+  },
+  {
+    "operationId": "acceptEventOffer",
+    "method": "POST",
+    "path": "/reservations/:id/offers/:offerId/actions/accept",
+    "scope": "reservations:change",
+    "policy": "owner",
+    "booking": true,
+    "handler": "booking-alias",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "offerId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "offerId",
+        "expectedVersion"
+      ]
+    },
+    "description": "acceptEventOffer through the shared domain rules.",
+    "versionKind": "reservation",
+    "command": "booking-action",
+    "action": "accept_event",
+    "output": "Reservation"
+  },
+  {
+    "operationId": "withdrawEventOffer",
+    "method": "DELETE",
+    "path": "/reservations/:id/offers/:offerId",
+    "scope": "reservations:approve",
+    "policy": "booking-manager",
+    "booking": true,
+    "handler": "booking-alias",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "offerId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "offerId",
+        "expectedVersion"
+      ]
+    },
+    "description": "withdrawEventOffer through the shared domain rules.",
+    "versionKind": "reservation",
+    "command": "booking-action",
+    "action": "withdraw_offer",
+    "output": "Reservation"
+  },
+  {
+    "operationId": "getGuestNote",
+    "method": "GET",
+    "path": "/reservations/:id/guest-note",
+    "scope": "notes:read",
+    "policy": "booking-viewer",
+    "booking": true,
+    "handler": "resources",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "description": "getGuestNote through the shared domain rules.",
+    "versionKind": "reservation"
+  },
+  {
+    "operationId": "deleteGuestNote",
+    "method": "DELETE",
+    "path": "/reservations/:id/guest-note",
+    "scope": "notes:write",
+    "policy": "owner",
+    "booking": true,
+    "handler": "booking-alias",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "expectedVersion"
+      ]
+    },
+    "description": "deleteGuestNote through the shared domain rules.",
+    "versionKind": "reservation",
+    "command": "note",
+    "fixed": {
+      "note": ""
+    },
+    "output": "Reservation"
+  },
+  {
+    "operationId": "listHostNotes",
+    "method": "GET",
+    "path": "/reservations/:id/host-notes",
+    "scope": "notes:read",
+    "policy": "booking-manager",
+    "booking": true,
+    "handler": "resources",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^[a-f0-9-]{36}$",
+          "maxLength": 36
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "description": "listHostNotes through the shared domain rules.",
+    "output": "HostNotePage"
+  },
+  {
+    "operationId": "createHostNote",
+    "method": "POST",
+    "path": "/reservations/:id/host-notes",
+    "scope": "notes:write",
+    "policy": "booking-manager",
+    "booking": true,
+    "handler": "resources",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000
+        }
+      },
+      "required": [
+        "id",
+        "text"
+      ]
+    },
+    "description": "createHostNote through the shared domain rules.",
+    "output": "HostNote"
+  },
+  {
+    "operationId": "updateHostNote",
+    "method": "PATCH",
+    "path": "/reservations/:id/host-notes/:noteId",
+    "scope": "notes:write",
+    "policy": "booking-manager",
+    "booking": true,
+    "handler": "resources",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "noteId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "noteId",
+        "text",
+        "expectedVersion"
+      ]
+    },
+    "description": "updateHostNote through the shared domain rules.",
+    "versionKind": "note",
+    "versionParam": "noteId",
+    "output": "HostNote"
+  },
+  {
+    "operationId": "redactHostNote",
+    "method": "DELETE",
+    "path": "/reservations/:id/host-notes/:noteId",
+    "scope": "notes:write",
+    "policy": "booking-manager",
+    "booking": true,
+    "handler": "resources",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "noteId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "noteId",
+        "expectedVersion"
+      ]
+    },
+    "description": "redactHostNote through the shared domain rules.",
+    "versionKind": "note",
+    "versionParam": "noteId",
+    "output": "HostNote"
+  },
+  {
+    "operationId": "createUnit",
+    "method": "POST",
+    "path": "/units",
+    "scope": "inventory:write",
+    "policy": "booking-manager",
+    "booking": false,
+    "handler": "resources",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "rate": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 10000,
+          "maximum": 100000000
+        }
+      },
+      "required": [
+        "name",
+        "capacity",
+        "rate"
+      ]
+    },
+    "description": "createUnit through the shared domain rules."
+  },
+  {
+    "operationId": "retireUnit",
+    "method": "DELETE",
+    "path": "/units/:id",
+    "scope": "inventory:write",
+    "policy": "booking-manager",
+    "booking": false,
+    "handler": "resources",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "expectedVersion"
+      ]
+    },
+    "description": "retireUnit through the shared domain rules.",
+    "versionKind": "unit"
+  },
+  {
+    "operationId": "getBlock",
+    "method": "GET",
+    "path": "/blocks/:id",
+    "scope": "inventory:read",
+    "policy": "booking-staff",
+    "booking": false,
+    "handler": "resources",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "description": "getBlock through the shared domain rules.",
+    "versionKind": "block"
+  },
+  {
+    "operationId": "updateBlock",
+    "method": "PATCH",
+    "path": "/blocks/:id",
+    "scope": "inventory:write",
+    "policy": "booking-manager",
+    "booking": false,
+    "handler": "resources",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "unitId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "arrival": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "format": "date"
+        },
+        "departure": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "format": "date"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "unitId",
+        "arrival",
+        "departure",
+        "reason",
+        "expectedVersion"
+      ]
+    },
+    "description": "updateBlock through the shared domain rules.",
+    "versionKind": "block"
+  },
+  {
+    "operationId": "getPromotion",
+    "method": "GET",
+    "path": "/promotions/:id",
+    "scope": "promotions:read",
+    "policy": "booking-staff",
+    "booking": false,
+    "handler": "resources",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "description": "getPromotion through the shared domain rules.",
+    "versionKind": "promo"
+  },
+  {
+    "operationId": "updatePromotion",
+    "method": "PATCH",
+    "path": "/promotions/:id",
+    "scope": "promotions:write",
+    "policy": "booking-manager",
+    "booking": false,
+    "handler": "resources",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9]{4,24}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "fixed",
+            "percent"
+          ]
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000000
+        },
+        "maxUses": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "from": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "format": "date"
+        },
+        "until": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "format": "date"
+        },
+        "active": {
+          "type": "boolean"
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "expectedVersion"
+      ]
+    },
+    "description": "updatePromotion through the shared domain rules.",
+    "versionKind": "promo"
+  },
+  {
+    "operationId": "deactivatePromotion",
+    "method": "DELETE",
+    "path": "/promotions/:id",
+    "scope": "promotions:write",
+    "policy": "booking-manager",
+    "booking": false,
+    "handler": "resources",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "expectedVersion"
+      ]
+    },
+    "description": "deactivatePromotion through the shared domain rules.",
+    "versionKind": "promo"
+  },
+  {
+    "operationId": "getContentDraft",
+    "method": "GET",
+    "path": "/content/draft",
+    "scope": "content:read",
+    "policy": "website-read",
+    "handler": "content",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {},
+      "required": []
+    },
+    "description": "getContentDraft follows the shared current membership, ownership and business rules.",
+    "versionKind": "content",
+    "output": "ContentDraft"
+  },
+  {
+    "operationId": "createContentDraft",
+    "method": "POST",
+    "path": "/content/draft",
+    "scope": "content:write",
+    "policy": "website-edit",
+    "handler": "content",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "content"
+      ]
+    },
+    "description": "createContentDraft follows the shared current membership, ownership and business rules.",
+    "output": "ContentDraft"
+  },
+  {
+    "operationId": "saveContentDraft",
+    "method": "PATCH",
+    "path": "/content/draft",
+    "scope": "content:write",
+    "policy": "website-edit",
+    "handler": "content",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "content",
+        "expectedVersion"
+      ]
+    },
+    "description": "saveContentDraft follows the shared current membership, ownership and business rules.",
+    "versionKind": "content",
+    "output": "ContentDraft"
+  },
+  {
+    "operationId": "discardContentDraft",
+    "method": "DELETE",
+    "path": "/content/draft",
+    "scope": "content:write",
+    "policy": "website-edit",
+    "handler": "content",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "expectedVersion"
+      ]
+    },
+    "description": "discardContentDraft follows the shared current membership, ownership and business rules.",
+    "versionKind": "content",
+    "output": "ContentArchived"
+  },
+  {
+    "operationId": "publishContent",
+    "method": "POST",
+    "path": "/content/actions/publish",
+    "scope": "content:publish",
+    "policy": "website-publish",
+    "handler": "content",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "expectedVersion"
+      ]
+    },
+    "description": "publishContent follows the shared current membership, ownership and business rules.",
+    "versionKind": "content",
+    "output": "ContentPublished"
+  },
+  {
+    "operationId": "restoreContentDraft",
+    "method": "POST",
+    "path": "/content/actions/restore",
+    "scope": "content:publish",
+    "policy": "website-publish",
+    "handler": "content",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "revision",
+        "expectedVersion"
+      ]
+    },
+    "description": "restoreContentDraft follows the shared current membership, ownership and business rules.",
+    "versionKind": "content",
+    "output": "ContentDraft"
+  },
+  {
+    "operationId": "listContentRevisions",
+    "method": "GET",
+    "path": "/content/revisions",
+    "scope": "content:read",
+    "policy": "website-read",
+    "handler": "content",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^[a-f0-9-]{36}$",
+          "maxLength": 36
+        }
+      },
+      "required": []
+    },
+    "description": "listContentRevisions follows the shared current membership, ownership and business rules.",
+    "output": "ContentRevisionPage"
+  },
+  {
+    "operationId": "listMembers",
+    "method": "GET",
+    "path": "/members",
+    "scope": "access:read",
+    "policy": "access",
+    "handler": "management",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^[a-f0-9-]{36}$",
+          "maxLength": 36
+        }
+      },
+      "required": []
+    },
+    "description": "listMembers follows the shared current membership, ownership and business rules.",
+    "output": "MemberPage"
+  },
+  {
+    "operationId": "getMember",
+    "method": "GET",
+    "path": "/members/:id",
+    "scope": "access:read",
+    "policy": "access",
+    "handler": "management",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "description": "getMember follows the shared current membership, ownership and business rules.",
+    "versionKind": "member",
+    "output": "Member"
+  },
+  {
+    "operationId": "revokeMember",
+    "method": "DELETE",
+    "path": "/members/:id",
+    "scope": "access:manage",
+    "policy": "access",
+    "handler": "management",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "expectedVersion"
+      ]
+    },
+    "description": "revokeMember follows the shared current membership, ownership and business rules.",
+    "versionKind": "member",
+    "output": "Member"
+  },
+  {
+    "operationId": "listInvitations",
+    "method": "GET",
+    "path": "/invitations",
+    "scope": "access:read",
+    "policy": "access",
+    "handler": "management",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^[a-f0-9-]{36}$",
+          "maxLength": 36
+        }
+      },
+      "required": []
+    },
+    "description": "listInvitations follows the shared current membership, ownership and business rules.",
+    "output": "InvitationPage"
+  },
+  {
+    "operationId": "getInvitation",
+    "method": "GET",
+    "path": "/invitations/:id",
+    "scope": "access:read",
+    "policy": "access",
+    "handler": "management",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "description": "getInvitation follows the shared current membership, ownership and business rules.",
+    "versionKind": "invitation",
+    "output": "Invitation"
+  },
+  {
+    "operationId": "revokeInvitation",
+    "method": "DELETE",
+    "path": "/invitations/:id",
+    "scope": "access:manage",
+    "policy": "access",
+    "handler": "management",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "expectedVersion"
+      ]
+    },
+    "description": "revokeInvitation follows the shared current membership, ownership and business rules.",
+    "versionKind": "invitation",
+    "output": "Invitation"
+  },
+  {
+    "operationId": "updateMember",
+    "method": "PATCH",
+    "path": "/members/:id",
+    "scope": "access:manage",
+    "policy": "access",
+    "handler": "management",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "viewer",
+            "editor",
+            "admin",
+            "superadmin"
+          ]
+        },
+        "active": {
+          "type": "boolean"
+        },
+        "websiteAccess": {
+          "type": "boolean"
+        },
+        "bookingAccess": {
+          "type": "string",
+          "enum": [
+            "none",
+            "viewer",
+            "manager"
+          ]
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "expectedVersion"
+      ]
+    },
+    "description": "updateMember follows the shared current membership, ownership and business rules.",
+    "versionKind": "member",
+    "output": "Member"
+  },
+  {
+    "operationId": "createInvitation",
+    "method": "POST",
+    "path": "/invitations",
+    "scope": "access:manage",
+    "policy": "access",
+    "handler": "management",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "email": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 254
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "viewer",
+            "editor",
+            "admin",
+            "superadmin"
+          ]
+        },
+        "websiteAccess": {
+          "type": "boolean"
+        },
+        "bookingAccess": {
+          "type": "string",
+          "enum": [
+            "none",
+            "viewer",
+            "manager"
+          ]
+        }
+      },
+      "required": [
+        "email",
+        "role"
+      ]
+    },
+    "description": "createInvitation follows the shared current membership, ownership and business rules.",
+    "output": "Invitation"
+  },
+  {
+    "operationId": "getOperation",
+    "method": "GET",
+    "path": "/operations/:id",
+    "scope": "operations:read",
+    "policy": "self",
+    "handler": "profile",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "description": "getOperation follows the shared current membership, ownership and business rules.",
+    "output": "ErasureOperation"
+  },
+  {
+    "operationId": "getMyErasureRequest",
+    "method": "GET",
+    "path": "/me/erasure-requests/:id",
+    "scope": "profiles:erase",
+    "policy": "self",
+    "handler": "profile",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "description": "getMyErasureRequest follows the shared current membership, ownership and business rules.",
+    "output": "ErasureOperation"
+  },
+  {
+    "operationId": "requestMyErasure",
+    "method": "POST",
+    "path": "/me/erasure-requests",
+    "scope": "profiles:erase",
+    "policy": "self",
+    "handler": "profile",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "expectedVersion"
+      ]
+    },
+    "description": "requestMyErasure follows the shared current membership, ownership and business rules.",
+    "versionIdentity": "principal",
+    "versionKind": "profile",
+    "output": "ErasureOperation"
+  },
+  {
+    "operationId": "deleteMyProfile",
+    "method": "DELETE",
+    "path": "/me/profile",
+    "scope": "profiles:erase",
+    "policy": "self",
+    "handler": "profile",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "expectedVersion"
+      ]
+    },
+    "description": "deleteMyProfile follows the shared current membership, ownership and business rules.",
+    "versionIdentity": "principal",
+    "versionKind": "profile",
+    "output": "ErasureOperation"
+  },
+  {
+    "operationId": "listAudit",
+    "method": "GET",
+    "path": "/audit",
+    "scope": "audit:read",
+    "policy": "access",
+    "handler": "audit",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^[a-f0-9-]{36}$",
+          "maxLength": 36
+        }
+      },
+      "required": []
+    },
+    "description": "listAudit follows the shared current membership, ownership and business rules.",
+    "output": "AuditPage"
+  },
+  {
+    "operationId": "listIntegrationClients",
+    "method": "GET",
+    "path": "/integration-clients",
+    "scope": "integrations:manage",
+    "policy": "superadmin",
+    "handler": "clients",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^[a-f0-9-]{36}$",
+          "maxLength": 36
+        }
+      },
+      "required": []
+    },
+    "description": "listIntegrationClients follows the shared current membership, ownership and business rules.",
+    "output": "IntegrationClientPage"
+  },
+  {
+    "operationId": "createIntegrationClient",
+    "method": "POST",
+    "path": "/integration-clients",
+    "scope": "integrations:manage",
+    "policy": "superadmin",
+    "handler": "clients",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "scopeCeiling": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "access:manage",
+              "access:read",
+              "audit:read",
+              "availability:read",
+              "calendar:read",
+              "communications:read",
+              "communications:retry",
+              "contacts:read",
+              "content:publish",
+              "content:published:read",
+              "content:read",
+              "content:write",
+              "documents:download",
+              "documents:read",
+              "feedback:read",
+              "feedback:submit",
+              "integrations:manage",
+              "inventory:read",
+              "inventory:write",
+              "media:read",
+              "media:write",
+              "notes:read",
+              "notes:write",
+              "operations:read",
+              "payments:read",
+              "payments:record",
+              "payments:reverse",
+              "profiles:erase",
+              "profiles:read",
+              "profiles:write",
+              "promotions:read",
+              "promotions:write",
+              "quotes:create",
+              "reservations:approve",
+              "reservations:cancel",
+              "reservations:change",
+              "reservations:create",
+              "reservations:read",
+              "reservations:update",
+              "runtime:read",
+              "settings:read",
+              "settings:write",
+              "stays:operate"
+            ]
+          }
+        },
+        "expiresAt": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "sponsorUid": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "name",
+        "scopeCeiling",
+        "expiresAt",
+        "sponsorUid"
+      ]
+    },
+    "description": "createIntegrationClient follows the shared current membership, ownership and business rules.",
+    "output": "IntegrationClient"
+  },
+  {
+    "operationId": "getIntegrationClient",
+    "method": "GET",
+    "path": "/integration-clients/:id",
+    "scope": "integrations:manage",
+    "policy": "superadmin",
+    "handler": "clients",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "description": "getIntegrationClient follows the shared current membership, ownership and business rules.",
+    "versionKind": "client",
+    "output": "IntegrationClient"
+  },
+  {
+    "operationId": "updateIntegrationClient",
+    "method": "PATCH",
+    "path": "/integration-clients/:id",
+    "scope": "integrations:manage",
+    "policy": "superadmin",
+    "handler": "clients",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "scopeCeiling": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "access:manage",
+              "access:read",
+              "audit:read",
+              "availability:read",
+              "calendar:read",
+              "communications:read",
+              "communications:retry",
+              "contacts:read",
+              "content:publish",
+              "content:published:read",
+              "content:read",
+              "content:write",
+              "documents:download",
+              "documents:read",
+              "feedback:read",
+              "feedback:submit",
+              "integrations:manage",
+              "inventory:read",
+              "inventory:write",
+              "media:read",
+              "media:write",
+              "notes:read",
+              "notes:write",
+              "operations:read",
+              "payments:read",
+              "payments:record",
+              "payments:reverse",
+              "profiles:erase",
+              "profiles:read",
+              "profiles:write",
+              "promotions:read",
+              "promotions:write",
+              "quotes:create",
+              "reservations:approve",
+              "reservations:cancel",
+              "reservations:change",
+              "reservations:create",
+              "reservations:read",
+              "reservations:update",
+              "runtime:read",
+              "settings:read",
+              "settings:write",
+              "stays:operate"
+            ]
+          }
+        },
+        "expiresAt": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "active": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "expectedVersion"
+      ]
+    },
+    "description": "updateIntegrationClient follows the shared current membership, ownership and business rules.",
+    "versionKind": "client",
+    "output": "IntegrationClient"
+  },
+  {
+    "operationId": "revokeIntegrationClient",
+    "method": "DELETE",
+    "path": "/integration-clients/:id",
+    "scope": "integrations:manage",
+    "policy": "superadmin",
+    "handler": "clients",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "expectedVersion"
+      ]
+    },
+    "description": "revokeIntegrationClient follows the shared current membership, ownership and business rules.",
+    "versionKind": "client",
+    "output": "IntegrationClient"
+  },
+  {
+    "operationId": "listIntegrationGrants",
+    "method": "GET",
+    "path": "/integration-clients/:id/grants",
+    "scope": "integrations:manage",
+    "policy": "superadmin",
+    "handler": "clients",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^[a-f0-9-]{36}$",
+          "maxLength": 36
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "description": "listIntegrationGrants follows the shared current membership, ownership and business rules.",
+    "output": "IntegrationGrantPage"
+  },
+  {
+    "operationId": "revokeIntegrationGrant",
+    "method": "DELETE",
+    "path": "/integration-clients/:id/grants/:grantId",
+    "scope": "integrations:manage",
+    "policy": "superadmin",
+    "handler": "clients",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "grantId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "grantId",
+        "expectedVersion"
+      ]
+    },
+    "description": "revokeIntegrationGrant follows the shared current membership, ownership and business rules.",
+    "versionParam": "grantId",
+    "versionKind": "grant",
+    "output": "IntegrationGrant"
+  },
+  {
+    "operationId": "listMedia",
+    "method": "GET",
+    "path": "/media",
+    "scope": "media:read",
+    "policy": "website-read",
+    "handler": "media",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^[a-f0-9-]{36}$"
+        }
+      },
+      "required": []
+    },
+    "description": "Immutable validated media workflow. Upload sessions are private. Archive preserves original files; active CMS references prevent archive.",
+    "output": "Media"
+  },
+  {
+    "operationId": "initiateMediaUpload",
+    "method": "POST",
+    "path": "/media/uploads",
+    "scope": "media:write",
+    "policy": "website-edit",
+    "handler": "media",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "image/avif",
+            "video/mp4",
+            "video/webm"
+          ]
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 41943039
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "type",
+        "size",
+        "sha256"
+      ]
+    },
+    "description": "Immutable validated media workflow. Upload sessions are private. Archive preserves original files; active CMS references prevent archive.",
+    "output": "Media"
+  },
+  {
+    "operationId": "getMediaUpload",
+    "method": "GET",
+    "path": "/media/uploads/:id",
+    "scope": "media:read",
+    "policy": "website-read",
+    "handler": "media",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "description": "Immutable validated media workflow. Upload sessions are private. Archive preserves original files; active CMS references prevent archive.",
+    "versionKind": "media",
+    "output": "Media"
+  },
+  {
+    "operationId": "finalizeMediaUpload",
+    "method": "POST",
+    "path": "/media/uploads/:id/actions/finalize",
+    "scope": "media:write",
+    "policy": "website-edit",
+    "handler": "media",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "expectedVersion"
+      ]
+    },
+    "description": "Immutable validated media workflow. Upload sessions are private. Archive preserves original files; active CMS references prevent archive.",
+    "versionKind": "media",
+    "output": "Media"
+  },
+  {
+    "operationId": "archiveMedia",
+    "method": "DELETE",
+    "path": "/media/:id",
+    "scope": "media:write",
+    "policy": "website-edit",
+    "handler": "media",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "expectedVersion"
+      ]
+    },
+    "description": "Immutable validated media workflow. Upload sessions are private. Archive preserves original files; active CMS references prevent archive.",
+    "versionKind": "media",
+    "output": "Media"
+  },
+  {
+    "operationId": "getCommunication",
+    "method": "GET",
+    "path": "/reservations/:id/communications/:jobId",
+    "scope": "communications:read",
+    "policy": "booking-viewer",
+    "booking": true,
+    "handler": "communications",
+    "versionKind": "communication",
+    "versionParam": "jobId",
+    "output": "Communication",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "jobId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "maxLength": 64
+        }
+      },
+      "required": [
+        "id",
+        "jobId"
+      ]
+    },
+    "description": "Read a permitted delivery status or retry only a definitive failed provider rejection. Accepted or uncertain jobs require reconciliation; historical messages are never replayed."
+  },
+  {
+    "operationId": "retryCommunication",
+    "method": "POST",
+    "path": "/reservations/:id/communications/:jobId/actions/retry",
+    "scope": "communications:retry",
+    "policy": "booking-manager",
+    "booking": true,
+    "handler": "communications",
+    "versionKind": "communication",
+    "versionParam": "jobId",
+    "output": "Communication",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "jobId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "maxLength": 64
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "jobId",
+        "expectedVersion"
+      ]
+    },
+    "description": "Read a permitted delivery status or retry only a definitive failed provider rejection. Accepted or uncertain jobs require reconciliation; historical messages are never replayed."
+  }
+]

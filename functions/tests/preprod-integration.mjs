@@ -406,6 +406,25 @@ test("pre-prod HTTP booking, approval, private invoice and webhook stay inside t
       (await db.collection("aroha_bookings").doc("canary").get()).data(),
       canary,
     );
+    // New lifecycle messages use actual host actions and only the local provider collector.
+    const lifeId="synthetic-lifecycle-"+randomUUID(),lifeNow=Date.now(),beforeLife=messages.length;
+    await db.collection('aroha_preprod_bookings').doc(lifeId).set({id:lifeId,reference:'SYNTHETIC-LIFECYCLE',owner:guest.localId,status:'confirmed',kind:'day',arrival:'2026-01-01',departure:'2026-01-02',startsAt:lifeNow-7200000,endsAt:lifeNow-3600000,adults:1,children:0,guests:1,units:[],allocations:[],subtotal:100000,discount:0,total:100000,history:[],version:1,createdAt:lifeNow});
+    const checkedIn=await call(owner,'/booking/booking-action',{id:lifeId,action:'checkin',expectedVersion:1},{admin:true});assert.equal(checkedIn.httpStatus,200,JSON.stringify(checkedIn));
+    await until(()=>messages.length===beforeLife+1);
+    const checkedOut=await call(owner,'/booking/booking-action',{id:lifeId,action:'complete',expectedVersion:checkedIn.version},{admin:true});assert.equal(checkedOut.httpStatus,200,JSON.stringify(checkedOut));
+    await until(()=>messages.length===beforeLife+2);
+    const lifeJobs=(await db.collection('aroha_preprod_notifications').where('bookingId','==',lifeId).get()).docs;assert.equal(lifeJobs.length,3);
+    const feedbackJob=lifeJobs.find(d=>d.data().channel==='guest_feedback'),feedbackData=feedbackJob.data();assert.ok(feedbackData.nextAttemptAt>=checkedOut.checkedOutAt+86400000);assert.equal(feedbackData.status,'queued');
+    const checkoutMail=messages.find(m=>m.body.subject.includes('Thank you for your time at Aroha'));assert.equal(checkoutMail.body.attachments.filter(a=>a.filename.endsWith('.pdf')).length,1);assert.match(checkoutMail.body.text,/Outstanding balance: INR 1,000.00/);
+    const {execFile}=await import('node:child_process');const {promisify}=await import('node:util');
+    const runWorker=()=>promisify(execFile)(process.execPath,['--input-type=module','-e',`import {initializeApp} from 'firebase-admin/app';import {getFirestore} from 'firebase-admin/firestore';import {drainEmails} from './email/delivery.mjs';initializeApp({projectId:'demo-aroha'});await drainEmails(getFirestore(),async(body,options)=>(await fetch('http://127.0.0.1:17881/email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({body,options})})).json());`],{cwd:new URL('../',import.meta.url),env:{...process.env,AROHA_ENVIRONMENT:'pre-prod',FUNCTIONS_EMULATOR:'true',MAIL_ENABLED:'true',MAIL_FROM:'test@example.test',MAIL_REPLY_TO:'owner@example.test',MAIL_HOST_TO:'owner@example.test',MAIL_RECIPIENT_MODE:'booking',DT_EXPORT_ENABLED:'false'},timeout:20000});
+    await runWorker();assert.equal(messages.length,beforeLife+2);
+    // Advance only this synthetic fixture's clock; the production handler still checks >=24h.
+    const pastCheckout=Date.now()-25*3600000;await db.collection('aroha_preprod_bookings').doc(lifeId).update({checkedOutAt:pastCheckout});await feedbackJob.ref.update({'snapshot.checkedOutAt':pastCheckout,nextAttemptAt:Date.now()-1});
+    await runWorker();await until(()=>messages.length===beforeLife+3);const feedbackMail=messages.find(m=>m.body.subject.includes('A private note about your Aroha stay'));assert.ok(feedbackMail);assert.match(feedbackMail.body.text,/private/);assert.equal((await feedbackJob.ref.get()).data().status,'accepted');
+    await runWorker();assert.equal(messages.length,beforeLife+3);
+    const {mkdir,writeFile}=await import('node:fs/promises');await mkdir('qa/local/platform-emails',{recursive:true});
+    for(const m of messages.slice(beforeLife)){let html=m.body.html;for(const a of m.body.attachments.filter(a=>a.contentId)){const mime=a.filename.endsWith('.png')?'image/png':'image/jpeg';const data=typeof a.content==='string'?a.content:Buffer.from(a.content.data).toString('base64');html=html.replaceAll('cid:'+a.contentId,'data:'+mime+';base64,'+data);}const name=m.body.subject.includes('Welcome')?'checkin':m===checkoutMail?'checkout':'feedback';await writeFile('qa/local/platform-emails/'+name+'.html',html);}
     assert.equal((await db.collection("aroha_bookings").get()).size, 1);
   } finally {
     await new Promise((r) => server.close(r));

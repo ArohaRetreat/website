@@ -1,3 +1,6 @@
+import {invoicePdf} from './email/documents.mjs';
+import {legacyPlatform} from './platform/legacy.mjs';
+import {platformOperation} from './platform/service.mjs';
 import {externalApi} from './external/api.mjs';
 import {tokenManagement} from './external/access.mjs';
 import { apiVersion } from "./version.mjs";
@@ -32,7 +35,7 @@ import {
   drainEvents,
   OPERATIONS,
 } from "./booking/observability.mjs";
-import { studioAccess, validModuleAccess } from "./access.mjs";
+import { studioAccess } from "./access.mjs";
 import {
   traceRequest,
   recordSummary,
@@ -49,11 +52,7 @@ import { createHash, randomUUID } from "node:crypto";
 import {
   DomainError,
   classifyError,
-  can,
-  mayManage,
   emailKey,
-  expectedVersion,
-  validateContent,
 } from "./domain.mjs";
 import {
   publicBookingState,
@@ -206,43 +205,6 @@ async function session(token) {
     };
   });
 }
-async function requireMember(token, operation) {
-  const member = await collection("members").doc(token.uid).get();
-  if (
-    !member.exists ||
-    !member.data().active ||
-    !can(member.data().role, operation) ||
-    (operation !== "access" && !studioAccess(member.data()).website)
-  )
-    throw new DomainError("FORBIDDEN", 403);
-  return { uid: token.uid, ...member.data() };
-}
-async function mutate(actor, operation, callback) {
-  return domainSpan("firestore." + operation, () =>
-    db.runTransaction(async (tx) => {
-      const member = await tx.get(collection("members").doc(actor.uid));
-      const permission = operation.startsWith("access.")
-        ? "access"
-        : operation === "content.saved"
-          ? "edit"
-          : "publish";
-      if (
-        !member.exists ||
-        !member.data().active ||
-        !can(member.data().role, permission) ||
-        (permission !== "access" && !studioAccess(member.data()).website)
-      )
-        throw new DomainError("FORBIDDEN", 403);
-      actor.role = member.data().role;
-      return callback(tx);
-    }),
-  );
-}
-const clean = (s) => ({
-  id: s.id,
-  ...s.data(),
-  updatedAt: s.data().updatedAt?.toDate?.().toISOString() ?? null,
-});
 export const arohaApi = onRequest(
   {
     region: "asia-south2",
@@ -391,6 +353,14 @@ export const arohaApi = onRequest(
         if(path==='/integration-tokens'||path.startsWith('/integration-tokens/')){operation='integration.tokens';await throttleBooking(db,token.uid);if(req.method==='POST'&&!req.is('application/json'))throw new DomainError('JSON_REQUIRED',415);return await tokenManagement(db,token,req.method,path.split('/')[2],b,req.get('Idempotency-Key'));}
         if (req.method === "POST" && !req.is("application/json"))
           throw new DomainError("JSON_REQUIRED", 415);
+        if(path==='/platform'&&req.method==='POST'){
+          operation='platform';
+          await throttleBooking(db,token.uid);
+          if(!b||Object.keys(b).some(k=>!['operation','input'].includes(k)))throw new DomainError('INVALID_FIELDS',422);
+          const result=await platformOperation(db,token,b.operation,b.input,req.get('Idempotency-Key'),{requestId});
+          if(b.operation==='downloadDocument'){const pdf=await invoicePdf(result.snapshot);return{contentBase64:pdf.buffer.toString('base64'),filename:result.metadata.number.replace(/[^A-Za-z0-9_.-]/g,'_')+'.pdf',contentType:'application/pdf'};}
+          return result;
+        }
         if (path === "/session" && req.method === "POST") {
           operation = "access.session";
           const admitted = await session(token);
@@ -518,248 +488,8 @@ export const arohaApi = onRequest(
         }
         if (environment.preprod && /^\/(members|invitations)(\/|$)/.test(path))
           throw new DomainError("PREPROD_ACCESS_READ_ONLY", 403);
-        const actor = await requireMember(
-          token,
-          /^\/(members|invitations)(\/|$)/.test(path) ? "access" : "read",
-        );
-        if (path === "/draft" && req.method === "GET") {
-          operation = "content.read";
-          const snap = await collection("content").doc("draft").get();
-          return {
-            draft: snap.exists ? snap.data() : null,
-            requestId,
-          };
-        }
-        if (path === "/draft" && req.method === "POST") {
-          operation = "content.saved";
-          if (!can(actor.role, "edit")) throw new DomainError("FORBIDDEN", 403);
-          validateContent(b.content);
-          const ref = collection("content").doc("draft");
-          const version = await mutate(actor, operation, async (tx) => {
-            const snap = await tx.get(ref);
-            const current = snap.exists ? snap.data().version : 0;
-            expectedVersion(b.expectedVersion, current);
-            tx.set(ref, {
-              content: b.content,
-              version: current + 1,
-              updatedAt: now(),
-              updatedBy: actor.uid,
-            });
-            audit(tx, actor, operation, "draft", { version: current + 1 });
-            return current + 1;
-          });
-          return { version, requestId };
-        }
-        if (path === "/publish" && req.method === "POST") {
-          operation = "content.published";
-          if (!can(actor.role, "publish"))
-            throw new DomainError("FORBIDDEN", 403);
-          const draft = collection("content").doc("draft"),
-            pub = collection("public").doc("site");
-          const version = await mutate(actor, operation, async (tx) => {
-            const d = await tx.get(draft);
-            if (!d.exists) throw new DomainError("NO_DRAFT", 404);
-            const value = d.data();
-            expectedVersion(b.expectedVersion, value.version);
-            validateContent(value.content);
-            const previous = await tx.get(pub);
-            if (previous.exists && previous.data().version === value.version)
-              throw new DomainError("ALREADY_PUBLISHED", 409);
-            const rev = collection("revisions").doc(String(value.version));
-            tx.set(rev, {
-              ...value,
-              publishedAt: now(),
-              publishedBy: actor.uid,
-            });
-            tx.set(pub, {
-              content: value.content,
-              version: value.version,
-              publishedAt: now(),
-            });
-            audit(tx, actor, operation, "site", { version: value.version });
-            return value.version;
-          });
-          return { version, requestId };
-        }
-        if (path === "/revisions" && req.method === "GET") {
-          operation = "content.history";
-          const limit = 25,
-            cursor = req.query.cursor;
-          if (
-            cursor &&
-            (!Number.isSafeInteger(Number(cursor)) || Number(cursor) < 0)
-          )
-            throw new DomainError("INVALID_CURSOR");
-          let q = collection("revisions")
-            .orderBy("version", "desc")
-            .limit(limit + 1);
-          if (cursor) q = q.startAfter(Number(cursor));
-          const rows = (await q.get()).docs;
-          return {
-            revisions: rows.slice(0, limit).map((s) => ({
-              id: s.id,
-              version: s.data().version,
-              publishedAt:
-                s.data().publishedAt?.toDate?.().toISOString() ?? null,
-            })),
-            nextCursor:
-              rows.length > limit ? rows[limit - 1].data().version : null,
-            requestId,
-          };
-        }
-        if (path === "/restore" && req.method === "POST") {
-          operation = "content.restored";
-          if (!can(actor.role, "publish"))
-            throw new DomainError("FORBIDDEN", 403);
-          if (!Number.isSafeInteger(b.revision) || b.revision < 1)
-            throw new DomainError("INVALID_REVISION");
-          const version = await mutate(actor, operation, async (tx) => {
-            const ref = collection("content").doc("draft"),
-              current = await tx.get(ref),
-              old = await tx.get(
-                collection("revisions").doc(String(b.revision)),
-              );
-            if (!old.exists) throw new DomainError("NOT_FOUND", 404);
-            expectedVersion(
-              b.expectedVersion,
-              current.exists ? current.data().version : 0,
-            );
-            const content = validateContent(old.data().content),
-              version = b.expectedVersion + 1;
-            tx.set(ref, {
-              content,
-              version,
-              updatedAt: now(),
-              updatedBy: actor.uid,
-            });
-            audit(tx, actor, operation, "draft", {
-              version,
-              restoredFrom: b.revision,
-            });
-            return version;
-          });
-          return { version, requestId };
-        }
-        if (
-          (path === "/members" || path === "/invitations") &&
-          req.method === "GET"
-        ) {
-          operation = "access.list";
-          if (!can(actor.role, "access"))
-            throw new DomainError("FORBIDDEN", 403);
-          const col = path.slice(1);
-          let q = collection(col).orderBy("__name__").limit(51);
-          const cursor = req.query.cursor;
-          if (cursor) {
-            if (
-              typeof cursor !== "string" ||
-              cursor.length > 128 ||
-              cursor.includes("/")
-            )
-              throw new DomainError("INVALID_CURSOR");
-            q = q.startAfter(cursor);
-          }
-          const rows = (await q.get()).docs;
-          return {
-            [col]: rows.slice(0, 50).map(clean),
-            nextCursor: rows.length > 50 ? rows[49].id : null,
-            requestId,
-          };
-        }
-        if (path === "/invitations" && req.method === "POST") {
-          operation = "access.invited";
-          if (!validModuleAccess(b))
-            throw new DomainError("INVALID_MODULE_ACCESS", 422);
-          const email = emailKey(b.email);
-          if (!mayManage(actor.role, "viewer", b.role))
-            throw new DomainError("FORBIDDEN", 403);
-          if (owners().has(email))
-            throw new DomainError("PROTECTED_OWNER", 409);
-          await mutate(actor, operation, async (tx) => {
-            const target = await tx.get(
-              collection("members").where("email", "==", email).limit(1),
-            );
-            if (!target.empty) throw new DomainError("MEMBER_EXISTS", 409);
-            tx.set(collection("invitations").doc(hash(email)), {
-              email,
-              role: b.role,
-              ...(b.websiteAccess === undefined
-                ? {}
-                : { websiteAccess: b.websiteAccess }),
-              ...(b.bookingAccess === undefined
-                ? {}
-                : { bookingAccess: b.bookingAccess }),
-              status: "pending",
-              expiresAt: Date.now() + 7 * 86400000,
-              invitedBy: actor.uid,
-              updatedAt: now(),
-            });
-            audit(tx, actor, operation, hash(email));
-          });
-          return {
-            inviteUrl: `${PUBLIC_ORIGIN}/admin/`,
-            expiresInDays: 7,
-            requestId,
-          };
-        }
-        if (path.startsWith("/invitations/") && req.method === "DELETE") {
-          operation = "access.invitation-revoked";
-          const key = path.split("/")[2];
-          if (!/^[a-f0-9]{64}$/.test(key)) throw new DomainError("INVALID_ID");
-          await mutate(actor, operation, async (tx) => {
-            const ref = collection("invitations").doc(key),
-              snap = await tx.get(ref);
-            if (!snap.exists) throw new DomainError("NOT_FOUND", 404);
-            if (!mayManage(actor.role, snap.data().role, snap.data().role))
-              throw new DomainError("FORBIDDEN", 403);
-            tx.update(ref, { status: "revoked", updatedAt: now() });
-            audit(tx, actor, operation, key);
-          });
-          return { ok: true, requestId };
-        }
-        if (path.startsWith("/members/") && req.method === "POST") {
-          operation = "access.updated";
-          const uid = path.split("/")[2];
-          if (
-            !uid ||
-            uid.length > 128 ||
-            uid === actor.uid ||
-            typeof b.active !== "boolean" ||
-            !validModuleAccess(b)
-          )
-            throw new DomainError("INVALID_MEMBER");
-          await mutate(actor, operation, async (tx) => {
-            const ref = collection("members").doc(uid),
-              snap = await tx.get(ref);
-            if (!snap.exists) throw new DomainError("NOT_FOUND", 404);
-            const target = snap.data();
-            if (
-              (b.websiteAccess !== undefined ||
-                b.bookingAccess !== undefined) &&
-              b.expectedVersion !== (target.version || 0)
-            )
-              throw new DomainError("VERSION_CONFLICT", 409);
-            if (
-              owners().has(target.email) ||
-              !mayManage(actor.role, target.role, b.role)
-            )
-              throw new DomainError("FORBIDDEN", 403);
-            tx.update(ref, {
-              role: b.role,
-              active: b.active,
-              version: (target.version || 0) + 1,
-              ...(b.websiteAccess === undefined
-                ? {}
-                : { websiteAccess: b.websiteAccess }),
-              ...(b.bookingAccess === undefined
-                ? {}
-                : { bookingAccess: b.bookingAccess }),
-              updatedAt: now(),
-            });
-            audit(tx, actor, operation, uid);
-          });
-          return { ok: true, requestId };
-        }
+        const legacyResult=await legacyPlatform(db,token,req,path,b,requestId);
+        if(legacyResult!==undefined)return legacyResult;
         throw new DomainError("NOT_FOUND", 404);
       } catch (error) {
         const failure = classifyError(
@@ -851,6 +581,7 @@ export const arohaApi = onRequest(
       }
     });
     // Finish bounded telemetry exports while request CPU is still allocated.
+    if(res.headersSent)return;
     return res.json(payload);
   },
 );

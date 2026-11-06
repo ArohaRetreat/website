@@ -1,7 +1,7 @@
 // Invoked only inside demo emulators by test-preproduction.mjs --review.
 import { spawnSync } from "node:child_process";
 import { createServer, request } from "node:http";
-import { readFile } from "node:fs/promises";
+import { readFile,cp } from "node:fs/promises";
 import { build } from "esbuild";
 import { resolve, extname } from "node:path";
 if (
@@ -25,6 +25,7 @@ for (const [command, args, env] of [
   const r = spawnSync(command, args, { stdio: "inherit", env });
   if (r.status !== 0) process.exit(r.status ?? 1);
 }
+await cp('qa/local/platform-emails','dist-preprod/review-emails',{recursive:true});
 await build({
   stdin: {
     contents: `import {emulatorLogin} from './website/firebase-auth.mjs';import {finishGuestSignIn} from './website/guest-signin-return.mjs';document.querySelector('form').onsubmit=async e=>{e.preventDefault();const email=document.querySelector('select').value;await emulatorLogin(email);finishGuestSignIn();};`,

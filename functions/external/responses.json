@@ -17,13 +17,14 @@
         "items": {
           "type": "string"
         },
-        "maxItems": 50
+        "maxItems": 200
       },
       "purpose": {
         "type": "string",
         "enum": [
           "integration",
-          "mcp-readonly"
+          "mcp-readonly",
+          "mcp"
         ]
       },
       "scopes": {
@@ -31,7 +32,7 @@
         "items": {
           "type": "string"
         },
-        "maxItems": 24
+        "maxItems": 64
       }
     },
     "required": [

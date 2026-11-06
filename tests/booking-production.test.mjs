@@ -169,9 +169,9 @@ test("production guest UI presents published private-room pricing without sample
     "utf8",
   );
   source = source.replace(/import \{visitDateLabel\} from "\.\/booking-visit-label.mjs";/, "const visitDateLabel=window.testVisitDateLabel;");
-  source = source.replace(
+  source = source.replace(/import \{mountStayPanel\} from '\.\/stay-panel.mjs';/, "").replace(
     /import \{ bookingApi \} from "\.\/booking-api.mjs";/,
-    "const bookingApi=window.testBookingApi;",
+    "const bookingApi=window.testBookingApi; const mountStayPanel=async()=>{};",
   );
   const wait = async () => {
     for (let i = 0; i < 200 && w.document.querySelector("#app[aria-busy]"); i++)

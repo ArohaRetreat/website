@@ -182,7 +182,9 @@
           "decline_change",
           "offer_event",
           "accept_event",
-          "assign_rooms"
+          "assign_rooms",
+          "withdraw_change",
+          "withdraw_offer"
         ]
       },
       "amount": {
@@ -204,6 +206,14 @@
         "type": "integer",
         "minimum": 1,
         "maximum": 72
+      },
+      "changeId": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "offerId": {
+        "type": "string",
+        "maxLength": 128
       }
     },
     "required": [
@@ -424,6 +434,33 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 100000000
+          }
+        }
+      },
+      "facilities": {
+        "type": "array",
+        "maxItems": 20,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "name",
+            "available"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,64}$"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            "available": {
+              "type": "boolean"
+            }
           }
         }
       }

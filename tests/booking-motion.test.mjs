@@ -65,13 +65,13 @@ async function mount(reduced = false) {
   const source = (
     await readFile(new URL("../website/booking.mjs", import.meta.url), "utf8")
   )
-    .replace(
+    .replace(/import \{mountStayPanel\} from '\.\/stay-panel.mjs';/, "").replace(
       /import \{\s*journeyStep\s*\} from "\.\/booking-journey.mjs";/,
       "const journeyStep=()=>{};",
     )
     .replace(
       /import \{ bookingApi \} from "\.\/booking-api.mjs";/,
-      "const bookingApi=window.testBookingApi;",
+      "const bookingApi=window.testBookingApi; const mountStayPanel=async()=>{};",
     );
   await w.eval("(async()=>{" + source.replace(/import \{visitDateLabel\} from "\.\/booking-visit-label.mjs";/, "const visitDateLabel=window.testVisitDateLabel;") + "})()");
   await new Promise((r) => setTimeout(r, 5));
