@@ -90,7 +90,9 @@ export function lifecycleEmailTemplate(job) {
       "Your feedback is never published as a public review. You can edit or withdraw it within seven days of submission.";
     action = "Share private feedback";
   } else throw Error("INVALID_LIFECYCLE_CHANNEL");
-  const now = stages[stage] + ". Recorded by your hosts.";
+  const now = stage === 5
+    ? "Feedback. A private invitation."
+    : stages[stage] + ". Recorded by your hosts.";
   const opening = "Dear " + b.guestName + ",";
   const attendance = Number.isInteger(b.guests)
     ? b.guests + " guests"
