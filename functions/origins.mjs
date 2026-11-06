@@ -17,6 +17,8 @@ export function isAllowedOrigin(origin, emulator = false) {
   return (
     !origin ||
     productionOrigins.has(origin) ||
+    origin === 'https://developer.aroharetreat.com' ||
+    origin === 'https://aroha-retreat-developer.web.app' ||
     (emulator && emulatorOrigins.has(origin))
   );
 }
