@@ -1,6 +1,6 @@
 .stay-panel { width: 100%; max-width: 760px; margin: 28px auto; color: var(--ink, #253d30); }
 .stay-panel .reviewpanel { margin: 18px 0; padding: 24px; border: 1px solid var(--line, #d4d9cd); border-radius: 18px; background: var(--paper, #fffdf8); }
-.stay-panel h3 { margin: 0 0 18px; font-family: Lora, Georgia, serif; font-size: 24px; font-weight: 500; }
+.stay-panel h3 { margin: 0 0 18px; font-family: 'Google Sans', Arial, sans-serif; font-size: 24px; font-weight: 500; }
 .stay-panel p { margin: 12px 0; line-height: 1.6; overflow-wrap: anywhere; }
 .stay-panel .detail-price { margin: 16px 0 22px; }
 .stay-panel .detail-price > div { display: flex; gap: 20px; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line, #d4d9cd); }

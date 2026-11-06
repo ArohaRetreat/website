@@ -1,3 +1,7 @@
+## Material 3 preprod review — 7 November 2026
+
+Issue111: website0.30/API0.15. Read [interface contract](../../docs/material-studio-v1.md). Shared Material controls/roles and responsive booking/Studio surfaces; visible visit choices; legacy booking options grouped. New email-v5-status includes cancellation Hrudhi; oldv4 renderer retained. Preprod new-mail Reply-To explicitly retreataroha@gmail.com; existing immutable jobs preserved. No domain/API contract/index/data migration. Deploy API+email dispatch/retry and exact-source Hosting only after checks; production held. Source preparation is not deployment or owner acceptance. Fresh private receipts: local/material-release/.
+
 ## Website0.23.0/API0.8.1 — issue86 (prepared, preprod only)
 
 Owner supersedes forced test inbox: new guest messages go to verified booked guest, host notifications to configured host, same provider account/domain; keep test subjects/PDF identity and isolated inventory. MAIL_RECIPIENT_MODE=booking is explicit; legacy queues retain old recipient/policy and are not replayed. Completed guest sign-in returns home, Host Studio stays, booking Back to website remains visible on phones. Read docs/guest-mail-parity-v1.md and actual ignored local/release-evidence/aroha-guest-mail-parity/handoff.md before claiming deployment. Production unchanged; full lifecycle/ledger/feedback remains issue70.

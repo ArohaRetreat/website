@@ -1,3 +1,5 @@
+import {installMaterialControls, confirmMaterial} from './material-controls.mjs';
+installMaterialControls();
 import locationDefaults from "./location-content.json";
 import { packageAvailability } from "../functions/domain.mjs";
 import natureDefaults from "./nature-content.json";
@@ -220,7 +222,7 @@ function shell() {
       }),
   );
   document.getElementById("signout").onclick = async () => {
-    if (dirty && !confirm("Discard unsaved changes and sign out?")) return;
+    if (dirty && !await confirmMaterial("Discard unsaved changes and sign out?")) return;
     await logout();
   };
   document.getElementById("save")?.addEventListener("click", save);
@@ -241,7 +243,7 @@ function shell() {
     };
   });
   document.getElementById("reload").onclick = async () => {
-    if (dirty && !confirm("Discard unsaved changes and load the latest draft?"))
+    if (dirty && !await confirmMaterial("Discard unsaved changes and load the latest draft?"))
       return;
     await task(async () => {
       await load();
@@ -355,8 +357,8 @@ function renderEditor() {
   );
   editor.querySelectorAll("[data-remove]").forEach(
     (b) =>
-      (b.onclick = () => {
-        if (!confirm("Remove this item from the draft?")) return;
+      (b.onclick = async () => {
+        if (!await confirmMaterial("Remove this item from the draft?")) return;
         if (b.dataset.remove === "sections")
           get(b.dataset.remove)[Number(b.dataset.index)].visible = false;
         else get(b.dataset.remove).splice(Number(b.dataset.index), 1);
@@ -549,7 +551,7 @@ function bindAccess() {
     (b) =>
       (b.onclick = () =>
         task(async () => {
-          if (!confirm("Apply this access change?")) return;
+          if (!await confirmMaterial("Apply this access change?")) return;
           const role = [...document.querySelectorAll("[data-role]")].find(
             (x) => x.dataset.role === b.dataset.member,
           ).value;
@@ -627,7 +629,7 @@ async function history(cursor = "", append = false) {
         (b.onclick = () =>
           task(async () => {
             if (
-              !confirm(
+              !await confirmMaterial(
                 "Replace the current draft with this revision? Export any unsaved work first.",
               )
             )

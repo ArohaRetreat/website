@@ -10,7 +10,7 @@ export function mailSettings(env = process.env, profile = environment) {
     environment: profile.name,
     test: profile.preprod,
     from: env.MAIL_FROM || "",
-    replyTo: env.MAIL_REPLY_TO || "",
+    replyTo: env.MAIL_REPLY_TO || "retreataroha@gmail.com",
     hostTo: env.MAIL_HOST_TO || "",
     testRecipient: env.MAIL_TEST_RECIPIENT || "",
     recipientMode: env.MAIL_RECIPIENT_MODE || (profile.preprod ? "test-inbox" : "booking"),
@@ -49,7 +49,6 @@ export function mailSettings(env = process.env, profile = environment) {
     c.issuer.configVersion < 1
   )
     throw Error("INVALID_BILLING_CONFIG");
-  if (c.recipientMode === "test-inbox") c.replyTo = c.testRecipient;
   return c;
 }
 export const validEmail = email;
