@@ -70,3 +70,7 @@ Website 0.7 adds optional nature heroEveningImage/heroEveningAlt under the same 
 API 0.2.1 adds optional tour.nature.hrudhi validation; prior content remains valid. Existing permissions/expectedVersion/telemetry unchanged. See docs/api/aroha-v1.md; deploy before website 0.13.0 studio.
 
 API 0.2.2 accepts optional package availability, visit address/Google embed and guide walkSheet. Prior records remain valid. See docs/api/aroha-v1.md. Host auth/rules remain independent of new public Google sessions; deploy validator before website 0.14.0.
+
+## External API production candidate — issue105
+
+Independent release branch from current main, preserving main-only private reservation support and current production mail configuration. New external API delegates to the same shared booking policy. Read docs/api/external-v1.md. This source note is not deployment evidence; retain production booking/CMS hashes and provider revisions. MCP and developer documentation live in separate repositories.

@@ -63,6 +63,8 @@ jobs:
         run: |
           AROHA_ENVIRONMENT=pre-prod node scripts/delivery/run-node-tests.mjs api-preprod-telemetry
           node scripts/test-preproduction.mjs
+      - name: Verify scoped external API contract in isolated emulators
+        run: node scripts/test-external.mjs
       - name: Retain bounded API test reports
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

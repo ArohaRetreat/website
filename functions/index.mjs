@@ -1,3 +1,5 @@
+import {externalApi} from './external/api.mjs';
+import {tokenManagement} from './external/access.mjs';
 import { apiVersion } from "./version.mjs";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { sendEmail } from "./email/provider.mjs";
@@ -273,9 +275,19 @@ export const arohaApi = onRequest(
           !isAllowedOrigin(req.get("origin"), !!process.env.FUNCTIONS_EMULATOR)
         )
           throw new DomainError("ORIGIN_DENIED", 403);
+        const origin=req.get('origin');
+        if(origin){res.set('Access-Control-Allow-Origin',origin);res.set('Vary','Origin');}
+        if(req.method==='OPTIONS'){
+          res.set('Access-Control-Allow-Methods','GET, POST, PATCH, DELETE, OPTIONS');
+          res.set('Access-Control-Allow-Headers','Authorization, Content-Type, Idempotency-Key, If-Match');
+          res.set('Access-Control-Expose-Headers','ETag, X-Request-Id');
+          return {};
+        }
+        res.set('Access-Control-Expose-Headers','ETag, X-Request-Id');
         if (req.rawBody?.length > 220000)
           throw new DomainError("PAYLOAD_TOO_LARGE", 413);
         captureAllowed = true;
+        if(req.path.startsWith('/api/external/v1/')){operation='external.request';return await externalApi(db,getAuth(),req,res,requestId);}
         const bookingPath =
           req.path.replace(/^\/api\/v1/, "").replace(/\/$/, "") || "/";
         const initialOp = bookingPath.startsWith("/booking/")
@@ -376,6 +388,7 @@ export const arohaApi = onRequest(
         const path =
           req.path.replace(/^\/api\/v1/, "").replace(/\/$/, "") || "/";
         const b = req.body ?? {};
+        if(path==='/integration-tokens'||path.startsWith('/integration-tokens/')){operation='integration.tokens';await throttleBooking(db,token.uid);if(req.method==='POST'&&!req.is('application/json'))throw new DomainError('JSON_REQUIRED',415);return await tokenManagement(db,token,req.method,path.split('/')[2],b,req.get('Idempotency-Key'));}
         if (req.method === "POST" && !req.is("application/json"))
           throw new DomainError("JSON_REQUIRED", 415);
         if (path === "/session" && req.method === "POST") {
@@ -757,6 +770,7 @@ export const arohaApi = onRequest(
         status = failure.status;
         errorCode = failure.code;
         res.status(status);
+        if(req.path.startsWith('/api/external/v1/')){if(status===401)res.set('WWW-Authenticate','Bearer');return {error:{code:errorCode,requestId,retryable:status===429||status>=500}};}
         return { error: { code: errorCode, requestId } };
       } finally {
         const op = req.path
@@ -820,6 +834,7 @@ export const arohaApi = onRequest(
             );
         }
 
+        if(req.externalOperation){operation='external.'+req.externalOperation;status=res.statusCode;}
         recordSummary({ operation, status, requestId, errorCode, bookingKind });
         console.info(
           JSON.stringify({
