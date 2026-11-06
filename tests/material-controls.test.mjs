@@ -60,3 +60,13 @@ test('payment date/time retains partial entry and preserves the original datetim
  try{await settle();const texts=m.d.querySelectorAll('input[type=text]');assert.equal(texts.length,2);texts[0].value='22/11/2026';texts[0].dispatchEvent(new m.w.Event('input',{bubbles:true}));texts[0].dispatchEvent(new m.w.Event('change',{bubbles:true}));await settle();assert.equal(texts[0].value,'22/11/2026');texts[1].value='14:30';texts[1].dispatchEvent(new m.w.Event('input',{bubbles:true}));texts[1].dispatchEvent(new m.w.Event('change',{bubbles:true}));assert.equal(new m.w.FormData(m.d.querySelector('form')).get('receivedAt'),'2026-11-22T14:30');m.d.querySelector('[name=receivedAt]').disabled=true;await settle();assert.equal(texts[0].disabled,true);assert.equal(texts[1].disabled,true);
  }finally{m.close();}
 });
+
+test('private popups retain explicit masking outside the page container',async()=>{
+ const m=mount('<main data-dt-mask><label>Arrival<input type="date" value="2026-11-22"></label><label>Policy time<input type="time" value="11:00"></label><label>Private selection<select><option>Synthetic private label</option></select></label></main>');
+ try{
+ m.d.querySelector('.md-calendar-trigger').click();let popup=m.d.querySelector('.md-calendar');assert.equal(popup.parentElement,m.d.body);assert.ok(popup.hasAttribute('data-dt-mask'));popup.close();
+ m.d.querySelectorAll('.md-calendar-trigger')[1].click();popup=m.d.querySelector('.md-time-picker');assert.equal(popup.parentElement,m.d.body);assert.ok(popup.hasAttribute('data-dt-mask'));popup.close();
+ m.d.querySelector('.md-select-button').click();assert.ok(m.d.querySelector('.md-option-menu').hasAttribute('data-dt-mask'));m.d.querySelector('.md-option-menu').hidePopover();
+ const pending=m.w.material.confirmMaterial('Synthetic private adjustment reason');popup=m.d.querySelector('.md-confirm');assert.equal(popup.parentElement,m.d.body);assert.ok(popup.hasAttribute('data-dt-mask'));popup.querySelector('[data-keep]').click();assert.equal(await pending,false);
+ }finally{m.close();}
+});
