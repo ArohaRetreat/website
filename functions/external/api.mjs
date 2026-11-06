@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { auditSensitiveRead } from "./audit.mjs";
 import {
   environment,
   collectionName,
@@ -153,10 +154,20 @@ export async function externalApi(db, auth, req, res, requestId) {
       if (operation === "getReservationContact") {
         if (!token._integration.scopes.includes("reservations:read"))
           fail("INSUFFICIENT_SCOPE", 403);
+        let verifiedEmail = b.owner === token.uid ? token.email : "";
+        if (b.owner !== token.uid) {
+          try {
+            const owner = await auth.getUser(b.owner);
+            if (owner.emailVerified) verifiedEmail = owner.email || "";
+          } catch (error) {
+            if (error.code !== "auth/user-not-found") throw error;
+          }
+        }
+        await auditSensitiveRead(db, token, params.id, requestId);
         return {
           name: b.contact?.name || "",
           phone: b.contact?.phone || "",
-          verifiedEmail: (await auth.getUser(b.owner)).email || "",
+          verifiedEmail,
         };
       }
       res.set("ETag", etag("reservation", b.id, b.version));

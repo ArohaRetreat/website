@@ -82,16 +82,13 @@ test("scoped external HTTP contract: own/all, CRUD parity, read purity, revocati
     .doc(owner.localId)
     .set({ active: true, role: "superadmin" });
   const state = initialState();
-  await db
-    .collection("aroha_preprod_booking_config")
-    .doc("site")
-    .set({
-      settings: state.settings,
-      units: state.units,
-      promos: [],
-      blocks: [],
-      guardVersion: 1,
-    });
+  await db.collection("aroha_preprod_booking_config").doc("site").set({
+    settings: state.settings,
+    units: state.units,
+    promos: [],
+    blocks: [],
+    guardVersion: 1,
+  });
   await db
     .collection("aroha_preprod_public")
     .doc("site")
@@ -134,6 +131,7 @@ test("scoped external HTTP contract: own/all, CRUD parity, read purity, revocati
       "runtime:read",
       "reservations:read",
       "reservations:approve",
+      "contacts:read",
       "inventory:read",
       "inventory:write",
     ],
@@ -256,6 +254,38 @@ test("scoped external HTTP contract: own/all, CRUD parity, read purity, revocati
   assert.equal(forbidden.status, 404);
   const host = await call(manager.token, "/reservations/" + id);
   assert.equal(host.status, 200);
+  const sensitive = await call(
+    manager.token,
+    "/reservations/" + id + "/contact",
+  );
+  assert.equal(sensitive.status, 200);
+  assert.equal(sensitive.data.verifiedEmail, "guest@example.test");
+  const deniedContact = await call(
+    read.token,
+    "/reservations/" + id + "/contact",
+  );
+  assert.equal(deniedContact.status, 403);
+  await db
+    .collection("aroha_preprod_bookings")
+    .doc("synthetic-imported-private")
+    .set({
+      id: "synthetic-imported-private",
+      owner: "external-unregistered",
+      status: "cancelled",
+      contact: { name: "Synthetic imported guest", phone: "" },
+    });
+  const imported = await call(
+    manager.token,
+    "/reservations/synthetic-imported-private/contact",
+  );
+  assert.equal(imported.status, 200);
+  assert.equal(imported.data.verifiedEmail, "");
+  const audits = await db
+    .collection("aroha_preprod_audit")
+    .where("operation", "==", "integration.reservation.contact.read")
+    .get();
+  assert.equal(audits.size, 2);
+
   const stale = await call(
     manager.token,
     "/reservations/" + id + "/actions/approve",
