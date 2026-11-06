@@ -1,6 +1,6 @@
 # Aroha Material 3 interface contract — website 0.30 / API 0.15
 
-Owner request, 7 November 2026. Delivery is preprod only; production promotion requires the owner's review. Issue #111 includes the booking/Studio component overhaul and cancellation-email refinement. Public photographic marketing pages and Natura are outside this implementation; their existing content, assets and identity are preserved pending a separate scope decision.
+Owner request, 7 November 2026. Delivery is preprod only; production promotion requires the owner's review. Issue #111 includes the booking/Studio component overhaul and cancellation-email refinement. The owner confirmed booking and Studio pages only. Public photographic marketing pages and Natura are outside this implementation; their existing content, assets and identity are preserved.
 
 ## Experience decisions
 

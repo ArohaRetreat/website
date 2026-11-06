@@ -179,3 +179,12 @@ test('review desk queries pending requests and pagination replaces rather than a
  m.target.querySelector('[data-previous]').click();await until(()=>m.target.textContent.includes('AR-FIRST'));assert.equal(calls[2].input.cursor,undefined);assert.equal(m.target.querySelector('[data-previous]').disabled,true);
  }finally{m.dom.window.close();}
 });
+
+test('walk-in draft survives Back and changing visit type with an empty arrival stays valid',async()=>{
+ const m=await mount();try{
+ m.openManualBooking({identity:'draft-host',units:[],call:async()=>{throw Error('No quote expected');},onBooked:()=>{}});
+ let f=m.w.document.querySelector('dialog form');f.elements.name.value='Synthetic Draft';f.elements.email.value='draft@example.test';f.elements.phone.value='+12025550123';submit(m.w,f);
+ f=m.w.document.querySelector('dialog form');f.elements.arrival.value='';f.elements.visitKind.value='event';f.querySelector('.visit-choices').dispatchEvent(new m.w.Event('change',{bubbles:true}));assert.equal(f.elements.kind.value,'event');assert.equal(f.elements.departure.hasAttribute('min'),false);
+ f.elements.promo.value='DRAFT';f.dispatchEvent(new m.w.Event('input',{bubbles:true}));m.w.document.querySelector('[data-back]').click();submit(m.w,m.w.document.querySelector('dialog form'));assert.equal(m.w.document.querySelector('[name=promo]').value,'DRAFT');assert.equal(m.w.document.querySelector('[name=arrival]').value,'');
+ }finally{m.dom.window.close();}
+});

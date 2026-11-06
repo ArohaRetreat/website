@@ -476,7 +476,7 @@ export function openManualBooking({ call, units, onBooked, identity }) {
       };
       const today=new Date(Date.now()+19800000).toISOString().slice(0,10);
       arrival.min=today;arrival.max=new Date(Date.now()+366*86400000).toISOString().slice(0,10);
-      const bounds=()=>{end.min=kind.value==='event'?arrival.value:new Date(Date.parse(arrival.value+'T12:00:00Z')+86400000).toISOString().slice(0,10);end.max=new Date(Date.parse(arrival.value+'T12:00:00Z')+(kind.value==='event'?30:31)*86400000).toISOString().slice(0,10);};
+      const bounds=()=>{if(!arrival.value){end.removeAttribute('min');end.removeAttribute('max');return;}end.min=kind.value==='event'?arrival.value:new Date(Date.parse(arrival.value+'T12:00:00Z')+86400000).toISOString().slice(0,10);end.max=new Date(Date.parse(arrival.value+'T12:00:00Z')+(kind.value==='event'?30:31)*86400000).toISOString().slice(0,10);};
       arrival.addEventListener('change',()=>{if(arrival.value)bounds();});
       form.querySelector('.visit-choices').addEventListener('change',bounds);bounds();
       count.oninput = drawAges;
