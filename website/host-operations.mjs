@@ -40,13 +40,9 @@ const heading = (title, copy) =>
 const empty = (t) => `<div class="ops-empty">${t}</div>`;
 const referenceForm = () =>
   '<form data-search class="ops-filters"><label>Booking reference<input name="reference" placeholder="AR-…" maxlength="32"></label><button class="outline-button">Search</button><button type="button" class="text-button" data-clear>Show all</button></form>';
-const bookingRows = (items) =>
-  items
-    .map(
-      (b) =>
-        `<article class="ops-row"><div><span class="badge ${esc(b.status)}">${esc(label(b.status))}</span><h3>${esc(b.reference)}</h3><p>${esc(b.arrival)} → ${esc(b.departure)} · ${esc(b.adults)} adult(s) · ${esc(b.childrenCount)} children</p><small>${esc(label(b.kind))} · ${cash(b.totalPaise)}</small></div><button class="outline-button" data-open="${esc(b.id)}">Open booking →</button></article>`,
-    )
-    .join("");
+const visitKind = kind => ({individual:'Individual stay',private:'Private room',day:'Day visit',event:'Exclusive retreat'})[kind] || 'Stay';
+const shortDate = date => new Date(date+'T12:00:00Z').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',timeZone:'Asia/Kolkata'});
+const bookingRows = items => items.length ? `<div class="ops-booking-table" role="table" aria-label="Bookings"><div class="ops-table-head" role="row"><span role="columnheader">Booking</span><span role="columnheader">Dates & guests</span><span role="columnheader">Status</span><span role="columnheader">Visit total</span><span role="columnheader">Action</span></div>${items.map(b=>`<div class="ops-booking-row" role="row"><div role="cell"><strong>${esc(b.reference)}</strong><small>${visitKind(b.kind)}</small></div><div role="cell"><span>${esc(shortDate(b.arrival))} → ${esc(shortDate(b.departure))}</span><small>${b.adults ? `${esc(b.adults)} adult${b.adults===1?'':'s'}${b.childrenCount ? ` · ${esc(b.childrenCount)} ${b.childrenCount===1?'child':'children'}`:''}` : 'Guest count to be arranged'}</small></div><div role="cell"><span class="badge ${esc(b.status)}">${esc(label(b.status))}</span></div><div role="cell" class="ops-amount">${b.totalPaise===null?'To be agreed':cash(b.totalPaise)}</div><div role="cell"><button class="${b.status==='pending_approval'?'button':'outline-button'}" data-open="${esc(b.id)}">${b.status==='pending_approval'?'Review request':'Open booking'} <span aria-hidden="true">→</span></button></div></div>`).join('')}</div>` : '';
 const creditSummary = (w) =>
   `<div class="ops-stats"><article><span>Available credits</span><strong>${w.creditsAvailable.toLocaleString("en-IN")}</strong><small>Worth ${cash(w.availableValuePaise)}</small></article><article><span>Reserved for requests</span><strong>${w.creditsReserved.toLocaleString("en-IN")}</strong><small>Released when a request ends</small></article><article><span>Level ${w.level} · ${esc(w.name)}</span><strong>${w.earnCreditsPerNight}<small> credits / night</small></strong><small>${w.completedStays} completed stays${w.nextLevelAt ? ` · next level at ${w.nextLevelAt}` : ""}</small></article></div>`;
 const entryRows = (items) =>
@@ -177,7 +173,7 @@ export async function mountHostOperations(
 ) {
   let page = { items: [], nextCursor: null },
     filter = {},
-    listGeneration = 0;
+    listGeneration = 0, pageIndex=0, cursors=[undefined];
   const alive = () => target.isConnected;
   const openRows = () =>
     target
@@ -289,13 +285,16 @@ export async function mountHostOperations(
     };
     return;
   }
+  const review = tab === "overview";
+  if(review)filter={status:"pending_approval"};
   const operation =
-    tab === "reservations"
+    (review || tab === "reservations")
       ? "listHostReservations"
       : tab === "payments"
         ? "listPaymentLedger"
         : "reviewPrivateFeedback";
   const titles = {
+    overview:["New requests", "Review the dates and price, then accept or decline."],
     reservations: [
       "Reservations",
       "Review a request, welcome an arrival, or follow a completed stay. Search uses the exact booking reference.",
@@ -310,17 +309,17 @@ export async function mountHostOperations(
     ],
   };
   target.innerHTML =
-    heading(...titles[tab]) +
-    (tab === "reservations"
-      ? `<form data-search class="ops-filters"><label>Booking reference<input name="reference" maxlength="32" placeholder="AR-…"></label><label>Stored status<select name="status"><option value="">All statuses</option>${statuses.map((s) => `<option value="${s}">${esc(label(s))}</option>`).join("")}</select></label><button class="button">Apply filters</button></form><p class="ops-note">Elapsed request holds are shown as expired, even before scheduled cleanup updates the stored status.</p>`
+    (review ? heading(...titles[tab]).replaceAll("h1>","h2>") : heading(...titles[tab])) +
+    (review ? '<form data-search class="ops-review-refresh"><button class="outline-button">Refresh requests</button></form>' : tab === "reservations"
+      ? `<form data-search class="ops-filters"><label>Booking reference<input name="reference" maxlength="32" placeholder="AR-…"></label><label>Status<select name="status"><option value="">All statuses</option>${statuses.map((s) => `<option value="${s}">${esc(label(s))}</option>`).join("")}</select></label><button class="button">Apply filters</button></form><div class="ops-status-shortcuts" role="group" aria-label="Quick booking filters"><button type="button" data-status="">All bookings</button><button type="button" data-status="pending_approval">Needs review</button><button type="button" data-status="confirmed">Confirmed</button><button type="button" data-status="checked_in">Checked in</button></div>`
       : referenceForm()) +
     '<p role="status" data-message></p><div data-results>Loading…</div><div data-pagination></div>';
   const render = () => {
     if (!alive()) return;
     target.querySelector("[data-results]").innerHTML =
-      tab === "reservations"
+      (review || tab === "reservations")
         ? bookingRows(page.items) ||
-          empty("No reservations match these filters.")
+          empty(review ? "You’re up to date. No requests are awaiting review. Open Reservations to find an existing booking, or use Add booking for a walk-in guest." : "No bookings match. Check the reference or choose another status.")
         : page.items
             .map(
               (i) =>
@@ -328,44 +327,39 @@ export async function mountHostOperations(
             )
             .join("") || empty("No entries match these filters.");
     openRows();
-    target.querySelector("[data-pagination]").innerHTML = page.nextCursor
-      ? '<button class="outline-button" data-more>Load more</button>'
-      : "";
-    target
-      .querySelector("[data-more]")
-      ?.addEventListener("click", () => load(true));
-    message(`${page.items.length} record(s) loaded`);
+    target.querySelector('[data-pagination]').innerHTML = `<div class="ops-pagination"><button class="outline-button" data-previous ${pageIndex===0?'disabled':''}>← Previous</button><span>Page ${pageIndex+1} · ${page.items.length} ${review?'requests':'records'}</span><button class="outline-button" data-more ${page.nextCursor?'':'disabled'}>Next →</button></div>`;
+    target.querySelector('[data-more]').onclick=()=>load(true);
+    target.querySelector('[data-previous]').onclick=()=>load('previous');
+    target.querySelectorAll('[data-status]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.status===(filter.status||''))));
+    message(review?'':'Showing one page. Search or filter to find another booking.');
   };
-  const load = async (more = false) => {
-    const generation = ++listGeneration;
-    message("Loading…");
-    target
-      .querySelectorAll("form button,[data-more]")
-      .forEach((b) => (b.disabled = true));
+  const load = async (direction = false) => {
+    const generation=++listGeneration;
+    const nextIndex=direction===true?pageIndex+1:direction==='previous'?pageIndex-1:0;
+    if(nextIndex<0)return;
+    const cursor=direction===true?page.nextCursor:direction==='previous'?cursors[nextIndex]:undefined;
+    if(direction===true&&!cursor)return;
+    message('Loading…');
+    const results=target.querySelector('[data-results]');results.setAttribute('aria-busy','true');
+    target.querySelectorAll('form button,[data-more],[data-previous],[data-open]').forEach(b=>b.disabled=true);
     try {
-      const p = await call(operation, {
-        ...filter,
-        limit: 25,
-        ...(more ? { cursor: page.nextCursor } : {}),
-      });
-      if (generation !== listGeneration || !alive()) return;
-      page = {
-        items: more ? [...page.items, ...p.items] : p.items,
-        nextCursor: p.nextCursor,
-      };
-      render();
+      const p=await call(operation,{...filter,limit:25,...(cursor?{cursor}:{})});
+      if(generation!==listGeneration||!alive())return;
+      if(direction===false)cursors=[undefined];else cursors[nextIndex]=cursor;
+      pageIndex=nextIndex;page={items:p.items,nextCursor:p.nextCursor};render();
     } catch {
-      message("This list could not load. Apply the filters again to retry.");
+      if(generation===listGeneration&&alive())message('Could not load this page. Your previous results are still shown. Retry with Refresh or Apply filters.');
     } finally {
-      if (alive() && generation === listGeneration)
-        target
-          .querySelectorAll("form button,[data-more]")
-          .forEach((b) => (b.disabled = false));
+      if(alive()&&generation===listGeneration){
+        results.removeAttribute('aria-busy');
+        target.querySelectorAll('form button,[data-open]').forEach(b=>b.disabled=false);
+        const prev=target.querySelector('[data-previous]'),next=target.querySelector('[data-more]');if(prev)prev.disabled=pageIndex===0;if(next)next.disabled=!page.nextCursor;
+      }
     }
   };
   target.querySelector("form").onsubmit = (e) => {
     e.preventDefault();
-    filter = Object.fromEntries(
+    filter = review ? {status:"pending_approval"} : Object.fromEntries(
       [...new FormData(e.currentTarget)].filter(([, v]) => v),
     );
     void load();
@@ -374,6 +368,9 @@ export async function mountHostOperations(
     filter = {};
     target.querySelector("form").reset();
     void load();
+  });
+  target.querySelectorAll('[data-status]').forEach(button=>button.onclick=()=>{
+    const form=target.querySelector('form');form.elements.status.value=button.dataset.status;form.requestSubmit();
   });
   await load();
 }
