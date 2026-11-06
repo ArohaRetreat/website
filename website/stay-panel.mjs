@@ -111,6 +111,10 @@ export async function mountStayPanel(
     };
     const paymentForm = target.querySelector("[data-payment]");
     if (paymentForm) {
+      paymentForm.elements.method.onchange = () => {
+        paymentForm.elements.reference.required =
+          paymentForm.elements.method.value !== "cash";
+      };
       paymentForm.elements.receivedAt.value = new Date(
         Date.now() - new Date().getTimezoneOffset() * 60000,
       )
@@ -122,7 +126,9 @@ export async function mountStayPanel(
           Number(paymentForm.elements.amount.value) * 100,
         ),
         method: paymentForm.elements.method.value,
-        reference: paymentForm.elements.reference.value,
+        ...(paymentForm.elements.reference.value.trim()
+          ? { reference: paymentForm.elements.reference.value.trim() }
+          : {}),
         receivedAt: new Date(paymentForm.elements.receivedAt.value).getTime(),
         verified: paymentForm.elements.verified.checked,
         expectedVersion: summary.version,

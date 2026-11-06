@@ -1,3 +1,5 @@
+import {validate} from '../functions/platform/core.mjs';
+import definitions from '../functions/platform/contract.json' with {type:'json'};
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {JSDOM} from 'jsdom';
@@ -7,11 +9,11 @@ test('payment UI freezes an uncertain write and retries its original key and pay
  const call=async(op,input,key)=>{
   if(op==='getFinancialSummary')return{totalPaise:100000,paidPaise:0,balanceDuePaise:100000,version:3};
   if(['listPayments','listDocuments'].includes(op))return{items:[],nextCursor:null};
-  if(op==='recordPayment'){attempts.push({input:structuredClone(input),key});if(attempts.length===1)throw Error('timeout');return{};}
+  if(op==='recordPayment'){validate(definitions.find(d=>d.operationId==='recordPayment').input,input);attempts.push({input:structuredClone(input),key});if(attempts.length===1)throw Error('timeout');return{};}
   throw Error('Unexpected operation');
  };
  try{await mountStayPanel(target,{booking:{id:'synthetic',status:'confirmed'},manager:true,call});const form=target.querySelector('[data-payment]');form.elements.amount.value='250';form.elements.method.value='cash';form.elements.verified.checked=true;
- await form.onsubmit({preventDefault(){}});assert.equal(attempts.length,1);assert.equal(attempts[0].input.amountPaise,25000);assert.equal(attempts[0].input.expectedVersion,3);assert.ok(form.elements.amount.disabled);form.elements.amount.value='999';
+ await form.onsubmit({preventDefault(){}});assert.equal(attempts.length,1);assert.equal(attempts[0].input.amountPaise,25000);assert.equal(attempts[0].input.reference,undefined);assert.equal(attempts[0].input.expectedVersion,3);assert.ok(form.elements.amount.disabled);form.elements.amount.value='999';
  await form.onsubmit({preventDefault(){}});assert.equal(attempts.length,2);assert.deepEqual(attempts[1],attempts[0]);assert.ok(target.querySelector('[data-payment]'));
  }finally{globalThis.document=old;dom.window.close();}
 });
