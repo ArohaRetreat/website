@@ -1,0 +1,13 @@
+# Host Studio 0.28 — implementation and rollout
+
+Issue111. This implements the missing task hierarchy from the earlier design; it is not a cache fix. Website0.28.0; API0.13.0/REST1.3 remain unchanged.
+
+Needs review opens a bounded server query for stored pending requests. Expired entries remain labelled expired and cannot be accepted by the server. Reservations provides exact-reference/status filters, quick statuses and previous/next cursor pages; each page replaces the rows. A filter change resets pagination. No customer directory or per-row profile fan-out is added. Pending date changes and legacy event offers remain on their booking detail; the new-request counter must not be described as a total of all operational decisions.
+
+Navigation groups bookings, guest follow-up and collapsed retreat settings. Add booking stays in the header for managers; viewer access remains read-only. Booking detail uses staff-facing titles, collapsible history/allocation, a separate contact/email utility area and one decision area. Accept acts on the reviewed request; decline has an inline deliberate confirmation. A pending host request no longer offers both Decline and Cancel. Payment records/check-in/out remain separate actual stages. Frozen decision payload/key survive an uncertain response; duplicate submissions remain blocked and server role/version/capacity/idempotency checks remain authoritative.
+
+The guest concierge is already live in production. Older service notes describing it as preprod-only are historical, not current evidence. This release does not change its entry, payment/credit policy, templates, documents, API schemas, runtime configuration, CMS, Natura, indexes or customer records.
+
+Validation: meaningful DOM cases for queue filtering, replacing cursor pages, previous-page recovery, reviewed acceptance/inline decline and selected-detail refresh/account changes; full application and foundation checks; actual-source synthetic desktop/mobile browser review. Synthetic fixtures and transport are private local review artifacts and never included in Hosting output. No real request acceptance, decline, payment, booking, mail replay or credit adjustment is required for deployment verification.
+
+Rollout: normal current-head PR into preprod, verify actual deployed0.28 source/assets and protected-route behavior, then independently select the reviewed change onto current main and complete its PR/checks/deployment. Verify exact production source/asset hashes and retained API version, CMS, Natura and booking baseline. Roll back only the corresponding frontend artifact; never restore booking data. Browser emulation does not certify a physical device or nontechnical-host acceptance.

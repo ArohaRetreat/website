@@ -63,3 +63,7 @@ Owner authorises production promotion of approved preprod refinements and real h
 ## Scoped CRUD and lifecycle candidate — issue105/70
 
 API0.12.0/contract1.2.0 and website0.26.0 implement the authorized full-CRUD expansion, including manual payment/reversal ledger, receipts/checkout statements, private feedback and new lifecycle notifications. See docs/api/platform-v1.2.md. Shared platform services also cover CMS/access, profile erasure, media and sponsored clients; existing Studio routes reuse them. Legacy mcp-readonly token ceilings remain unchanged. Source tests and actual deployment are separate; no live customer/booking/payment/email writes are authorized for testing. Deploy ready indexes plus API and affected email workers while preserving provider env/secret bindings and existing CMS/booking/media baselines.
+
+## Host Studio0.28 — issue111
+
+The missing navigation/decision redesign is implemented against existing API0.13/contract1.3: Needs review landing queue, grouped daily/guest/setup navigation, header Add booking, aligned responsive rows, replacing Next/Previous pages, one reviewed acceptance/inline decline and separate utilities/history/allocation. Read docs/host-studio-ux-0.28.md for actual scope and remaining boundaries. No backend/data/CMS/template changes. Production guest concierge is already live; older preprod-only entries above are historical. Verify actual source/Hosting receipts separately; this source note alone is not deployment proof.

@@ -158,7 +158,7 @@ test("reservation filters are sent to server and each next page retains the same
     m.target.querySelector("[name=status]").value = "confirmed";
     m.target.querySelector("[name=reference]").value = "AR-SYNTHETIC";
     submit(m.w, m.target.querySelector("form"));
-    await until(() => m.target.querySelector("[data-more]"));
+    await until(() => !m.target.querySelector("[data-more]").disabled);
     m.target.querySelector("[data-more]").click();
     await until(() => calls.length === 3);
     assert.equal(calls[1].input.status, "confirmed");
@@ -167,4 +167,14 @@ test("reservation filters are sent to server and each next page retains the same
   } finally {
     m.dom.window.close();
   }
+});
+
+
+test('review desk queries pending requests and pagination replaces rather than appends rows', async()=>{
+ const m=await mount(),calls=[];const row=id=>({id,reference:'AR-'+id,kind:'individual',status:'pending_approval',arrival:'2026-11-08',departure:'2026-11-10',adults:1,childrenCount:0,totalPaise:700000});
+ try{await m.mountHostOperations(m.target,{tab:'overview',manager:true,openBooking:()=>{},call:async(op,input)=>{calls.push({op,input});return{items:[row(input.cursor?'SECOND':'FIRST')],nextCursor:input.cursor?null:'next'};}});
+ assert.equal(calls[0].input.status,'pending_approval');assert.equal(calls[0].input.limit,25);assert.match(m.target.textContent,/Review request/);
+ m.target.querySelector('[data-more]').click();await until(()=>m.target.textContent.includes('AR-SECOND'));assert.ok(!m.target.textContent.includes('AR-FIRST'));assert.equal(m.target.querySelectorAll('[data-open]').length,1);
+ m.target.querySelector('[data-previous]').click();await until(()=>m.target.textContent.includes('AR-FIRST'));assert.equal(calls[2].input.cursor,undefined);assert.equal(m.target.querySelector('[data-previous]').disabled,true);
+ }finally{m.dom.window.close();}
 });
