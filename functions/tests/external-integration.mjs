@@ -99,12 +99,13 @@ test("scoped external HTTP contract: own/all, CRUD parity, read purity, revocati
     scopes,
     purpose = "integration",
     rowAccess = "own",
+    expiresInHours = 24,
   ) => {
     const r = await call(user.idToken, "/integration-tokens", {
       external: false,
       method: "POST",
       key: name + "-key-0001",
-      body: { name, scopes, purpose, rowAccess },
+      body: { name, scopes, purpose, rowAccess, expiresInHours },
     });
     assert.equal(r.status, 200, "scoped token creation");
     assert.ok(r.data.token);
@@ -123,6 +124,8 @@ test("scoped external HTTP contract: own/all, CRUD parity, read purity, revocati
       "communications:read",
     ],
     "mcp-readonly",
+    "own",
+    null,
   );
   const manager = await mint(
     owner,
@@ -153,6 +156,31 @@ test("scoped external HTTP contract: own/all, CRUD parity, read purity, revocati
     await db.collection("aroha_preprod_integration_tokens").doc(read.id).get()
   ).data();
   assert.ok(stored.secretHash && !JSON.stringify(stored).includes(read.token));
+  assert.equal(read.expiresAt, null);
+  assert.equal(stored.expiresAt, null);
+  assert.ok(!("expireAt" in stored));
+  const listed = await call(guest.idToken, "/integration-tokens", { external: false });
+  assert.equal(listed.data.items.find(t => t.id === read.id).expiresAt, null);
+  assert.ok(manager.expiresAt > Date.now() + 23 * 3600000);
+  const defaultExpiry = await call(owner.idToken, "/integration-tokens", {
+    external: false, method: "POST", key: "default-expiry-0001",
+    body: { name: "default-expiry", scopes: ["runtime:read"] },
+  });
+  assert.equal(defaultExpiry.status, 200);
+  assert.ok(defaultExpiry.data.expiresAt > Date.now() + 23 * 3600000);
+  assert.ok(defaultExpiry.data.expiresAt <= Date.now() + 24 * 3600000);
+  for (const [index, value] of [0, 169, "never", false].entries()) {
+    const invalid = await call(guest.idToken, "/integration-tokens", {
+      external: false, method: "POST", key: "invalid-expiry-000" + index,
+      body: { name: "invalid-expiry", scopes: ["runtime:read"], expiresInHours: value },
+    });
+    assert.equal(invalid.status, 422);
+  }
+  const finite = await mint(guest, "finite-reader", ["runtime:read"], "mcp-readonly", "own", 1);
+  assert.ok(Number.isSafeInteger(finite.expiresAt));
+  const finiteRef = db.collection("aroha_preprod_integration_tokens").doc(finite.id);
+  await finiteRef.update({ expiresAt: Date.now() - 1 });
+  assert.equal((await call(finite.token, "/runtime")).status, 403);
   const date = addDays(todayIST(), 14),
     departure = addDays(date, 1),
     beforeConfig = JSON.stringify(
@@ -331,5 +359,14 @@ test("scoped external HTTP contract: own/all, CRUD parity, read purity, revocati
     body: {},
   });
   assert.equal(unknown.status, 404);
+  // Non-expiring grants consume the same active-grant budget as finite grants.
+  for (let n = 0; n < 19; n++)
+    await mint(other, "permanent-" + n, ["runtime:read"], "mcp-readonly", "own", null);
+  const overLimit = await call(other.idToken, "/integration-tokens", {
+    external: false, method: "POST", key: "permanent-over-limit-0001",
+    body: { name: "permanent-over-limit", scopes: ["runtime:read"], expiresInHours: null },
+  });
+  assert.equal(overLimit.status, 409);
+  assert.equal(overLimit.data.error.code, "TOKEN_LIMIT");
   assert.equal((await db.collection("aroha_bookings").get()).size, 0);
 });

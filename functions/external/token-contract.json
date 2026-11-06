@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Aroha integration token management",
+  "contractVersion": "1.1.0",
+  "basePath": "/api/v1/integration-tokens",
+  "authentication": "Verified Google Firebase ID token; integration credentials cannot mint other credentials.",
+  "$defs": {
+    "create": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "scopes"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "scopes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 22,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "runtime:read",
+              "availability:read",
+              "calendar:read",
+              "reservations:read",
+              "inventory:read",
+              "content:published:read",
+              "communications:read",
+              "quotes:create",
+              "reservations:create",
+              "reservations:cancel",
+              "reservations:change",
+              "reservations:approve",
+              "stays:operate",
+              "inventory:write",
+              "promotions:read",
+              "promotions:write",
+              "settings:read",
+              "settings:write",
+              "profiles:read",
+              "profiles:write",
+              "notes:write",
+              "contacts:read"
+            ]
+          }
+        },
+        "purpose": {
+          "enum": [
+            "integration",
+            "mcp-readonly"
+          ],
+          "default": "integration"
+        },
+        "rowAccess": {
+          "enum": [
+            "own",
+            "all"
+          ],
+          "default": "own"
+        },
+        "expiresInHours": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 168
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 24,
+          "description": "Explicit null means never expires. Omitted means 24 hours. Existing grants are unchanged."
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "scopes",
+        "rowAccess",
+        "purpose",
+        "version",
+        "active",
+        "createdAt",
+        "expiresAt"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "name": {
+          "type": "string"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "runtime:read",
+              "availability:read",
+              "calendar:read",
+              "reservations:read",
+              "inventory:read",
+              "content:published:read",
+              "communications:read",
+              "quotes:create",
+              "reservations:create",
+              "reservations:cancel",
+              "reservations:change",
+              "reservations:approve",
+              "stays:operate",
+              "inventory:write",
+              "promotions:read",
+              "promotions:write",
+              "settings:read",
+              "settings:write",
+              "profiles:read",
+              "profiles:write",
+              "notes:write",
+              "contacts:read"
+            ]
+          }
+        },
+        "rowAccess": {
+          "enum": [
+            "own",
+            "all"
+          ]
+        },
+        "purpose": {
+          "enum": [
+            "integration",
+            "mcp-readonly"
+          ]
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "active": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expiresAt": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "description": "Epoch milliseconds, or null for never expires. Revocation and live authorization still apply."
+        }
+      }
+    }
+  }
+}

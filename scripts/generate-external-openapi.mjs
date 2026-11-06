@@ -1,6 +1,6 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { routes } from "../functions/external/routes.mjs";
-import { SCOPES } from "../functions/external/access.mjs";
+import { SCOPES, CONTRACT_VERSION } from "../functions/external/access.mjs";
 const legacy = JSON.parse(
   await readFile(
     new URL("../functions/booking/contract.json", import.meta.url),
@@ -209,7 +209,7 @@ await writeFile(
       openapi: "3.1.0",
       info: {
         title: "Aroha external API",
-        version: "1.0.0",
+        version: CONTRACT_VERSION,
         description:
           "Actual scoped-token initial slice; source status is separate from deployed availability. Full draft and future lifecycle routes are not exposed.",
       },
@@ -234,4 +234,37 @@ await writeFile(
     null,
     2,
   ) + "\n",
+);
+// Google-authenticated grant management remains on the existing /api/v1 base.
+await writeFile(
+  new URL('../functions/external/token-contract.json', import.meta.url),
+  JSON.stringify({
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    title: 'Aroha integration token management',
+    contractVersion: CONTRACT_VERSION,
+    basePath: '/api/v1/integration-tokens',
+    authentication: 'Verified Google Firebase ID token; integration credentials cannot mint other credentials.',
+    $defs: {
+      create: {
+        type: 'object', additionalProperties: false, required: ['name', 'scopes'],
+        properties: {
+          name: {type:'string',minLength:2,maxLength:80},
+          scopes: {type:'array',minItems:1,maxItems:SCOPES.length,uniqueItems:true,items:{enum:SCOPES}},
+          purpose: {enum:['integration','mcp-readonly'],default:'integration'},
+          rowAccess: {enum:['own','all'],default:'own'},
+          expiresInHours: {anyOf:[{type:'integer',minimum:1,maximum:168},{type:'null'}],default:24,description:'Explicit null means never expires. Omitted means 24 hours. Existing grants are unchanged.'},
+        },
+      },
+      metadata: {
+        type:'object',additionalProperties:false,
+        required:['id','name','scopes','rowAccess','purpose','version','active','createdAt','expiresAt'],
+        properties:{
+          id:{type:'string',pattern:'^[a-f0-9]{32}$'},name:{type:'string'},
+          scopes:{type:'array',items:{enum:SCOPES}},rowAccess:{enum:['own','all']},purpose:{enum:['integration','mcp-readonly']},
+          version:{type:'integer',minimum:1},active:{type:'boolean'},createdAt:{type:'integer',minimum:0},
+          expiresAt:{type:['integer','null'],minimum:0,description:'Epoch milliseconds, or null for never expires. Revocation and live authorization still apply.'},
+        },
+      },
+    },
+  },null,2)+'\n',
 );
