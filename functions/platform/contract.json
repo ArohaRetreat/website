@@ -2922,5 +2922,88 @@
     },
     "output": "HostBookingSummary",
     "description": "Current booking access required. Bounded server pagination; exact reference or stored status filters. Elapsed pending holds are labelled expired. Summary counts distinguish elapsed holds using server time."
+  },
+  {
+    "operationId": "searchHostReservations",
+    "method": "POST",
+    "path": "/host/reservation-searches",
+    "scope": "customers:read",
+    "policy": "booking-staff",
+    "handler": "host",
+    "readOnly": true,
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "view": {
+          "type": "string",
+          "enum": [
+            "review",
+            "arrivals",
+            "in_house",
+            "departures",
+            "all"
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "individual",
+            "private",
+            "day",
+            "event"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending_approval",
+            "confirmed",
+            "checked_in",
+            "completed",
+            "cancelled",
+            "declined",
+            "expired",
+            "no_show"
+          ]
+        },
+        "attention": {
+          "type": "string",
+          "enum": [
+            "new",
+            "change",
+            "offer"
+          ]
+        },
+        "arrivalFrom": {
+          "type": "string",
+          "format": "date"
+        },
+        "arrivalThrough": {
+          "type": "string",
+          "format": "date"
+        },
+        "reference": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 32
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^[a-f0-9-]{36}$",
+          "maxLength": 36
+        }
+      },
+      "required": [
+        "view"
+      ]
+    },
+    "output": "DeskReservationPage",
+    "description": "Private staff search. Server filters and opaque bound cursors. Display names require customer read scope; legacy read-only grants cannot access this operation."
   }
 ]

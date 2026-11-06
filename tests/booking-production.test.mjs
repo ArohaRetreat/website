@@ -169,7 +169,7 @@ test("production guest UI presents published private-room pricing without sample
     "utf8",
   );
   source = source.replace(/import \{visitDateLabel\} from "\.\/booking-visit-label.mjs";/, "const visitDateLabel=window.testVisitDateLabel;");
-  source = source.replace(/import \{mountHostOperations,mountHostSummary,openManualBooking\} from '\.\/host-operations.mjs';/, 'const mountHostOperations=async()=>{},mountHostSummary=async()=>{},openManualBooking=()=>{};').replace(/import \{auth\} from '\.\/firebase-auth.mjs';/, 'const auth={currentUser:null};').replace(/import \{mountStayPanel\} from '\.\/stay-panel.mjs';/, "").replace(
+  source = source.replace(/import \{hostShell,mountFrontDesk\} from '\.\/frontdesk.mjs';/,'const hostShell=({content})=>content,mountFrontDesk=async()=>{};').replace(/import \{mountHostOperations,mountHostSummary,openManualBooking\} from '\.\/host-operations.mjs';/, 'const mountHostOperations=async()=>{},mountHostSummary=async()=>{},openManualBooking=()=>{};').replace(/import \{auth\} from '\.\/firebase-auth.mjs';/, 'const auth={currentUser:null};').replace(/import \{mountStayPanel\} from '\.\/stay-panel.mjs';/, "").replace(
     /import \{ bookingApi \} from "\.\/booking-api.mjs";/,
     "const bookingApi=window.testBookingApi; const mountStayPanel=async()=>{};",
   );

@@ -379,7 +379,7 @@ export async function queryPage(
   ].sort((a, b) => {
     if (orderField && a.data()[orderField] !== b.data()[orderField])
       return (
-        (a.data()[orderField] - b.data()[orderField]) * (descending ? -1 : 1)
+        (a.data()[orderField] < b.data()[orderField] ? -1 : 1) * (descending ? -1 : 1)
       );
     return (
       (a.id < b.id ? -1 : a.id > b.id ? 1 : 0) *

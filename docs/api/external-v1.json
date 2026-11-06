@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Aroha external API",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "description": "Versioned scoped CRUD surface using shared website and Studio business rules. Financial records use immutable receipts and reversals; media archive and profile erasure preserve required history. Source status is separate from deployment evidence."
   },
   "servers": [
@@ -18233,6 +18233,187 @@
         }
       }
     },
+    "/host/reservation-searches": {
+      "post": {
+        "operationId": "searchHostReservations",
+        "summary": "searchHostReservations",
+        "description": "Private staff search. Server filters and opaque bound cursors. Display names require customer read scope; legacy read-only grants cannot access this operation.",
+        "security": [
+          {
+            "integrationToken": []
+          }
+        ],
+        "x-required-scopes": [
+          "customers:read"
+        ],
+        "x-shared-operation": "searchHostReservations",
+        "x-read-only": true,
+        "x-implementation-status": "implemented-source-not-deployment-evidence",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Authorized shared business result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeskReservationPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bounded API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bounded API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bounded API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bounded API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Bounded API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Bounded API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Bounded API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Bounded API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Bounded API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Bounded API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Bounded API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Bounded API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Bounded API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Bounded API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/searchHostReservationsInput"
+              }
+            }
+          }
+        }
+      }
+    },
     "/runtime": {
       "get": {
         "operationId": "getRuntime",
@@ -26836,6 +27017,121 @@
           "asOf"
         ]
       },
+      "DeskReservation": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "reference": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "kind": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "arrival": {
+            "type": "string"
+          },
+          "departure": {
+            "type": "string"
+          },
+          "adults": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "childrenCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "unitIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "totalPaise": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "currency": {
+            "const": "INR"
+          },
+          "guestName": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "attention": {
+            "type": "string",
+            "enum": [
+              "none",
+              "new",
+              "change",
+              "offer"
+            ]
+          },
+          "responseDeadline": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "reference",
+          "version",
+          "kind",
+          "status",
+          "arrival",
+          "departure",
+          "adults",
+          "childrenCount",
+          "unitIds",
+          "totalPaise",
+          "currency",
+          "guestName",
+          "attention",
+          "responseDeadline"
+        ]
+      },
+      "DeskReservationPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+              "$ref": "#/components/schemas/DeskReservation"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "asOf": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor",
+          "asOf"
+        ]
+      },
       "recordPaymentInput": {
         "type": "object",
         "additionalProperties": false,
@@ -27564,6 +27860,78 @@
           "quoteId"
         ]
       },
+      "searchHostReservationsInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "view": {
+            "type": "string",
+            "enum": [
+              "review",
+              "arrivals",
+              "in_house",
+              "departures",
+              "all"
+            ]
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "individual",
+              "private",
+              "day",
+              "event"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending_approval",
+              "confirmed",
+              "checked_in",
+              "completed",
+              "cancelled",
+              "declined",
+              "expired",
+              "no_show"
+            ]
+          },
+          "attention": {
+            "type": "string",
+            "enum": [
+              "new",
+              "change",
+              "offer"
+            ]
+          },
+          "arrivalFrom": {
+            "type": "string",
+            "format": "date"
+          },
+          "arrivalThrough": {
+            "type": "string",
+            "format": "date"
+          },
+          "reference": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 32
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+          },
+          "cursor": {
+            "type": "string",
+            "pattern": "^[a-f0-9-]{36}$",
+            "maxLength": 36
+          }
+        },
+        "required": [
+          "view"
+        ]
+      },
       "createQuoteInput": {
         "type": "object",
         "additionalProperties": false,
@@ -28196,6 +28564,7 @@
     "customers:link",
     "loyalty:read",
     "loyalty:adjust",
-    "reservations:manual"
+    "reservations:manual",
+    "customers:read"
   ]
 }

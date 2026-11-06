@@ -1,3 +1,4 @@
+import { deskFields } from './desk.mjs';
 import {
   customerBinding,
   customerOwnerContext,
@@ -966,6 +967,7 @@ export async function bookingCommand(
       if (!b?.id) fail("INVALID_MUTATION", 500);
       if (operation === "create")
         tx.update(qSnap.ref, { consumedBy: b.id, consumedAt: now });
+      Object.assign(b, deskFields(b));
       tx.set(reservations(db).doc(b.id), b);
       for (let i = 0; i < days.length; i++) {
         const d = days[i],
