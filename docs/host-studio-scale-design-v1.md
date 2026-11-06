@@ -1,5 +1,7 @@
 # Host Studio module design — proposal v1
 
+Tracking: [website issue111](https://github.com/ArohaRetreat/website/issues/111).
+
 Status: planning, not deployed behavior. This design follows the user’s6November2026 request to simplify booking administration for nontechnical hosts and account for10,000 customer accounts. Walk-in identity and loyalty are specified separately in [Walk-in booking design](walk-in-booking-identity-design-v1.md). It is a separate follow-on to the in-progress REST1.2/MCP0.2, payment ledger, private feedback and lifecycle release. No production data migration, infrastructure expansion or new search provider is approved by this document.
 
 ## What the current implementation gets wrong

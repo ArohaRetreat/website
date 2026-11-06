@@ -51,7 +51,7 @@ export function lifecycleEmailTemplate(job) {
     next =
       "Enjoy the retreat at your pace. Reply here if you need help or local guidance.";
     note =
-      "Facilities are the current host-configured available options, not a promise of unavailable services.";
+      "Your hosts can help with the facilities and any arrangements for your visit.";
     action = "See your visit";
   } else if (job.channel === "guest_checkout") {
     stage = 4;
@@ -82,7 +82,7 @@ export function lifecycleEmailTemplate(job) {
     kicker = "YOUR EXPERIENCE MATTERS TO YOUR HOSTS.";
     title = "A moment to reflect.<br>A note, just for us.";
     body =
-      "It has been at least 24 hours since your host-recorded checkout. If you would like, share a private rating and note about your visit.";
+      "Thank you for spending time at Aroha. If you would like, share a private rating and note about your visit.";
     caption = "Your visit is complete. Feedback is optional and private.";
     next =
       "Sign in with the same Google account used for this booking. Only you and authorized booking managers can read your feedback.";

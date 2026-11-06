@@ -1,5 +1,7 @@
 # Walk-in booking and loyalty — design proposal v1
 
+Tracking: [website issue111](https://github.com/ArohaRetreat/website/issues/111).
+
 Status: planning only. Complements [Host Studio module design](host-studio-scale-design-v1.md). This proposal is not implemented by the current106-operation API release and creates no accounts, customer links or bookings. The user explicitly requests manual admin booking with email and phone, email-associated loyalty, and past booking visibility after Google sign-in with that email.
 
 ## The host’s flow
