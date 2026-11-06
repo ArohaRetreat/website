@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Aroha integration token management",
-  "contractVersion": "1.1.0",
+  "contractVersion": "1.2.0",
   "basePath": "/api/v1/integration-tokens",
   "authentication": "Verified Google Firebase ID token; integration credentials cannot mint other credentials.",
   "$defs": {
@@ -18,10 +18,14 @@
           "minLength": 2,
           "maxLength": 80
         },
+        "clientId": {
+          "type": "string",
+          "pattern": "^[a-f0-9-]{36}$"
+        },
         "scopes": {
           "type": "array",
           "minItems": 1,
-          "maxItems": 22,
+          "maxItems": 43,
           "uniqueItems": true,
           "items": {
             "enum": [
@@ -46,14 +50,36 @@
               "profiles:read",
               "profiles:write",
               "notes:write",
-              "contacts:read"
+              "contacts:read",
+              "payments:read",
+              "payments:record",
+              "payments:reverse",
+              "documents:read",
+              "documents:download",
+              "feedback:submit",
+              "feedback:read",
+              "reservations:update",
+              "notes:read",
+              "content:read",
+              "content:write",
+              "content:publish",
+              "access:read",
+              "access:manage",
+              "operations:read",
+              "profiles:erase",
+              "audit:read",
+              "integrations:manage",
+              "media:read",
+              "media:write",
+              "communications:retry"
             ]
           }
         },
         "purpose": {
           "enum": [
             "integration",
-            "mcp-readonly"
+            "mcp-readonly",
+            "mcp"
           ],
           "default": "integration"
         },
@@ -102,6 +128,10 @@
         "name": {
           "type": "string"
         },
+        "clientId": {
+          "type": "string",
+          "pattern": "^[a-f0-9-]{36}$"
+        },
         "scopes": {
           "type": "array",
           "items": {
@@ -127,7 +157,28 @@
               "profiles:read",
               "profiles:write",
               "notes:write",
-              "contacts:read"
+              "contacts:read",
+              "payments:read",
+              "payments:record",
+              "payments:reverse",
+              "documents:read",
+              "documents:download",
+              "feedback:submit",
+              "feedback:read",
+              "reservations:update",
+              "notes:read",
+              "content:read",
+              "content:write",
+              "content:publish",
+              "access:read",
+              "access:manage",
+              "operations:read",
+              "profiles:erase",
+              "audit:read",
+              "integrations:manage",
+              "media:read",
+              "media:write",
+              "communications:retry"
             ]
           }
         },
@@ -140,7 +191,8 @@
         "purpose": {
           "enum": [
             "integration",
-            "mcp-readonly"
+            "mcp-readonly",
+            "mcp"
           ]
         },
         "version": {

@@ -1,10 +1,10 @@
+import {communicationRetryPatch} from './retry.mjs';
 import { studioAccess } from "../access.mjs";
 import { sharedCollectionName } from "../environment.mjs";
 import { mailCollection, invoiceCollection } from "./jobs.mjs";
 import { invoicePdf } from "./documents.mjs";
 import { mailSettings } from "./config.mjs";
 import { BookingError } from "../booking/domain.mjs";
-import { FieldValue } from "firebase-admin/firestore";
 export async function communicationCommand(
   db,
   operation,
@@ -105,19 +105,7 @@ export async function communicationCommand(
         j = d.data();
       if (studioAccess(m.data()).bookings !== "manager")
         throw new BookingError("FORBIDDEN", 403);
-      if (!j || j.bookingId !== booking.id)
-        throw new BookingError("NOT_FOUND", 404);
-      if (j.version !== input.expectedVersion)
-        throw new BookingError("VERSION_CONFLICT", 409);
-      if (j.status !== "failed" || j.uncertain === true || j.providerMessageId)
-        throw new BookingError("MAIL_RECONCILIATION_REQUIRED", 409);
-      tx.update(ref, {
-        status: "retry",
-        version: j.version + 1,
-        nextAttemptAt: Date.now(),
-        firstAttemptAt: FieldValue.delete(),
-        errorCode: FieldValue.delete(),
-      });
+      tx.update(ref,communicationRetryPatch(j,booking.id,input.expectedVersion));
     });
     return { queued: true };
   }

@@ -1,3 +1,11 @@
+## 0.26.0 / API 0.12.0 — scoped CRUD and stay lifecycle
+
+- Extend canonical external contract1.2.0 to106 domain-backed operations; existing mcp-readonly grants retain their original nine-operation ceiling. New explicitly scoped mcp grants support CRUD.
+- Add append-only verified manual payments/full reversals, private receipts, ledger-backed checkout statements, actual check-in/checkout timestamps and optional private feedback due24hours after checkout. No online charge or bank transfer is initiated.
+- Add shared CMS/access facade, eligible profile erasure receipts, manager-private notes, inactive unit creation/retirement, atomic blocks, prospective promotions, sponsored integration clients and immutable validated media workflows.
+- Route existing Studio content/access operations through the same policy service and add payment/document/feedback panels to existing booking views. Preserve approved email-v3/PDF-v4 assets, existing pricing/capacity and production data.
+- Record per-operation safe audits and committed business events. New lifecycle templates apply only to new operations; no historical email replay.
+
 ## 0.25.1 / API 0.11.0 — optional non-expiring integration tokens
 
 - Accept explicit expiresInHours:null for Never expires; keep 24-hour default and 1–168-hour timed tokens. Existing grants retain their deadlines.

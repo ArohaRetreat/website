@@ -1,3 +1,4 @@
+import {definitionsById} from '../functions/platform/registry.mjs';
 import { readFile, writeFile } from "node:fs/promises";
 import { routes } from "../functions/external/routes.mjs";
 import { SCOPES, CONTRACT_VERSION } from "../functions/external/access.mjs";
@@ -31,6 +32,7 @@ Object.assign(
     ),
   ),
 );
+Object.assign(schemas,JSON.parse(await readFile(new URL('../functions/platform/responses.json',import.meta.url))));
 const responseNames = {
   getRuntime: "Runtime",
   getAvailability: "Availability",
@@ -54,8 +56,24 @@ for (const [
   action,
   versionKind,
 ] of routes) {
-  const path = raw.replace(/:([a-z]+)/g, "{$1}");
-  const parameters = [...raw.matchAll(/:([a-z]+)/g)].map((m) => ({
+  const definition=definitionsById.get(operationId);
+  if(definition){
+    const path=raw.replace(/:([a-z][A-Za-z0-9]*)/g,'{$1}');
+    const names=[...raw.matchAll(/:([a-z][A-Za-z0-9]*)/g)].map(m=>m[1]);
+    const parameters=names.map(name=>({in:'path',name,required:true,schema:definition.input.properties[name]}));
+    if(method==='GET')for(const[name,schema]of Object.entries(definition.input.properties))if(!names.includes(name))parameters.push({in:'query',name,required:definition.input.required.includes(name),schema});
+    if(method!=='GET')parameters.push({in:'header',name:'Idempotency-Key',required:true,schema:{type:'string',minLength:8,maxLength:100,pattern:'^[A-Za-z0-9-]+$'}});
+    if(method!=='GET'&&definition.versionKind)parameters.push({in:'header',name:'If-Match',required:true,schema:{type:'string'},description:'Strong ETag for '+definition.versionKind+' returned by its read operation.'});
+    const input=structuredClone(definition.input);for(const name of [...names,'expectedVersion'])delete input.properties[name];input.required=input.required.filter(name=>!names.includes(name)&&name!=='expectedVersion');
+    const output=definition.output||'DomainResult';schemas.DomainResult||={type:'object'};
+    const responses={[method==='POST'?201:200]:{description:'Authorized shared business result',content:{[definition.binary?'application/pdf':'application/json']:{schema:definition.binary?{type:'string',format:'binary'}:{$ref:'#/components/schemas/'+output}}}}};
+    for(const status of [400,401,403,404,409,410,412,413,415,422,428,429,503,504])responses[status]={description:'Bounded API error',content:{'application/json':{schema:{$ref:'#/components/schemas/Error'}}}};
+    const op={operationId,summary:operationId,description:definition.description,security:[{integrationToken:[]}],'x-required-scopes':definition.scopes||[scope],'x-shared-operation':operationId,'x-implementation-status':'implemented-source-not-deployment-evidence',parameters,responses};
+    if(method!=='GET'&&Object.keys(input.properties).length){const schemaName=operationId+'Input';schemas[schemaName]=input;op.requestBody={required:true,content:{'application/json':{schema:{$ref:'#/components/schemas/'+schemaName}}}};}
+    paths[path]||={};paths[path][method.toLowerCase()]=op;continue;
+  }
+  const path = raw.replace(/:([a-z][A-Za-z0-9]*)/g, "{$1}");
+  const parameters = [...raw.matchAll(/:([a-z][A-Za-z0-9]*)/g)].map((m) => ({
     in: "path",
     name: m[1],
     required: true,
@@ -211,7 +229,7 @@ await writeFile(
         title: "Aroha external API",
         version: CONTRACT_VERSION,
         description:
-          "Actual scoped-token initial slice; source status is separate from deployed availability. Full draft and future lifecycle routes are not exposed.",
+          "Versioned scoped CRUD surface using shared website and Studio business rules. Financial records use immutable receipts and reversals; media archive and profile erasure preserve required history. Source status is separate from deployment evidence.",
       },
       servers: [
         { url: "https://aroharetreat.com/api/external/v1" },
@@ -249,8 +267,9 @@ await writeFile(
         type: 'object', additionalProperties: false, required: ['name', 'scopes'],
         properties: {
           name: {type:'string',minLength:2,maxLength:80},
+          clientId: {type:'string',pattern:'^[a-f0-9-]{36}$'},
           scopes: {type:'array',minItems:1,maxItems:SCOPES.length,uniqueItems:true,items:{enum:SCOPES}},
-          purpose: {enum:['integration','mcp-readonly'],default:'integration'},
+          purpose: {enum:['integration','mcp-readonly','mcp'],default:'integration'},
           rowAccess: {enum:['own','all'],default:'own'},
           expiresInHours: {anyOf:[{type:'integer',minimum:1,maximum:168},{type:'null'}],default:24,description:'Explicit null means never expires. Omitted means 24 hours. Existing grants are unchanged.'},
         },
@@ -259,8 +278,8 @@ await writeFile(
         type:'object',additionalProperties:false,
         required:['id','name','scopes','rowAccess','purpose','version','active','createdAt','expiresAt'],
         properties:{
-          id:{type:'string',pattern:'^[a-f0-9]{32}$'},name:{type:'string'},
-          scopes:{type:'array',items:{enum:SCOPES}},rowAccess:{enum:['own','all']},purpose:{enum:['integration','mcp-readonly']},
+          id:{type:'string',pattern:'^[a-f0-9]{32}$'},name:{type:'string'},clientId:{type:'string',pattern:'^[a-f0-9-]{36}$'},
+          scopes:{type:'array',items:{enum:SCOPES}},rowAccess:{enum:['own','all']},purpose:{enum:['integration','mcp-readonly','mcp']},
           version:{type:'integer',minimum:1},active:{type:'boolean'},createdAt:{type:'integer',minimum:0},
           expiresAt:{type:['integer','null'],minimum:0,description:'Epoch milliseconds, or null for never expires. Revocation and live authorization still apply.'},
         },

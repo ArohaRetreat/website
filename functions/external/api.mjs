@@ -1,3 +1,7 @@
+import {operationPermitted} from './access.mjs';
+import {definitionsById} from '../platform/registry.mjs';
+import {platformOperation} from '../platform/service.mjs';
+import {invoicePdf} from '../email/documents.mjs';
 import { createHash } from "node:crypto";
 import { auditSensitiveRead } from "./audit.mjs";
 import {
@@ -77,15 +81,33 @@ export async function externalApi(db, auth, req, res, requestId) {
     fail("READ_ONLY_TOKEN_REQUIRED", 403);
   req.externalOperation = operation;
   await throttleBooking(db, "integration:" + token._integration.id);
-  const all = token._integration.rowAccess === "all";
+  const allRequested = token._integration.rowAccess === "all";
   const member = await db
       .collection(sharedCollectionName("members"))
       .doc(token.uid)
       .get(),
     access = studioAccess(member.data());
+  const all=allRequested&&access.bookings!=="none";
   const staffReads = ["getSettings", "listBlocks", "listPromotions"];
   if (staffReads.includes(operation) && access.bookings === "none")
     fail("FORBIDDEN", 403);
+  if(command==='platform'){
+    const definition=definitionsById.get(operation);
+    for(const s of definition.scopes||[scope]) requireScope(token,s,operation);
+    const versionIdentity=definition.versionIdentity==='principal'?token.uid:params[definition.versionParam||'id']||'site';
+    const pathKeys=Object.keys(params), allowed=Object.keys(definition.input.properties).filter(k=>!pathKeys.includes(k)&&k!=='expectedVersion');
+    const raw=method==='GET'?req.query:(req.body??{});ownFields(raw,allowed);
+    const input={...raw,...params};
+    for(const[k,v]of Object.entries(input)) if(definition.input.properties[k]?.type==='integer'&&typeof v==='string')input[k]=Number(v);
+    if(method!=='GET'&&definition.versionKind) input.expectedVersion=expected(req.get('If-Match'),definition.versionKind,versionIdentity);
+    let result;
+    try{result=await platformOperation(db,token,operation,input,req.get('Idempotency-Key'),{requestId});}catch(e){if(e.code==='VERSION_CONFLICT')throw new BookingError('VERSION_CONFLICT',412);throw e;}
+    if(definition.binary){const pdf=await invoicePdf(result.snapshot,{designVersion:result.snapshot.documentTemplateVersion||'legacy'});res.set('Content-Type','application/pdf');res.set('Content-Disposition','attachment; filename="'+result.metadata.number.replace(/[^A-Za-z0-9_.-]/g,'_')+'.pdf"');res.send(pdf.buffer);return null;}
+    const resultVersion=result.version??result.summary?.version;
+    if(definition.versionKind&&Number.isSafeInteger(resultVersion))res.set('ETag',etag(definition.versionKind,versionIdentity,resultVersion));
+    if(method==='POST')res.status(201);
+    return definition.handler==='booking-alias'?projectReservation(result):result;
+  }
   if (method === "GET") {
     if (operation === "getRuntime")
       return {
@@ -96,8 +118,7 @@ export async function externalApi(db, auth, req, res, requestId) {
         capabilities: routes
           .filter(
             (r) =>
-              r[0] === "GET" &&
-              token._integration.scopes.includes(r[3]) &&
+              token._integration.scopes.includes(r[3]) && operationPermitted(r[2],member.data(),token._integration) &&
               (token._integration.purpose !== "mcp-readonly" ||
                 [
                   "getRuntime",
@@ -183,7 +204,7 @@ export async function externalApi(db, auth, req, res, requestId) {
       if (!all)
         q = q.where("channel", "in", [
           "guest_acknowledgement",
-          "guest_confirmation",
+          "guest_confirmation", "guest_checkin", "guest_checkout", "guest_feedback", "guest_payment_receipt", "guest_payment_reversed",
         ]);
       return pageRead(
         db,

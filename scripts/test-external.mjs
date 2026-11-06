@@ -3,7 +3,7 @@ import { writeFile, unlink } from "node:fs/promises";
 const path = "functions/.env.local";
 await writeFile(
   path,
-  "AROHA_ENVIRONMENT=pre-prod\nDT_EXPORT_ENABLED=false\nMAIL_ENABLED=false\nSUPER_ADMIN_EMAILS=owner@example.test\nPREPROD_TESTER_EMAILS=owner@example.test,guest@example.test,other@example.test\n",
+  "AROHA_ENVIRONMENT=pre-prod\nDT_EXPORT_ENABLED=false\nMAIL_ENABLED=false\nBILLING_DISPLAY_NAME=Synthetic Aroha\nBILLING_ADDRESS=Synthetic test address\nBILLING_PAYMENT_INSTRUCTIONS=Synthetic test only\nSUPER_ADMIN_EMAILS=owner@example.test\nPREPROD_TESTER_EMAILS=owner@example.test,guest@example.test,other@example.test,platform-owner@example.test,platform-guest@example.test,platform-other@example.test\n",
   { flag: "wx", mode: 0o600 },
 );
 try {
@@ -17,7 +17,7 @@ try {
       "demo-aroha",
       "--only",
       "auth,firestore,functions,storage",
-      "node --test functions/tests/external-integration.mjs",
+      "node scripts/delivery/run-node-tests.mjs api-external",
     ],
     { stdio: "inherit" },
   );

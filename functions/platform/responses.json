@@ -1,0 +1,1828 @@
+{
+  "FinancialSummary": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "currency": {
+        "const": "INR"
+      },
+      "totalPaise": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "paidPaise": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "balanceDuePaise": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "version": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "hasOutstandingBalance": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "id",
+      "currency",
+      "totalPaise",
+      "paidPaise",
+      "balanceDuePaise",
+      "version",
+      "hasOutstandingBalance"
+    ]
+  },
+  "PaymentEntry": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "bookingId": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "kind": {
+        "enum": [
+          "payment",
+          "reversal"
+        ]
+      },
+      "amountPaise": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "method": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "enum": [
+          "cash",
+          "upi",
+          "bank",
+          null
+        ]
+      },
+      "receivedAt": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "createdAt": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "version": {
+        "const": 1
+      },
+      "reverses": {
+        "type": "string",
+        "maxLength": 128
+      }
+    },
+    "required": [
+      "id",
+      "bookingId",
+      "kind",
+      "amountPaise",
+      "method",
+      "receivedAt",
+      "createdAt",
+      "version"
+    ]
+  },
+  "PaymentPage": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "items": {
+        "type": "array",
+        "maxItems": 50,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "bookingId": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "kind": {
+              "enum": [
+                "payment",
+                "reversal"
+              ]
+            },
+            "amountPaise": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "method": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "cash",
+                "upi",
+                "bank",
+                null
+              ]
+            },
+            "receivedAt": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "createdAt": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "version": {
+              "const": 1
+            },
+            "reverses": {
+              "type": "string",
+              "maxLength": 128
+            }
+          },
+          "required": [
+            "id",
+            "bookingId",
+            "kind",
+            "amountPaise",
+            "method",
+            "receivedAt",
+            "createdAt",
+            "version"
+          ]
+        }
+      },
+      "nextCursor": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "items",
+      "nextCursor"
+    ]
+  },
+  "FinancialDocument": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "bookingId": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "kind": {
+        "enum": [
+          "invoice",
+          "receipt",
+          "checkout_statement"
+        ]
+      },
+      "number": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string"
+      },
+      "version": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "createdAt": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "currency": {
+        "const": "INR"
+      },
+      "totalPaise": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "paidPaise": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "balanceDuePaise": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "minimum": 0
+      },
+      "test": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "id",
+      "bookingId",
+      "kind",
+      "number",
+      "status",
+      "version",
+      "createdAt",
+      "currency",
+      "totalPaise",
+      "paidPaise",
+      "balanceDuePaise",
+      "test"
+    ]
+  },
+  "DocumentPage": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "items": {
+        "type": "array",
+        "maxItems": 50,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "bookingId": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "kind": {
+              "enum": [
+                "invoice",
+                "receipt",
+                "checkout_statement"
+              ]
+            },
+            "number": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "version": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "createdAt": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "currency": {
+              "const": "INR"
+            },
+            "totalPaise": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "paidPaise": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "balanceDuePaise": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "test": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "id",
+            "bookingId",
+            "kind",
+            "number",
+            "status",
+            "version",
+            "createdAt",
+            "currency",
+            "totalPaise",
+            "paidPaise",
+            "balanceDuePaise",
+            "test"
+          ]
+        }
+      },
+      "nextCursor": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "items",
+      "nextCursor"
+    ]
+  },
+  "PaymentRecorded": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "payment": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "bookingId": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "kind": {
+            "enum": [
+              "payment",
+              "reversal"
+            ]
+          },
+          "amountPaise": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "method": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "cash",
+              "upi",
+              "bank",
+              null
+            ]
+          },
+          "receivedAt": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "createdAt": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "version": {
+            "const": 1
+          },
+          "reverses": {
+            "type": "string",
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "id",
+          "bookingId",
+          "kind",
+          "amountPaise",
+          "method",
+          "receivedAt",
+          "createdAt",
+          "version"
+        ]
+      },
+      "summary": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "currency": {
+            "const": "INR"
+          },
+          "totalPaise": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "paidPaise": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "balanceDuePaise": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "hasOutstandingBalance": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "currency",
+          "totalPaise",
+          "paidPaise",
+          "balanceDuePaise",
+          "version",
+          "hasOutstandingBalance"
+        ]
+      },
+      "document": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "bookingId": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "kind": {
+            "enum": [
+              "invoice",
+              "receipt",
+              "checkout_statement"
+            ]
+          },
+          "number": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "createdAt": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "currency": {
+            "const": "INR"
+          },
+          "totalPaise": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "paidPaise": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "balanceDuePaise": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "test": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "bookingId",
+          "kind",
+          "number",
+          "status",
+          "version",
+          "createdAt",
+          "currency",
+          "totalPaise",
+          "paidPaise",
+          "balanceDuePaise",
+          "test"
+        ]
+      }
+    },
+    "required": [
+      "payment",
+      "summary",
+      "document"
+    ]
+  },
+  "PaymentReversed": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "payment": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "bookingId": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "kind": {
+            "enum": [
+              "payment",
+              "reversal"
+            ]
+          },
+          "amountPaise": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "method": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "cash",
+              "upi",
+              "bank",
+              null
+            ]
+          },
+          "receivedAt": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "createdAt": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "version": {
+            "const": 1
+          },
+          "reverses": {
+            "type": "string",
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "id",
+          "bookingId",
+          "kind",
+          "amountPaise",
+          "method",
+          "receivedAt",
+          "createdAt",
+          "version"
+        ]
+      },
+      "summary": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "currency": {
+            "const": "INR"
+          },
+          "totalPaise": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "paidPaise": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "balanceDuePaise": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "hasOutstandingBalance": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "currency",
+          "totalPaise",
+          "paidPaise",
+          "balanceDuePaise",
+          "version",
+          "hasOutstandingBalance"
+        ]
+      }
+    },
+    "required": [
+      "payment",
+      "summary"
+    ]
+  },
+  "PrivateFeedback": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "bookingId": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "rating": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "minimum": 1,
+        "maximum": 5
+      },
+      "comment": {
+        "type": "string",
+        "maxLength": 3000
+      },
+      "withdrawn": {
+        "type": "boolean"
+      },
+      "createdAt": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "updatedAt": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "version": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "required": [
+      "id",
+      "bookingId",
+      "rating",
+      "comment",
+      "withdrawn",
+      "createdAt",
+      "updatedAt",
+      "version"
+    ]
+  },
+  "FeedbackPage": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "items": {
+        "type": "array",
+        "maxItems": 50,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "bookingId": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "rating": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1,
+              "maximum": 5
+            },
+            "comment": {
+              "type": "string",
+              "maxLength": 3000
+            },
+            "withdrawn": {
+              "type": "boolean"
+            },
+            "createdAt": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "updatedAt": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "version": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "id",
+            "bookingId",
+            "rating",
+            "comment",
+            "withdrawn",
+            "createdAt",
+            "updatedAt",
+            "version"
+          ]
+        }
+      },
+      "nextCursor": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "items",
+      "nextCursor"
+    ]
+  },
+  "HostNote": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "text": {
+        "type": "string",
+        "maxLength": 3000
+      },
+      "redacted": {
+        "type": "boolean"
+      },
+      "createdAt": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "updatedAt": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "version": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "required": [
+      "id",
+      "text",
+      "redacted",
+      "createdAt",
+      "updatedAt",
+      "version"
+    ]
+  },
+  "HostNotePage": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "items": {
+        "type": "array",
+        "maxItems": 50,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "text": {
+              "type": "string",
+              "maxLength": 3000
+            },
+            "redacted": {
+              "type": "boolean"
+            },
+            "createdAt": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "updatedAt": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "version": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "id",
+            "text",
+            "redacted",
+            "createdAt",
+            "updatedAt",
+            "version"
+          ]
+        }
+      },
+      "nextCursor": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "items",
+      "nextCursor"
+    ]
+  },
+  "IntegrationClient": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "name": {
+        "type": "string"
+      },
+      "sponsorUid": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "scopeCeiling": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 64
+      },
+      "environment": {
+        "enum": [
+          "production",
+          "pre-prod"
+        ]
+      },
+      "active": {
+        "type": "boolean"
+      },
+      "expiresAt": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "minimum": 0
+      },
+      "version": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "createdAt": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "updatedAt": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "required": [
+      "id",
+      "name",
+      "sponsorUid",
+      "scopeCeiling",
+      "environment",
+      "active",
+      "expiresAt",
+      "version",
+      "createdAt",
+      "updatedAt"
+    ]
+  },
+  "IntegrationClientPage": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "items": {
+        "type": "array",
+        "maxItems": 50,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "name": {
+              "type": "string"
+            },
+            "sponsorUid": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "scopeCeiling": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 64
+            },
+            "environment": {
+              "enum": [
+                "production",
+                "pre-prod"
+              ]
+            },
+            "active": {
+              "type": "boolean"
+            },
+            "expiresAt": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "version": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "createdAt": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "updatedAt": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "sponsorUid",
+            "scopeCeiling",
+            "environment",
+            "active",
+            "expiresAt",
+            "version",
+            "createdAt",
+            "updatedAt"
+          ]
+        }
+      },
+      "nextCursor": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "items",
+      "nextCursor"
+    ]
+  },
+  "IntegrationGrant": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "name": {
+        "type": "string"
+      },
+      "owner": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "scopes": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "purpose": {
+        "enum": [
+          "integration",
+          "mcp-readonly",
+          "mcp"
+        ]
+      },
+      "rowAccess": {
+        "enum": [
+          "own",
+          "all"
+        ]
+      },
+      "active": {
+        "type": "boolean"
+      },
+      "expiresAt": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "minimum": 0
+      },
+      "version": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "createdAt": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "required": [
+      "id",
+      "name",
+      "owner",
+      "scopes",
+      "purpose",
+      "rowAccess",
+      "active",
+      "expiresAt",
+      "version",
+      "createdAt"
+    ]
+  },
+  "IntegrationGrantPage": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "items": {
+        "type": "array",
+        "maxItems": 50,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "name": {
+              "type": "string"
+            },
+            "owner": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "scopes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "purpose": {
+              "enum": [
+                "integration",
+                "mcp-readonly",
+                "mcp"
+              ]
+            },
+            "rowAccess": {
+              "enum": [
+                "own",
+                "all"
+              ]
+            },
+            "active": {
+              "type": "boolean"
+            },
+            "expiresAt": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "version": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "createdAt": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "owner",
+            "scopes",
+            "purpose",
+            "rowAccess",
+            "active",
+            "expiresAt",
+            "version",
+            "createdAt"
+          ]
+        }
+      },
+      "nextCursor": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "items",
+      "nextCursor"
+    ]
+  },
+  "ErasureOperation": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "type": {
+        "const": "profile_erasure"
+      },
+      "status": {
+        "const": "completed"
+      },
+      "createdAt": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "completedAt": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "retained": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "version": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "required": [
+      "id",
+      "type",
+      "status",
+      "createdAt",
+      "completedAt",
+      "retained"
+    ]
+  },
+  "Member": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "email": {
+        "type": "string"
+      },
+      "role": {
+        "enum": [
+          "viewer",
+          "editor",
+          "admin",
+          "superadmin"
+        ]
+      },
+      "active": {
+        "type": "boolean"
+      },
+      "version": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "websiteAccess": {
+        "type": "boolean"
+      },
+      "bookingAccess": {
+        "enum": [
+          "none",
+          "viewer",
+          "manager"
+        ]
+      },
+      "updatedAt": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "minimum": 0
+      }
+    },
+    "required": [
+      "id",
+      "email",
+      "role",
+      "active",
+      "version",
+      "updatedAt"
+    ]
+  },
+  "MemberPage": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "items": {
+        "type": "array",
+        "maxItems": 50,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "email": {
+              "type": "string"
+            },
+            "role": {
+              "enum": [
+                "viewer",
+                "editor",
+                "admin",
+                "superadmin"
+              ]
+            },
+            "active": {
+              "type": "boolean"
+            },
+            "version": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "websiteAccess": {
+              "type": "boolean"
+            },
+            "bookingAccess": {
+              "enum": [
+                "none",
+                "viewer",
+                "manager"
+              ]
+            },
+            "updatedAt": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            }
+          },
+          "required": [
+            "id",
+            "email",
+            "role",
+            "active",
+            "version",
+            "updatedAt"
+          ]
+        }
+      },
+      "nextCursor": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "items",
+      "nextCursor"
+    ]
+  },
+  "Invitation": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "email": {
+        "type": "string"
+      },
+      "role": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string"
+      },
+      "expiresAt": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "version": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "websiteAccess": {
+        "type": "boolean"
+      },
+      "bookingAccess": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "minimum": 0
+      },
+      "inviteUrl": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "email",
+      "role",
+      "status",
+      "expiresAt",
+      "version",
+      "updatedAt"
+    ]
+  },
+  "InvitationPage": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "items": {
+        "type": "array",
+        "maxItems": 50,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "email": {
+              "type": "string"
+            },
+            "role": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "expiresAt": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "version": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "websiteAccess": {
+              "type": "boolean"
+            },
+            "bookingAccess": {
+              "type": "string"
+            },
+            "updatedAt": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "inviteUrl": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "email",
+            "role",
+            "status",
+            "expiresAt",
+            "version",
+            "updatedAt"
+          ]
+        }
+      },
+      "nextCursor": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "items",
+      "nextCursor"
+    ]
+  },
+  "Media": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "type": {
+        "type": "string"
+      },
+      "size": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "sha256": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "status": {
+        "type": "string"
+      },
+      "version": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "createdAt": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "url": {
+        "type": "string"
+      },
+      "completedAt": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "uploadUrl": {
+        "type": "string"
+      },
+      "expiresAt": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "uploadMethod": {
+        "const": "PUT"
+      },
+      "contentType": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "type",
+      "size",
+      "sha256",
+      "status",
+      "version",
+      "createdAt"
+    ]
+  },
+  "MediaPage": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "items": {
+        "type": "array",
+        "maxItems": 50,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "type": {
+              "type": "string"
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "status": {
+              "type": "string"
+            },
+            "version": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "createdAt": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "url": {
+              "type": "string"
+            },
+            "completedAt": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "uploadUrl": {
+              "type": "string"
+            },
+            "expiresAt": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "uploadMethod": {
+              "const": "PUT"
+            },
+            "contentType": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "size",
+            "sha256",
+            "status",
+            "version",
+            "createdAt"
+          ]
+        }
+      },
+      "nextCursor": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "items",
+      "nextCursor"
+    ]
+  },
+  "ContentDraft": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "exists": {
+        "type": "boolean"
+      },
+      "content": {
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "version": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "updatedAt": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "minimum": 0
+      },
+      "updatedBy": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "restoredFrom": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "required": [
+      "id",
+      "content",
+      "version",
+      "updatedAt",
+      "updatedBy"
+    ]
+  },
+  "ContentPublished": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "version": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "required": [
+      "id",
+      "version"
+    ]
+  },
+  "ContentArchived": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "maxLength": 128
+      },
+      "version": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "archived": {
+        "const": true
+      }
+    },
+    "required": [
+      "id",
+      "version",
+      "archived"
+    ]
+  },
+  "ContentRevisionPage": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "items": {
+        "type": "array",
+        "maxItems": 50,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "version": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "publishedAt": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "createdAt": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            }
+          },
+          "required": [
+            "id",
+            "version",
+            "publishedAt",
+            "createdAt"
+          ]
+        }
+      },
+      "nextCursor": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "items",
+      "nextCursor"
+    ]
+  },
+  "AuditPage": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "items": {
+        "type": "array",
+        "maxItems": 50,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "operation": {
+              "type": "string"
+            },
+            "entity": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "actor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "createdAt": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "id",
+            "operation",
+            "entity",
+            "actor",
+            "createdAt"
+          ]
+        }
+      },
+      "nextCursor": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "items",
+      "nextCursor"
+    ]
+  },
+  "Communication": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "version": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "channel": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string"
+      },
+      "createdAt": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "templateVersion": {
+        "type": "string"
+      },
+      "retryAllowed": {
+        "type": "boolean"
+      },
+      "queued": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "id",
+      "version",
+      "channel",
+      "status",
+      "createdAt",
+      "templateVersion",
+      "retryAllowed"
+    ]
+  }
+}

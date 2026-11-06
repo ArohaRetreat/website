@@ -20,6 +20,7 @@ export function contactDetails(value) {
   return { name, phone };
 }
 export function ownContact(profile = {}, token = {}) {
+  if(profile.erasedAt)return{name:'',phone:'',email:'',version:profile.contactVersion||0};
   return {
     name:
       profile.contact?.name ||

@@ -68,13 +68,13 @@ async function mount(s, role = "guest", hash = "") {
   const source = (
     await readFile(new URL("../website/booking.mjs", import.meta.url), "utf8")
   )
-    .replace(
+    .replace(/import \{mountStayPanel\} from '\.\/stay-panel.mjs';/, "").replace(
       /import \{\s*journeyStep\s*\} from "\.\/booking-journey.mjs";/,
       "const journeyStep=()=>{};",
     )
     .replace(
       /import \{ bookingApi \} from "\.\/booking-api.mjs";/,
-      "const bookingApi=window.testBookingApi;",
+      "const bookingApi=window.testBookingApi; const mountStayPanel=async()=>{};",
     );
   await w.eval("(async()=>{" + source + "})()");
   const wait = async () => {
