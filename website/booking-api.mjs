@@ -1,4 +1,4 @@
-import {finishGuestSignIn} from "./guest-signin-return.mjs";
+import { finishGuestSignIn } from "./guest-signin-return.mjs";
 import {
   bookingJourneyId,
   bookingJourneyKind,
@@ -6,6 +6,7 @@ import {
 } from "./booking-journey.mjs";
 import { auth, login, logout } from "./firebase-auth.mjs";
 let ready = auth.authStateReady();
+const customerClaims = new Map();
 export async function bookingApi(
   operation,
   body,
@@ -39,10 +40,11 @@ export async function bookingApi(
       if (!session.ok)
         throw Error("This Google account does not have Host Studio access.");
     }
-    if(!admin) return finishGuestSignIn();
+    if (!admin) return finishGuestSignIn();
     return request("state", undefined, undefined, { admin, start });
   }
   if (operation === "logout") {
+    customerClaims.clear();
     await logout();
     try {
       sessionStorage.removeItem("aroha-guest-session");
@@ -50,7 +52,7 @@ export async function bookingApi(
     return { signedOut: true };
   }
   if (operation === "state" && !auth.currentUser) return request("public");
-  if (operation === "calendar") return request(operation,body);
+  if (operation === "calendar") return request(operation, body);
   if (!auth.currentUser) throw Error("Sign in with Google to continue.");
   try {
     return await request(operation, body, key, { admin, start, cursor });
@@ -66,6 +68,41 @@ async function request(
   key,
   { admin = false, start, cursor } = {},
 ) {
+  let customerLinkNotice;
+  if (operation === "state" && !admin && auth.currentUser) {
+    const uid = auth.currentUser.uid;
+    if (!customerClaims.has(uid))
+      customerClaims.set(
+        uid,
+        request(
+          "platform",
+          { operation: "claimMyCustomer", input: {} },
+          crypto.randomUUID(),
+        ).catch((e) => {
+          customerClaims.delete(uid);
+          throw e;
+        }),
+      );
+    try {
+      await customerClaims.get(uid);
+    } catch (e) {
+      if (
+        ["CUSTOMER_LINK_REVIEW_REQUIRED", "PROFILE_RECREATE_REQUIRED"].includes(
+          e.code,
+        )
+      )
+        customerLinkNotice =
+          e.code === "PROFILE_RECREATE_REQUIRED"
+            ? "Your profile was erased. Save your contact details explicitly to recreate it. Retained booking and financial history remains available."
+            : "Some host-recorded history needs an identity review. Contact Aroha; no accounts have been merged.";
+      else throw e;
+    }
+    if (auth.currentUser?.uid !== uid)
+      throw Object.assign(
+        Error("Account changed. Please reopen your portal."),
+        { code: "SESSION_CHANGED" },
+      );
+  }
   const query = new URLSearchParams();
   if (admin) query.set("admin", "1");
   if (start) query.set("start", start);
@@ -79,7 +116,9 @@ async function request(
     "booking-action": "admin",
   }[operation];
   const response = await fetch(
-    (operation==="platform"?"/api/v1/platform":"/api/v1/booking/" + operation + (query.size ? "?" + query : "")),
+    operation === "platform"
+      ? "/api/v1/platform"
+      : "/api/v1/booking/" + operation + (query.size ? "?" + query : ""),
     {
       method: body === undefined ? "GET" : "POST",
       headers: {
@@ -133,5 +172,7 @@ async function request(
         [...result.bookings, ...result.activeBookings].map((b) => [b.id, b]),
       ).values(),
     ];
+  if (customerLinkNotice) result.customerLinkNotice = customerLinkNotice;
+  if (operation === "profile") customerClaims.clear();
   return result;
 }

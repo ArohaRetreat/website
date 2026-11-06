@@ -113,6 +113,11 @@
           "minimum": 0,
           "maximum": 9
         }
+      },
+      "redeemCredits": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 1000000000
       }
     },
     "required": [
@@ -738,5 +743,113 @@
         "format": "date"
       }
     }
+  },
+  "manual-quote": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "arrival": {
+        "type": "string",
+        "format": "date"
+      },
+      "departure": {
+        "type": "string",
+        "format": "date"
+      },
+      "guests": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 200
+      },
+      "units": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "minItems": 0,
+        "maxItems": 9,
+        "uniqueItems": true
+      },
+      "promo": {
+        "type": "string",
+        "maxLength": 32
+      },
+      "kind": {
+        "type": "string",
+        "enum": [
+          "day",
+          "individual",
+          "private",
+          "event"
+        ]
+      },
+      "adults": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100
+      },
+      "childrenAges": {
+        "type": "array",
+        "maxItems": 100,
+        "items": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9
+        }
+      },
+      "redeemCredits": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 1000000000
+      },
+      "customer": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "email": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 254
+          },
+          "phone": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "phone"
+        ]
+      }
+    },
+    "required": [
+      "arrival",
+      "departure",
+      "customer",
+      "kind",
+      "adults"
+    ]
+  },
+  "manual-create": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "quoteId": {
+        "type": "string",
+        "minLength": 36,
+        "maxLength": 36
+      }
+    },
+    "required": [
+      "quoteId"
+    ]
   }
 }

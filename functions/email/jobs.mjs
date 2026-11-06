@@ -41,7 +41,17 @@ export function invoiceSnapshot(
     throw Error("INVOICE_PRICE_REQUIRED");
   const v = {
     schemaVersion: 1,
-    documentTemplateVersion: "pdf-v4",
+    documentTemplateVersion: booking.loyaltyCredits
+      ? "pdf-v4-loyalty"
+      : "pdf-v4",
+    ...(booking.loyaltyCredits
+      ? {
+          documentKind: "loyalty_invoice",
+          loyaltyCredits: booking.loyaltyCredits,
+          loyaltyDiscount: booking.loyaltyDiscount,
+          priceBenefitDiscount: booking.priceBenefitDiscount || 0,
+        }
+      : {}),
     id: booking.id + "-v" + ((previous?.version || 0) + 1),
     bookingId: booking.id,
     owner: booking.owner,
@@ -68,7 +78,8 @@ export function invoiceSnapshot(
     total: booking.total,
     amountPaid: 0,
     balanceDue: booking.total,
-    status: "unpaid",
+    status:
+      booking.loyaltyCredits && booking.total === 0 ? "settled" : "unpaid",
   };
   return { ...v, snapshotHash: hash(JSON.stringify(v)) };
 }
@@ -104,8 +115,18 @@ export function queueNotifications(
       target = channel === "host_notification" ? config.hostTo : profile.email;
     const job = {
       schemaVersion: 1,
-      templateVersion: documentCorrection ? (booking.source === "host_private" ? "email-v3-private-correction" : "email-v3-correction") : booking.source === "host_private" ? "email-v3-private" : "email-v3",
-      ...(invoice?.documentTemplateVersion ? {documentTemplateVersion:invoice.documentTemplateVersion} : {}),
+      templateVersion: documentCorrection
+        ? booking.source === "host_private"
+          ? "email-v3-private-correction"
+          : "email-v3-correction"
+        : booking.source === "host_manual"
+          ? "email-v4-manual"
+          : booking.source === "host_private"
+            ? "email-v3-private"
+            : "email-v3",
+      ...(invoice?.documentTemplateVersion
+        ? { documentTemplateVersion: invoice.documentTemplateVersion }
+        : {}),
       id,
       owner: booking.owner,
       bookingId: booking.id,
@@ -113,7 +134,8 @@ export function queueNotifications(
       sourceEventId: event.eventId,
       sourceContext: contextFields(),
       channel,
-      to: recipientMode(config) === "test-inbox" ? config.testRecipient : target,
+      to:
+        recipientMode(config) === "test-inbox" ? config.testRecipient : target,
       recipientMode: recipientMode(config),
       from: config.from,
       replyTo: config.replyTo,
@@ -122,7 +144,12 @@ export function queueNotifications(
       subjectPrefix: config.test ? "[PRE-PROD TEST] " : "",
       snapshot: {
         reference: booking.reference,
-        ...(booking.source === "host_private" ? {privateReservation:true,guestCountPending:booking.guestCountPending===true} : {}),
+        ...(booking.source === "host_private"
+          ? {
+              privateReservation: true,
+              guestCountPending: booking.guestCountPending === true,
+            }
+          : {}),
         guestName:
           booking.contact?.name ||
           profile.contact?.name ||

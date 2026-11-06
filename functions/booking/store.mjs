@@ -1,6 +1,21 @@
-import {ledgerRead,financialSummary} from '../platform/finance.mjs';
-import {prepareStayLifecycle,commitStayLifecycle} from '../platform/lifecycle.mjs';
-import {guardIntegrationTransaction} from '../external/access.mjs';
+import {
+  customerBinding,
+  customerOwnerContext,
+  resolveManualCustomer,
+  customerSearchFields,
+} from "./customers.mjs";
+import {
+  prepareLoyalty,
+  commitLoyalty,
+  readWallets,
+  loyaltySummary,
+} from "./loyalty.mjs";
+import { ledgerRead, financialSummary } from "../platform/finance.mjs";
+import {
+  prepareStayLifecycle,
+  commitStayLifecycle,
+} from "../platform/lifecycle.mjs";
+import { guardIntegrationTransaction } from "../external/access.mjs";
 import { apiVersion } from "../version.mjs";
 import { mailSettings } from "../email/config.mjs";
 import {
@@ -161,6 +176,7 @@ const project = (s, actor, profile, bookings, extra = {}) => ({
           { ...s, stats: { [actor.id]: profile.completedStays || 0 } },
           actor.id,
         ),
+        ...(profile.loyaltyWallet || {}),
       }
     : null,
   promos: actor?.role === "host" ? s.promos : [],
@@ -178,22 +194,32 @@ export async function publicBookingState(db) {
 }
 export async function publicBookingCalendar(db, input) {
   validate(schemas.calendar, input);
-  const now = Date.now(), range = calendarWindow(input, now);
-  return db.runTransaction(async tx => {
+  const now = Date.now(),
+    range = calendarWindow(input, now);
+  return db.runTransaction(async (tx) => {
     const refs = [];
-    for(let d=range.start;d<=range.end;d=addDays(d,1)) refs.push(collection(db,"days").doc(d));
-    if(refs.length>96) fail("CALENDAR_LIMIT");
+    for (let d = range.start; d <= range.end; d = addDays(d, 1))
+      refs.push(collection(db, "days").doc(d));
+    if (refs.length > 96) fail("CALENDAR_LIMIT");
     const [config, ledgers, overdue] = await Promise.all([
-      tx.get(collection(db,"config").doc("site")),
+      tx.get(collection(db, "config").doc("site")),
       tx.getAll(...refs),
-      tx.get(reservations(db).where("status","==","checked_in").where("departure","<=",todayIST(now)).limit(201)),
+      tx.get(
+        reservations(db)
+          .where("status", "==", "checked_in")
+          .where("departure", "<=", todayIST(now))
+          .limit(201),
+      ),
     ]);
-    if(overdue.size>200) fail("RECONCILIATION_REQUIRED",409);
-    const state=loadConfig(config), rows=new Map();
-    for(const ledger of ledgers) for(const b of Object.values(ledger.data()?.entries||{})) rows.set(b.id,b);
-    for(const b of overdue.docs) rows.set(b.id,b.data());
-    state.bookings=[...rows.values()];
-    return availabilityCalendar(state,input,now);
+    if (overdue.size > 200) fail("RECONCILIATION_REQUIRED", 409);
+    const state = loadConfig(config),
+      rows = new Map();
+    for (const ledger of ledgers)
+      for (const b of Object.values(ledger.data()?.entries || {}))
+        rows.set(b.id, b);
+    for (const b of overdue.docs) rows.set(b.id, b.data());
+    state.bookings = [...rows.values()];
+    return availabilityCalendar(state, input, now);
   });
 }
 export async function bookingState(
@@ -204,40 +230,81 @@ export async function bookingState(
   const configRef = collection(db, "config").doc("site"),
     profileRef = collection(db, "profiles").doc(token.uid),
     memberRef = db.collection(sharedCollectionName("members")).doc(token.uid);
-  const { s, profile, actor } = await db.runTransaction(async (tx) => {
-    const [cs, ms, ps] = await Promise.all([
-      tx.get(configRef),
-      tx.get(memberRef),
-      tx.get(profileRef),
-    ]);
-    if (admin && !guardMember(ms)) fail("FORBIDDEN", 403);
-    const actor = {
-      id: token.uid,
-      name: String(token.name || "Guest").slice(0, 80),
-      role: admin ? "host" : "guest",
-      ...(admin ? { bookingAccess: studioAccess(ms.data()).bookings } : {}),
-    };
-    const profile = ps.exists
-      ? ps.data()
-      : {
-          id: token.uid,
-          name: actor.name,
-          email: String(token.email || "").slice(0, 254),
-          completedStays: 0,
-          activeIds: [],
-          createdAt: Date.now(),
+  const { s, profile, actor, ownerIds } = await db.runTransaction(
+    async (tx) => {
+      const [cs, ms, ps] = await Promise.all([
+        tx.get(configRef),
+        tx.get(memberRef),
+        tx.get(profileRef),
+      ]);
+      if (admin && !guardMember(ms)) fail("FORBIDDEN", 403);
+      const actor = {
+        id: token.uid,
+        name: String(token.name || "Guest").slice(0, 80),
+        role: admin ? "host" : "guest",
+        ...(admin ? { bookingAccess: studioAccess(ms.data()).bookings } : {}),
+      };
+      const profile = ps.exists
+        ? ps.data()
+        : {
+            id: token.uid,
+            name: actor.name,
+            email: String(token.email || "").slice(0, 254),
+            completedStays: 0,
+            activeIds: [],
+            createdAt: Date.now(),
+          };
+      const binding = admin
+        ? { ownerIds: [token.uid] }
+        : await customerBinding(tx, db, token);
+      const profileRows = [profile];
+      for (const id of binding.ownerIds.filter((id) => id !== token.uid)) {
+        const p = (await tx.get(collection(db, "profiles").doc(id))).data();
+        if (p) profileRows.push(p);
+      }
+      const config = loadConfig(cs),
+        context = {
+          ownerIds: binding.ownerIds,
+          completedStays: profileRows.reduce(
+            (n, p) => n + (p.completedStays || 0),
+            0,
+          ),
         };
-    const email = String(token.email || "").slice(0, 254);
-    if (!profile.erasedAt && (!ps.exists || profile.name !== actor.name || profile.email !== email)) {
-      profile.name = actor.name;
-      profile.email = email;
-      tx.set(profileRef, profile);
-    }
-    return { s: loadConfig(cs), profile, actor };
-  });
+      const wallets = await readWallets(tx, db, binding.ownerIds, Date.now());
+      const email = String(token.email || "").slice(0, 254);
+
+      if (
+        !profile.erasedAt &&
+        (!ps.exists || profile.name !== actor.name || profile.email !== email)
+      ) {
+        profile.name = actor.name;
+        profile.email = email;
+        tx.set(profileRef, { ...profile, ...customerSearchFields(profile) });
+      }
+      return {
+        s: config,
+        profile: {
+          ...profile,
+          activeIds: [
+            ...new Set(profileRows.flatMap((p) => p.activeIds || [])),
+          ],
+          contact: profile.contact || profileRows[1]?.contact,
+          completedStays: context.completedStays,
+          loyaltyWallet: loyaltySummary(
+            wallets,
+            context,
+            config.settings,
+            Date.now(),
+          ),
+        },
+        actor,
+        ownerIds: binding.ownerIds,
+      };
+    },
+  );
   const now = Date.now(),
     col = reservations(db);
-  let query = admin ? col : col.where("owner", "==", token.uid);
+  let query = admin ? col : col.where("owner", "in", ownerIds);
   query = query
     .orderBy("createdAt", "desc")
     .orderBy("__name__", "desc")
@@ -251,6 +318,7 @@ export async function bookingState(
       !cs.exists ||
       c.owner !== token.uid ||
       c.admin !== admin ||
+      JSON.stringify(c.ownerIds || [token.uid]) !== JSON.stringify(ownerIds) ||
       c.expiresAt < now
     )
       fail("INVALID_CURSOR");
@@ -267,6 +335,7 @@ export async function bookingState(
       .doc(nextCursor)
       .set({
         owner: token.uid,
+        ownerIds,
         admin,
         id: last.id,
         createdAt: last.data().createdAt,
@@ -283,7 +352,7 @@ export async function bookingState(
       ...profile.activeIds.slice(0, 3).map((id) => col.doc(id)),
     );
     activeBookings = rows
-      .filter((d) => d.exists && d.data().owner === token.uid)
+      .filter((d) => d.exists && ownerIds.includes(d.data().owner))
       .map((d) => effective(d.data(), now));
   }
   if (admin) {
@@ -339,16 +408,6 @@ export async function bookingState(
     if (missing.length)
       for (const d of await db.getAll(...missing.map((id) => col.doc(id))))
         if (d.exists) all.set(d.id, effective(d.data(), now));
-    const ps = await collection(db, "profiles")
-      .orderBy("createdAt", "desc")
-      .limit(50)
-      .get();
-    users = ps.docs.map((d) => ({
-      id: d.id,
-      name: d.data().name || "Guest",
-      role: "guest",
-      stays: d.data().completedStays || 0,
-    }));
     const as = await collection(db, "audit")
       .orderBy("at", "desc")
       .limit(10)
@@ -381,8 +440,15 @@ export async function bookingCommand(
   key,
   { admin = false, journeyId, requestId } = {},
 ) {
+  const requestedOperation = operation,
+    manualQuote = operation === "manual-quote",
+    manualCreate = operation === "manual-create";
+  if ((manualQuote || manualCreate) && !admin) fail("FORBIDDEN", 403);
   if (!schemas[operation]) fail("NOT_FOUND", 404);
   validate(schemas[operation], input);
+  const originalInput = input;
+  if (manualQuote) operation = "quote";
+  if (manualCreate) operation = "create";
   if (
     [
       "settings",
@@ -401,9 +467,14 @@ export async function bookingCommand(
   const requestRef = collection(db, "requests").doc(
       hash(token.uid + ":" + key),
     ),
-    requestHash = hash(JSON.stringify(stable({ operation, input, admin })));
+    requestHash = hash(
+      JSON.stringify(
+        stable({ operation: requestedOperation, input: originalInput, admin }),
+      ),
+    );
   return db.runTransaction(async (tx) => {
-    await guardIntegrationTransaction(tx,db,token);
+    await guardIntegrationTransaction(tx, db, token);
+    let input = { ...originalInput };
     const now = Date.now(),
       configRef = collection(db, "config").doc("site"),
       profileRef = collection(db, "profiles").doc(token.uid),
@@ -449,11 +520,40 @@ export async function bookingCommand(
       if (admin) fail("FORBIDDEN", 403);
       if (input.expectedVersion !== (profile.contactVersion || 0))
         fail("VERSION_CONFLICT", 409);
+      const relatedBinding = await customerBinding(tx, db, token),
+        related = [];
+      for (const id of relatedBinding.ownerIds.filter(
+        (id) => id !== token.uid,
+      )) {
+        const ref = collection(db, "profiles").doc(id);
+        related.push({ ref, profile: (await tx.get(ref)).data() });
+      }
       const contact = contactDetails({ name: input.name, phone: input.phone });
+      for (const row of related)
+        if (row.profile?.erasedAt)
+          tx.set(row.ref, {
+            ...row.profile,
+            erasedAt: null,
+            email: String(token.email || "")
+              .trim()
+              .toLowerCase(),
+            name: contact.name,
+            contact,
+            contactVersion: (row.profile.contactVersion || 0) + 1,
+            ...customerSearchFields({
+              ...row.profile,
+              email: String(token.email || ""),
+              contact,
+            }),
+            updatedAt: now,
+          });
       tx.set(profileRef, {
         ...profile,
         erasedAt: null,
-        email: String(token.email || ""),
+        email: String(token.email || "")
+          .trim()
+          .toLowerCase(),
+        ...customerSearchFields({ ...profile, email: token.email, contact }),
         contact,
         contactVersion: (profile.contactVersion || 0) + 1,
         updatedAt: now,
@@ -490,6 +590,17 @@ export async function bookingCommand(
       });
       return result;
     }
+    const binding = admin
+      ? { ownerIds: [token.uid] }
+      : await customerBinding(tx, db, token);
+    actor.ownerIds = binding.ownerIds;
+    const manualCustomer = manualQuote
+      ? await resolveManualCustomer(tx, db, input.customer, now)
+      : null;
+    if (manualCustomer) {
+      input.guestId = manualCustomer.profile.id;
+      input.guests = input.adults + (input.childrenAges || []).length;
+    }
     if (input.id && !/^[A-Za-z0-9-]{1,100}$/.test(input.id)) fail("INVALID_ID");
     if (input.quoteId && !/^[a-z0-9-]{36}$/.test(input.quoteId))
       fail("INVALID_ID");
@@ -499,7 +610,11 @@ export async function bookingCommand(
     let target = targetRef ? await tx.get(targetRef) : null;
     target = target?.exists ? target.data() : null;
     const priorStatus = target?.status;
-    if (target && actor.role !== "host" && target.owner !== actor.id)
+    if (
+      target &&
+      actor.role !== "host" &&
+      !binding.ownerIds.includes(target.owner)
+    )
       fail("NOT_FOUND", 404);
     const qSnap = input.quoteId
         ? await tx.get(collection(db, "quotes").doc(input.quoteId))
@@ -507,14 +622,42 @@ export async function bookingCommand(
       q = qSnap?.exists ? qSnap.data() : null;
     if (input.quoteId && !/^[a-z0-9-]{36}$/.test(input.quoteId))
       fail("INVALID_ID");
+    if (manualCreate) {
+      if (!q?.manualBooking) fail("MANUAL_QUOTE_REQUIRED", 409);
+      const currentCustomer = await resolveManualCustomer(
+        tx,
+        db,
+        { ...q.manualContact, email: q.manualEmail },
+        now,
+      );
+      if (currentCustomer.create || currentCustomer.profile.id !== q.guestId)
+        fail("CUSTOMER_LINK_REVIEW_REQUIRED", 409);
+      input.contact = q.manualContact;
+    }
     let owner =
       target?.owner ||
       (admin ? input.guestId || q?.guestId : token.uid) ||
       token.uid;
     const ownerRef = collection(db, "profiles").doc(owner),
       ownerSnap = owner === token.uid ? ps : await tx.get(ownerRef);
-    if (owner !== token.uid && !ownerSnap.exists) fail("INVALID_GUEST");
-    const ownerProfile = ownerSnap.exists ? ownerSnap.data() : profile;
+    if (owner !== token.uid && !ownerSnap.exists && !manualCustomer)
+      fail("INVALID_GUEST");
+    const ownerProfile =
+      manualCustomer?.profile ||
+      (ownerSnap.exists ? ownerSnap.data() : profile);
+    const ownerContext = manualCustomer?.create
+      ? {
+          ownerIds: [owner],
+          profiles: new Map([[owner, ownerProfile]]),
+          completedStays: 0,
+        }
+      : await customerOwnerContext(tx, db, owner, ownerProfile);
+    if (
+      target?.loyaltyCredits &&
+      (["change-quote", "change-request"].includes(operation) ||
+        (operation === "booking-action" && input.action === "approve_change"))
+    )
+      fail("CREDIT_REDEMPTION_CHANGE_REQUIRES_REBOOKING", 409);
     if (operation === "guest-profile") {
       if (!admin) fail("FORBIDDEN", 403);
       return ownContact(ownerProfile);
@@ -531,7 +674,7 @@ export async function bookingCommand(
     const creditRows = completing
       ? await tx.get(
           collection(db, "credits")
-            .where("owner", "==", owner)
+            .where("owner", "in", ownerContext.ownerIds)
             .where("active", "==", true)
             .where("arrival", "<=", target.departure)
             .where("departure", ">=", target.arrival)
@@ -540,12 +683,13 @@ export async function bookingCommand(
       : null;
     if (creditRows?.size >= 40) fail("RECONCILIATION_REQUIRED", 409);
 
+    actor.customerOwnerIds = ownerContext.ownerIds;
     s.users = [
       { id: owner, name: ownerProfile.name || actor.name, role: "guest" },
     ];
     s.stats = {
-      [owner]: ownerProfile.completedStays || 0,
-      [token.uid]: profile.completedStays || 0,
+      [token.uid]: ownerContext.completedStays,
+      [owner]: ownerContext.completedStays,
     };
     let range = input.arrival ? input : q || target;
     const periods = [range, target, target?.changeRequest].filter(
@@ -565,7 +709,11 @@ export async function bookingCommand(
         ]),
       ),
     );
-    const activeIds = (ownerProfile.activeIds || []).slice(0, 3),
+    const activeIds = [
+        ...new Set(
+          [...ownerContext.profiles.values()].flatMap((p) => p.activeIds || []),
+        ),
+      ].slice(0, 6),
       activeSnaps = activeIds.length
         ? await tx.getAll(...activeIds.map((id) => reservations(db).doc(id)))
         : [];
@@ -659,40 +807,109 @@ export async function bookingCommand(
     )
       fail("PROMO_LIMIT");
     if (operation === "block" && s.blocks.length >= 100) fail("BLOCK_LIMIT");
+    const loyalty = await prepareLoyalty(tx, db, {
+      context: ownerContext,
+      owner,
+      target,
+      operation,
+      input,
+      settings: s.settings,
+      now,
+    });
+    s.loyaltyBalances = {
+      [owner]: loyalty.summary.creditsAvailable,
+      [token.uid]: loyalty.summary.creditsAvailable,
+    };
     const emailConfig = mailSettings();
     const invoiceApproval =
       (emailConfig.enabled || !!target?.invoiceId) &&
-      operation === "booking-action" &&
-      ["approve", "approve_change"].includes(input.action);
+      ((operation === "booking-action" &&
+        ["approve", "approve_change"].includes(input.action)) ||
+        manualCreate);
     const counterRef = db
       .collection(collectionName("invoice_counters"))
       .doc(String(invoiceYear(now)));
     const counterSnap = invoiceApproval ? await tx.get(counterRef) : null;
-    const previousInvoice =
-      target?.invoiceId
-        ? (await tx.get(invoiceCollection(db).doc(target.invoiceId))).data()
-        : null;
+    const previousInvoice = target?.invoiceId
+      ? (await tx.get(invoiceCollection(db).doc(target.invoiceId))).data()
+      : null;
     let contact;
     if (operation === "create") {
-      if(ownerProfile.erasedAt)fail("PROFILE_RECREATE_REQUIRED",409);
+      if (ownerProfile.erasedAt) fail("PROFILE_RECREATE_REQUIRED", 409);
       if (!input.contact && !ownerProfile.contact?.phone)
         fail("CONTACT_REQUIRED", 422);
       contact = contactDetails(input.contact || ownerProfile.contact);
     }
-    const changeLedger=operation==='booking-action'&&input.action==='approve_change'?await ledgerRead(tx,db,target.id):null;
-    const stayLifecycle=await prepareStayLifecycle(tx,db,{booking:target,operation,input,now});
-    const result =
+    const changeLedger =
+      operation === "booking-action" && input.action === "approve_change"
+        ? await ledgerRead(tx, db, target.id)
+        : null;
+    const stayLifecycle = await prepareStayLifecycle(tx, db, {
+      booking: target,
+      operation,
+      input,
+      now,
+    });
+    let result =
       operation === "availability"
         ? availability(s, input, now)
         : mutate(s, actor, operation, input, now);
-    if(changeLedger){if(changeLedger.length)financialSummary(result,changeLedger);result.financialVersion=(target.financialVersion||0)+1;}
+    if (manualCreate) {
+      if (!emailConfig.enabled) fail("MAIL_NOT_CONFIGURED", 409);
+      result.source = "host_manual";
+      result.recordedBy = token.uid;
+      result.contact = contact;
+      result.guestName = contact.name;
+      s.audit = s.audit.filter((e) => e.type !== "booking.requested");
+      result = mutate(
+        s,
+        actor,
+        "booking-action",
+        { id: result.id, expectedVersion: result.version, action: "approve" },
+        now,
+      );
+      result.history = [
+        { status: "confirmed", at: now, source: "host_manual" },
+      ];
+    }
+    if (manualQuote) {
+      result.manualBooking = true;
+      result.manualContact = manualCustomer.contact;
+      result.manualEmail = manualCustomer.email;
+      result.customerId = owner;
+    }
+    if (operation === "create" || operation === "booking-action")
+      commitLoyalty(tx, db, loyalty, {
+        booking: result,
+        previous: target,
+        operation,
+        input,
+        manual: manualCreate,
+      });
+    if (manualCustomer) {
+      if (manualCustomer.create)
+        tx.set(manualCustomer.ref, manualCustomer.profile);
+      if (manualCustomer.createIndex)
+        tx.set(manualCustomer.keyRef, { customerId: owner, createdAt: now });
+    }
+    if (changeLedger) {
+      if (changeLedger.length) financialSummary(result, changeLedger);
+      result.financialVersion = (target.financialVersion || 0) + 1;
+    }
     if (operation === "availability") return result;
     if (operation === "quote" || operation === "change-quote")
       tx.set(collection(db, "quotes").doc(result.id), {
         ...result,
         expireAt: new Date(result.expiresAt + 86400000),
       });
-    if(stayLifecycle)commitStayLifecycle(tx,db,{prepared:stayLifecycle,booking:result,profile:ownerProfile,settings:s.settings,now});
+    if (stayLifecycle)
+      commitStayLifecycle(tx, db, {
+        prepared: stayLifecycle,
+        booking: result,
+        profile: ownerProfile,
+        settings: s.settings,
+        now,
+      });
     const reservationMutation = [
       "create",
       "booking-action",
@@ -747,6 +964,8 @@ export async function bookingCommand(
           80,
         );
       if (!b?.id) fail("INVALID_MUTATION", 500);
+      if (operation === "create")
+        tx.update(qSnap.ref, { consumedBy: b.id, consumedAt: now });
       tx.set(reservations(db).doc(b.id), b);
       for (let i = 0; i < days.length; i++) {
         const d = days[i],
@@ -770,7 +989,9 @@ export async function bookingCommand(
             ...(b.kind
               ? {
                   kind: b.kind,
-                  ...(b.pricingVersion ? {pricingVersion:b.pricingVersion} : {}),
+                  ...(b.pricingVersion
+                    ? { pricingVersion: b.pricingVersion }
+                    : {}),
                   adults: b.adults,
                   children: b.children,
                   startsAt: b.startsAt,
@@ -782,13 +1003,21 @@ export async function bookingCommand(
         tx.set(dayRefs[i], { date: d, entries, updatedAt: now });
       }
       const active = activeSnaps
-        .filter((d) => d.exists && d.id !== b.id && occupies(d.data(), now))
+        .filter(
+          (d) =>
+            d.exists &&
+            d.data().owner === owner &&
+            d.id !== b.id &&
+            occupies(d.data(), now),
+        )
         .map((d) => d.id);
       if (occupies(b, now)) active.push(b.id);
       const completed =
         (ownerProfile.completedStays || 0) +
         (completing && b.status === "completed" && priorStatus !== "completed"
-          ? 1 - (creditRows?.size || 0)
+          ? 1 -
+            (creditRows?.docs.filter((d) => d.data().owner === owner).length ||
+              0)
           : 0);
       if (completing && b.status === "completed") {
         const creditId = hash(owner + ":" + b.id),
@@ -805,6 +1034,20 @@ export async function bookingCommand(
         });
         for (const d of creditRows.docs)
           tx.update(d.ref, { active: false, supersededBy: creditId });
+        for (const [id, p] of ownerContext.profiles)
+          if (id !== owner) {
+            const removed = creditRows.docs.filter(
+              (d) => d.data().owner === id,
+            ).length;
+            if (removed) {
+              if ((p.completedStays || 0) < removed)
+                fail("LOYALTY_RECONCILIATION_REQUIRED", 409);
+              tx.update(collection(db, "profiles").doc(id), {
+                completedStays: (p.completedStays || 0) - removed,
+                updatedAt: now,
+              });
+            }
+          }
       }
       tx.set(ownerRef, {
         ...ownerProfile,

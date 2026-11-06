@@ -62,13 +62,13 @@ for (const [
     const names=[...raw.matchAll(/:([a-z][A-Za-z0-9]*)/g)].map(m=>m[1]);
     const parameters=names.map(name=>({in:'path',name,required:true,schema:definition.input.properties[name]}));
     if(method==='GET')for(const[name,schema]of Object.entries(definition.input.properties))if(!names.includes(name))parameters.push({in:'query',name,required:definition.input.required.includes(name),schema});
-    if(method!=='GET')parameters.push({in:'header',name:'Idempotency-Key',required:true,schema:{type:'string',minLength:8,maxLength:100,pattern:'^[A-Za-z0-9-]+$'}});
+    if(method!=='GET'&&!definition.readOnly)parameters.push({in:'header',name:'Idempotency-Key',required:true,schema:{type:'string',minLength:8,maxLength:100,pattern:'^[A-Za-z0-9-]+$'}});
     if(method!=='GET'&&definition.versionKind)parameters.push({in:'header',name:'If-Match',required:true,schema:{type:'string'},description:'Strong ETag for '+definition.versionKind+' returned by its read operation.'});
     const input=structuredClone(definition.input);for(const name of [...names,'expectedVersion'])delete input.properties[name];input.required=input.required.filter(name=>!names.includes(name)&&name!=='expectedVersion');
     const output=definition.output||'DomainResult';schemas.DomainResult||={type:'object'};
-    const responses={[method==='POST'?201:200]:{description:'Authorized shared business result',content:{[definition.binary?'application/pdf':'application/json']:{schema:definition.binary?{type:'string',format:'binary'}:{$ref:'#/components/schemas/'+output}}}}};
+    const responses={[method==='POST'&&!definition.readOnly?201:200]:{description:'Authorized shared business result',content:{[definition.binary?'application/pdf':'application/json']:{schema:definition.binary?{type:'string',format:'binary'}:{$ref:'#/components/schemas/'+output}}}}};
     for(const status of [400,401,403,404,409,410,412,413,415,422,428,429,503,504])responses[status]={description:'Bounded API error',content:{'application/json':{schema:{$ref:'#/components/schemas/Error'}}}};
-    const op={operationId,summary:operationId,description:definition.description,security:[{integrationToken:[]}],'x-required-scopes':definition.scopes||[scope],'x-shared-operation':operationId,'x-implementation-status':'implemented-source-not-deployment-evidence',parameters,responses};
+    const op={operationId,summary:operationId,description:definition.description,security:[{integrationToken:[]}],'x-required-scopes':definition.scopes||[scope],'x-shared-operation':operationId,'x-read-only':method==='GET'||definition.readOnly===true,'x-implementation-status':'implemented-source-not-deployment-evidence',parameters,responses};
     if(method!=='GET'&&Object.keys(input.properties).length){const schemaName=operationId+'Input';schemas[schemaName]=input;op.requestBody={required:true,content:{'application/json':{schema:{$ref:'#/components/schemas/'+schemaName}}}};}
     paths[path]||={};paths[path][method.toLowerCase()]=op;continue;
   }

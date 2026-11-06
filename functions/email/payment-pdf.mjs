@@ -33,7 +33,12 @@ const time = (n) =>
   }).format(new Date(n)) + " IST";
 export async function renderPaymentDocumentPdf(invoice) {
   const receipt = invoice.documentKind === "receipt";
-  const title = receipt ? "Payment receipt" : "Checkout statement";
+  const creditInvoice = invoice.documentKind === "loyalty_invoice";
+  const title = creditInvoice
+    ? "Booking invoice"
+    : receipt
+      ? "Payment receipt"
+      : "Checkout statement";
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({
         size: "A4",
@@ -157,9 +162,11 @@ export async function renderPaymentDocumentPdf(invoice) {
         218,
         invoice.test
           ? "PRE-PRODUCTION TEST / NOT VALID FOR PAYMENT"
-          : receipt
-            ? "VERIFIED MANUAL PAYMENT / RECEIPT"
-            : "CHECKOUT STATEMENT / ACTUAL PAID AND OUTSTANDING",
+          : creditInvoice
+            ? "CONFIRMED VISIT / LOYALTY CREDITS APPLIED"
+            : receipt
+              ? "VERIFIED MANUAL PAYMENT / RECEIPT"
+              : "CHECKOUT STATEMENT / ACTUAL PAID AND OUTSTANDING",
         "#fff8eb",
         7,
       );
@@ -260,7 +267,22 @@ export async function renderPaymentDocumentPdf(invoice) {
         line(y + height);
         y += height + 17;
       }
-      y = ensure(y, 118);
+      y = ensure(y, invoice.loyaltyCredits ? 175 : 118);
+      if (invoice.loyaltyCredits) {
+        text(44, y, "Price benefit", 10, "Source", M);
+        right(551, y, "−" + money(invoice.priceBenefitDiscount || 0), 11);
+        y += 22;
+        text(
+          44,
+          y,
+          `${invoice.loyaltyCredits} loyalty credits applied`,
+          10,
+          "Source",
+          M,
+        );
+        right(551, y, "−" + money(invoice.loyaltyDiscount), 11);
+        y += 22;
+      }
       text(44, y, "Visit charges", 11, "SourceBold");
       right(551, y, money(invoice.total), 13, "SourceBold");
       y += 25;
@@ -276,7 +298,12 @@ export async function renderPaymentDocumentPdf(invoice) {
       caps(
         61,
         y + 15,
-        "BALANCE DUE · " + (invoice.balanceDue === 0 ? "PAID" : "UNPAID"),
+        "BALANCE DUE · " +
+          (invoice.balanceDue === 0
+            ? invoice.loyaltyCredits
+              ? "SETTLED"
+              : "PAID"
+            : "UNPAID"),
         "#d2dfc3",
         8,
       );
@@ -285,9 +312,11 @@ export async function renderPaymentDocumentPdf(invoice) {
       text(
         45,
         y,
-        receipt
-          ? "Records a verified manual payment. No online transfer was initiated."
-          : "Amounts reflect the payment ledger when this statement was issued.",
+        creditInvoice
+          ? "Loyalty credits reduce the visit amount. No payment has been recorded by this invoice."
+          : receipt
+            ? "Records a verified manual payment. No online transfer was initiated."
+            : "Amounts reflect the payment ledger when this statement was issued.",
         8,
         "Source",
         M,

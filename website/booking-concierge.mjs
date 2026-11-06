@@ -1,3 +1,4 @@
+import {mountCreditWallet} from './host-operations.mjs';
 import {mountStayPanel} from './stay-panel.mjs';
 import { recommendPrivate } from "./booking-options.mjs";
 export async function startConcierge({
@@ -19,7 +20,7 @@ export async function startConcierge({
       .toISOString()
       .slice(0, 10);
   document.querySelector("#app").innerHTML =
-    '<div class="website-return"><a href="/">← Back to website</a></div><header class="header"><a href="#plan" id="home" aria-label="Plan a visit at Aroha"><img id="logo" src="/assets/brand/logo-forest.svg" alt="Aroha Retreat"></a><nav aria-label="Your account"><button id="help">Need a hand?</button><button id="visits">Your visits</button><button id="profile">Profile</button><button id="atmosphere" aria-pressed="false">Sunset</button><button id="account" disabled>Opening…</button></nav></header><aside id="pending-request"></aside><main id="main" tabindex="-1"><div class="loading" role="status">Opening your booking portal…</div></main><div id="mobile-action"></div><div id="toast" role="status" aria-live="polite"></div><dialog id="sheet" aria-label="Booking details"><button class="close" aria-label="Close dialog">×</button><div id="sheet-content"></div></dialog><footer><img src="/assets/brand/logo-forest.svg" alt=""><span>Small enough to feel personal.<br>Aroha Retreat · Kanakapura</span><a href="/" >Explore Aroha ↗</a><a href="/admin/#bookings">Host Studio ↗</a></footer>';
+    '<div class="website-return"><a href="/">← Back to website</a></div><header class="header"><a href="#plan" id="home" aria-label="Plan a visit at Aroha"><img id="logo" src="/assets/brand/logo-forest.svg" alt="Aroha Retreat"></a><nav aria-label="Your account"><button id="help">Need a hand?</button><button id="visits">Your visits</button><button id="credits">Your credits</button><button id="profile">Profile</button><button id="atmosphere" aria-pressed="false">Sunset</button><button id="account" disabled>Opening…</button></nav></header><aside id="pending-request"></aside><main id="main" tabindex="-1"><div class="loading" role="status">Opening your booking portal…</div></main><div id="mobile-action"></div><div id="toast" role="status" aria-live="polite"></div><dialog id="sheet" aria-label="Booking details"><button class="close" aria-label="Close dialog">×</button><div id="sheet-content"></div></dialog><footer><img src="/assets/brand/logo-forest.svg" alt=""><span>Small enough to feel personal.<br>Aroha Retreat · Kanakapura</span><a href="/" >Explore Aroha ↗</a><a href="/admin/#bookings">Host Studio ↗</a></footer>';
   const $ = (s) => document.querySelector(s),
     $$ = (s) => [...document.querySelectorAll(s)];
   const S = {
@@ -47,6 +48,7 @@ export async function startConcierge({
     account: null,
     filter: "upcoming",
     promo: "",
+    redeemCredits:0,
     submitKey: null,
     requestBody: null,
     submitting: false,
@@ -143,7 +145,7 @@ export async function startConcierge({
     const hash =
       v === "visits" || v === "confirmation"
         ? "#visits"
-        : v === "profile"
+        : v === "credits" ? "#credits" : v === "profile"
           ? "#profile"
           : "#plan";
     history.replaceState(null, "", hash);
@@ -194,7 +196,7 @@ export async function startConcierge({
       )
       .join(
         "",
-      )}${q.discount ? `<div class="billrow"><span>${esc(q.offer)}</span><span>−${cash(q.discount)}</span></div>` : ""}<div class="billtotal"><span>${q.total === null ? "Price" : "Total for your visit"}</span><strong>${cash(q.total)}</strong></div><p class="detailnote">${S.kind === "event" ? "The published daily rate covers every selected day. Overnight accommodation and special arrangements are agreed separately." : S.kind === "stay" ? nights() + " night" + (nights() > 1 ? "s" : "") + " · Check in " + policy().stayStart + " · check out " + policy().stayEnd + " IST." : "Breakfast & lunch included · " + policy().dayStart + "–" + policy().dayEnd + " IST."}</p><p class="detailnote">No online payment. Your request needs host approval. Prices and availability are rechecked when you send.</p>`;
+      )}${(q.priceBenefitDiscount??q.discount)?`<div class="billrow"><span>${esc(q.offer)}</span><span>−${cash(q.priceBenefitDiscount??q.discount)}</span></div>`:""}${q.loyaltyCredits?`<div class="billrow"><span>${q.loyaltyCredits} loyalty credits</span><span>−${cash(q.loyaltyDiscount)}</span></div>`:""}<div class="billtotal"><span>${q.total === null ? "Price" : "Total for your visit"}</span><strong>${cash(q.total)}</strong></div><p class="detailnote">${S.kind === "event" ? "The published daily rate covers every selected day. Overnight accommodation and special arrangements are agreed separately." : S.kind === "stay" ? nights() + " night" + (nights() > 1 ? "s" : "") + " · Check in " + policy().stayStart + " · check out " + policy().stayEnd + " IST." : "Breakfast & lunch included · " + policy().dayStart + "–" + policy().dayEnd + " IST."}</p><p class="detailnote">No online payment. Your request needs host approval. Prices and availability are rechecked when you send.</p>`;
   }
   function sidebar(review = false) {
     return `<aside class="quote">${bill()}${primary(review ? (S.needsQuote ? "Refresh options →" : S.submissionUnknown ? "Retry same request →" : "Send request →") : S.kind === "event" ? "Review request →" : "Review request →", review ? "submit" : "review", !offer() || S.roomDirty || S.busy)}<p class="detailnote">${review ? "Acknowledgement first. Confirmation follows host review." : "You can edit your plans on the next screen."}</p></aside>`;
@@ -254,7 +256,7 @@ export async function startConcierge({
     return `<section class="wrap">${progress(1)}<h1 style="font-size:40px">Let’s find a better fit.</h1>${tripbar()}<div class="empty"><h2>${cap ? "Your group is larger than our overnight capacity." : "These dates don’t have a suitable option."}</h2><p>${cap ? "Aroha currently accommodates up to " + Math.min(policy().nightAdults, S.account.settings.capacity) + " overnight adults. You can plan a day outing or ask about an exclusive retreat; overnight accommodation still needs a separate host agreement." : "Your plans are kept. Try different dates, fewer guests or a different visit type. Availability can change while you plan."}</p><div class="inline-actions">${cap ? primary("Plan a day outing", "switchday") : ""}<button class="secondary" data-act="dates">Choose different dates</button></div></div></section>`;
   }
   function review() {
-    return `<section class="wrap reveal">${progress(2)}<span class="eyebrow">YOUR REQUEST, READY FOR A HUMAN WELCOME</span><h1 style="font-size:42px;margin-top:12px">A few details, then over to us.</h1>${tripbar()}<div class="split"><div><section class="reviewpanel"><h3>${S.kind === "event" ? "Your exclusive-retreat enquiry" : S.selected === "private" ? "Your private stay" : S.kind === "day" ? "Your day outing" : "Your individual stay"}</h3><p>${party()} · ${tripDates()}${S.kind === "stay" ? "<br>" + esc(offer().unitNames.join(" · ")) : ""}</p><div class="inline-actions"><button class="textbutton" data-act="options">Change your option</button></div><p class="help-line">${S.kind === "event" ? "Your hosts will prepare a quote. This enquiry is not an exclusive booking or a hold." : "The price is shown in full. Your request is confirmed only after your hosts approve it."}</p></section><section class="reviewpanel"><h3>So we can welcome you.</h3><div class="profile-note"><span>Filled from your guest profile. Edit name and phone for this visit; Google verifies your email.</span></div><form id="contact"><fieldset style="border:0;padding:0;margin:0;min-width:0" ${S.submissionUnknown ? "disabled" : ""}><div class="columns"><label class="field">Your name<input id="name" autocomplete="name" minlength="2" required maxlength="120" value="${esc(S.name)}"></label><label class="field">Phone number<input id="phone" type="tel" autocomplete="tel" placeholder="+91 98765 43210" required maxlength="32" value="${esc(S.phone)}"></label></div><label class="field">Email for your booking updates<input id="email" type="email" autocomplete="email" readonly value="${esc(S.email)}"></label>${S.kind === "event" ? `<label class="field">What are you planning?<select id="occasion"><option value="">Choose an occasion (optional)</option>${["Family gathering", "Celebration", "Team outing", "Something else"].map((t) => `<option ${S.occasion === t ? "selected" : ""}>${t}</option>`).join("")}</select></label>` : ""}<label class="field">Anything you’d like your hosts to know? <small>Optional</small><textarea id="notes" maxlength="${S.kind === "event" ? 950 : 1000}" placeholder="Arrival plans, a celebration, or something that would help us welcome you…">${esc(S.notes)}</textarea></label><label class="checkline"><input id="save-profile" type="checkbox" ${S.saveProfile ? "checked" : ""}>Save name and phone to my profile for future visits</label><p class="planner-note">Your contact number is used by authorised hosts and included in operational booking events in Dynatrace. Names, private notes and child ages are not sent. Profile edits do not change past booking contacts.</p><label class="checkline"><input id="terms" type="checkbox" required ${S.terms ? "checked" : ""}><span>I understand the accommodation, sharing terms and price shown, that host approval is required, and no online payment is collected. Self-service cancellation is available ${cutoff(S.account.settings.cancelHours)}; later cancellations need the host.</span></label></fieldset></form><small>Contact changes apply to this request. Previous booking contacts are not overwritten.</small></section><section class="reviewpanel"><h3>What happens after I send?</h3><p>First, an acknowledgement. Then your hosts review ${S.kind === "event" ? "the scope and prepare a quote for your acceptance" : "the dates and arrangements"}. Confirmation follows host approval. No payment is taken on this page.</p></section>${S.kind !== "event" ? `<div class="reviewpanel"><details><summary>Have an invitation code?</summary><label class="field">Invitation code<input id="promo-code" maxlength="32" value="${esc(S.promo)}"></label><button class="secondary" data-act="applypromo">Apply code</button></details></div>` : ""}${S.error ? `<p class="form-error" role="alert">${esc(S.error)}</p>` : ""}</div>${sidebar(true)}</div></section>`;
+    return `<section class="wrap reveal">${progress(2)}<span class="eyebrow">YOUR REQUEST, READY FOR A HUMAN WELCOME</span><h1 style="font-size:42px;margin-top:12px">A few details, then over to us.</h1>${tripbar()}<div class="split"><div><section class="reviewpanel"><h3>${S.kind === "event" ? "Your exclusive-retreat enquiry" : S.selected === "private" ? "Your private stay" : S.kind === "day" ? "Your day outing" : "Your individual stay"}</h3><p>${party()} · ${tripDates()}${S.kind === "stay" ? "<br>" + esc(offer().unitNames.join(" · ")) : ""}</p><div class="inline-actions"><button class="textbutton" data-act="options">Change your option</button></div><p class="help-line">${S.kind === "event" ? "Your hosts will prepare a quote. This enquiry is not an exclusive booking or a hold." : "The price is shown in full. Your request is confirmed only after your hosts approve it."}</p></section><section class="reviewpanel"><h3>So we can welcome you.</h3><div class="profile-note"><span>Filled from your guest profile. Edit name and phone for this visit; Google verifies your email.</span></div><form id="contact"><fieldset style="border:0;padding:0;margin:0;min-width:0" ${S.submissionUnknown ? "disabled" : ""}><div class="columns"><label class="field">Your name<input id="name" autocomplete="name" minlength="2" required maxlength="120" value="${esc(S.name)}"></label><label class="field">Phone number<input id="phone" type="tel" autocomplete="tel" placeholder="+91 98765 43210" required maxlength="32" value="${esc(S.phone)}"></label></div><label class="field">Email for your booking updates<input id="email" type="email" autocomplete="email" readonly value="${esc(S.email)}"></label>${S.kind === "event" ? `<label class="field">What are you planning?<select id="occasion"><option value="">Choose an occasion (optional)</option>${["Family gathering", "Celebration", "Team outing", "Something else"].map((t) => `<option ${S.occasion === t ? "selected" : ""}>${t}</option>`).join("")}</select></label>` : ""}<label class="field">Anything you’d like your hosts to know? <small>Optional</small><textarea id="notes" maxlength="${S.kind === "event" ? 950 : 1000}" placeholder="Arrival plans, a celebration, or something that would help us welcome you…">${esc(S.notes)}</textarea></label><label class="checkline"><input id="save-profile" type="checkbox" ${S.saveProfile ? "checked" : ""}>Save name and phone to my profile for future visits</label><p class="planner-note">Your contact number is used by authorised hosts and included in operational booking events in Dynatrace. Names, private notes and child ages are not sent. Profile edits do not change past booking contacts.</p><label class="checkline"><input id="terms" type="checkbox" required ${S.terms ? "checked" : ""}><span>I understand the accommodation, sharing terms and price shown, that host approval is required, and no online payment is collected. Self-service cancellation is available ${cutoff(S.account.settings.cancelHours)}; later cancellations need the host.</span></label></fieldset></form><small>Contact changes apply to this request. Previous booking contacts are not overwritten.</small></section><section class="reviewpanel"><h3>What happens after I send?</h3><p>First, an acknowledgement. Then your hosts review ${S.kind === "event" ? "the scope and prepare a quote for your acceptance" : "the dates and arrangements"}. Confirmation follows host approval. No payment is taken on this page.</p></section>${S.kind !== "event" ? `<div class="reviewpanel"><details><summary>Have an invitation code?</summary><label class="field">Invitation code<input id="promo-code" maxlength="32" value="${esc(S.promo)}"></label><button class="secondary" data-act="applypromo">Apply code</button></details></div>` : ""}${S.kind==="stay"?`<section class="reviewpanel"><h3>Use your Aroha credits</h3><p>${S.account.loyalty?.creditsAvailable||0} credits available · 1 credit = ₹1. Credits are reserved when you send and used after host approval.</p><label class="field">Credits to use<input id="redeem-credits" type="number" min="0" step="1" max="${S.account.loyalty?.creditsAvailable||0}" value="${S.redeemCredits}" ${S.submissionUnknown?"disabled":""}></label><button class="secondary" data-act="applycredits" ${S.submissionUnknown?"disabled":""}>Update credits & price</button></section>`:""}${S.error ? `<p class="form-error" role="alert">${esc(S.error)}</p>` : ""}</div>${sidebar(true)}</div></section>`;
   }
   function confirmation() {
     const r = S.record;
@@ -278,6 +280,7 @@ export async function startConcierge({
     );
     return `<section class="wrap reveal"><span class="eyebrow">YOUR AROHA VISITS</span><h1 style="font-size:42px;margin-top:12px">Something to look forward to.</h1><p class="lead">${esc(t?.name || "Visitor")} · ${t?.stays || 0} completed stays.${t?.nextAt ? " " + Math.max(0, t.nextAt - t.stays) + " more stays to your next tier." : ""}${t?.discount ? " " + t.discount + "% overnight benefit." : ""}</p><div class="inline-actions">${primary("Plan another visit", "find")}${["upcoming", "past", "cancelled"].map((f) => `<button class="secondary" data-filter="${f}" aria-pressed="${S.filter === f}">${f[0].toUpperCase() + f.slice(1)}</button>`).join("")}</div>${rows.length ? rows.map((b) => `<article class="reviewpanel visit-item"><span class="pill">${esc(statusLabel(b.status))}</span><h3>${esc(productLabel(b.kind))}</h3><p>${dateLabel(b.arrival)} – ${dateLabel(b.kind === "event" ? add(b.departure, -1) : b.departure)} · ${b.adults ?? b.guests} adults · ${b.children ?? 0} under 10s</p><p>${esc(b.reference)} · ${cash(b.total)}</p><div class="inline-actions"><button class="textbutton" data-booking="${esc(b.id)}">View booking ↗</button></div></article>`).join("") : '<div class="empty"><h2>No visits in this category yet.</h2><p>New requests and confirmed visits will appear here.</p></div>'}${a.nextCursor ? '<button class="secondary" data-act="morevisits">Load more history</button>' : ""}</section>`;
   }
+  function credits(){return `<section class="wrap"><span class="eyebrow">YOUR AROHA CREDITS</span><h1>A little more to return to.</h1><div data-credit-wallet role="region" aria-label="Your loyalty balance">Loading your credits…</div></section>`;}
   function profile() {
     return `<section class="wrap"><span class="eyebrow">YOUR GUEST PROFILE</span><h1 style="font-size:42px;margin-top:12px">So we can welcome you.</h1><div class="inline-actions"><button class="secondary" data-act="enquire">Enquire on WhatsApp ↗</button><button class="primary" data-act="find">Book a visit →</button></div><form id="profile-form" class="reviewpanel" style="margin-top:25px"><div class="columns"><label class="field">Full name<input id="profile-name" minlength="2" maxlength="120" autocomplete="name" required value="${esc(S.account.profile?.name || S.account.actor?.name)}"></label><label class="field">Phone with country code<input id="profile-phone" type="tel" autocomplete="tel" required maxlength="32" placeholder="+91 98765 43210" value="${esc(S.account.profile?.phone)}"></label></div><label class="field">Verified Google email<input type="email" readonly value="${esc(S.account.profile?.email)}"></label><p class="planner-note">Your phone is used by authorised hosts and included in operational booking business events in Dynatrace. Names, private notes and child ages are not sent. Existing booking contacts stay unchanged.</p><div class="inline-actions">${primary("Save profile", "saveprofile")}</div></form></section>`;
   }
@@ -289,7 +292,7 @@ export async function startConcierge({
       : "";
     if (S.view === "review") syncContact();
     $("#main").innerHTML = (
-      { find, options, review, confirmation, visits, profile }[S.view] || find
+      { find, options, review, confirmation, visits, profile, credits }[S.view] || find
     )();
     let visible =
       ["options", "review"].includes(S.view) && S.data?.available && !S.busy;
@@ -298,6 +301,8 @@ export async function startConcierge({
       ? `<button class="mobile-price" data-act="bill"><strong>${offer() ? cash(offer().total) : "Choose an option"}</strong>${S.kind === "event" ? "Quote details" : "Total · price details"}</button>${primary(S.view === "review" ? (S.needsQuote ? "Refresh options →" : S.submissionUnknown ? "Retry same request →" : "Send request →") : S.kind === "event" ? "Review request →" : "Review request →", S.view === "review" ? "submit" : "review", !offer() || S.roomDirty)}`
       : "";
     updateAccount();
+    if(S.account?.customerLinkNotice){const note=document.createElement('p');note.className='profile-note';note.textContent=S.account.customerLinkNotice;$('#main').prepend(note);}
+    if(S.view==='credits')void mountCreditWallet($('[data-credit-wallet]'),{call:(operation,input,key)=>api('platform',{operation,input},key)});
     if(S.view==='confirmation'&&S.record){const target=document.createElement('div');$('#main').append(target);void mountStayPanel(target,{booking:S.record,call:(operation,input,key)=>api('platform',{operation,input},key)});}
   }
   function syncContact() {
@@ -328,7 +333,7 @@ export async function startConcierge({
     };
   }
   async function quoted(kind, units = []) {
-    return api("quote", { ...(await payload(kind, units)), promo: S.promo });
+    return api("quote", { ...(await payload(kind, units)), promo: S.promo,redeemCredits:["individual","private"].includes(kind)?S.redeemCredits:0 });
   }
   async function refresh() {
     const previous = S.account?.actor?.id;
@@ -367,6 +372,7 @@ export async function startConcierge({
     S.phone = "";
     S.notes = "";
     S.promo = "";
+    S.redeemCredits=0;
     S.contactDirty = false;
     S.submitKey = null;
     S.requestBody = null;
@@ -845,6 +851,7 @@ export async function startConcierge({
     if (a === "visits") {
       await loadVisits();
     }
+    if(a==='credits'){if(!S.account.actor&&!(await signIn()))return;if($("#sheet").open)$("#sheet").close();await refresh();view('credits');}
     if (a === "profile") {
       if (!S.account.actor && !(await signIn())) return;
       if ($("#sheet").open) $("#sheet").close();
@@ -931,6 +938,10 @@ export async function startConcierge({
     if (a === "sendchange") {
       await sendChange();
     }
+    if(a==='applycredits'){
+      const amount=Number($('#redeem-credits')?.value);if(!Number.isSafeInteger(amount)||amount<0)return toast('Enter a whole number of credits.');
+      await guarded(async()=>{const previous=S.redeemCredits;S.redeemCredits=amount;try{const q=await quoted(apiKind(),offer().units);S.data[S.selected==='private'?'private':'shared']=q;render();toast('Credits and full price updated.');}catch(e){S.redeemCredits=previous;throw e;}});
+    }
     if (a === "applypromo") {
       await applyPromo();
     }
@@ -998,6 +1009,9 @@ export async function startConcierge({
       "Children must be under 10 on arrival; older guests count as adults.",
     INVALID_STAY_DATES:
       "Choose future dates within the next year and up to 31 nights.",
+    INSUFFICIENT_LOYALTY_CREDITS:'Your available credits changed. Open Your credits, then refresh the price.',
+    INVALID_REDEEM_CREDITS:'Enter whole credits up to your available balance and the stay price.',
+    CREDIT_REDEMPTION_CHANGE_REQUIRES_REBOOKING:'This booking uses credits. Contact your hosts to cancel and rebook with the right dates; cancellation restores redeemed credits.',
     INVALID_TIME_WINDOW: "This visit window has ended. Choose another date.",
     IDEMPOTENCY_CONFLICT:
       "A previous request may already be saved. Check Your visits before trying again.",
@@ -1315,7 +1329,7 @@ export async function startConcierge({
     });
   }
   function initialView() {
-    return location.hash === "#visits"
+    return location.hash === "#credits" && S.account.actor ? "credits" : location.hash === "#visits"
       ? "visits"
       : location.hash === "#profile" && S.account.actor
         ? "profile"

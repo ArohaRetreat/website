@@ -9,7 +9,7 @@ import {
 import {can} from "../domain.mjs";
 import { studioAccess } from "../access.mjs";
 import { BookingError } from "../booking/domain.mjs";
-export const CONTRACT_VERSION = "1.2.0";
+export const CONTRACT_VERSION = "1.3.0";
 export const READ_SCOPES = Object.freeze([
   "runtime:read",
   "availability:read",
@@ -101,7 +101,7 @@ export function scopePermitted(scope,member,rowAccess='all') {
  if(scope==='integrations:manage')return rowAccess==='all'&&a.access&&member.role==='superadmin';
  if(scope.startsWith('access:')||scope==='audit:read')return rowAccess==='all'&&a.access;
  if(scope.startsWith('content:')&&scope!=='content:published:read'||scope.startsWith('media:'))return rowAccess==='all'&&a.website&&can(member?.role,scope==='content:publish'?'publish':scope.endsWith(':write')?'edit':'read');
- if(['reservations:approve','stays:operate','inventory:write','promotions:write','settings:write','payments:record','payments:reverse','communications:retry'].includes(scope))return rowAccess==='all'&&a.bookings==='manager';
+ if(['reservations:approve','stays:operate','inventory:write','promotions:write','settings:write','payments:record','payments:reverse','communications:retry','reservations:manual','loyalty:adjust'].includes(scope))return rowAccess==='all'&&a.bookings==='manager';
  if(['promotions:read','settings:read'].includes(scope))return rowAccess==='all'&&a.bookings!=='none';
  return true;
 }

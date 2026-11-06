@@ -1,4 +1,5 @@
-import {studioAccess} from '../access.mjs';
+import { readCustomerBinding } from "../booking/customers.mjs";
+import { studioAccess } from "../access.mjs";
 import { randomUUID, createHash } from "node:crypto";
 import { collectionName, sharedCollectionName } from "../environment.mjs";
 import { loadConfig, publicBookingCalendar } from "../booking/store.mjs";
@@ -63,10 +64,21 @@ export async function configRead(db) {
 export async function reservationRead(db, token, id) {
   const d = await db.collection(collectionName("bookings")).doc(id).get(),
     b = d.data();
-  const member=token._integration.rowAccess==="all"?(await db.collection(sharedCollectionName("members")).doc(token.uid).get()).data():null;
+  const binding = await readCustomerBinding(db, token);
+  const member =
+    token._integration.rowAccess === "all"
+      ? (
+          await db
+            .collection(sharedCollectionName("members"))
+            .doc(token.uid)
+            .get()
+        ).data()
+      : null;
   if (
     !d.exists ||
-    (b.owner!==token.uid&&(token._integration.rowAccess!=="all"||studioAccess(member).bookings==="none"))
+    (!binding.ownerIds.includes(b.owner) &&
+      (token._integration.rowAccess !== "all" ||
+        studioAccess(member).bookings === "none"))
   )
     fail("NOT_FOUND", 404);
   return b;
