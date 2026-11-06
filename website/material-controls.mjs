@@ -32,9 +32,10 @@ function upgradeSelect(input) {
   input.classList.add('md-native');input.tabIndex=-1;input.setAttribute('aria-hidden','true');
   button.type='button';button.className='md-select-button';button.setAttribute('aria-haspopup','listbox');
   button.setAttribute('aria-expanded','false');wrap.append(button);
-  const update=()=>{button.innerHTML=`<span>${esc(input.options[input.selectedIndex]?.textContent||'Choose an option')}</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>`;button.disabled=input.disabled;button.setAttribute('aria-label',name+': '+(input.options[input.selectedIndex]?.textContent||'Choose an option'));};
+  const error=document.createElement('span');error.className='md-control-error';error.id='md-select-error-'+(++sequence);error.setAttribute('role','alert');wrap.append(error);
+  const update=()=>{button.innerHTML=`<span>${esc(input.options[input.selectedIndex]?.textContent||'Choose an option')}</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>`;button.disabled=input.disabled;button.setAttribute('aria-label',name+': '+(input.options[input.selectedIndex]?.textContent||'Choose an option'));if(input.validity.valid){button.removeAttribute('aria-invalid');button.removeAttribute('aria-describedby');error.textContent='';}};
   input.addEventListener('change',update); input.addEventListener('focus',()=>button.focus());
-  input.addEventListener('invalid',e=>{e.preventDefault();button.setAttribute('aria-invalid','true');button.focus();});
+  input.addEventListener('invalid',e=>{e.preventDefault();button.setAttribute('aria-invalid','true');button.setAttribute('aria-describedby',error.id);error.textContent='Choose an option for '+name.toLowerCase()+'.';button.focus();});
   let popup;
   button.onclick=()=>{
     if(popup?.isConnected){popup.hidePopover();return;}

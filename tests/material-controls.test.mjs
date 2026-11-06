@@ -43,3 +43,9 @@ test('destructive confirmation is a cancellable nested modal before any mutation
  try{const result=m.w.material.confirmMaterial('This releases the booking.',{title:'Cancel booking?',action:'Cancel booking',danger:true});const modal=m.d.querySelector('.md-confirm');assert.ok(modal.closest('dialog')!==modal.parentElement);assert.equal(modal.parentElement.tagName,'DIALOG');modal.querySelector('[data-keep]').click();assert.equal(await result,false);assert.equal(m.d.querySelector('.md-confirm'),null);
  }finally{m.close();}
 });
+
+test('required menu fields explain missing choices and clear the error after selection',async()=>{
+ const m=mount('<form><label>Child age<select name="age" required><option value="">Choose age</option><option value="2">2 years</option></select></label></form>');
+ try{const select=m.d.querySelector('select'),button=m.d.querySelector('.md-select-button');select.dispatchEvent(new m.w.Event('invalid',{cancelable:true}));assert.equal(button.getAttribute('aria-invalid'),'true');assert.match(m.d.querySelector('[role=alert]').textContent,/Choose an option for child age/);button.click();m.d.querySelector('[data-option="1"]').click();assert.equal(button.hasAttribute('aria-invalid'),false);assert.equal(m.d.querySelector('[role=alert]').textContent,'');
+ }finally{m.close();}
+});
