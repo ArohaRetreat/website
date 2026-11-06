@@ -490,6 +490,10 @@
       },
       "verifiedEmail": {
         "type": "string"
+      },
+      "bookingEmail": {
+        "type": "string",
+        "maxLength": 254
       }
     },
     "required": [

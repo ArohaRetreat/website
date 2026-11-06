@@ -1,3 +1,7 @@
+## Prepared manual booking and loyalty — 6 November 2026
+
+Issue114/111: website0.27.0/API0.13.0, external contract1.3.0/121operations. Read [contract](../../docs/api/manual-booking-loyalty-v1.3.md). New customer alias/linking, nightly wallet, search-first host modules and guest redemption share transactional policy. Source prepared; verify CI and actual environment release before claiming deployment. Preprod first, independent selected production promotion; frozen email-v3/PDF-v4, CMS/Natura and unrelated bookings preserved. New credit invoices use pdf-v4-loyalty; manual confirmations email-v4-manual. Never replay historical emails or award bulk historical credits. Matching derived-search migration is CAS guarded and dry-run first. Real guest changes belong only in private delivery receipts.
+
 ## Preprod0.22.0 / API0.8.0 — issue83 (prepared)
 
 Read [booking refinement contract](../../docs/booking-refinements-v1.md). New exclusive rate/one-approval flow, signed-in WhatsApp enquiry/account choices and privacy-safe availability calendar are preprod-only. Production remains0.21.7/API0.7.1. Use local/release-evidence/aroha-booking-refinements/handoff.md and actual provider receipts for deployment state. Preserve CMS/reservations/media and frozen email/PDF snapshots; full stage communications stay issue70.

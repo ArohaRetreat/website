@@ -1,4 +1,5 @@
 import { communicationsHandler } from "./communications.mjs";
+import { customersHandler } from "./customers.mjs";
 import { mediaHandler, settleMedia } from "./media.mjs";
 import { clientsHandler } from "./clients.mjs";
 import { managementHandler, contentHandler } from "./management.mjs";
@@ -12,7 +13,10 @@ import { definitionsById } from "./registry.mjs";
 import { transaction, fail } from "./core.mjs";
 import { financeHandler } from "./finance.mjs";
 import { feedbackHandler } from "./feedback.mjs";
+import { hostHandler } from "./host.mjs";
 const handlers = {
+  host: hostHandler,
+  customers: customersHandler,
   communications: communicationsHandler,
   media: mediaHandler,
   clients: clientsHandler,
@@ -54,7 +58,7 @@ export async function platformOperation(
       fail("FORBIDDEN", 403);
     const args = { ...input, ...(definition.fixed || {}) };
     if (definition.action) args.action = definition.action;
-    return bookingCommand(
+    const result = await bookingCommand(
       db,
       token,
       definition.command,
@@ -70,6 +74,28 @@ export async function platformOperation(
       ),
       { admin: manager, requestId: options.requestId },
     );
+    if (operation === "quoteManualBooking")
+      return {
+        id: result.id,
+        version: 0,
+        customerId: result.customerId,
+        kind: result.kind,
+        arrival: result.arrival,
+        departure: result.departure,
+        adults: result.adults,
+        childrenCount: result.children || 0,
+        unitIds: result.units,
+        unitNames: result.unitNames,
+        subtotalPaise: result.subtotal,
+        priceBenefitDiscountPaise: result.priceBenefitDiscount || 0,
+        loyaltyCredits: result.loyaltyCredits || 0,
+        loyaltyDiscountPaise: result.loyaltyDiscount || 0,
+        totalPaise: result.total,
+        expiresAt: result.expiresAt,
+        settingsVersion: result.settingsVersion,
+        contact: { ...result.manualContact, email: result.manualEmail },
+      };
+    return result;
   }
   const result = await transaction(
     db,
