@@ -7,7 +7,8 @@ if(!process.argv.includes('--environment')||process.argv[process.argv.indexOf('-
 const apply=process.argv.includes('--apply');
 const Client=await firebaseClient(),client=new Client({urlPrefix:'https://firestore.googleapis.com',apiVersion:'v1',auth:true});
 const decode=v=>v?.stringValue??(v?.integerValue!==undefined?Number(v.integerValue):v?.booleanValue!==undefined?v.booleanValue:v?.nullValue!==undefined?null:v?.mapValue?Object.fromEntries(Object.entries(v.mapValue.fields||{}).map(([k,x])=>[k,decode(x)])):undefined);
-const canonical=v=>JSON.stringify(Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b))));
+const stable=v=>v&&typeof v==='object'?(Array.isArray(v)?v.map(stable):Object.fromEntries(Object.keys(v).sort().map(k=>[k,stable(v[k])]))):v;
+const canonical=v=>JSON.stringify(stable(v));
 let pageToken,visited=0,changed=0;const receipts=[];
 do {
  const page=(await client.get('/projects/aroha-retreat/databases/(default)/documents/aroha_preprod_bookings',{queryParams:{pageSize:100,...(pageToken?{pageToken}:{})}})).body;

@@ -2927,7 +2927,7 @@
     "operationId": "searchHostReservations",
     "method": "POST",
     "path": "/host/reservation-searches",
-    "scope": "customers:read",
+    "scope": "reservations:read",
     "policy": "booking-staff",
     "handler": "host",
     "readOnly": true,
@@ -3004,6 +3004,10 @@
       ]
     },
     "output": "DeskReservationPage",
-    "description": "Private staff search. Server filters and opaque bound cursors. Display names require customer read scope; legacy read-only grants cannot access this operation."
+    "description": "Private staff search. Server filters and opaque bound cursors. Display names require customer read scope; legacy read-only grants cannot access this operation.",
+    "scopes": [
+      "reservations:read",
+      "customers:read"
+    ]
   }
 ]

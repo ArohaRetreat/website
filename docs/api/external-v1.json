@@ -18244,6 +18244,7 @@
           }
         ],
         "x-required-scopes": [
+          "reservations:read",
           "customers:read"
         ],
         "x-shared-operation": "searchHostReservations",

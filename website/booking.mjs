@@ -622,6 +622,7 @@ function hostContent() {
 }
 function render() {
   document.documentElement.classList.toggle("frontdesk-v2",hostRoute());
+  document.documentElement.classList.toggle("studio-embedded",hostRoute()&&window.parent!==window);
   const view = hostRoute()
     ? `host:${hostTab}`
     : location.hash === "#profile"
