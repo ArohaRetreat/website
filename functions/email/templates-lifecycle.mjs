@@ -84,15 +84,17 @@ export function lifecycleEmailTemplate(job) {
     body =
       "Thank you for spending time at Aroha. If you would like, share a private rating and note about your visit.";
     caption = "Your visit is complete. Feedback is optional and private.";
-    next =
-      "Sign in with the same Google account used for this booking. Only you and authorized booking managers can read your feedback.";
+    next = b.manualBooking
+      ? "Sign in to Aroha with the email on your booking. Only you and authorized booking managers can read your feedback."
+      : "Sign in with the same Google account used for this booking. Only you and authorized booking managers can read your feedback.";
     note =
       "Your feedback is never published as a public review. You can edit or withdraw it within seven days of submission.";
     action = "Share private feedback";
   } else throw Error("INVALID_LIFECYCLE_CHANNEL");
-  const now = stage === 5
-    ? "Feedback. A private invitation."
-    : stages[stage] + ". Recorded by your hosts.";
+  const now =
+    stage === 5
+      ? "Feedback. A private invitation."
+      : stages[stage] + ". Recorded by your hosts.";
   const opening = "Dear " + b.guestName + ",";
   const attendance = Number.isInteger(b.guests)
     ? b.guests + " guests"

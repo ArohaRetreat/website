@@ -10,6 +10,39 @@ const publicView = (d) => ({
   version: d.version,
 });
 export async function feedbackHandler({ tx, db, ctx, input, booking }) {
+  if (ctx.operation === "reviewPrivateFeedback") {
+    if (input.reference) {
+      const matches = await tx.get(
+        col(db, "bookings")
+          .where("reference", "==", input.reference.trim().toUpperCase())
+          .limit(2),
+      );
+      if (matches.size > 1) fail("BOOKING_REFERENCE_CONFLICT", 409);
+      if (!matches.size) return { items: [], nextCursor: null };
+      const b = matches.docs[0].data(),
+        d = (await tx.get(col(db, "booking_feedback").doc(b.id))).data();
+      return {
+        items: d ? [{ ...publicView(d), bookingReference: b.reference }] : [],
+        nextCursor: null,
+      };
+    }
+    return queryPage(
+      tx,
+      db,
+      ctx,
+      ctx.operation,
+      input,
+      col(db, "booking_feedback"),
+      async (d) => {
+        const b = (await tx.get(col(db, "bookings").doc(d.bookingId))).data();
+        return {
+          ...publicView(d),
+          bookingReference: b?.reference || "Historical booking",
+        };
+      },
+      { orderField: "createdAt", descending: true },
+    );
+  }
   if (ctx.operation === "listPrivateFeedback") {
     return queryPage(
       tx,
@@ -33,14 +66,15 @@ export async function feedbackHandler({ tx, db, ctx, input, booking }) {
     if (!old) fail("NOT_FOUND", 404);
     return publicView(old);
   }
-  if (booking.owner !== ctx.uid) fail("FORBIDDEN", 403);
+  if (!(ctx.ownerIds || [ctx.uid]).includes(booking.owner))
+    fail("FORBIDDEN", 403);
   if (ctx.operation === "submitFeedback") {
     if (old) fail("FEEDBACK_ALREADY_SUBMITTED", 409);
     if (input.consent !== true) fail("FEEDBACK_CONSENT_REQUIRED");
     const d = {
       id: booking.id,
       bookingId: booking.id,
-      owner: ctx.uid,
+      owner: booking.owner,
       rating: input.rating,
       comment: input.comment.trim(),
       createdAt: ctx.now,

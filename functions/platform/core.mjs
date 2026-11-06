@@ -6,6 +6,7 @@ import {
   sharedCollectionName,
 } from "../environment.mjs";
 import { studioAccess } from "../access.mjs";
+import { customerBinding } from "../booking/customers.mjs";
 import { can } from "../domain.mjs";
 import { guardIntegrationTransaction } from "../external/access.mjs";
 import { bookingEvent, queueCommitted } from "../booking/observability.mjs";
@@ -116,9 +117,11 @@ export async function principal(tx, db, token) {
   const m = (
     await tx.get(db.collection(sharedCollectionName("members")).doc(token.uid))
   ).data();
+  const binding = await customerBinding(tx, db, token);
   return {
     token,
     uid: token.uid,
+    ownerIds: binding.ownerIds,
     member: m,
     modules: studioAccess(m),
     all: !token._integration || token._integration.rowAccess === "all",
@@ -128,20 +131,21 @@ export function permit(ctx, policy, booking) {
   if (policy === "booking-owner-or-manager") {
     if (!booking) fail("NOT_FOUND", 404);
     if (
-      booking.owner !== ctx.uid &&
+      !(ctx.ownerIds || [ctx.uid]).includes(booking.owner) &&
       (!ctx.all || ctx.modules.bookings !== "manager")
     )
       fail("NOT_FOUND", 404);
     return;
   }
   if (policy === "owner") {
-    if (!booking || booking.owner !== ctx.uid) fail("NOT_FOUND", 404);
+    if (!booking || !(ctx.ownerIds || [ctx.uid]).includes(booking.owner))
+      fail("NOT_FOUND", 404);
     return;
   }
   if (policy === "feedback-reader") {
     if (!booking) fail("NOT_FOUND", 404);
     if (
-      booking.owner !== ctx.uid &&
+      !(ctx.ownerIds || [ctx.uid]).includes(booking.owner) &&
       (!ctx.all || ctx.modules.bookings !== "manager")
     )
       fail("NOT_FOUND", 404);
@@ -150,7 +154,7 @@ export function permit(ctx, policy, booking) {
   if (policy === "booking-viewer") {
     if (!booking) fail("NOT_FOUND", 404);
     if (
-      booking.owner !== ctx.uid &&
+      !(ctx.ownerIds || [ctx.uid]).includes(booking.owner) &&
       (!ctx.all || ctx.modules.bookings === "none")
     )
       fail("NOT_FOUND", 404);
@@ -207,7 +211,7 @@ export async function transaction(
   { requestId } = {},
 ) {
   validate(definition.input, input);
-  const isRead = definition.method === "GET";
+  const isRead = definition.method === "GET" || definition.readOnly === true;
   if (!isRead && !/^[A-Za-z0-9-]{8,100}$/.test(key || ""))
     fail("IDEMPOTENCY_KEY_REQUIRED", 400);
   const requestRef = isRead
@@ -383,6 +387,9 @@ export async function queryPage(
     );
   });
   const selected = docs.slice(0, limit);
+  const items = await Promise.all(
+    selected.map((d) => projector({ id: d.id, ...d.data() })),
+  );
   let nextCursor = null;
   if (docs.length > limit) {
     nextCursor = randomUUID();
@@ -400,7 +407,7 @@ export async function queryPage(
     });
   }
   return {
-    items: selected.map((d) => projector({ id: d.id, ...d.data() })),
+    items,
     nextCursor,
   };
 }

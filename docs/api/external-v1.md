@@ -1,3 +1,5 @@
+> Current additions: contract1.3.0/API0.13.0 are specified in [manual booking and nightly loyalty](manual-booking-loyalty-v1.3.md) and canonical OpenAPI. These source contracts do not imply deployment; verify live release metadata.
+
 > Historical initial-slice record. Current contract1.2.0/API0.12.0 is specified in [platform-v1.2](platform-v1.2.md) and the canonical [OpenAPI](external-v1.json). It adds explicit scoped CRUD, financial/lifecycle/feedback and CMS/access/media/privacy operations; the read-only token ceiling remains unchanged.
 
 # Scoped external API v1 — implementation slice

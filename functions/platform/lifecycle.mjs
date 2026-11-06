@@ -49,6 +49,7 @@ export function queueLifecycle(
     endsAt: booking.endsAt || 0,
     status: booking.status,
     bookingVersion: booking.version,
+    ...(booking.source === "host_manual" ? { manualBooking: true } : {}),
     total: booking.total,
     pricingPending: booking.checkoutPricingPending === true,
     guests: booking.guests || booking.adults || 0,
@@ -67,7 +68,9 @@ export function queueLifecycle(
     environment: environment.name,
     sourceEventId: id,
     sourceContext: contextFields(),
-    templateVersion: ['guest_cancelled','guest_declined'].includes(channel) ? 'email-v4-status' : "email-v4-lifecycle",
+    templateVersion: ["guest_cancelled", "guest_declined"].includes(channel)
+      ? "email-v4-status"
+      : "email-v4-lifecycle",
     documentTemplateVersion: document ? "pdf-v4-financial" : null,
     documentId: document?.id || null,
     paymentId: paymentId || null,
@@ -101,7 +104,8 @@ export async function prepareStayLifecycle(
     !booking
   )
     return null;
-  if (['cancel','decline'].includes(input.action)) return {action:input.action};
+  if (["cancel", "decline"].includes(input.action))
+    return { action: input.action };
   if (input.action === "checkin") return { action: "checkin" };
   const ledger = await ledgerRead(tx, db, booking.id);
   if (booking.total === null && !ledger.length)
@@ -128,9 +132,17 @@ export function commitStayLifecycle(
   { prepared, booking, profile, settings, now },
 ) {
   if (!prepared) return;
-  if (['cancel','decline'].includes(prepared.action)) {
-    const status=prepared.action==='cancel'?'cancelled':'declined';
-    booking.lifecycleDelivery={...(booking.lifecycleDelivery||{}),[status]:queueLifecycle(tx,db,{booking,profile,channel:'guest_'+status,now})};
+  if (["cancel", "decline"].includes(prepared.action)) {
+    const status = prepared.action === "cancel" ? "cancelled" : "declined";
+    booking.lifecycleDelivery = {
+      ...(booking.lifecycleDelivery || {}),
+      [status]: queueLifecycle(tx, db, {
+        booking,
+        profile,
+        channel: "guest_" + status,
+        now,
+      }),
+    };
     return;
   }
   if (prepared.action === "checkin") {
@@ -166,7 +178,7 @@ export function commitStayLifecycle(
   });
   // Imported private bookings have no fabricated Google identity or unusable feedback link.
   const feedback =
-    booking.source === "host_private"
+    booking.source === "host_private" && !profile.linkedUid
       ? "account_required"
       : queueLifecycle(tx, db, {
           booking,

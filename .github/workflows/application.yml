@@ -65,6 +65,8 @@ jobs:
           node scripts/test-preproduction.mjs
       - name: Verify scoped external API contract in isolated emulators
         run: node scripts/test-external.mjs
+      - name: Verify manual booking, loyalty races and bounded large-record queries
+        run: AROHA_LOYALTY_SCALE=1 node scripts/test-loyalty.mjs
       - name: Retain bounded API test reports
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -74,6 +76,7 @@ jobs:
             .delivery-reports/api-integration.jsonl
             .delivery-reports/api-telemetry.jsonl
             .delivery-reports/api-external.jsonl
+            .delivery-reports/api-loyalty.jsonl
           include-hidden-files: true
           retention-days: 14
           if-no-files-found: warn

@@ -414,8 +414,19 @@ export function productPrice(state, uid, input, now = Date.now(), exclude) {
     }
   }
 
+  const redeemCredits=input.redeemCredits||0;
+  if(!Number.isSafeInteger(redeemCredits)||redeemCredits<0||redeemCredits>1e9)fail('INVALID_LOYALTY_REDEMPTION');
+  if(redeemCredits&& !['private','individual'].includes(a.kind))fail('LOYALTY_REQUIRES_OVERNIGHT_PRODUCT');
+  if(redeemCredits>(state.loyaltyBalances?.[uid]||0))fail('INSUFFICIENT_LOYALTY_CREDITS',409);
+  if(redeemCredits>Math.floor((subtotal-discount)/100))fail('CREDITS_EXCEED_PAYABLE',409);
+  const priceBenefitDiscount=discount,loyaltyDiscount=redeemCredits*100;
+  discount+=loyaltyDiscount;
   return {
     ...a,
+    redeemCredits,
+    loyaltyCredits:redeemCredits,
+    loyaltyDiscount,
+    priceBenefitDiscount,
     units: a.allocations.map((x) => x.unitId),
     unitNames:
       a.kind === "individual"

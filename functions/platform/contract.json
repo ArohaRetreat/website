@@ -2384,5 +2384,543 @@
       ]
     },
     "description": "Read a permitted delivery status or retry only a definitive failed provider rejection. Accepted or uncertain jobs require reconciliation; historical messages are never replayed."
+  },
+  {
+    "operationId": "claimMyCustomer",
+    "method": "POST",
+    "path": "/me/customer-link",
+    "scope": "customers:link",
+    "policy": "self",
+    "handler": "customers",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {},
+      "required": []
+    },
+    "output": "CustomerLink",
+    "description": "claimMyCustomer using shared current identity, booking and credit policy."
+  },
+  {
+    "operationId": "lookupCustomers",
+    "method": "POST",
+    "path": "/customers/lookups",
+    "scope": "contacts:read",
+    "policy": "booking-manager",
+    "handler": "customers",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "name",
+            "email",
+            "phone",
+            "reference"
+          ]
+        },
+        "search": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 254
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        }
+      },
+      "required": [
+        "mode",
+        "search"
+      ]
+    },
+    "output": "CustomerLookup",
+    "description": "lookupCustomers using shared current identity, booking and credit policy.",
+    "readOnly": true
+  },
+  {
+    "operationId": "getCustomer",
+    "method": "GET",
+    "path": "/customers/:id",
+    "scope": "contacts:read",
+    "policy": "booking-staff",
+    "handler": "customers",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "output": "Customer",
+    "description": "getCustomer using shared current identity, booking and credit policy.",
+    "versionKind": "customer"
+  },
+  {
+    "operationId": "getMyLoyalty",
+    "method": "GET",
+    "path": "/me/loyalty",
+    "scope": "loyalty:read",
+    "policy": "self",
+    "handler": "customers",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {},
+      "required": []
+    },
+    "output": "LoyaltyBalance",
+    "description": "getMyLoyalty using shared current identity, booking and credit policy.",
+    "versionKind": "loyalty",
+    "versionIdentity": "principal"
+  },
+  {
+    "operationId": "getCustomerLoyalty",
+    "method": "GET",
+    "path": "/customers/:id/loyalty",
+    "scope": "loyalty:read",
+    "policy": "booking-staff",
+    "handler": "customers",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "output": "LoyaltyBalance",
+    "description": "getCustomerLoyalty using shared current identity, booking and credit policy.",
+    "versionKind": "loyalty"
+  },
+  {
+    "operationId": "listMyLoyaltyEntries",
+    "method": "GET",
+    "path": "/me/loyalty/entries",
+    "scope": "loyalty:read",
+    "policy": "self",
+    "handler": "customers",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^[a-f0-9-]{36}$",
+          "maxLength": 36
+        }
+      },
+      "required": []
+    },
+    "output": "LoyaltyEntryPage",
+    "description": "listMyLoyaltyEntries using shared current identity, booking and credit policy."
+  },
+  {
+    "operationId": "listCustomerLoyaltyEntries",
+    "method": "GET",
+    "path": "/customers/:id/loyalty/entries",
+    "scope": "loyalty:read",
+    "policy": "booking-staff",
+    "handler": "customers",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^[a-f0-9-]{36}$",
+          "maxLength": 36
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "output": "LoyaltyEntryPage",
+    "description": "listCustomerLoyaltyEntries using shared current identity, booking and credit policy."
+  },
+  {
+    "operationId": "adjustCustomerCredits",
+    "method": "POST",
+    "path": "/customers/:id/loyalty/adjustments",
+    "scope": "loyalty:adjust",
+    "policy": "booking-manager",
+    "handler": "customers",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "credits": {
+          "type": "integer",
+          "minimum": -1000000,
+          "maximum": 1000000
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 200
+        },
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "credits",
+        "reason",
+        "expectedVersion"
+      ]
+    },
+    "output": "LoyaltyBalance",
+    "description": "adjustCustomerCredits using shared current identity, booking and credit policy.",
+    "versionKind": "loyalty"
+  },
+  {
+    "operationId": "quoteManualBooking",
+    "method": "POST",
+    "path": "/manual-booking-quotes",
+    "scope": "reservations:manual",
+    "policy": "booking-manager",
+    "handler": "booking-alias",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "arrival": {
+          "type": "string",
+          "format": "date"
+        },
+        "departure": {
+          "type": "string",
+          "format": "date"
+        },
+        "guests": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "units": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "minItems": 0,
+          "maxItems": 9,
+          "uniqueItems": true
+        },
+        "promo": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "day",
+            "individual",
+            "private",
+            "event"
+          ]
+        },
+        "adults": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "childrenAges": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9
+          }
+        },
+        "redeemCredits": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000000
+        },
+        "customer": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 120
+            },
+            "email": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 254
+            },
+            "phone": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 32
+            }
+          },
+          "required": [
+            "name",
+            "email",
+            "phone"
+          ]
+        }
+      },
+      "required": [
+        "arrival",
+        "departure",
+        "customer",
+        "kind",
+        "adults"
+      ]
+    },
+    "output": "ManualBookingQuote",
+    "description": "quoteManualBooking using shared current identity, booking and credit policy.",
+    "scopes": [
+      "reservations:manual",
+      "contacts:read"
+    ],
+    "command": "manual-quote",
+    "responseProjection": "raw"
+  },
+  {
+    "operationId": "createManualBooking",
+    "method": "POST",
+    "path": "/manual-bookings",
+    "scope": "reservations:manual",
+    "policy": "booking-manager",
+    "handler": "booking-alias",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "quoteId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36
+        }
+      },
+      "required": [
+        "quoteId"
+      ]
+    },
+    "output": "Reservation",
+    "description": "createManualBooking using shared current identity, booking and credit policy.",
+    "scopes": [
+      "reservations:manual",
+      "contacts:read"
+    ],
+    "command": "manual-create"
+  },
+  {
+    "operationId": "listPaymentLedger",
+    "method": "GET",
+    "path": "/payments",
+    "scope": "payments:read",
+    "policy": "booking-staff",
+    "handler": "finance",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^[a-f0-9-]{36}$",
+          "maxLength": 36
+        },
+        "reference": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 32
+        }
+      },
+      "required": []
+    },
+    "output": "PaymentLedgerPage",
+    "description": "listPaymentLedger using shared current identity, booking and credit policy."
+  },
+  {
+    "operationId": "reviewPrivateFeedback",
+    "method": "GET",
+    "path": "/feedback/review",
+    "scope": "feedback:read",
+    "policy": "booking-manager",
+    "handler": "feedback",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^[a-f0-9-]{36}$",
+          "maxLength": 36
+        },
+        "reference": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 32
+        }
+      },
+      "required": []
+    },
+    "output": "FeedbackReviewPage",
+    "description": "reviewPrivateFeedback using shared current identity, booking and credit policy."
+  },
+  {
+    "operationId": "listHostReservations",
+    "method": "GET",
+    "path": "/host/reservations",
+    "scope": "reservations:read",
+    "policy": "booking-staff",
+    "handler": "host",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^[a-f0-9-]{36}$",
+          "maxLength": 36
+        },
+        "reference": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 32
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending_approval",
+            "confirmed",
+            "checked_in",
+            "completed",
+            "cancelled",
+            "declined",
+            "expired",
+            "no_show"
+          ]
+        }
+      },
+      "required": []
+    },
+    "output": "HostReservationPage",
+    "description": "Current booking access required. Bounded server pagination; exact reference or stored status filters. Elapsed pending holds are labelled expired. Summary counts distinguish elapsed holds using server time."
+  },
+  {
+    "operationId": "listCustomerReservations",
+    "method": "GET",
+    "path": "/customers/:id/reservations",
+    "scope": "reservations:read",
+    "policy": "booking-staff",
+    "handler": "host",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^[a-f0-9-]{36}$",
+          "maxLength": 36
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9:_-]{1,128}$",
+          "maxLength": 128
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending_approval",
+            "confirmed",
+            "checked_in",
+            "completed",
+            "cancelled",
+            "declined",
+            "expired",
+            "no_show"
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "output": "HostReservationPage",
+    "description": "Current booking access required. Bounded server pagination; exact reference or stored status filters. Elapsed pending holds are labelled expired. Summary counts distinguish elapsed holds using server time."
+  },
+  {
+    "operationId": "getHostBookingSummary",
+    "method": "GET",
+    "path": "/host/booking-summary",
+    "scope": "reservations:read",
+    "policy": "booking-staff",
+    "handler": "host",
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {},
+      "required": []
+    },
+    "output": "HostBookingSummary",
+    "description": "Current booking access required. Bounded server pagination; exact reference or stored status filters. Elapsed pending holds are labelled expired. Summary counts distinguish elapsed holds using server time."
   }
 ]

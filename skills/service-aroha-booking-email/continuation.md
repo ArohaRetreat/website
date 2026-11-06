@@ -1,3 +1,7 @@
+## Prepared manual booking and loyalty — 6 November 2026
+
+Issue114/111: website0.27.0/API0.13.0, external contract1.3.0/121operations. Read [contract](../../docs/api/manual-booking-loyalty-v1.3.md). New customer alias/linking, nightly wallet, search-first host modules and guest redemption share transactional policy. Source prepared; verify CI and actual environment release before claiming deployment. Preprod first, independent selected production promotion; frozen email-v3/PDF-v4, CMS/Natura and unrelated bookings preserved. New credit invoices use pdf-v4-loyalty; manual confirmations email-v4-manual. Never replay historical emails or award bulk historical credits. Matching derived-search migration is CAS guarded and dry-run first. Real guest changes belong only in private delivery receipts.
+
 ## Website0.23.0/API0.8.1 — issue86 (prepared, preprod only)
 
 Owner supersedes forced test inbox: new guest messages go to verified booked guest, host notifications to configured host, same provider account/domain; keep test subjects/PDF identity and isolated inventory. MAIL_RECIPIENT_MODE=booking is explicit; legacy queues retain old recipient/policy and are not replayed. Completed guest sign-in returns home, Host Studio stays, booking Back to website remains visible on phones. Read docs/guest-mail-parity-v1.md and actual ignored local/release-evidence/aroha-guest-mail-parity/handoff.md before claiming deployment. Production unchanged; full lifecycle/ledger/feedback remains issue70.
