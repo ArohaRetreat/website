@@ -1,3 +1,10 @@
+## Website 0.28.0 — a clearer booking desk
+
+- Open Host Studio on a server-filtered Needs review queue and group navigation by daily work, guest follow-up and retreat settings.
+- Keep Add booking in the header, align reservation rows and replace each bounded cursor page instead of appending history.
+- Review requests in one staff-facing panel with direct reviewed acceptance, inline decline and separate contact, email, history and allocation controls.
+- Preserve API0.13.0, existing scope/version/business rules, private data, CMS, original assets and operational email/payment workflows.
+
 ## 0.27.1 — refresh selected bookings outside the current page
 
 - Re-read the selected booking after mutation when it is outside the current list page. Close and clear private details when the signed-in account changes or access cannot be refreshed. API and contract remain0.13.0/1.3.0.
