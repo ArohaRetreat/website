@@ -76,6 +76,7 @@ async function showModule() {
       location.origin,
     );
   }
+  document.body.classList.toggle("booking-workspace", selected === "bookings");
   const access = document.querySelector("#studio-access");
   access.hidden = selected !== "access";
   if (selected === "access") {

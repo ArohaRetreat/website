@@ -173,3 +173,14 @@ h2 {
 }
 
 .studio-invitation { padding: 18px 0; border-bottom: 1px solid #d8dfd2; }
+
+/* Module switching stays available without competing with the booking workspace. */
+.booking-workspace .studio-bar{background:#fff;color:#263c2c;padding:8px 18px;gap:12px;border-bottom:1px solid #dce4d8;min-height:52px;font-size:13px}
+.booking-workspace .studio-bar>a,.booking-workspace .studio-bar>strong,.booking-workspace .studio-bar>span{display:none}
+.booking-workspace .studio-bar button{color:#52654f;border-color:transparent;min-height:36px;padding:6px 12px}.booking-workspace .studio-bar button[aria-current]{color:#285b43;background:#e8f0e9}
+.booking-workspace .studio-module{height:calc(100dvh - 53px)}
+@media(max-width:700px){.booking-workspace .studio-bar{flex-wrap:nowrap;padding:4px 8px;gap:4px}.booking-workspace .studio-bar nav{gap:2px;flex-wrap:nowrap}.booking-workspace .studio-bar button{font-size:12px;min-height:44px;padding:5px 8px}.booking-workspace #studio-signout{display:none}}
+
+.booking-workspace .studio-module{min-height:0}
+
+body.booking-workspace{height:100dvh;display:flex;flex-direction:column;overflow:hidden}.booking-workspace>.preprod-banner{flex:none}.booking-workspace #studio{flex:1;min-height:0;display:flex;flex-direction:column}.booking-workspace .studio-bar,.booking-workspace #studio-status{flex:none}.booking-workspace #studio-workspace{flex:1;min-height:0}.booking-workspace .studio-module{height:100%;min-height:0}

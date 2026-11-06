@@ -1,3 +1,4 @@
+import {hostShell,mountFrontDesk} from './frontdesk.mjs';
 import {mountHostOperations,mountHostSummary,openManualBooking} from './host-operations.mjs';
 import {auth} from './firebase-auth.mjs';
 import {mountStayPanel} from './stay-panel.mjs';
@@ -489,9 +490,7 @@ function hostPage() {
   if(!nav.some(([id])=>id===hostTab))hostTab="overview";
   if (state.actor?.role !== "host")
     return `<div class="host-welcome"><img src="/assets/brand/logo-forest.svg" width="200" alt="Aroha Retreat"><p class="eyebrow">HOST STUDIO</p><h1>A thoughtful stay<br>starts with you.</h1><p>Explore your reservation desk with a host account.<br>Guest sessions do not have access to host booking controls.</p><button class="button" id="host-login">Sign in to Host Studio ↗</button><a class="text-button" href="/book/">← Back to guest experience</a></div>`;
-  const navButton=([id,label,icon])=>`<button data-host-tab="${id}" ${hostTab===id?'aria-current="page"':""}><span aria-hidden="true">${icon}</span>${label}</button>`;
-  const setup=["inventory","offers","settings"];
-  return `<div class="studio"><aside class="studio-nav"><a href="/book/"><img src="/assets/brand/logo-forest.svg" alt="Aroha Retreat" width="180" height="62"></a><p class="eyebrow">HOST STUDIO</p><label class="ops-mobile-nav">Booking section<select data-host-section>${nav.map(([id,label])=>`<option value="${id}" ${hostTab===id?"selected":""}>${label}</option>`).join("")}</select></label><nav aria-label="Booking sections"><p class="nav-group-label">Bookings</p>${nav.filter(([id])=>["overview","reservations","calendar"].includes(id)).map(navButton).join("")}<p class="nav-group-label">Guests & follow-up</p>${nav.filter(([id])=>!["overview","reservations","calendar",...setup].includes(id)).map(navButton).join("")}<details class="nav-setup" ${setup.includes(hostTab)?"open":""}><summary>Retreat settings</summary>${nav.filter(([id])=>setup.includes(id)).map(navButton).join("")}</details></nav><div class="studio-bottom"><p>Host workspace</p><a href="/book/">View guest portal ↗</a><button class="text-button" id="logout">Leave account</button></div></aside><div class="studio-content"><header class="studio-header"><span>BOOKINGS <b>/</b> ${nav.find((x) => x[0] === hostTab)[1]}</span>${state.actor?.bookingAccess!=="viewer"?'<button class="button" id="manual-reservation">+ Add booking</button>':'<span class="ops-readonly">View-only access</span>'}</header><main id="main" class="studio-main" tabindex="-1">${hostContent()}</main></div></div>`;
+  return hostShell({tab:hostTab,manager:state.actor.bookingAccess!=='viewer',content:hostContent()});
 }
 function hostContent() {
   if (["reservations","guests","loyalty","payments","feedback"].includes(hostTab)) return '<div data-host-operations></div>';
@@ -621,6 +620,8 @@ function hostContent() {
   return `${title("YOUR PUBLIC RETREAT", "Website changes.", "Website content stays separate from reservation operations.")}<div class="paper"><h2>Website content editor</h2><p>Manage website content in the existing editor. Booking operations are saved separately and never publish or overwrite website drafts.</p><div class="website-categories">${["Brand & welcome", "Page layout", "Farm tour & films", "Living Map stories", "Cottages", "Experiences", "Visit packages", "Contact & FAQs", "Design & motion", "Published history"].map((s) => `<div><span>${s}</span><small>Existing CMS editor</small></div>`).join("")}</div><a class="outline-button" href="https://aroharetreat.com/admin/" target="_blank" rel="noopener noreferrer">Open existing Host Studio ↗</a><p class="form-note">Opens the real Studio in a new tab and requires your existing host account. Publishing there affects the live site.</p></div>`;
 }
 function render() {
+  document.documentElement.classList.toggle("frontdesk-v2",hostRoute());
+  document.documentElement.classList.toggle("studio-embedded",hostRoute()&&window.parent!==window);
   const view = hostRoute()
     ? `host:${hostTab}`
     : location.hash === "#profile"
@@ -674,12 +675,15 @@ function render() {
   const identity=state.actor?.id;
   const call=async(operation,input,key)=>{if(auth.currentUser?.uid!==identity)throw {code:'SESSION_CHANGED'};const r=await bookingApi('platform',{operation,input},key);if(auth.currentUser?.uid!==identity)throw {code:'SESSION_CHANGED'};return r;};
   if(operations)void mountHostOperations(operations,{tab:hostTab,call,manager:state.actor?.bookingAccess!=='viewer',openBooking:async id=>run(async()=>{const b=await api('reservation-detail',{id});state.bookings=state.bookings.filter(x=>x.id!==id);state.bookings.push(b);detail(id);})});
-  if(hostRoute()&&hostTab==='overview'&&state.actor?.role==='host'){const totals=document.querySelector('[data-host-summary]');if(totals)void mountHostSummary(totals,{call});}
+  const desk=document.querySelector('[data-frontdesk]');
+  const deskApi=async(operation,input,key)=>{if(auth.currentUser?.uid!==identity)throw {code:'SESSION_CHANGED',status:403};const r=await bookingApi(operation,input,key,{admin:true});if(auth.currentUser?.uid!==identity)throw {code:'SESSION_CHANGED',status:403};return r;};
+  if(desk)void mountFrontDesk(desk,{tab:hostTab,call,api:deskApi,manager:state.actor?.bookingAccess!=='viewer',identity,onManual:done=>openManualBooking({identity,units:state.units,call,onBooked:async booked=>{await done(booked);toast('Booking confirmed. Check Messages for delivery.');}}),openLegacy:async id=>{const b=await api('reservation-detail',{id});state.bookings=state.bookings.filter(x=>x.id!==id);state.bookings.push(b);detail(id);}});
+  document.querySelector('[data-desk-more]')?.addEventListener('click',()=>{const d=document.createElement('dialog');d.className='filter-dialog';d.innerHTML='<div class="dialog-head"><h2>More</h2><button data-close-more aria-label="Close navigation">×</button></div>'+[['payments','Payments'],['calendar','Room calendar'],['loyalty','Loyalty programme'],['feedback','Feedback'],['inventory','Rooms'],['offers','Offers'],['settings','Booking policies']].filter(([id])=>state.actor.bookingAccess!=='viewer'||!['loyalty','feedback'].includes(id)).map(([id,t])=>`<button data-go="${id}">${t}</button>`).join('');document.body.append(d);d.showModal();d.querySelector('[data-close-more]').onclick=()=>d.close();d.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{hostTab=b.dataset.go;d.close();render();});d.addEventListener('close',()=>d.remove(),{once:true});});
 
   if (hostRoute() && state.actor?.bookingAccess === "viewer") {
     document
       .querySelectorAll(
-        ".studio-main form:not([data-search]) input,.studio-main form:not([data-search]) select,.studio-main form:not([data-search]) textarea,.studio-main form:not([data-search]) button,[data-action],[data-cancel],[data-unblock],[data-block-unit],[data-ready-unit],#manual-reservation",
+        "#main form:not([data-search]) input,#main form:not([data-search]) select,#main form:not([data-search]) textarea,#main form:not([data-search]) button,[data-action],[data-cancel],[data-unblock],[data-block-unit],[data-ready-unit],#manual-reservation",
       )
       .forEach((el) => {
         el.disabled = true;

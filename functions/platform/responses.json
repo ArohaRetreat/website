@@ -2577,5 +2577,120 @@
       "noShow",
       "asOf"
     ]
+  },
+  "DeskReservation": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "reference": {
+        "type": "string"
+      },
+      "version": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "kind": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string"
+      },
+      "arrival": {
+        "type": "string"
+      },
+      "departure": {
+        "type": "string"
+      },
+      "adults": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "childrenCount": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "unitIds": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "totalPaise": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "minimum": 0
+      },
+      "currency": {
+        "const": "INR"
+      },
+      "guestName": {
+        "type": "string",
+        "maxLength": 120
+      },
+      "attention": {
+        "type": "string",
+        "enum": [
+          "none",
+          "new",
+          "change",
+          "offer"
+        ]
+      },
+      "responseDeadline": {
+        "type": [
+          "integer",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "id",
+      "reference",
+      "version",
+      "kind",
+      "status",
+      "arrival",
+      "departure",
+      "adults",
+      "childrenCount",
+      "unitIds",
+      "totalPaise",
+      "currency",
+      "guestName",
+      "attention",
+      "responseDeadline"
+    ]
+  },
+  "DeskReservationPage": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "items": {
+        "type": "array",
+        "maxItems": 50,
+        "items": {
+          "$ref": "#/components/schemas/DeskReservation"
+        }
+      },
+      "nextCursor": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "asOf": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "items",
+      "nextCursor",
+      "asOf"
+    ]
   }
 }
