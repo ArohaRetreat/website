@@ -1,3 +1,9 @@
+## 0.25.1 / API 0.11.0 — optional non-expiring integration tokens
+
+- Accept explicit expiresInHours:null for Never expires; keep 24-hour default and 1–168-hour timed tokens. Existing grants retain their deadlines.
+- Preserve live account/role/scope/environment checks and revocation. Permanent grants count toward active limits and omit the TTL field; malformed stored expiry fails closed.
+- Publish token-management schemas and contract1.1.0. Recognize the explicitly compatible scoped API0.10/0.11 booking contract in frontend delivery gates.
+
 ## 0.25.0 / API 0.10.0 — scoped external API
 
 - Add the versioned external API contract and 39 scoped operations using the existing booking, pricing and authorization rules. Future financial, feedback and lifecycle CRUD remains tracked under issue 105.
