@@ -1,3 +1,8 @@
+## 0.23.11 / API 0.11.0 — optional non-expiring integration tokens (preprod)
+
+- Accept explicit expiresInHours:null for Never expires while preserving the24-hour default, finite expiry, current account checks, active limits and revocation. Existing grants are unchanged.
+- Publish contract1.1.0 token-management schemas and recognize known compatible API0.10/0.11 booking transport in frontend delivery gates.
+
 # 0.23.8 (pre-production) — preserve active tester reservations
 
 - Correct the host room timeline so an exclusive retreat hold marks every room reserved until the exclusive departure boundary.
