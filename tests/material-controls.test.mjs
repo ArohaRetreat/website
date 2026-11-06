@@ -49,3 +49,14 @@ test('required menu fields explain missing choices and clear the error after sel
  try{const select=m.d.querySelector('select'),button=m.d.querySelector('.md-select-button');select.dispatchEvent(new m.w.Event('invalid',{cancelable:true}));assert.equal(button.getAttribute('aria-invalid'),'true');assert.match(m.d.querySelector('[role=alert]').textContent,/Choose an option for child age/);button.click();m.d.querySelector('[data-option="1"]').click();assert.equal(button.hasAttribute('aria-invalid'),false);assert.equal(m.d.querySelector('[role=alert]').textContent,'');
  }finally{m.close();}
 });
+
+test('time picker uses bounded 24-hour entry and commits only on explicit confirmation',async()=>{
+ const m=mount('<form><label>Stay check-in<input name="checkIn" type="time" required value="11:00"></label></form>');
+ try{m.d.querySelector('.md-calendar-trigger').click();const d=m.d.querySelector('.md-time-picker');d.querySelector('[name=hour]').value='14';d.querySelector('[name=minute]').value='30';assert.equal(m.d.querySelector('[name=checkIn]').value,'11:00');d.querySelector('form').dispatchEvent(new m.w.Event('submit',{bubbles:true,cancelable:true}));assert.equal(new m.w.FormData(m.d.querySelector('form')).get('checkIn'),'14:30');assert.equal(m.d.querySelector('input[type=text]').value,'14:30');assert.equal(m.d.querySelector('.md-time-picker'),null);
+ }finally{m.close();}
+});
+test('payment date/time retains partial entry and preserves the original datetime FormData contract',async()=>{
+ const m=mount('<form><label>Received at<input name="receivedAt" type="datetime-local" required></label></form>');
+ try{await settle();const texts=m.d.querySelectorAll('input[type=text]');assert.equal(texts.length,2);texts[0].value='22/11/2026';texts[0].dispatchEvent(new m.w.Event('input',{bubbles:true}));texts[0].dispatchEvent(new m.w.Event('change',{bubbles:true}));await settle();assert.equal(texts[0].value,'22/11/2026');texts[1].value='14:30';texts[1].dispatchEvent(new m.w.Event('input',{bubbles:true}));texts[1].dispatchEvent(new m.w.Event('change',{bubbles:true}));assert.equal(new m.w.FormData(m.d.querySelector('form')).get('receivedAt'),'2026-11-22T14:30');m.d.querySelector('[name=receivedAt]').disabled=true;await settle();assert.equal(texts[0].disabled,true);assert.equal(texts[1].disabled,true);
+ }finally{m.close();}
+});

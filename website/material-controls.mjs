@@ -105,13 +105,45 @@ function upgradeStepper(input) {
   const update=()=>{buttons.forEach((b,i)=>b.disabled=input.disabled||(input.value!==''&&(i===0&&input.min!==''&&Number(input.value)<=Number(input.min)||i===1&&input.max!==''&&Number(input.value)>=Number(input.max))));};
   input._mdUpdate=update;input.addEventListener('input',update);input.addEventListener('change',update);update();
 }
+function upgradeTime(input) {
+  const name=fieldName(input),wrap=shell(input,'md-date-field'),text=document.createElement('input'),button=document.createElement('button');
+  input.classList.add('md-native');input.tabIndex=-1;input.setAttribute('aria-hidden','true');
+  text.type='text';text.inputMode='numeric';text.placeholder='HH:MM';text.pattern='([01][0-9]|2[0-3]):[0-5][0-9]';text.setAttribute('aria-label',name+' (24-hour HH:MM)');
+  button.type='button';button.className='md-calendar-trigger';button.setAttribute('aria-haspopup','dialog');button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/></svg>';wrap.append(text,button);
+  const update=()=>{text.value=input.value.slice(0,5);text.disabled=input.disabled;text.required=input.required;button.disabled=input.disabled;button.setAttribute('aria-label','Choose '+name.toLowerCase());};
+  input._mdUpdate=update;input.addEventListener('change',update);input.addEventListener('focus',()=>text.focus());
+  input.addEventListener('invalid',e=>{e.preventDefault();text.setCustomValidity(input.validationMessage);text.reportValidity();});
+  text.oninput=()=>{text.setCustomValidity('');input.value=/^([01]\d|2[0-3]):[0-5]\d$/.test(text.value)?text.value:'';input.dispatchEvent(new Event('input',{bubbles:true}));};
+  text.onchange=()=>{text.setCustomValidity(text.value&&!input.value?'Use a 24-hour time as HH:MM.':'');input.dispatchEvent(new Event('change',{bubbles:true}));};
+  button.onclick=()=>{
+    const d=document.createElement('dialog');d.className='md-time-picker';d.setAttribute('aria-label','Choose '+name.toLowerCase());const [h,m]=(input.value||'11:00').split(':');
+    d.innerHTML=`<form><p class="eyebrow">Select ${esc(name.toLowerCase())}</p><h2>Choose a time</h2><p>Use 24-hour time.</p><div class="md-time-fields"><label>Hour<input name="hour" inputmode="numeric" type="number" min="0" max="23" step="1" required value="${esc(h)}"></label><span aria-hidden="true">:</span><label>Minute<input name="minute" inputmode="numeric" type="number" min="0" max="59" step="1" required value="${esc(m)}"></label></div><p role="status"></p><div class="md-confirm-actions"><button type="button" data-cancel>Cancel</button><button type="submit" class="primary">Use this time</button></div></form>`;
+    (input.closest('dialog')||document.body).append(d);d.showModal();d.querySelector('[name=hour]').focus();d.querySelector('[data-cancel]').onclick=()=>d.close();
+    d.querySelector('form').onsubmit=e=>{e.preventDefault();const form=e.currentTarget;input.value=String(Number(form.elements.hour.value)).padStart(2,'0')+':'+String(Number(form.elements.minute.value)).padStart(2,'0');if(!input.validity.valid){d.querySelector('[role=status]').textContent=input.validationMessage;return;}text.setCustomValidity('');changed(input);d.close();};
+    d.addEventListener('close',()=>{d.remove();if(button.isConnected)button.focus();},{once:true});
+  };update();
+}
+function upgradeDateTime(input) {
+  const name=fieldName(input),wrap=shell(input,'md-datetime'),day=document.createElement('input'),time=document.createElement('input');let synced;
+  input.classList.add('md-native');input.tabIndex=-1;input.setAttribute('aria-hidden','true');
+  day.type='date';time.type='time';day.setAttribute('aria-label',name+' date');time.setAttribute('aria-label',name+' time');wrap.append(day,time);
+  const update=()=>{
+    if(input.value!==synced){[day.value,time.value]=(input.value||'T').split('T');synced=input.value;}
+    for(const part of [day,time]){if(part.required!==input.required)part.required=input.required;if(part.disabled!==input.disabled)part.disabled=input.disabled;}
+    const min=input.min.split('T')[0],max=input.max.split('T')[0];if(day.min!==min)day.min=min;if(day.max!==max)day.max=max;day._mdUpdate?.();time._mdUpdate?.();
+  };
+  const error=document.createElement('span');error.className='md-control-error';error.setAttribute('role','alert');wrap.append(error);
+  const compose=()=>{input.value=day.value&&time.value?day.value+'T'+time.value:'';synced=input.value;if(input.validity.valid)error.textContent='';};
+  for(const part of [day,time]){part.addEventListener('input',()=>{compose();input.dispatchEvent(new Event('input',{bubbles:true}));});part.addEventListener('change',()=>{compose();input.dispatchEvent(new Event('change',{bubbles:true}));});}
+  input.addEventListener('change',update);input.addEventListener('focus',()=>day.focus());input.addEventListener('invalid',e=>{e.preventDefault();error.textContent=input.validationMessage;day.focus();});input._mdUpdate=update;update();
+}
 export function installMaterialControls(root=document) {
   if(root._materialControls)return;root._materialControls=true;document.documentElement.classList.add('material-app');
   let queued=false;
   const scan=()=>{
     queued=false;
-    root.querySelectorAll('select:not([data-md-ready]),input[type=date]:not([data-md-ready]),input[type=number][data-stepper]:not([data-md-ready]),input[type=number][name=adults]:not([data-md-ready]),input[type=number][name=childrenCount]:not([data-md-ready])').forEach(input=>{
-      input.dataset.mdReady='';if(input.tagName==='SELECT')upgradeSelect(input);else if(input.type==='date')upgradeDate(input);else upgradeStepper(input);
+    root.querySelectorAll('select:not([data-md-ready]),input[type=date]:not([data-md-ready]),input[type=time]:not([data-md-ready]),input[type=datetime-local]:not([data-md-ready]),input[type=number][data-stepper]:not([data-md-ready]),input[type=number][name=adults]:not([data-md-ready]),input[type=number][name=childrenCount]:not([data-md-ready])').forEach(input=>{
+      input.dataset.mdReady='';if(input.tagName==='SELECT')upgradeSelect(input);else if(input.type==='date')upgradeDate(input);else if(input.type==='time')upgradeTime(input);else if(input.type==='datetime-local')upgradeDateTime(input);else upgradeStepper(input);
     });
     root.querySelectorAll('[data-md-ready]').forEach(input=>input._mdUpdate?.());
   };

@@ -25,7 +25,7 @@ Research: [Material 3 date pickers](https://m3.material.io/components/date-picke
 
 ## Component and screen inventory
 
-Shared `material.css` owns semantic roles, typography, fields, buttons, radios/checkboxes, menus, date pickers, steppers, dialogs, cards, lists, summaries, errors, loading/disabled/focus and reduced-motion treatment. `frontdesk.css` now owns only the responsive staff workspace rather than a copied preview theme and incremental overrides. `material-controls.mjs` owns shared interactions, with native fields retained as validation/FormData values.
+Shared `material.css` owns semantic roles, typography, fields, buttons, radios/checkboxes, menus, date and 24-hour time pickers, split payment date/time entry, steppers, dialogs, cards, lists, summaries, errors, loading/disabled/focus and reduced-motion treatment. `frontdesk.css` now owns only the responsive staff workspace rather than a copied preview theme and incremental overrides. `material-controls.mjs` owns shared interactions, with native fields retained as validation/FormData values.
 
 Covered surfaces: Studio sign-in/module navigation/access; front desk/task queues/results/filter dialogs; walk-in Guest/Visit/Review steps; booking decision drawer and legacy booking-options/contact/mail/allocation paths; room calendar/inventory/policies/offers; customer lookup/history/loyalty; payments/reversal/documents/private feedback; guest booking search, dates, party counts, accommodation/review, account/visits/credits and detail sheets. The Website changes editor receives shared typography/controls and navigation treatment while retaining its mounted draft frame. Website changes content/publishing semantics stay intact.
 
