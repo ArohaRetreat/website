@@ -27,3 +27,5 @@ Rollback: revert frontend to its compatible previous revision and API if necessa
 Automated controller coverage includes server filter inputs, cursor reset, next/previous replacement, separate approval/check-in, deliberate decline and read-only controls, frozen retry after uncertain response. HTTP/emulator tests cover real policy, contacts/loyalty, bounded queries, outsider denial and invalid ranges. Browser review covers desktop, tablet and phone layouts and actual visible controls. Browser emulation does not certify physical-device or staff usability acceptance.
 
 Before owner acceptance: try reviewing a request, adding a walk-in and checking in on both devices. Check navigation, text size, filter recovery, drawer context and whether each action's consequence is clear. Keep production held until that review.
+
+Browser verification also found a pre-existing manual booking name overwrite: an account display name could replace the reviewed guest name. Manual confirmations now retain the reviewed contact-name snapshot; a regression uses a different account label. This changes no customer ownership, claims, prices or credits.

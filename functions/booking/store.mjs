@@ -959,7 +959,7 @@ export async function bookingCommand(
     if (reservationMutation) {
       const b = result;
       if (operation === "create") b.contact = contact;
-      if (operation === "create")
+      if (operation === "create" && !manualCreate)
         b.guestName = String(ownerProfile.name || actor.name || "Guest").slice(
           0,
           80,

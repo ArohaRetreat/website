@@ -130,11 +130,14 @@ test("manual identity, actual nightly rewards and concurrent redemption use real
     await assert.rejects(auth.getUserByEmail("walkin@example.test"), {
       code: "auth/user-not-found",
     });
+    // A customer's account label must not replace the reviewed manual booking name.
+    await db.collection('aroha_preprod_booking_profiles').doc(q.customerId).update({name:'Synthetic account label'});
     const key = randomUUID(),
       b = okay(
         await op(host, "createManualBooking", { quoteId: q.id }, { key }),
       );
     assert.equal(b.status, "confirmed");
+    assert.equal(b.guestName, selection.customer.name);
     assert.equal(b.source, "host_manual");
     assert.equal(b.owner, q.customerId);
     assert.deepEqual(
