@@ -1,3 +1,4 @@
+import {matchRoute as matchExternalRoute} from './external/routes.mjs';
 import { apiVersion } from "./version.mjs";
 import { RuntimeExporter } from "./runtime-exporter.mjs";
 import { activeTelemetryConfig } from "./observability-config.mjs";
@@ -157,6 +158,8 @@ function initialize() {
   providers = { traces: tp, logs: lp, metrics: mp };
 }
 function route(req) {
+  if(req.path.startsWith('/api/external/v1/'))return 'external.'+(matchExternalRoute(req.method,req.path.replace(/^\/api\/external\/v1/,''))?.row[2]||'unknown');
+  if(req.path.startsWith('/api/v1/integration-tokens'))return 'integration.tokens';
   const p = req.path.replace(/^\/api\/v1/, "");
   const booking = p.match(/^\/booking\/([a-z-]+)\/?$/);
   if (

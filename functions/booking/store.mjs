@@ -1,3 +1,4 @@
+import {guardIntegrationTransaction} from '../external/access.mjs';
 import { apiVersion } from "../version.mjs";
 import { mailSettings } from "../email/config.mjs";
 import {
@@ -133,7 +134,7 @@ const pickConfig = (s) => ({
   promos: s.promos,
   blocks: s.blocks,
 });
-const loadConfig = (snap) => {
+export const loadConfig = (snap) => {
   const initial = initialState(),
     stored = snap.exists ? snap.data() : {};
   return {
@@ -400,6 +401,7 @@ export async function bookingCommand(
     ),
     requestHash = hash(JSON.stringify(stable({ operation, input, admin })));
   return db.runTransaction(async (tx) => {
+    await guardIntegrationTransaction(tx,db,token);
     const now = Date.now(),
       configRef = collection(db, "config").doc("site"),
       profileRef = collection(db, "profiles").doc(token.uid),
