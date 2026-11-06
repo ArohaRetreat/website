@@ -162,14 +162,20 @@ async function run(fn) {
 }
 async function refresh() {
   const previous = state?.actor?.id;
+  const selectedBooking=dialog.open?dialog.dataset.detailId:null;
   state = await api("state");
   if (previous && state.actor?.id !== previous) {
+    dialog.close();dialog.replaceChildren();delete dialog.dataset.detailId;
     contactDraft = undefined;
     quote = null;
     note = "";
     promo = "";
     selected = [];
     step = 1;
+  }else if(selectedBooking&&!state.bookings.some(b=>b.id===selectedBooking)){
+    // List pagination is not a detail cache. Re-read just this authorised record.
+    try{const current=await api('reservation-detail',{id:selectedBooking});state.bookings.push(current);}
+    catch(e){dialog.close();dialog.replaceChildren();delete dialog.dataset.detailId;throw e;}
   }
 }
 const hostRoute = () =>

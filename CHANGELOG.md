@@ -1,3 +1,7 @@
+## 0.27.1 — refresh selected bookings outside the current page
+
+- Re-read the selected booking after mutation when it is outside the current list page. Close and clear private details when the signed-in account changes or access cannot be refreshed. API and contract remain0.13.0/1.3.0.
+
 ## 0.27.0 / API 0.13.0 — manual bookings and nightly loyalty
 
 - Add one-review host booking for new or existing guest emails without creating Auth accounts. Verified same-email Google sign-in claims the private customer alias; history, documents, feedback and credits share current ownership policy.
