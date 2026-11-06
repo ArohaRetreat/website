@@ -39,7 +39,7 @@ function upgradeSelect(input) {
   let popup;
   button.onclick=()=>{
     if(popup?.isConnected){popup.hidePopover();return;}
-    update();popup=document.createElement('div');popup.id='md-options-'+(++sequence);popup.className='md-option-menu';popup.popover='auto';popup.setAttribute('role','listbox');popup.setAttribute('aria-label',name);
+    update();popup=document.createElement('div');popup.id='md-options-'+(++sequence);popup.className='md-option-menu';popup.setAttribute('data-dt-mask','');popup.popover='auto';popup.setAttribute('role','listbox');popup.setAttribute('aria-label',name);
     button.setAttribute('aria-controls',popup.id);
     popup.innerHTML=[...input.options].map((o,i)=>`<button type="button" role="option" aria-selected="${o.selected}" data-option="${i}" tabindex="-1" ${o.disabled?'disabled':''}><span>${esc(o.textContent)}</span>${o.selected?'<span aria-hidden="true">✓</span>':''}</button>`).join('');
     wrap.append(popup);popup.showPopover();button.setAttribute('aria-expanded','true');
@@ -59,9 +59,12 @@ function upgradeSelect(input) {
       else if(e.key==='Tab'){popup.hidePopover();button.focus();}
       else if(e.key.length===1&&!e.ctrlKey&&!e.metaKey){typed+=e.key.toLowerCase();clearTimeout(timer);timer=setTimeout(()=>{typed='';},700);options.find(b=>b.textContent.trim().toLowerCase().startsWith(typed))?.focus();}
     };
-    const closeOnMove=e=>{if(e.target!==popup&&!popup.contains(e.target)&&popup.isConnected)popup.hidePopover();};
+    const menu=popup;
+    const cleanup=()=>{clearTimeout(timer);window.removeEventListener('resize',closeOnMove);document.removeEventListener('scroll',closeOnMove,true);life.disconnect();};
+    const closeOnMove=e=>{if(!menu.isConnected){cleanup();return;}if(e.type==='resize'||!(e.target instanceof Node&&menu.contains(e.target)))menu.hidePopover();};
+    const life=new MutationObserver(()=>{if(!menu.isConnected)cleanup();});life.observe(document.documentElement,{subtree:true,childList:true});
     window.addEventListener('resize',closeOnMove);document.addEventListener('scroll',closeOnMove,true);
-    popup.addEventListener('toggle',e=>{if(e.newState==='closed'){button.setAttribute('aria-expanded','false');clearTimeout(timer);window.removeEventListener('resize',closeOnMove);document.removeEventListener('scroll',closeOnMove,true);popup.remove();}},{once:false});
+    menu.addEventListener('toggle',e=>{if(e.newState==='closed'){button.setAttribute('aria-expanded','false');cleanup();menu.remove();}});
     (options.find(b=>b.getAttribute('aria-selected')==='true')||options[0])?.focus();
   };
   button.addEventListener('keydown',e=>{if(['ArrowDown','ArrowUp','Home','End'].includes(e.key)){e.preventDefault();button.click();}});
@@ -79,7 +82,7 @@ function upgradeDate(input) {
   text.addEventListener('input',()=>{text.setCustomValidity('');input.value=parseDate(text.value);input.dispatchEvent(new Event('input',{bubbles:true}));});
   text.addEventListener('change',()=>{const v=parseDate(text.value);text.setCustomValidity(text.value&&!v?'Enter a valid date as DD/MM/YYYY.':'');input.value=v;input.dispatchEvent(new Event('change',{bubbles:true}));if(v)text.value=displayDate(v);});
   button.onclick=()=>{
-    const d=document.createElement('dialog');d.className='md-calendar';d.setAttribute('aria-label','Choose '+name.toLowerCase());
+    const d=document.createElement('dialog');d.className='md-calendar';d.setAttribute('data-dt-mask','');d.setAttribute('aria-label','Choose '+name.toLowerCase());
     const selected=input.value, clamp=s=>input.min&&s<input.min?input.min:input.max&&s>input.max?input.max:s, initial=clamp(parseDate(selected)||parseDate(input.min)||today());let focus=initial, month=initial.slice(0,7);
     const allowed=s=>(!input.min||s>=input.min)&&(!input.max||s<=input.max);
     function draw(){
@@ -116,7 +119,7 @@ function upgradeTime(input) {
   text.oninput=()=>{text.setCustomValidity('');input.value=/^([01]\d|2[0-3]):[0-5]\d$/.test(text.value)?text.value:'';input.dispatchEvent(new Event('input',{bubbles:true}));};
   text.onchange=()=>{text.setCustomValidity(text.value&&!input.value?'Use a 24-hour time as HH:MM.':'');input.dispatchEvent(new Event('change',{bubbles:true}));};
   button.onclick=()=>{
-    const d=document.createElement('dialog');d.className='md-time-picker';d.setAttribute('aria-label','Choose '+name.toLowerCase());const [h,m]=(input.value||'11:00').split(':');
+    const d=document.createElement('dialog');d.className='md-time-picker';d.setAttribute('data-dt-mask','');d.setAttribute('aria-label','Choose '+name.toLowerCase());const [h,m]=(input.value||'11:00').split(':');
     d.innerHTML=`<form><p class="eyebrow">Select ${esc(name.toLowerCase())}</p><h2>Choose a time</h2><p>Use 24-hour time.</p><div class="md-time-fields"><label>Hour<input name="hour" inputmode="numeric" type="number" min="0" max="23" step="1" required value="${esc(h)}"></label><span aria-hidden="true">:</span><label>Minute<input name="minute" inputmode="numeric" type="number" min="0" max="59" step="1" required value="${esc(m)}"></label></div><p role="status"></p><div class="md-confirm-actions"><button type="button" data-cancel>Cancel</button><button type="submit" class="primary">Use this time</button></div></form>`;
     (input.closest('dialog')||document.body).append(d);d.showModal();d.querySelector('[name=hour]').focus();d.querySelector('[data-cancel]').onclick=()=>d.close();
     d.querySelector('form').onsubmit=e=>{e.preventDefault();const form=e.currentTarget;input.value=String(Number(form.elements.hour.value)).padStart(2,'0')+':'+String(Number(form.elements.minute.value)).padStart(2,'0');if(!input.validity.valid){d.querySelector('[role=status]').textContent=input.validationMessage;return;}text.setCustomValidity('');changed(input);d.close();};
@@ -135,7 +138,7 @@ function upgradeDateTime(input) {
   const error=document.createElement('span');error.className='md-control-error';error.setAttribute('role','alert');wrap.append(error);
   const compose=()=>{input.value=day.value&&time.value?day.value+'T'+time.value:'';synced=input.value;if(input.validity.valid)error.textContent='';};
   for(const part of [day,time]){part.addEventListener('input',()=>{compose();input.dispatchEvent(new Event('input',{bubbles:true}));});part.addEventListener('change',()=>{compose();input.dispatchEvent(new Event('change',{bubbles:true}));});}
-  input.addEventListener('change',update);input.addEventListener('focus',()=>day.focus());input.addEventListener('invalid',e=>{e.preventDefault();error.textContent=input.validationMessage;day.focus();});input._mdUpdate=update;update();
+  input.addEventListener('change',update);input.addEventListener('focus',()=>day.focus());input.addEventListener('invalid',e=>{e.preventDefault();error.textContent=input.validationMessage;day.focus();});input._mdUpdate=update;input._mdReset=()=>{synced=undefined;update();};update();
 }
 export function installMaterialControls(root=document) {
   if(root._materialControls)return;root._materialControls=true;document.documentElement.classList.add('material-app');
@@ -149,8 +152,8 @@ export function installMaterialControls(root=document) {
   };
   const schedule=()=>{if(!queued){queued=true;queueMicrotask(scan);}};
   new MutationObserver(records=>{if(records.some(r=>r.type==='attributes'?(r.target.matches?.('[data-md-ready],option')):[...r.addedNodes].some(n=>n.nodeType===1&&!n.closest?.('.md-select-button,.md-option-menu,.md-calendar'))))schedule();}).observe(root.documentElement||root,{subtree:true,childList:true,attributes:true,attributeFilter:['disabled','min','max','required','selected']});
-  root.addEventListener('reset',()=>setTimeout(scan,0));scan();
+  root.addEventListener('reset',e=>setTimeout(()=>{e.target.querySelectorAll('[data-md-ready]').forEach(input=>input._mdReset?.());scan();},0));scan();
 }
 export function confirmMaterial(message,{title='Confirm this change',action='Confirm',danger=false}={}) {
-  return new Promise(resolve=>{const d=document.createElement('dialog');d.className='md-confirm';d.innerHTML=`<h2>${esc(title)}</h2><p>${esc(message)}</p><div class="md-confirm-actions"><button type="button" data-keep>Keep reviewing</button><button type="button" class="${danger?'danger':'primary'}" data-confirm>${esc(action)}</button></div>`;d.setAttribute('aria-label',title);(document.querySelector('dialog[open]')||document.body).append(d);d.showModal();let yes=false;d.querySelector('[data-keep]').onclick=()=>d.close();d.querySelector('[data-confirm]').onclick=()=>{yes=true;d.close();};d.addEventListener('close',()=>{d.remove();resolve(yes);},{once:true});});
+  return new Promise(resolve=>{const d=document.createElement('dialog');d.className='md-confirm';d.setAttribute('data-dt-mask','');d.innerHTML=`<h2>${esc(title)}</h2><p>${esc(message)}</p><div class="md-confirm-actions"><button type="button" data-keep>Keep reviewing</button><button type="button" class="${danger?'danger':'primary'}" data-confirm>${esc(action)}</button></div>`;d.setAttribute('aria-label',title);(document.querySelector('dialog[open]')||document.body).append(d);d.showModal();let yes=false;d.querySelector('[data-keep]').onclick=()=>d.close();d.querySelector('[data-confirm]').onclick=()=>{yes=true;d.close();};d.addEventListener('close',()=>{d.remove();resolve(yes);},{once:true});});
 }
