@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Aroha external API",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Actual scoped-token initial slice; source status is separate from deployed availability. Full draft and future lifecycle routes are not exposed."
   },
   "servers": [

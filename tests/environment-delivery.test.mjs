@@ -74,3 +74,11 @@ test("publication and live verification share the website-to-API version contrac
  assert.equal(compatibleBookingApi("0.21.7","0.8.0"),false);
  assert.equal(compatibleBookingApi("bad","0.8.0"),false);
 });
+
+
+test("scoped API releases preserve known booking compatibility without accepting unknown minors", () => {
+ for (const website of ["0.23.11", "0.25.1"]) {
+  for (const api of ["0.10.0", "0.11.0"]) assert.equal(compatibleBookingApi(website, api), true);
+  assert.equal(compatibleBookingApi(website, "0.12.0"), false);
+ }
+});

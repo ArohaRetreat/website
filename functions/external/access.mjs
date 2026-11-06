@@ -7,7 +7,7 @@ import {
 } from "../environment.mjs";
 import { studioAccess } from "../access.mjs";
 import { BookingError } from "../booking/domain.mjs";
-export const CONTRACT_VERSION = "1.0.0";
+export const CONTRACT_VERSION = "1.1.0";
 export const READ_SCOPES = Object.freeze([
   "runtime:read",
   "availability:read",
@@ -63,6 +63,9 @@ const metadata = (g) => ({
   createdAt: g.createdAt,
   expiresAt: g.expiresAt,
 });
+const unexpired = (g, now) =>
+  g?.expiresAt === null ||
+  (Number.isSafeInteger(g?.expiresAt) && g.expiresAt > now);
 export function assertGrant(g, token, now = Date.now()) {
   const a = token._integration;
   if (!a) return;
@@ -71,7 +74,7 @@ export function assertGrant(g, token, now = Date.now()) {
     !g.active ||
     g.owner !== token.uid ||
     g.environment !== environment.name ||
-    g.expiresAt <= now ||
+    !unexpired(g, now) ||
     g.version !== a.version ||
     !a.scopes.every((s) => g.scopes.includes(s)) ||
     g.purpose !== a.purpose ||
@@ -219,9 +222,10 @@ export async function tokenManagement(db, token, method, id, body, key) {
     scopes.some((s) => !SCOPES.includes(s)) ||
     !["integration", "mcp-readonly"].includes(purpose) ||
     !["own", "all"].includes(rowAccess) ||
-    !Number.isInteger(expiresInHours) ||
-    expiresInHours < 1 ||
-    expiresInHours > 168
+    (expiresInHours !== null &&
+      (!Number.isInteger(expiresInHours) ||
+        expiresInHours < 1 ||
+        expiresInHours > 168))
   )
     fail("INVALID_REQUEST", 422);
   if (
@@ -244,7 +248,7 @@ export async function tokenManagement(db, token, method, id, body, key) {
     if (old.exists) fail("TOKEN_ALREADY_ISSUED", 409);
     if (
       existing.size >= 50 ||
-      existing.docs.filter((d) => d.data().active && d.data().expiresAt > now)
+      existing.docs.filter((d) => d.data().active && unexpired(d.data(), now))
         .length >= 20
     )
       fail("TOKEN_LIMIT", 409);
@@ -280,12 +284,15 @@ export async function tokenManagement(db, token, method, id, body, key) {
       secretHash: digest(secret),
       createdAt: now,
       issuedAfter: (token.auth_time || Math.floor(now / 1000)) * 1000,
-      expiresAt: now + expiresInHours * 3600000,
-      expireAt: new Date(now + expiresInHours * 3600000),
+      expiresAt: expiresInHours === null ? null : now + expiresInHours * 3600000,
+      ...(expiresInHours === null
+        ? {}
+        : { expireAt: new Date(now + expiresInHours * 3600000) }),
     };
     tx.set(ref, g);
     tx.set(db.collection(collectionName("audit")).doc(), {
       operation: "integration.token.created",
+      expiresAt: g.expiresAt,
       actor: token.uid,
       entity: idValue,
       at: now,

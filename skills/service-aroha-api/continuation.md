@@ -76,3 +76,7 @@ Issue93 restores preprod Website changes in API0.8.4, using existing environment
 ## External API work6November2026 — issue105
 
 Scoped-token-first implementation is on feat/external-api-v1 from current preprod. Read docs/api/external-v1.md and its OpenAPI;39 facade operations delegate to shared booking policy, nine read MCP capabilities live in separate ArohaRetreat/mcp. No remote OAuth, financial ledger or feedback capability is implied. Synthetic HTTP integration passed locally; source/CI/merge/deployment evidence must be checked. Preserve all production bookings/CMS/media and existing mail; no historical replay.
+
+## Optional non-expiring integration grants
+
+Contract1.1.0/API0.11.0 accepts explicit expiresInHours:null, returns expiresAt:null and omits the grant TTL field. Default24h and finite1..168h remain. Null is the only permanent sentinel; malformed/missing expiry fails closed. Non-expiring grants count toward20active/50stored caps and remain revocable with current account/provider/role/scope/environment checks. No existing grant is extended or rewritten. Emulator coverage includes finite expiry, permanent read/revoke and permanent cap enforcement.
