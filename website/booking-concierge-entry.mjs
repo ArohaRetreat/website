@@ -1,3 +1,5 @@
+import {installMaterialControls, confirmMaterial} from './material-controls.mjs';
+installMaterialControls();
 import { bookingApi } from "./booking-api.mjs";
 import { journeyStep } from "./booking-journey.mjs";
 import { auth, observeAuth } from "./firebase-auth.mjs";

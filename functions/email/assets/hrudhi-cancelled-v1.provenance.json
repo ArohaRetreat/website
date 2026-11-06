@@ -1,0 +1,8 @@
+{
+  "asset": "hrudhi-cancelled-v1.png",
+  "source": "website/assets/retreat/hrudhi-guide-v1.webp",
+  "method": "Built-in imagegen edit preserving the approved character identity; PNG optimized to 320x480 for email",
+  "prompt": "Preserve Hrudhi's face, dark wavy bob, leaf hair clip, sage pinafore, cream shirt, botanical satchel and tan shoes. Change expression to very gentle disappointment, hands loosely together; no tears, distress or exaggerated sadness. Full-body transparent cutout, no text, scenery, glow or shadow.",
+  "use": "CID illustration for new email-v5-status cancellation jobs",
+  "review": "Preprod owner review pending"
+}

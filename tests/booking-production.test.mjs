@@ -166,6 +166,7 @@ test("production guest UI presents published private-room pricing without sample
     new URL("../website/booking.mjs", import.meta.url),
     "utf8",
   );
+  source = source.replace(/import \{[^\n]+\} from ['"]\.\/material-controls.mjs['"];/, 'const installMaterialControls=()=>{},confirmMaterial=async()=>window.confirm();');
   source = source.replace(/import \{hostShell,mountFrontDesk\} from '\.\/frontdesk.mjs';/,'const hostShell=({content})=>content,mountFrontDesk=async()=>{};').replace(/import \{mountHostOperations,mountHostSummary,openManualBooking\} from '\.\/host-operations.mjs';/, 'const mountHostOperations=async()=>{},mountHostSummary=async()=>{},openManualBooking=()=>{};').replace(/import \{auth\} from '\.\/firebase-auth.mjs';/, 'const auth={currentUser:null};').replace(/import \{mountStayPanel\} from '\.\/stay-panel.mjs';/, "").replace(
     /import \{ bookingApi \} from "\.\/booking-api.mjs";/,
     "const bookingApi=window.testBookingApi; const mountStayPanel=async()=>{};",

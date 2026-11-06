@@ -1,3 +1,5 @@
+import {installMaterialControls, confirmMaterial} from './material-controls.mjs';
+installMaterialControls();
 import { api, login, logout, observeAuth } from "./firebase.mjs";
 const root = document.querySelector("#studio"),
   frames = new Map();
@@ -49,7 +51,7 @@ function shell() {
   document.querySelector("#studio-signout").onclick = async () => {
     if (
       dirty &&
-      !confirm("There are unsaved website changes. Sign out and discard them?")
+      !await confirmMaterial("There are unsaved website changes. Sign out and discard them?")
     )
       return;
     await logout();

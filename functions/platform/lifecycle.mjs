@@ -69,7 +69,7 @@ export function queueLifecycle(
     sourceEventId: id,
     sourceContext: contextFields(),
     templateVersion: ["guest_cancelled", "guest_declined"].includes(channel)
-      ? "email-v4-status"
+      ? "email-v5-status"
       : "email-v4-lifecycle",
     documentTemplateVersion: document ? "pdf-v4-financial" : null,
     documentId: document?.id || null,

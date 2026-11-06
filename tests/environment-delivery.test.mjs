@@ -95,7 +95,10 @@ test("nightly credit UI requires its deployed policy and unknown future versions
 
 test("Host Studio 0.28 explicitly retains API 0.13 without allowing unknown backend contracts",async()=>{
  const pkg=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8'));
- assert.equal(compatibleBookingApi(pkg.version,'0.14.0'),true);
+ assert.equal(compatibleBookingApi(pkg.version,'0.15.0'),true);
+ assert.equal(compatibleBookingApi('0.30.0','0.14.0'),false);
+ assert.equal(compatibleBookingApi('0.30.0','0.16.0'),false);
+ assert.equal(compatibleBookingApi('0.29.0','0.15.0'),true);
  assert.equal(compatibleBookingApi('0.28.0','0.13.0'),true);
  assert.equal(compatibleBookingApi('0.28.1','0.13.2'),true);
  for(const api of ['0.12.1','0.14.0','bad'])assert.equal(compatibleBookingApi('0.28.0',api),false);

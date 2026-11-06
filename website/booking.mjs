@@ -1,3 +1,5 @@
+import {installMaterialControls, confirmMaterial} from './material-controls.mjs';
+installMaterialControls();
 import {hostShell,mountFrontDesk} from './frontdesk.mjs';
 import {mountHostOperations,mountHostSummary,openManualBooking} from './host-operations.mjs';
 import {auth} from './firebase-auth.mjs';
@@ -726,6 +728,23 @@ function detail(id) {
   open(
     `<p class="eyebrow">${esc(b.reference)} ${isHost && owner ? "· " + esc(owner.name.split(" ·")[0]) : ""}</p><h2>${isHost ? (b.status === "pending_approval" ? "Review booking request" : "Booking details") : b.source === "host_private" ? "Privately booked" : "Your little corner of Aroha."}</h2>${isHost ? `<p class="host-guest-name">${esc(b.guestName || owner?.name?.split(" ·")[0] || "Guest")}</p>` : ""}${badge(b.status)}<div class="detail-dates"><strong>${format(b.arrival, { day: "numeric", month: "long" })} — ${format(endDateOf(b), { day: "numeric", month: "long", year: "numeric" })}</strong><p>${esc(b.kind ? kindLabel(b.kind) : b.unitNames.join(" + "))} · ${b.guestCountPending ? "Guest count to be arranged" : (b.adults ?? b.guests)+" adult(s) · "+(b.children ?? 0)+" under 10(s)"}</p></div>${b.source === "host_private" ? `<p>${esc(b.guestName)} · ${money(b.dayRate)} per day × ${b.days} days</p>` : ""}<dl class="detail-price"><div><dt>Visit subtotal</dt><dd>${money(b.subtotal)}</dd></div><div><dt>Offer</dt><dd>−${money(b.discount)}</dd></div><div class="total"><dt>Visit total</dt><dd>${money(b.total)}</dd></div></dl>${b.note ? `<div class="private-note"><p class="eyebrow">${b.source === "host_private" ? "HOST BOOKING NOTE" : "PRIVATE GUEST REQUEST"}</p><p>${esc(b.note)}</p></div>` : ""}${b.status === "pending_approval" ? `<div class="approval-note"><strong>${isHost ? "Your decision is needed" : "Awaiting your host’s approval"}</strong><p>Review deadline: ${new Date(b.expiresAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} IST. ${b.kind === "event" && !b.pricingVersion ? "Legacy event enquiries do not hold the property." : "Your places are held until then."}</p></div>` : ""}${isHost ? '<details class="booking-history"><summary>Booking history</summary>' : ""}<div class="status-history">${b.history.map((h) => `<div><span></span><p><strong>${esc(pretty(h.status))}</strong><small>${new Date(h.at).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short" })}</small></p></div>`).join("")}</div>${isHost ? "</details>" : ""}<div class="detail-actions">${isHost && b.status === "pending_approval" ? `<button class="button" data-action="approve" data-id="${b.id}" ${b.kind === "event" && !b.pricingVersion && !b.quoteAccepted ? "disabled" : ""}>Accept booking & email guest</button><button class="outline-button" data-action="decline" data-id="${b.id}">Decline request</button>` : ""}${isHost && b.status === "confirmed" ? `<button class="button" data-action="checkin" data-id="${b.id}">Check in</button><button class="text-button" data-action="no_show" data-id="${b.id}">Mark no-show</button>` : ""}${isHost && b.status === "checked_in" ? `<button class="button" data-action="complete" data-id="${b.id}">Check out</button>` : ""}${["pending_approval", "confirmed"].includes(b.status) && !(isHost && b.status === "pending_approval") ? `<button class="text-button danger" data-cancel="${b.id}">Cancel ${b.status === "pending_approval" ? "request" : "booking"}</button>` : ""}</div><p class="form-note">${emailEnabled() ? "Booking emails are enabled; check Email updates for delivery status." : "Email notifications are not enabled."} No online payment collected. Confirmed-stay cancellation cutoff: ${b.cancelHours ?? state.settings.cancelHours} hours before arrival. For later cancellation, contact the host.</p>`,
   );
+  const content=document.createElement('div');content.className='booking-detail-content';
+  const header=document.createElement('header');header.className='booking-detail-header';
+  const dates=dialog.querySelector('.detail-dates');
+  let inContent=false;
+  for(const node of [...dialog.children]){
+    if(node.matches('[data-close]'))continue;
+    if(node===dates)inContent=true;
+    if(inContent)content.append(node);else header.append(node);
+  }
+  dialog.append(header,content);
+  if(isHost){
+    const starts=b.startsAt||Date.parse(b.arrival+'T00:00:00+05:30'),ends=b.endsAt||Date.parse(b.departure+'T00:00:00+05:30');
+    for(const [action,at,caption] of [['checkin',starts,'Check-in'],['complete',ends,'Checkout'],['no_show',ends,'No-show reporting']]){
+      const button=dialog.querySelector(`[data-action="${action}"]`);
+      if(button&&Date.now()<at){button.disabled=true;button.title=caption+' opens '+new Date(at).toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})+' IST';}
+    }
+  }
   dialog.classList.toggle("host-booking-detail",isHost);
   if(isHost){
     const tools=document.createElement('div');tools.className='booking-tools';
@@ -738,7 +757,7 @@ function detail(id) {
       fold.innerHTML='<summary>Room allocation</summary>';allocation.before(fold);fold.append(allocation);
     }
   }
-  const panel=document.createElement('div');panel.dataset.stayPanel='';dialog.querySelector('.dialog-content, #detail-content')?.append(panel);
+  const panel=document.createElement('div');panel.dataset.stayPanel='';dialog.querySelector('.booking-detail-content, .dialog-content, #detail-content')?.append(panel);
   if(!panel.isConnected)dialog.append(panel);
   const manager=isHost&&state.actor?.bookingAccess!=='viewer';
   if(!isHost||b.status!=="pending_approval")void mountStayPanel(panel,{booking:b,manager,staff:isHost,call:(operation,input,key)=>bookingApi('platform',{operation,input},key),onMutation:async()=>{await refresh();render();}});
@@ -760,7 +779,7 @@ function bindDialog() {
       run(async()=>{
         const booking=state.bookings.find(x=>x.id===button.dataset.id);
         const prompts={no_show:'Mark this guest as a no-show? No stay credits will be earned.',checkin:'Confirm the guest has arrived and check them in?',complete:'Check out this guest? Eligible night credits and the checkout statement will be recorded.'};
-        if(prompts[action]&&!confirm(prompts[action]))return;
+        if(prompts[action]&&!await confirmMaterial(prompts[action]))return;
         decisionRequest ??= {id:booking.id,action,expectedVersion:booking.version};
         decisionKey ??= crypto.randomUUID();
         await api('booking-action',decisionRequest,decisionKey);
@@ -854,7 +873,7 @@ function extendPage() {
       run(async () => {
         if (
           app.querySelector("form") &&
-          !confirm("Reload the workspace? Unsaved form edits will be lost.")
+          !await confirmMaterial("Reload the workspace? Unsaved form edits will be lost.")
         )
           return;
         await refresh();
