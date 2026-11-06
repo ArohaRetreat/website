@@ -74,3 +74,7 @@ API 0.2.2 accepts optional package availability, visit address/Google embed and 
 ## External API production candidate — issue105
 
 Independent release branch from current main, preserving main-only private reservation support and current production mail configuration. New external API delegates to the same shared booking policy. Read docs/api/external-v1.md. This source note is not deployment evidence; retain production booking/CMS hashes and provider revisions. MCP and developer documentation live in separate repositories.
+
+## Optional non-expiring integration grants
+
+Contract1.1.0/API0.11.0 accepts explicit expiresInHours:null, returns expiresAt:null and omits the grant TTL field. Default24h and finite1..168h remain. Null is the only permanent sentinel; malformed/missing expiry fails closed. Non-expiring grants count toward20active/50stored caps and remain revocable with current account/provider/role/scope/environment checks. No existing grant is extended or rewritten. Emulator coverage includes finite expiry, permanent read/revoke and permanent cap enforcement.
