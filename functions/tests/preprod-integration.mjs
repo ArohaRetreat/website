@@ -389,7 +389,7 @@ test("pre-prod HTTP booking, approval, private invoice and webhook stay inside t
     await db.collection('aroha_preprod_bookings').doc(cancelId).set({id:cancelId,reference:'SYNTHETIC-CANCEL',owner:guest.localId,status:'confirmed',kind:'day',arrival:'2026-01-01',departure:'2026-01-02',startsAt:cancelNow+86400000,endsAt:cancelNow+90000000,adults:1,children:0,guests:1,units:[],allocations:[],subtotal:100000,discount:0,total:100000,history:[],version:1,createdAt:cancelNow});
     const cancelled=await call(owner,'/booking/booking-action',{id:cancelId,action:'cancel',expectedVersion:1},{admin:true,key:cancelKey});assert.equal(cancelled.httpStatus,200,JSON.stringify(cancelled));
     await until(()=>messages.some(m=>m.body.subject.includes('Booking cancelled')&&m.body.text.includes('SYNTHETIC-CANCEL')));
-    const cancellation=(await db.collection('aroha_preprod_notifications').where('bookingId','==',cancelId).get()).docs;assert.equal(cancellation.length,1);assert.equal(cancellation[0].data().status,'accepted');
+    const cancellation=(await db.collection('aroha_preprod_notifications').where('bookingId','==',cancelId).get()).docs;assert.equal(cancellation.length,1);await until(async()=>(await cancellation[0].ref.get()).data().status==='accepted');assert.equal((await cancellation[0].ref.get()).data().status,'accepted');
     assert.equal((await call(owner,'/booking/booking-action',{id:cancelId,action:'cancel',expectedVersion:1},{admin:true,key:cancelKey})).httpStatus,200);
     await runWorker();assert.equal((await db.collection('aroha_preprod_notifications').where('bookingId','==',cancelId).get()).size,1);
     const {mkdir,writeFile}=await import('node:fs/promises');await mkdir('qa/local/platform-emails',{recursive:true});
