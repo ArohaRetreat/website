@@ -611,3 +611,17 @@ test("approved document objects coexist with immutable originals and reject snap
  await assert.rejects(invoicePdf({...invoice,snapshotHash:'changed'},{bucket,designVersion:'pdf-v4'}),/INVOICE_DOCUMENT_MISMATCH/);
  assert.equal(objects.size,2);assert.deepEqual(objects.get(old.object).buffer,old.buffer);
 });
+
+test('cancellation mail preserves truthful status and suppresses a stale booking version', async()=>{
+ const {queueLifecycle}=await import('../functions/platform/lifecycle.mjs');
+ const {emailTemplate}=await import('../functions/email/templates.mjs');
+ const db=fakeDB(), b={...booking,status:'cancelled',version:4};
+ await db.collection(collectionName('bookings')).doc(b.id).set(b);
+ await db.runTransaction(async tx=>queueLifecycle(tx,db,{booking:b,profile,channel:'guest_cancelled',now:Date.now()}));
+ const jobs=await db.collection(collectionName('notifications')).get();const ref=jobs.docs[0].ref,job=jobs.docs[0].data();
+ const message=emailTemplate(job);assert.match(message.text,/cancelled/);assert.match(message.text,/does not record a payment or refund/);assert.doesNotMatch(message.text,/checkout completed/i);
+ let sent=0;await deliverEmail(db,ref,async()=>{sent++;return{data:{id:'synthetic-cancel'},error:null};});assert.equal(sent,1);assert.equal((await ref.get()).data().status,'accepted');
+ await deliverEmail(db,ref,async()=>{sent++;return{data:{id:'duplicate'},error:null};});assert.equal(sent,1);
+ const stale=fakeDB();await stale.collection(collectionName('bookings')).doc(b.id).set({...b,version:5});await stale.runTransaction(async tx=>queueLifecycle(tx,stale,{booking:b,profile,channel:'guest_cancelled',now:Date.now()}));
+ const staleJob=(await stale.collection(collectionName('notifications')).get()).docs[0];await deliverEmail(stale,staleJob.ref,async()=>{throw Error('STALE_SHOULD_NOT_SEND');});assert.equal((await staleJob.ref.get()).data().status,'suppressed');
+});
