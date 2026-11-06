@@ -1,3 +1,5 @@
+import {ledgerRead,financialSummary} from '../platform/finance.mjs';
+import {prepareStayLifecycle,commitStayLifecycle} from '../platform/lifecycle.mjs';
 import {guardIntegrationTransaction} from '../external/access.mjs';
 import { apiVersion } from "../version.mjs";
 import { mailSettings } from "../email/config.mjs";
@@ -226,7 +228,7 @@ export async function bookingState(
           createdAt: Date.now(),
         };
     const email = String(token.email || "").slice(0, 254);
-    if (!ps.exists || profile.name !== actor.name || profile.email !== email) {
+    if (!profile.erasedAt && (!ps.exists || profile.name !== actor.name || profile.email !== email)) {
       profile.name = actor.name;
       profile.email = email;
       tx.set(profileRef, profile);
@@ -450,6 +452,7 @@ export async function bookingCommand(
       const contact = contactDetails({ name: input.name, phone: input.phone });
       tx.set(profileRef, {
         ...profile,
+        erasedAt: null,
         email: String(token.email || ""),
         contact,
         contactVersion: (profile.contactVersion || 0) + 1,
@@ -671,20 +674,25 @@ export async function bookingCommand(
         : null;
     let contact;
     if (operation === "create") {
+      if(ownerProfile.erasedAt)fail("PROFILE_RECREATE_REQUIRED",409);
       if (!input.contact && !ownerProfile.contact?.phone)
         fail("CONTACT_REQUIRED", 422);
       contact = contactDetails(input.contact || ownerProfile.contact);
     }
+    const changeLedger=operation==='booking-action'&&input.action==='approve_change'?await ledgerRead(tx,db,target.id):null;
+    const stayLifecycle=await prepareStayLifecycle(tx,db,{booking:target,operation,input,now});
     const result =
       operation === "availability"
         ? availability(s, input, now)
         : mutate(s, actor, operation, input, now);
+    if(changeLedger){if(changeLedger.length)financialSummary(result,changeLedger);result.financialVersion=(target.financialVersion||0)+1;}
     if (operation === "availability") return result;
     if (operation === "quote" || operation === "change-quote")
       tx.set(collection(db, "quotes").doc(result.id), {
         ...result,
         expireAt: new Date(result.expiresAt + 86400000),
       });
+    if(stayLifecycle)commitStayLifecycle(tx,db,{prepared:stayLifecycle,booking:result,profile:ownerProfile,settings:s.settings,now});
     const reservationMutation = [
       "create",
       "booking-action",

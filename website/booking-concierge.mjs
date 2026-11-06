@@ -1,3 +1,4 @@
+import {mountStayPanel} from './stay-panel.mjs';
 import { recommendPrivate } from "./booking-options.mjs";
 export async function startConcierge({
   api,
@@ -297,6 +298,7 @@ export async function startConcierge({
       ? `<button class="mobile-price" data-act="bill"><strong>${offer() ? cash(offer().total) : "Choose an option"}</strong>${S.kind === "event" ? "Quote details" : "Total · price details"}</button>${primary(S.view === "review" ? (S.needsQuote ? "Refresh options →" : S.submissionUnknown ? "Retry same request →" : "Send request →") : S.kind === "event" ? "Review request →" : "Review request →", S.view === "review" ? "submit" : "review", !offer() || S.roomDirty)}`
       : "";
     updateAccount();
+    if(S.view==='confirmation'&&S.record){const target=document.createElement('div');$('#main').append(target);void mountStayPanel(target,{booking:S.record,call:(operation,input,key)=>api('platform',{operation,input},key)});}
   }
   function syncContact() {
     for (const [id, k] of [

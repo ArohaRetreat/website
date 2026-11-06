@@ -79,7 +79,7 @@ async function request(
     "booking-action": "admin",
   }[operation];
   const response = await fetch(
-    "/api/v1/booking/" + operation + (query.size ? "?" + query : ""),
+    (operation==="platform"?"/api/v1/platform":"/api/v1/booking/" + operation + (query.size ? "?" + query : "")),
     {
       method: body === undefined ? "GET" : "POST",
       headers: {

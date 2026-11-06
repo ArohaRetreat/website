@@ -344,7 +344,7 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
       current.settingsVersion !== q.settingsVersion
     )
       fail("QUOTE_CHANGED", 409);
-    b.changeRequest = { ...current, requestedAt: now };
+    b.changeRequest = { ...current, id:q.id, requestedAt: now };
     b.version++;
     event(state, actor, "booking.change_requested", b.id, now);
     return b;
@@ -410,6 +410,16 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
     if (!b || (actor.role !== "host" && b.owner !== actor.id))
       fail("NOT_FOUND", 404);
     version(b, input.expectedVersion);
+    if(input.changeId&&input.changeId!==(b.changeRequest?.id||('legacy-change-'+b.changeRequest?.requestedAt)))fail('NOT_FOUND',404);
+    if(input.offerId&&input.offerId!==b.currentOffer?.id)fail('NOT_FOUND',404);
+    if(input.action==='withdraw_change'){
+      if(b.status!=='confirmed'||!b.changeRequest)fail('INVALID_TRANSITION',409);
+      b.changeHistory=[...(b.changeHistory||[]),{...b.changeRequest,status:'withdrawn',resolvedAt:now}].slice(-20);delete b.changeRequest;b.version++;b.history.push({status:'change_withdrawn',at:now});event(state,actor,'booking.change_withdrawn',b.id,now);return b;
+    }
+    if(input.action==='withdraw_offer'){
+      host(actor);if(b.kind!=='event'||b.pricingVersion||b.status!=='pending_approval'||!b.currentOffer||b.quoteAccepted)fail('INVALID_TRANSITION',409);
+      b.currentOffer={...b.currentOffer,status:'withdrawn',version:b.currentOffer.version+1};b.total=null;b.subtotal=null;b.lineItems=[];b.quoteAccepted=false;state.blocks=state.blocks.filter(x=>x.bookingId!==b.id);b.version++;b.history.push({status:'offer_withdrawn',at:now});event(state,actor,'booking.offer_withdrawn',b.id,now);return b;
+    }
     if (["approve_change", "decline_change"].includes(input.action)) {
       host(actor);
       if (b.status !== "confirmed" || !b.changeRequest)
@@ -460,6 +470,8 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
             ),
           });
         }
+        if(b.currentOffer)b.offerHistory=[...(b.offerHistory||[]),b.currentOffer].slice(-20);
+        b.currentOffer={id:randomUUID(),amount:input.amount,createdAt:now,status:'pending',version:1};
         b.total = int(input.amount, 10000, 100000000);
         b.subtotal = b.total;
         b.quoteAccepted = false;
@@ -470,6 +482,7 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
         if (b.owner !== actor.id) fail("FORBIDDEN", 403);
         if (b.total === null) fail("EVENT_QUOTE_REQUIRED", 409);
         b.quoteAccepted = true;
+        if(b.currentOffer)b.currentOffer={...b.currentOffer,status:'accepted',acceptedAt:now,version:b.currentOffer.version+1};
       }
       b.version++;
       b.history.push({ status: input.action, at: now });
@@ -579,6 +592,8 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
     )
       state.blocks = state.blocks.filter((x) => x.bookingId !== b.id);
     b.status = next;
+    if(next==='checked_in')b.checkedInAt=now;
+    if(next==='completed')b.checkedOutAt=now;
     delete b.changeRequest;
     b.version++;
     b.history.push({ status: next, at: now });
@@ -649,6 +664,10 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
       }
       next.products = p;
     }
+    if(input.facilities!==undefined){
+      if(!Array.isArray(input.facilities)||input.facilities.length>20||new Set(input.facilities.map(f=>f.id)).size!==input.facilities.length)fail('INVALID_FACILITIES');
+      next.facilities=input.facilities.map(f=>({id:text(f.id,64),name:text(f.name,80),available:f.available===true}));
+    }
     next.version++;
     state.settings = next;
     event(state, actor, "settings.updated", "settings", now);
@@ -658,6 +677,7 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
     const u = state.units.find((u) => u.id === input.id);
     if (!u) fail("NOT_FOUND", 404);
     version(u, input.expectedVersion);
+    if(u.retired)fail('UNIT_RETIRED',409);
     const capacity = int(input.capacity, 1, 10),
       rate = input.rate === null ? null : int(input.rate, 10000, 100000000);
     if (
@@ -665,6 +685,7 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
       state.bookings.some((b) => occupies(b, now) && b.units.includes(u.id))
     )
       fail("EXISTING_BOOKINGS_CONFLICT", 409);
+
     const needsVerification = ["Unconfigured", "Under construction"].includes(
       u.type,
     );

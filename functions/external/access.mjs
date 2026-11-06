@@ -1,3 +1,4 @@
+import {platformScopes,definitionsById} from '../platform/registry.mjs';
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import {
   environment,
@@ -5,9 +6,10 @@ import {
   sharedCollectionName,
   isTester,
 } from "../environment.mjs";
+import {can} from "../domain.mjs";
 import { studioAccess } from "../access.mjs";
 import { BookingError } from "../booking/domain.mjs";
-export const CONTRACT_VERSION = "1.1.0";
+export const CONTRACT_VERSION = "1.2.0";
 export const READ_SCOPES = Object.freeze([
   "runtime:read",
   "availability:read",
@@ -34,7 +36,7 @@ export const WRITE_SCOPES = Object.freeze([
   "notes:write",
   "contacts:read",
 ]);
-export const SCOPES = Object.freeze([...READ_SCOPES, ...WRITE_SCOPES]);
+export const SCOPES = Object.freeze([...new Set([...READ_SCOPES, ...WRITE_SCOPES, ...platformScopes])]);
 export const MCP_OPERATIONS = Object.freeze([
   "getRuntime",
   "getAvailability",
@@ -62,6 +64,7 @@ const metadata = (g) => ({
   active: g.active,
   createdAt: g.createdAt,
   expiresAt: g.expiresAt,
+  ...(g.clientId?{clientId:g.clientId}:{}),
 });
 const unexpired = (g, now) =>
   g?.expiresAt === null ||
@@ -90,10 +93,29 @@ export function assertGrant(g, token, now = Date.now()) {
   )
     fail("OPERATION_NOT_ALLOWED");
 }
+function assertClient(c,g,now=Date.now()) {
+ if(!c||!c.active||c.environment!==environment.name||c.sponsorUid!==g.owner||!unexpired(c,now)||!g.scopes.every(scope=>c.scopeCeiling.includes(scope)))fail('CLIENT_REVOKED');
+}
+export function scopePermitted(scope,member,rowAccess='all') {
+ const a=studioAccess(member);
+ if(scope==='integrations:manage')return rowAccess==='all'&&a.access&&member.role==='superadmin';
+ if(scope.startsWith('access:')||scope==='audit:read')return rowAccess==='all'&&a.access;
+ if(scope.startsWith('content:')&&scope!=='content:published:read'||scope.startsWith('media:'))return rowAccess==='all'&&a.website&&can(member?.role,scope==='content:publish'?'publish':scope.endsWith(':write')?'edit':'read');
+ if(['reservations:approve','stays:operate','inventory:write','promotions:write','settings:write','payments:record','payments:reverse','communications:retry'].includes(scope))return rowAccess==='all'&&a.bookings==='manager';
+ if(['promotions:read','settings:read'].includes(scope))return rowAccess==='all'&&a.bookings!=='none';
+ return true;
+}
+export function operationPermitted(operation,member,grant) {
+ const d=definitionsById.get(operation);
+ if(d){if(environment.preprod&&d.handler==='management'&&d.method!=='GET')return false;if(!(d.scopes||[d.scope]).every(s=>scopePermitted(s,member,grant.rowAccess)))return false;
+ const a=studioAccess(member);if(['booking-manager','booking-staff'].includes(d.policy))return grant.rowAccess==='all'&&(d.policy==='booking-manager'?a.bookings==='manager':a.bookings!=='none');}
+ return true;
+}
 export async function guardIntegrationTransaction(tx, db, token) {
   if (token._integration) {
     const s = await tx.get(grantCollection(db).doc(token._integration.id));
     assertGrant(s.data(), token);
+    if(s.data()?.clientId)assertClient((await tx.get(db.collection(collectionName("integration_clients")).doc(s.data().clientId))).data(),s.data());
   }
 }
 export function requireScope(token, scope, operation) {
@@ -149,13 +171,14 @@ export async function verifyIntegration(db, auth, bearer) {
     },
   };
   assertGrant(g, token);
+  if(g.clientId)assertClient((await db.collection(collectionName("integration_clients")).doc(g.clientId).get()).data(),g);
   if (!isTester(token)) fail("PREPROD_TESTER_REQUIRED");
   if (g.rowAccess === "all") {
     const ms = await db
       .collection(sharedCollectionName("members"))
       .doc(token.uid)
       .get();
-    if (studioAccess(ms.data()).bookings === "none") fail("FORBIDDEN");
+    const access=studioAccess(ms.data());if(access.bookings==="none"&&!access.website&&!access.access) fail("FORBIDDEN");
   }
   return token;
 }
@@ -197,7 +220,7 @@ export async function tokenManagement(db, token, method, id, body, key) {
     Array.isArray(body) ||
     Object.keys(body).some(
       (k) =>
-        !["name", "scopes", "purpose", "rowAccess", "expiresInHours"].includes(
+        !["name", "scopes", "purpose", "rowAccess", "expiresInHours", "clientId"].includes(
           k,
         ),
     )
@@ -209,8 +232,10 @@ export async function tokenManagement(db, token, method, id, body, key) {
     purpose = "integration",
     rowAccess = "own",
     expiresInHours = 24,
+    clientId,
   } = body;
   if (
+    clientId!==undefined&&!/^[a-f0-9-]{36}$/.test(clientId)||
     typeof name !== "string" ||
     name.trim().length < 2 ||
     name.length > 80 ||
@@ -220,7 +245,7 @@ export async function tokenManagement(db, token, method, id, body, key) {
     scopes.length > SCOPES.length ||
     new Set(scopes).size !== scopes.length ||
     scopes.some((s) => !SCOPES.includes(s)) ||
-    !["integration", "mcp-readonly"].includes(purpose) ||
+    !["integration", "mcp-readonly", "mcp"].includes(purpose) ||
     !["own", "all"].includes(rowAccess) ||
     (expiresInHours !== null &&
       (!Number.isInteger(expiresInHours) ||
@@ -253,24 +278,9 @@ export async function tokenManagement(db, token, method, id, body, key) {
     )
       fail("TOKEN_LIMIT", 409);
     const access = studioAccess(ms.data());
-    if (rowAccess === "all" && access.bookings === "none") fail("FORBIDDEN");
-    const managerScopes = [
-      "reservations:approve",
-      "stays:operate",
-      "inventory:write",
-      "promotions:write",
-      "settings:write",
-    ];
-    if (
-      scopes.some((s) => managerScopes.includes(s)) &&
-      access.bookings !== "manager"
-    )
-      fail("FORBIDDEN");
-    if (
-      scopes.some((s) => ["promotions:read", "settings:read"].includes(s)) &&
-      access.bookings === "none"
-    )
-      fail("FORBIDDEN");
+    if(rowAccess==='all'&&access.bookings==='none'&&!access.website&&!access.access)fail('FORBIDDEN');
+    if(!scopes.every(scope=>scopePermitted(scope,ms.data(),rowAccess)))fail('FORBIDDEN');
+    if(clientId){const c=(await tx.get(db.collection(collectionName('integration_clients')).doc(clientId))).data();assertClient(c,{owner:token.uid,scopes});}
     const g = {
       id: idValue,
       owner: token.uid,
@@ -282,6 +292,7 @@ export async function tokenManagement(db, token, method, id, body, key) {
       active: true,
       environment: environment.name,
       secretHash: digest(secret),
+      ...(clientId?{clientId}:{}),
       createdAt: now,
       issuedAfter: (token.auth_time || Math.floor(now / 1000)) * 1000,
       expiresAt: expiresInHours === null ? null : now + expiresInHours * 3600000,
