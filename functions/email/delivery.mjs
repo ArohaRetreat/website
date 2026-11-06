@@ -70,9 +70,17 @@ export async function deliverEmail(
     ).data();
     if (!booking || booking.owner !== job.owner)
       throw Object.assign(Error("BOOKING_NOT_FOUND"), { terminal: true });
+    let feedback,feedbackProfile;
+    if(job.channel==='guest_feedback'){feedback=(await db.collection(collectionName('booking_feedback')).doc(job.bookingId).get()).data();feedbackProfile=(await db.collection(collectionName('booking_profiles')).doc(job.owner).get()).data();}
     const isCurrent = (b) =>
       b?.owner === job.owner &&
-      (job.channel === "guest_confirmation"
+      (job.channel === 'guest_checkin'
+        ? b.status==='checked_in'&&b.checkedInAt===job.snapshot.checkedInAt
+        : job.channel === 'guest_checkout'
+          ? b.status==='completed'&&b.checkedOutAt===job.snapshot.checkedOutAt
+          : job.channel === 'guest_feedback'
+            ? b.status==='completed'&&b.checkedOutAt===job.snapshot.checkedOutAt&&!feedback&&!feedbackProfile?.erasedAt&&now>=b.checkedOutAt+24*3600000
+            : job.channel === "guest_confirmation"
         ? ["confirmed", "checked_in", "completed"].includes(b.status) &&
           b.invoiceId === job.invoiceId
         : b.status === "pending_approval");
@@ -116,6 +124,13 @@ export async function deliverEmail(
           }),
         );
       }
+      if(job.channel==='guest_checkout'&&job.documentId){
+        const ref=db.collection(collectionName('booking_documents')).doc(job.documentId),document=(await ref.get()).data();
+        if(!document||document.owner!==job.owner||document.bookingId!==job.bookingId||document.status!=='issued')throw Object.assign(Error('DOCUMENT_NOT_FOUND'),{terminal:true});
+        const pdf=await makePdf(document,{designVersion:'pdf-v4-financial'});
+        attachments.push({filename:document.number+'.pdf',content:pdf.buffer});
+      }
+      if(job.channel==='guest_feedback'){feedback=(await db.collection(collectionName('booking_feedback')).doc(job.bookingId).get()).data();feedbackProfile=(await db.collection(collectionName('booking_profiles')).doc(job.owner).get()).data();}
       // PDF generation can outlive a cancellation or replacement approval.
       const latest = (
         await db.collection(collectionName("bookings")).doc(job.bookingId).get()

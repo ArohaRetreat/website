@@ -1,0 +1,107 @@
+method,path,operationId,requiredScopesAll,policy,implementation,evidenceBoundary
+GET,/reservations/{id}/financial-summary,getFinancialSummary,payments:read,booking-viewer,finance,source; deployment and runtime evidence separate
+GET,/reservations/{id}/payments,listPayments,payments:read,booking-viewer,finance,source; deployment and runtime evidence separate
+POST,/reservations/{id}/payments,recordPayment,payments:record,booking-manager,finance,source; deployment and runtime evidence separate
+POST,/reservations/{id}/payments/{paymentId}/reversals,reversePayment,payments:reverse,booking-manager,finance,source; deployment and runtime evidence separate
+GET,/reservations/{id}/documents,listDocuments,documents:read,booking-viewer,finance,source; deployment and runtime evidence separate
+GET,/reservations/{id}/documents/{documentId},getDocument,documents:read,booking-viewer,finance,source; deployment and runtime evidence separate
+GET,/reservations/{id}/documents/{documentId}/content,downloadDocument,documents:read documents:download,booking-viewer,finance,source; deployment and runtime evidence separate
+POST,/reservations/{id}/feedback,submitFeedback,feedback:submit,owner,feedback,source; deployment and runtime evidence separate
+GET,/reservations/{id}/feedback,getReservationFeedback,feedback:read,feedback-reader,feedback,source; deployment and runtime evidence separate
+PATCH,/reservations/{id}/feedback,editMyFeedback,feedback:submit,owner,feedback,source; deployment and runtime evidence separate
+DELETE,/reservations/{id}/feedback,withdrawMyFeedback,feedback:submit,owner,feedback,source; deployment and runtime evidence separate
+GET,/feedback,listPrivateFeedback,feedback:read,booking-manager,feedback,source; deployment and runtime evidence separate
+PATCH,/reservations/{id},updateReservationContact,reservations:update,booking-owner-or-manager,resources,source; deployment and runtime evidence separate
+GET,/reservations/{id},getReservation,reservations:read,existing shared booking policy,read-projection,source; deployment and runtime evidence separate
+DELETE,/reservations/{id},cancelReservation,reservations:cancel,existing shared booking policy,booking-action,source; deployment and runtime evidence separate
+GET,/reservations/{id}/changes,listReservationChanges,reservations:read,booking-viewer,resources,source; deployment and runtime evidence separate
+POST,/reservations/{id}/changes,requestChange,reservations:change,existing shared booking policy,change-request,source; deployment and runtime evidence separate
+DELETE,/reservations/{id}/changes/{changeId},withdrawReservationChange,reservations:change,booking-owner-or-manager,booking-alias,source; deployment and runtime evidence separate
+POST,/reservations/{id}/changes/{changeId}/actions/approve,approveReservationChange,reservations:approve,booking-manager,booking-alias,source; deployment and runtime evidence separate
+POST,/reservations/{id}/changes/{changeId}/actions/decline,declineReservationChange,reservations:approve,booking-manager,booking-alias,source; deployment and runtime evidence separate
+GET,/reservations/{id}/offers,listReservationOffers,reservations:read,booking-viewer,resources,source; deployment and runtime evidence separate
+POST,/reservations/{id}/offers,createEventOffer,reservations:approve,booking-manager,booking-alias,source; deployment and runtime evidence separate
+POST,/reservations/{id}/offers/{offerId}/actions/accept,acceptEventOffer,reservations:change,owner,booking-alias,source; deployment and runtime evidence separate
+DELETE,/reservations/{id}/offers/{offerId},withdrawEventOffer,reservations:approve,booking-manager,booking-alias,source; deployment and runtime evidence separate
+GET,/reservations/{id}/guest-note,getGuestNote,notes:read,booking-viewer,resources,source; deployment and runtime evidence separate
+DELETE,/reservations/{id}/guest-note,deleteGuestNote,notes:write,owner,booking-alias,source; deployment and runtime evidence separate
+GET,/reservations/{id}/host-notes,listHostNotes,notes:read,booking-manager,resources,source; deployment and runtime evidence separate
+POST,/reservations/{id}/host-notes,createHostNote,notes:write,booking-manager,resources,source; deployment and runtime evidence separate
+PATCH,/reservations/{id}/host-notes/{noteId},updateHostNote,notes:write,booking-manager,resources,source; deployment and runtime evidence separate
+DELETE,/reservations/{id}/host-notes/{noteId},redactHostNote,notes:write,booking-manager,resources,source; deployment and runtime evidence separate
+POST,/units,createUnit,inventory:write,booking-manager,resources,source; deployment and runtime evidence separate
+GET,/units,list_units,inventory:read,existing shared booking policy,read-projection,source; deployment and runtime evidence separate
+DELETE,/units/{id},retireUnit,inventory:write,booking-manager,resources,source; deployment and runtime evidence separate
+GET,/units/{id},get_units,inventory:read,existing shared booking policy,read-projection,source; deployment and runtime evidence separate
+PATCH,/units/{id},updateUnit,inventory:write,existing shared booking policy,unit,source; deployment and runtime evidence separate
+GET,/blocks/{id},getBlock,inventory:read,booking-staff,resources,source; deployment and runtime evidence separate
+PATCH,/blocks/{id},updateBlock,inventory:write,booking-manager,resources,source; deployment and runtime evidence separate
+DELETE,/blocks/{id},releaseBlock,inventory:write,existing shared booking policy,unblock,source; deployment and runtime evidence separate
+GET,/promotions/{id},getPromotion,promotions:read,booking-staff,resources,source; deployment and runtime evidence separate
+PATCH,/promotions/{id},updatePromotion,promotions:write,booking-manager,resources,source; deployment and runtime evidence separate
+DELETE,/promotions/{id},deactivatePromotion,promotions:write,booking-manager,resources,source; deployment and runtime evidence separate
+GET,/content/draft,getContentDraft,content:read,website-read,content,source; deployment and runtime evidence separate
+POST,/content/draft,createContentDraft,content:write,website-edit,content,source; deployment and runtime evidence separate
+PATCH,/content/draft,saveContentDraft,content:write,website-edit,content,source; deployment and runtime evidence separate
+DELETE,/content/draft,discardContentDraft,content:write,website-edit,content,source; deployment and runtime evidence separate
+POST,/content/actions/publish,publishContent,content:publish,website-publish,content,source; deployment and runtime evidence separate
+POST,/content/actions/restore,restoreContentDraft,content:publish,website-publish,content,source; deployment and runtime evidence separate
+GET,/content/revisions,listContentRevisions,content:read,website-read,content,source; deployment and runtime evidence separate
+GET,/members,listMembers,access:read,access,management,source; deployment and runtime evidence separate
+GET,/members/{id},getMember,access:read,access,management,source; deployment and runtime evidence separate
+DELETE,/members/{id},revokeMember,access:manage,access,management,source; deployment and runtime evidence separate
+PATCH,/members/{id},updateMember,access:manage,access,management,source; deployment and runtime evidence separate
+GET,/invitations,listInvitations,access:read,access,management,source; deployment and runtime evidence separate
+POST,/invitations,createInvitation,access:manage,access,management,source; deployment and runtime evidence separate
+GET,/invitations/{id},getInvitation,access:read,access,management,source; deployment and runtime evidence separate
+DELETE,/invitations/{id},revokeInvitation,access:manage,access,management,source; deployment and runtime evidence separate
+GET,/operations/{id},getOperation,operations:read,self,profile,source; deployment and runtime evidence separate
+GET,/me/erasure-requests/{id},getMyErasureRequest,profiles:erase,self,profile,source; deployment and runtime evidence separate
+POST,/me/erasure-requests,requestMyErasure,profiles:erase,self,profile,source; deployment and runtime evidence separate
+DELETE,/me/profile,deleteMyProfile,profiles:erase,self,profile,source; deployment and runtime evidence separate
+GET,/me/profile,getMyProfile,profiles:read,existing shared booking policy,read-projection,source; deployment and runtime evidence separate
+POST,/me/profile,createMyProfile,profiles:write,existing shared booking policy,profile,source; deployment and runtime evidence separate
+PATCH,/me/profile,updateMyProfile,profiles:write,existing shared booking policy,profile,source; deployment and runtime evidence separate
+GET,/audit,listAudit,audit:read,access,audit,source; deployment and runtime evidence separate
+GET,/integration-clients,listIntegrationClients,integrations:manage,superadmin,clients,source; deployment and runtime evidence separate
+POST,/integration-clients,createIntegrationClient,integrations:manage,superadmin,clients,source; deployment and runtime evidence separate
+GET,/integration-clients/{id},getIntegrationClient,integrations:manage,superadmin,clients,source; deployment and runtime evidence separate
+PATCH,/integration-clients/{id},updateIntegrationClient,integrations:manage,superadmin,clients,source; deployment and runtime evidence separate
+DELETE,/integration-clients/{id},revokeIntegrationClient,integrations:manage,superadmin,clients,source; deployment and runtime evidence separate
+GET,/integration-clients/{id}/grants,listIntegrationGrants,integrations:manage,superadmin,clients,source; deployment and runtime evidence separate
+DELETE,/integration-clients/{id}/grants/{grantId},revokeIntegrationGrant,integrations:manage,superadmin,clients,source; deployment and runtime evidence separate
+GET,/media,listMedia,media:read,website-read,media,source; deployment and runtime evidence separate
+POST,/media/uploads,initiateMediaUpload,media:write,website-edit,media,source; deployment and runtime evidence separate
+GET,/media/uploads/{id},getMediaUpload,media:read,website-read,media,source; deployment and runtime evidence separate
+POST,/media/uploads/{id}/actions/finalize,finalizeMediaUpload,media:write,website-edit,media,source; deployment and runtime evidence separate
+DELETE,/media/{id},archiveMedia,media:write,website-edit,media,source; deployment and runtime evidence separate
+GET,/reservations/{id}/communications/{jobId},getCommunication,communications:read,booking-viewer,communications,source; deployment and runtime evidence separate
+POST,/reservations/{id}/communications/{jobId}/actions/retry,retryCommunication,communications:retry,booking-manager,communications,source; deployment and runtime evidence separate
+GET,/runtime,getRuntime,runtime:read,existing shared booking policy,read-projection,source; deployment and runtime evidence separate
+GET,/availability,getAvailability,availability:read,existing shared booking policy,read-projection,source; deployment and runtime evidence separate
+GET,/calendar,getCalendar,calendar:read,existing shared booking policy,read-projection,source; deployment and runtime evidence separate
+GET,/reservations,listReservations,reservations:read,existing shared booking policy,read-projection,source; deployment and runtime evidence separate
+POST,/reservations,createReservation,reservations:create,existing shared booking policy,create,source; deployment and runtime evidence separate
+GET,/content/published,getPublishedContent,content:published:read,existing shared booking policy,read-projection,source; deployment and runtime evidence separate
+GET,/reservations/{id}/communications,listCommunications,communications:read,existing shared booking policy,read-projection,source; deployment and runtime evidence separate
+GET,/reservations/{id}/contact,getReservationContact,contacts:read reservations:read,existing shared booking policy,read-projection,source; deployment and runtime evidence separate
+GET,/settings,getSettings,settings:read,existing shared booking policy,read-projection,source; deployment and runtime evidence separate
+PATCH,/settings,updateSettings,settings:write,existing shared booking policy,settings,source; deployment and runtime evidence separate
+GET,/blocks,listBlocks,inventory:read,existing shared booking policy,read-projection,source; deployment and runtime evidence separate
+POST,/blocks,createBlock,inventory:write,existing shared booking policy,block,source; deployment and runtime evidence separate
+GET,/promotions,listPromotions,promotions:read,existing shared booking policy,read-projection,source; deployment and runtime evidence separate
+POST,/promotions,createPromotion,promotions:write,existing shared booking policy,promo,source; deployment and runtime evidence separate
+POST,/quotes,createQuote,quotes:create,existing shared booking policy,quote,source; deployment and runtime evidence separate
+POST,/reservations/{id}/actions/approve,approveReservation,reservations:approve,existing shared booking policy,booking-action,source; deployment and runtime evidence separate
+POST,/reservations/{id}/actions/decline,declineReservation,reservations:approve,existing shared booking policy,booking-action,source; deployment and runtime evidence separate
+POST,/reservations/{id}/actions/checkin,checkInReservation,stays:operate,existing shared booking policy,booking-action,source; deployment and runtime evidence separate
+POST,/reservations/{id}/actions/complete,completeReservation,stays:operate,existing shared booking policy,booking-action,source; deployment and runtime evidence separate
+POST,/reservations/{id}/actions/no-show,noShowReservation,stays:operate,existing shared booking policy,booking-action,source; deployment and runtime evidence separate
+POST,/reservations/{id}/actions/assign-rooms,assignRooms,inventory:write,existing shared booking policy,booking-action,source; deployment and runtime evidence separate
+POST,/reservations/{id}/actions/offer-event,offerEvent,reservations:approve,existing shared booking policy,booking-action,source; deployment and runtime evidence separate
+POST,/reservations/{id}/actions/accept-event,acceptEvent,reservations:change,existing shared booking policy,booking-action,source; deployment and runtime evidence separate
+POST,/reservations/{id}/change-quotes,createChangeQuote,reservations:change,existing shared booking policy,change-quote,source; deployment and runtime evidence separate
+POST,/reservations/{id}/changes/actions/approve,approveChange,reservations:approve,existing shared booking policy,booking-action,source; deployment and runtime evidence separate
+POST,/reservations/{id}/changes/actions/decline,declineChange,reservations:approve,existing shared booking policy,booking-action,source; deployment and runtime evidence separate
+POST,/reservations/{id}/notes,addNote,notes:write,existing shared booking policy,note,source; deployment and runtime evidence separate
+POST,/units/{id}/actions/readiness,updateReadiness,inventory:write,existing shared booking policy,readiness,source; deployment and runtime evidence separate

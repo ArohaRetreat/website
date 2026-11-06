@@ -1,5 +1,6 @@
+import {platformRoutes} from '../platform/registry.mjs';
 // Resource facade delegates every mutation to the existing booking application service.
-export const routes = Object.freeze([
+const legacyRoutes = Object.freeze([
   ["GET", "/runtime", "getRuntime", "runtime:read"],
   ["GET", "/availability", "getAvailability", "availability:read"],
   ["GET", "/calendar", "getCalendar", "calendar:read"],
@@ -213,11 +214,13 @@ export const routes = Object.freeze([
   ["POST", "/blocks", "createBlock", "inventory:write", "block"],
   ["DELETE", "/blocks/:id", "releaseBlock", "inventory:write", "unblock"],
 ]);
+const replaced=new Set(platformRoutes.map(r=>r[0]+':'+r[1]));
+export const routes=Object.freeze([...platformRoutes,...legacyRoutes.filter(r=>!replaced.has(r[0]+':'+r[1]))]);
 export function matchRoute(method, path) {
   for (const row of routes) {
     if (row[0] !== method) continue;
     const names = [];
-    const pattern = row[1].replace(/:([a-z]+)/g, (_, name) => {
+    const pattern = row[1].replace(/:([a-z][A-Za-z0-9]*)/g, (_, name) => {
       names.push(name);
       return "([A-Za-z0-9_-]{1,128})";
     });

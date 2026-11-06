@@ -76,6 +76,7 @@ jobs:
           path: |
             .delivery-reports/api-integration.jsonl
             .delivery-reports/api-telemetry.jsonl
+            .delivery-reports/api-external.jsonl
           include-hidden-files: true
           retention-days: 14
           if-no-files-found: warn
