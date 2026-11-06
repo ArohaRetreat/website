@@ -126,6 +126,9 @@ test('CMS, integration client ceilings, media publication and profile erasure sh
  const revisions=await call(host,'/content/revisions');assert.equal(revisions.data.items[0].version,draft.data.version);
  const discard=await call(host,'/content/draft',{method:'DELETE',key:'platform-content-discard-0001',etag:get.etag,body:{}});assert.equal(discard.status,200);assert.equal((await db.collection('aroha_preprod_public').doc('site').get()).data().content.brand.tagline,content.brand.tagline);
  const restored=await call(host,'/content/actions/restore',{method:'POST',key:'platform-content-restore-0001',etag:'"content:site:0"',body:{revision:draft.data.version}});assert.equal(restored.status,201);assert.ok(restored.data.version>draft.data.version);
+ const republished=await call(host,'/content/actions/publish',{method:'POST',key:'platform-content-publish-0002',etag:restored.etag,body:{}});assert.equal(republished.status,201);
+ const firstRevision=await call(host,'/content/revisions?limit=1');assert.equal(firstRevision.data.items[0].version,restored.data.version);assert.ok(firstRevision.data.nextCursor);
+ const nextRevision=await call(host,'/content/revisions?limit=1&cursor='+firstRevision.data.nextCursor);assert.equal(nextRevision.data.items[0].version,draft.data.version);assert.equal(nextRevision.data.nextCursor,null);
  assert.equal((await call(host,'/invitations',{method:'POST',key:'preprod-invite-denied-0001',body:{email:'no-write@example.test',role:'viewer'}})).status,403);
  const client=await call(host,'/integration-clients',{method:'POST',key:'platform-client-create-0001',body:{name:'Synthetic MCP client',sponsorUid:owner.localId,scopeCeiling:['runtime:read'],expiresAt:null}});assert.equal(client.status,201,JSON.stringify(client.data));
  const child=await mint(owner,'platform-client-child',['runtime:read'],'own',client.data.id);assert.equal((await call(child,'/runtime')).status,200);

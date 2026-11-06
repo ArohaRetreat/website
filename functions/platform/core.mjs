@@ -359,7 +359,7 @@ export async function queryPage(
           let ordered = orderField
             ? q
                 .orderBy(orderField, descending ? "desc" : "asc")
-                .orderBy("__name__")
+                .orderBy("__name__", descending ? "desc" : "asc")
             : q.orderBy("__name__");
           if (after)
             ordered = orderField
@@ -372,15 +372,16 @@ export async function queryPage(
   );
   const docs = [
     ...new Map(snapshots.flatMap((s) => s.docs).map((d) => [d.id, d])).values(),
-  ].sort((a, b) =>
-    orderField && a.data()[orderField] !== b.data()[orderField]
-      ? (a.data()[orderField] - b.data()[orderField]) * (descending ? -1 : 1)
-      : a.id < b.id
-        ? -1
-        : a.id > b.id
-          ? 1
-          : 0,
-  );
+  ].sort((a, b) => {
+    if (orderField && a.data()[orderField] !== b.data()[orderField])
+      return (
+        (a.data()[orderField] - b.data()[orderField]) * (descending ? -1 : 1)
+      );
+    return (
+      (a.id < b.id ? -1 : a.id > b.id ? 1 : 0) *
+      (orderField && descending ? -1 : 1)
+    );
+  });
   const selected = docs.slice(0, limit);
   let nextCursor = null;
   if (docs.length > limit) {
