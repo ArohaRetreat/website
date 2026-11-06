@@ -6,7 +6,7 @@ const source=(await readFile(new URL('../website/material-controls.mjs',import.m
 const settle=()=>new Promise(r=>setTimeout(r,0));
 function mount(markup){
  const dom=new JSDOM(markup,{url:'https://example.test',runScripts:'outside-only',pretendToBeVisual:true}),w=dom.window;
- w.HTMLElement.prototype.showPopover=function(){this.dataset.open='true';};w.HTMLElement.prototype.hidePopover=function(){this.dispatchEvent(new w.Event('close'));this.remove();};
+ w.HTMLElement.prototype.showPopover=function(){this.dataset.open='true';};w.HTMLElement.prototype.hidePopover=function(){const e=new w.Event('toggle');Object.defineProperty(e,'newState',{value:'closed'});this.dispatchEvent(e);this.remove();};
  w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;this.dispatchEvent(new w.Event('close'));};
  w.eval(source+'\nwindow.material={installMaterialControls,parseDate,confirmMaterial};');w.material.installMaterialControls();
  return{w,d:w.document,close:()=>dom.window.close()};
@@ -69,4 +69,15 @@ test('private popups retain explicit masking outside the page container',async()
  m.d.querySelector('.md-select-button').click();assert.ok(m.d.querySelector('.md-option-menu').hasAttribute('data-dt-mask'));m.d.querySelector('.md-option-menu').hidePopover();
  const pending=m.w.material.confirmMaterial('Synthetic private adjustment reason');popup=m.d.querySelector('.md-confirm');assert.equal(popup.parentElement,m.d.body);assert.ok(popup.hasAttribute('data-dt-mask'));popup.querySelector('[data-keep]').click();assert.equal(await pending,false);
  }finally{m.close();}
+});
+
+test('window resize closes an open menu without a non-Node event target error',async()=>{
+ const m=mount('<label>Method<select><option>Cash</option><option>UPI</option></select></label>');
+ try{const errors=[];m.w.addEventListener('error',e=>errors.push(e.error));m.d.querySelector('.md-select-button').click();m.w.dispatchEvent(new m.w.Event('resize'));await settle();assert.equal(errors.length,0);assert.equal(m.d.querySelector('.md-option-menu'),null);assert.equal(m.d.querySelector('.md-select-button').getAttribute('aria-expanded'),'false');}
+ finally{m.close();}
+});
+test('reset restores a default timestamp even when its native value did not change',async()=>{
+ const m=mount('<form><label>Received at<input name="receivedAt" type="datetime-local" value="2026-11-22T14:30" required></label></form>');
+ try{await settle();m.d.querySelector('form').reset();await settle();const text=m.d.querySelectorAll('input[type=text]');assert.equal(text[0].value,'22/11/2026');assert.equal(text[1].value,'14:30');assert.equal(new m.w.FormData(m.d.querySelector('form')).get('receivedAt'),'2026-11-22T14:30');}
+ finally{m.close();}
 });
