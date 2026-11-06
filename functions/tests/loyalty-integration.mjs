@@ -412,6 +412,16 @@ test("manual identity, actual nightly rewards and concurrent redemption use real
     assert.equal(totals.confirmed, 1);
     assert.equal(totals.cancelled, 1);
     assert.equal(totals.completed, 2);
+    const today=todayIST(),ending=[['stay','individual',addDays(today,-2),today],['day','day',today,addDays(today,1)],['event','event',addDays(today,-2),addDays(today,1)],['later','individual',today,addDays(today,1)]];
+    const deskFixtures=ending.map(([tag,kind,arrival,departure])=>({id:'desk-ending-'+tag,reference:'AR-DESK-'+tag,owner:host.localId,version:1,kind,status:'checked_in',arrival,departure,adults:1,children:0,units:[],total:350000,guestName:'Synthetic ending guest',...deskFields({kind,status:'checked_in'})}));
+    try {
+      const seed=db.batch();for(const row of deskFixtures)seed.set(db.collection('aroha_preprod_bookings').doc(row.id),row);await seed.commit();
+      const due=okay(await op(host,'searchHostReservations',{view:'departures'}));
+      for(const tag of ['stay','day','event'])assert.ok(due.items.some(b=>b.id==='desk-ending-'+tag));
+      assert.ok(!due.items.some(b=>b.id==='desk-ending-later'));
+      const dayDue=okay(await op(host,'searchHostReservations',{view:'departures',kind:'day'}));assert.ok(dayDue.items.some(b=>b.id==='desk-ending-day'));assert.ok(dayDue.items.every(b=>b.kind==='day'));
+    } finally {const clean=db.batch();for(const row of deskFixtures)clean.delete(db.collection('aroha_preprod_bookings').doc(row.id));await clean.commit();}
+
     assert.equal((await op(stranger, "getHostBookingSummary")).httpStatus, 403);
     assert.ok(
       okay(
