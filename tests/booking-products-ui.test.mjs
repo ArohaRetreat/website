@@ -159,6 +159,7 @@ test("legacy host offer and owner acceptance remain separate visible event actio
   delete b.pricingVersion; b.total=null; b.subtotal=null; b.quoteAccepted=false; b.lineItems=[];
   let ui = await mount(s, "host");
   try {
+    ui.d.querySelector('[data-host-tab="calendar"]').click();
     ui.d.querySelector(`[data-booking="${b.id}"]`).click();
     await ui.wait();
     assert.ok(ui.d.querySelector('[data-action="approve"]').disabled);

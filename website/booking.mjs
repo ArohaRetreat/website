@@ -475,7 +475,7 @@ function bookingCard(b, host = false) {
 }
 function hostPage() {
   const nav = [
-    ["overview", "Overview", "◈"],
+    ["overview", "Needs review", "◈"],
     ["calendar", "Retreat calendar", "▦"],
     ["reservations", "Reservations", "☷"],
     ["inventory", "Rooms & inventory", "⌂"],
@@ -489,7 +489,9 @@ function hostPage() {
   if(!nav.some(([id])=>id===hostTab))hostTab="overview";
   if (state.actor?.role !== "host")
     return `<div class="host-welcome"><img src="/assets/brand/logo-forest.svg" width="200" alt="Aroha Retreat"><p class="eyebrow">HOST STUDIO</p><h1>A thoughtful stay<br>starts with you.</h1><p>Explore your reservation desk with a host account.<br>Guest sessions do not have access to host booking controls.</p><button class="button" id="host-login">Sign in to Host Studio ↗</button><a class="text-button" href="/book/">← Back to guest experience</a></div>`;
-  return `<div class="studio"><aside class="studio-nav"><a href="/book/"><img src="/assets/brand/logo-white.svg" alt="Aroha Retreat" width="180" height="62"></a><p class="eyebrow">HOST STUDIO</p><label class="ops-mobile-nav">Booking section<select data-host-section>${nav.map(([id,label])=>`<option value="${id}" ${hostTab===id?"selected":""}>${label}</option>`).join("")}</select></label><nav aria-label="Booking sections">${nav.map(([id, label, icon]) => `<button data-host-tab="${id}" ${hostTab === id ? 'aria-current="page"' : ""}><span aria-hidden="true">${icon}</span>${label}</button>`).join("")}</nav><div class="studio-bottom"><p>Host workspace</p><a href="/book/">View guest portal ↗</a><button class="text-button" id="logout">Leave account</button></div></aside><div class="studio-content"><header class="studio-header"><span>BOOKINGS <b>/</b> ${nav.find((x) => x[0] === hostTab)[1]}</span><span class="host-avatar">H</span></header><main id="main" class="studio-main" tabindex="-1">${hostContent()}</main></div></div>`;
+  const navButton=([id,label,icon])=>`<button data-host-tab="${id}" ${hostTab===id?'aria-current="page"':""}><span aria-hidden="true">${icon}</span>${label}</button>`;
+  const setup=["inventory","offers","settings"];
+  return `<div class="studio"><aside class="studio-nav"><a href="/book/"><img src="/assets/brand/logo-forest.svg" alt="Aroha Retreat" width="180" height="62"></a><p class="eyebrow">HOST STUDIO</p><label class="ops-mobile-nav">Booking section<select data-host-section>${nav.map(([id,label])=>`<option value="${id}" ${hostTab===id?"selected":""}>${label}</option>`).join("")}</select></label><nav aria-label="Booking sections"><p class="nav-group-label">Bookings</p>${nav.filter(([id])=>["overview","reservations","calendar"].includes(id)).map(navButton).join("")}<p class="nav-group-label">Guests & follow-up</p>${nav.filter(([id])=>!["overview","reservations","calendar",...setup].includes(id)).map(navButton).join("")}<details class="nav-setup" ${setup.includes(hostTab)?"open":""}><summary>Retreat settings</summary>${nav.filter(([id])=>setup.includes(id)).map(navButton).join("")}</details></nav><div class="studio-bottom"><p>Host workspace</p><a href="/book/">View guest portal ↗</a><button class="text-button" id="logout">Leave account</button></div></aside><div class="studio-content"><header class="studio-header"><span>BOOKINGS <b>/</b> ${nav.find((x) => x[0] === hostTab)[1]}</span>${state.actor?.bookingAccess!=="viewer"?'<button class="button" id="manual-reservation">+ Add booking</button>':'<span class="ops-readonly">View-only access</span>'}</header><main id="main" class="studio-main" tabindex="-1">${hostContent()}</main></div></div>`;
 }
 function hostContent() {
   if (["reservations","guests","loyalty","payments","feedback"].includes(hostTab)) return '<div data-host-operations></div>';
@@ -501,7 +503,7 @@ function hostContent() {
     title = (eye, h, p, action = "") =>
       `<div class="section-heading studio-title"><div><p class="eyebrow">${eye}</p><h1>${h}</h1><p>${p}</p></div>${action}</div>`;
   if (hostTab === "overview")
-    return `${title("YOUR HOSTING DESK", "Make room for good days.", "A clear view of the people and places you’re caring for.")}<div class="stat-grid"><article><span>Awaiting your welcome</span><strong>${pending.length}</strong><small>Requests to review</small></article><article><span>Confirmed & checked in</span><strong>${active.length}</strong><small>Reservations on the calendar</small></article><article><span>Ready to host</span><strong>${rooms.length}<em>rooms</em></strong><small>${rooms.reduce((n, u) => n + u.capacity, 0)} configured adult beds · onsite cap ${policy().siteAdults}</small></article><article><span>Future rooms</span><strong>${state.units.filter((u) => u.type === "Under construction").length}</strong><small>Under construction · not available</small></article></div><section class="host-section"><div class="section-heading"><div><p class="eyebrow">A PERSONAL WELCOME</p><h2>Recent requests to review</h2><p>Open Reservations to find the full request queue.</p></div><button class="text-button" data-host-tab="calendar">Open calendar ↗</button></div>${pending.length ? pending.map((b) => bookingCard(b, true)).join("") : '<div class="paper"><h3>Open the request queue.</h3><p>Reservations includes pending and earlier requests beyond this recent view.</p><button class="outline-button" data-host-tab="reservations">Review reservations →</button></div>'}</section><div class="host-bottom-grid"><article class="paper"><p class="eyebrow">BEFORE YOU OPEN THE DOORS</p><h3>${rooms.length} rooms ready to host.</h3><p>Room capacity and the overall retreat limit are configured separately. Verify room readiness before opening new inventory.</p><button class="text-button" data-host-tab="inventory">Review inventory →</button></article><article class="paper"><p class="eyebrow">DELIVERY STATUS</p><h3>Follow every request.</h3><p>Booking steps and outcomes are queued for operational monitoring in Dynatrace. Requests and host responses remain available here. ${emailEnabled() ? "Booking acknowledgement, host notification and confirmation emails are enabled. Invoice and delivery status are available on each booking." : "Email is not connected."} Record verified manual payments in each booking. External calendar sync is not connected.</p><small>${state.audit.length} committed booking events · durable operational history</small></article></div>`;
+    return `<section class="desk-intro"><p class="eyebrow">YOUR BOOKING DESK</p><h1>Booking desk.</h1><p>Review requests, manage visits, or add a walk-in booking.</p></section><div data-host-summary></div><section class="desk-queue"><div data-host-operations></div></section>`;
   if (hostTab === "calendar")
     return `${
       (state.calendarDays || []).length
@@ -672,7 +674,7 @@ function render() {
   const identity=state.actor?.id;
   const call=async(operation,input,key)=>{if(auth.currentUser?.uid!==identity)throw {code:'SESSION_CHANGED'};const r=await bookingApi('platform',{operation,input},key);if(auth.currentUser?.uid!==identity)throw {code:'SESSION_CHANGED'};return r;};
   if(operations)void mountHostOperations(operations,{tab:hostTab,call,manager:state.actor?.bookingAccess!=='viewer',openBooking:async id=>run(async()=>{const b=await api('reservation-detail',{id});state.bookings=state.bookings.filter(x=>x.id!==id);state.bookings.push(b);detail(id);})});
-  if(hostRoute()&&hostTab==='overview'&&state.actor?.role==='host'){const old=document.querySelector('.stat-grid');if(old){old.innerHTML='<p role="status">Loading booking totals…</p>';old.classList.remove('stat-grid');void mountHostSummary(old,{call});}}
+  if(hostRoute()&&hostTab==='overview'&&state.actor?.role==='host'){const totals=document.querySelector('[data-host-summary]');if(totals)void mountHostSummary(totals,{call});}
 
   if (hostRoute() && state.actor?.bookingAccess === "viewer") {
     document
@@ -718,33 +720,51 @@ function detail(id) {
   const isHost = state.actor?.role === "host",
     owner = state.users?.find((u) => u.id === b.owner);
   open(
-    `<p class="eyebrow">${esc(b.reference)} ${isHost && owner ? "· " + esc(owner.name.split(" ·")[0]) : ""}</p><h2>${b.source === "host_private" ? "Privately booked" : "Your little corner of Aroha."}</h2>${badge(b.status)}<div class="detail-dates"><strong>${format(b.arrival, { day: "numeric", month: "long" })} — ${format(endDateOf(b), { day: "numeric", month: "long", year: "numeric" })}</strong><p>${esc(b.kind ? kindLabel(b.kind) : b.unitNames.join(" + "))} · ${b.guestCountPending ? "Guest count to be arranged" : (b.adults ?? b.guests)+" adult(s) · "+(b.children ?? 0)+" under 10(s)"}</p></div>${b.source === "host_private" ? `<p>${esc(b.guestName)} · ${money(b.dayRate)} per day × ${b.days} days</p>` : ""}<dl class="detail-price"><div><dt>Visit subtotal</dt><dd>${money(b.subtotal)}</dd></div><div><dt>Offer</dt><dd>−${money(b.discount)}</dd></div><div class="total"><dt>Visit total</dt><dd>${money(b.total)}</dd></div></dl>${b.note ? `<div class="private-note"><p class="eyebrow">${b.source === "host_private" ? "HOST BOOKING NOTE" : "PRIVATE GUEST REQUEST"}</p><p>${esc(b.note)}</p></div>` : ""}${b.status === "pending_approval" ? `<div class="approval-note"><strong>Awaiting your host’s approval</strong><p>Review deadline: ${new Date(b.expiresAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} IST. ${b.kind === "event" && !b.pricingVersion ? "Legacy event enquiries do not hold the property." : "Your places are held until then."}</p></div>` : ""}<div class="status-history">${b.history.map((h) => `<div><span></span><p><strong>${esc(pretty(h.status))}</strong><small>${new Date(h.at).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short" })}</small></p></div>`).join("")}</div><div class="detail-actions">${isHost && b.status === "pending_approval" ? `<button class="button" data-action="approve" data-id="${b.id}" ${b.kind === "event" && !b.quoteAccepted ? "disabled" : ""}>Confirm booking & email guest</button><button class="outline-button" data-action="decline" data-id="${b.id}">Decline request</button>` : ""}${isHost && b.status === "confirmed" ? `<button class="button" data-action="checkin" data-id="${b.id}">Check in</button><button class="text-button" data-action="no_show" data-id="${b.id}">Mark no-show</button>` : ""}${isHost && b.status === "checked_in" ? `<button class="button" data-action="complete" data-id="${b.id}">Check out</button>` : ""}${["pending_approval", "confirmed"].includes(b.status) ? `<button class="text-button danger" data-cancel="${b.id}">Cancel ${b.status === "pending_approval" ? "request" : "booking"}</button>` : ""}</div><p class="form-note">${emailEnabled() ? "Booking emails are enabled; check Email updates for delivery status." : "Email notifications are not enabled."} No online payment collected. Confirmed-stay cancellation cutoff: ${b.cancelHours ?? state.settings.cancelHours} hours before arrival. For later cancellation, contact the host.</p>`,
+    `<p class="eyebrow">${esc(b.reference)} ${isHost && owner ? "· " + esc(owner.name.split(" ·")[0]) : ""}</p><h2>${isHost ? (b.status === "pending_approval" ? "Review booking request" : "Booking details") : b.source === "host_private" ? "Privately booked" : "Your little corner of Aroha."}</h2>${isHost ? `<p class="host-guest-name">${esc(b.guestName || owner?.name?.split(" ·")[0] || "Guest")}</p>` : ""}${badge(b.status)}<div class="detail-dates"><strong>${format(b.arrival, { day: "numeric", month: "long" })} — ${format(endDateOf(b), { day: "numeric", month: "long", year: "numeric" })}</strong><p>${esc(b.kind ? kindLabel(b.kind) : b.unitNames.join(" + "))} · ${b.guestCountPending ? "Guest count to be arranged" : (b.adults ?? b.guests)+" adult(s) · "+(b.children ?? 0)+" under 10(s)"}</p></div>${b.source === "host_private" ? `<p>${esc(b.guestName)} · ${money(b.dayRate)} per day × ${b.days} days</p>` : ""}<dl class="detail-price"><div><dt>Visit subtotal</dt><dd>${money(b.subtotal)}</dd></div><div><dt>Offer</dt><dd>−${money(b.discount)}</dd></div><div class="total"><dt>Visit total</dt><dd>${money(b.total)}</dd></div></dl>${b.note ? `<div class="private-note"><p class="eyebrow">${b.source === "host_private" ? "HOST BOOKING NOTE" : "PRIVATE GUEST REQUEST"}</p><p>${esc(b.note)}</p></div>` : ""}${b.status === "pending_approval" ? `<div class="approval-note"><strong>${isHost ? "Your decision is needed" : "Awaiting your host’s approval"}</strong><p>Review deadline: ${new Date(b.expiresAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} IST. ${b.kind === "event" && !b.pricingVersion ? "Legacy event enquiries do not hold the property." : "Your places are held until then."}</p></div>` : ""}${isHost ? '<details class="booking-history"><summary>Booking history</summary>' : ""}<div class="status-history">${b.history.map((h) => `<div><span></span><p><strong>${esc(pretty(h.status))}</strong><small>${new Date(h.at).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short" })}</small></p></div>`).join("")}</div>${isHost ? "</details>" : ""}<div class="detail-actions">${isHost && b.status === "pending_approval" ? `<button class="button" data-action="approve" data-id="${b.id}" ${b.kind === "event" && !b.pricingVersion && !b.quoteAccepted ? "disabled" : ""}>Accept booking & email guest</button><button class="outline-button" data-action="decline" data-id="${b.id}">Decline request</button>` : ""}${isHost && b.status === "confirmed" ? `<button class="button" data-action="checkin" data-id="${b.id}">Check in</button><button class="text-button" data-action="no_show" data-id="${b.id}">Mark no-show</button>` : ""}${isHost && b.status === "checked_in" ? `<button class="button" data-action="complete" data-id="${b.id}">Check out</button>` : ""}${["pending_approval", "confirmed"].includes(b.status) && !(isHost && b.status === "pending_approval") ? `<button class="text-button danger" data-cancel="${b.id}">Cancel ${b.status === "pending_approval" ? "request" : "booking"}</button>` : ""}</div><p class="form-note">${emailEnabled() ? "Booking emails are enabled; check Email updates for delivery status." : "Email notifications are not enabled."} No online payment collected. Confirmed-stay cancellation cutoff: ${b.cancelHours ?? state.settings.cancelHours} hours before arrival. For later cancellation, contact the host.</p>`,
   );
+  dialog.classList.toggle("host-booking-detail",isHost);
+  if(isHost){
+    const tools=document.createElement('div');tools.className='booking-tools';
+    const actions=dialog.querySelector('.detail-actions');
+    actions.querySelectorAll('button:not([data-action]):not([data-cancel])').forEach(button=>tools.append(button));
+    if(tools.childElementCount)actions.after(tools);
+    const allocation=dialog.querySelector('form.paper');
+    if(allocation&&b.kind==='individual'){
+      const fold=document.createElement('details');fold.className='booking-history';
+      fold.innerHTML='<summary>Room allocation</summary>';allocation.before(fold);fold.append(allocation);
+    }
+  }
   const panel=document.createElement('div');panel.dataset.stayPanel='';dialog.querySelector('.dialog-content, #detail-content')?.append(panel);
   if(!panel.isConnected)dialog.append(panel);
   const manager=isHost&&state.actor?.bookingAccess!=='viewer';
-  void mountStayPanel(panel,{booking:b,manager,staff:isHost,call:(operation,input,key)=>bookingApi('platform',{operation,input},key),onMutation:async()=>{await refresh();render();}});
+  if(!isHost||b.status!=="pending_approval")void mountStayPanel(panel,{booking:b,manager,staff:isHost,call:(operation,input,key)=>bookingApi('platform',{operation,input},key),onMutation:async()=>{await refresh();render();}});
 
 }
 function bindDialog() {
-  dialog.querySelectorAll("[data-action]").forEach(
-    (b) =>
-      (b.onclick = () =>
-        run(async () => {
-          const booking = state.bookings.find((x) => x.id === b.dataset.id);
-          const prompts={approve:'Confirm this booking and email the guest?',decline:'Decline this request, release its capacity and email the guest?',no_show:'Mark this guest as a no-show? No stay credits will be earned.',checkin:'Confirm the guest has arrived and check them in?',complete:'Check out this guest? Eligible night credits and the checkout statement will be recorded.'};
-          if(!confirm(prompts[b.dataset.action]||'Save this booking change?'))return;
-          await api("booking-action", {
-            id: booking.id,
-            action: b.dataset.action,
-            expectedVersion: booking.version,
-          });
-          await refresh();
-          render();
-          detail(booking.id);
-          toast("Reservation updated.");
-        })),
-  );
+  dialog.querySelectorAll("[data-action]").forEach(button => {
+    let decisionRequest,decisionKey;
+    button.onclick=()=>{
+      const action=button.dataset.action;
+      if(action==='decline'&&!button.dataset.reviewed){
+        button.dataset.reviewed='1';
+        const note=document.createElement('div');note.className='decline-review';note.setAttribute('role','status');
+        note.innerHTML='<strong>Decline this request?</strong><p>This releases the held capacity and sends a decline email to the guest.</p><button type="button" class="text-button" data-keep-review>Keep reviewing</button>';
+        button.before(note);button.textContent='Yes, decline request';
+        note.querySelector('button').onclick=()=>{delete button.dataset.reviewed;button.textContent='Decline request';note.remove();};
+        return;
+      }
+      run(async()=>{
+        const booking=state.bookings.find(x=>x.id===button.dataset.id);
+        const prompts={no_show:'Mark this guest as a no-show? No stay credits will be earned.',checkin:'Confirm the guest has arrived and check them in?',complete:'Check out this guest? Eligible night credits and the checkout statement will be recorded.'};
+        if(prompts[action]&&!confirm(prompts[action]))return;
+        decisionRequest ??= {id:booking.id,action,expectedVersion:booking.version};
+        decisionKey ??= crypto.randomUUID();
+        await api('booking-action',decisionRequest,decisionKey);
+        await refresh();render();detail(booking.id);
+        toast(action==='approve'?'Booking accepted. Check Email updates for delivery.':action==='decline'?'Request declined. Check Email updates for delivery.':'Booking updated.');
+      });
+    };
+  });
   dialog.querySelectorAll("[data-cancel]").forEach(
     (b) =>
       (b.onclick = () => {
@@ -839,14 +859,15 @@ function extendPage() {
       });
     header.insertBefore(b, header.lastElementChild);
   }
-  if (["overview", "reservations", "calendar"].includes(hostTab)) {
-    const b = document.createElement("button");
+  if (state.actor?.bookingAccess!=="viewer") {
+    const b = document.querySelector("#manual-reservation");
+    if(!b)return;
     b.type = "button";
     b.className = "button";
-    b.textContent = "Add manual booking +";
+    b.textContent = "+ Add booking";
     b.id = "manual-reservation";
     b.onclick = ()=>{const identity=state.actor.id;openManualBooking({identity,units:state.units,call:async(operation,input,key)=>{if(auth.currentUser?.uid!==identity)throw{code:'SESSION_CHANGED'};return bookingApi('platform',{operation,input},key);},onBooked:async booked=>{await refresh();render();if(!state.bookings.some(b=>b.id===booked.id))state.bookings.push(booked);detail(booked.id);toast('Booking confirmed. Check Email updates for delivery.');}});};
-    document.querySelector(".studio-title")?.append(b);
+
   }
 }
 async function showCommunications(b){
