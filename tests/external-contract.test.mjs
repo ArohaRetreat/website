@@ -67,10 +67,15 @@ test("mutation grant recheck rejects changed/revoked/expired grants and MCP non-
     expiresAt: Date.now() + 10000,
   };
   assert.doesNotThrow(() => assertGrant(g, token));
+  const permanent = { ...g, expiresAt: null };
+  assert.doesNotThrow(() => assertGrant(permanent, token, Date.now() + 365 * 86400000));
+  assert.throws(() => assertGrant({ ...permanent, active: false }, token));
+  assert.throws(() => assertGrant({ ...permanent, version: 2 }, token));
   for (const patch of [
     { active: false },
     { version: 2 },
     { expiresAt: 0 },
+    ...[undefined, "", "never", Number.NaN, Number.POSITIVE_INFINITY].map(expiresAt => ({ expiresAt })),
     { owner: "other" },
     { rowAccess: "all" },
     { scopes: [] },
