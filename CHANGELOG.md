@@ -1,3 +1,8 @@
+## API 0.12.1 — cancellation and decline emails
+
+- Queue one operational cancellation/decline email in the booking transaction, including manually recorded bookings. Preserve frozen templates, invoice voiding, current mail settings and no historical replay.
+- Suppress stale status/version jobs and preserve provider idempotency; the notice never claims a payment or refund. Existing REST/MCP contracts remain unchanged.
+
 ## 0.26.0 / API 0.12.0 — scoped CRUD and stay lifecycle
 
 - Extend canonical external contract1.2.0 to106 domain-backed operations; existing mcp-readonly grants retain their original nine-operation ceiling. New explicitly scoped mcp grants support CRUD.
