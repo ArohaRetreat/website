@@ -1,3 +1,9 @@
+## 0.25.0 / API 0.10.0 — scoped external API
+
+- Add the versioned external API contract and 39 scoped operations using the existing booking, pricing and authorization rules. Future financial, feedback and lifecycle CRUD remains tracked under issue 105.
+- Add expiring, revocable integration grants issued through verified Google sign-in, own/all row access, read-only MCP grants, conditional writes, client-bound idempotency and sensitive-read audit records.
+- Add Hosting routes for both environments and isolated emulator coverage. Preserve production email settings, private reservations, CMS, approved email/PDF assets and existing customer records.
+
 ## 0.24.0 / API 0.9.0 — production booking promotion and private reservations
 
 - Promote approved exclusive pricing/calendar, signed-in enquiry, homepage sign-in return and branded booking emails through an independent main release.
