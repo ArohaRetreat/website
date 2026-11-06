@@ -90,6 +90,8 @@ export async function externalApi(db, auth, req, res, requestId) {
       return {
         environment: environment.name,
         contractVersion: CONTRACT_VERSION,
+        purpose: token._integration.purpose,
+        scopes: token._integration.scopes,
         capabilities: routes
           .filter(
             (r) =>
