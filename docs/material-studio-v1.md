@@ -48,3 +48,7 @@ Release the reviewed source via PR to preprod with all required checks. Prepare 
 Rollback UI independently; retain all business records. Roll back new-mail rendering only by a compatible renderer that still supports queued v5 jobs. Do not restore an old worker that cannot render them, delete outboxes or resend accepted jobs. Restoring the old Reply-To is a separate explicit config change.
 
 Privacy patch0.30.1 explicitly masks every shared calendar/menu/time/confirmation popup before insertion, including detached top-layer elements. Private credit-adjustment reasons and selection labels remain inside the RUM privacy boundary. No API or business-policy change.
+
+## Production promotion
+
+Promote the reviewed front desk, Material controls, and email changes together. Verify the production booking indexes and run the derived-field backfill against the existing bookings before releasing Hosting. Prepare the exact merged production source with `--environment production --reply-to retreataroha@gmail.com`. Deploy dispatch and retry first, then the API, then Hosting. Preserve existing sender, recipients, billing, secret bindings, and queued-job snapshots. Verify the live guest booking flow and Studio at a mobile viewport. Confirm Reply-To from the live Functions configuration and the cancellation provider payload in isolation.
