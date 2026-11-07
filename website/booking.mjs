@@ -3,6 +3,7 @@ installMaterialControls();
 import {hostShell,mountFrontDesk} from './frontdesk.mjs';
 import {mountHostOperations,mountHostSummary,openManualBooking} from './host-operations.mjs';
 import {auth} from './firebase-auth.mjs';
+import {visitDateLabel} from "./booking-visit-label.mjs";
 import {mountStayPanel} from './stay-panel.mjs';
 import { journeyStep } from "./booking-journey.mjs";
 import { bookingApi } from "./booking-api.mjs";
