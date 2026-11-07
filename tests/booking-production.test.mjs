@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { visitDateLabel } from "../website/booking-visit-label.mjs";
 import { initialState, mutate, tier } from "../functions/booking/domain.mjs";
 const now = Date.parse("2026-11-03T05:00:00Z"),
   guest = { id: "verified-guest", role: "guest" },
@@ -132,6 +133,7 @@ test("production guest UI presents published private-room pricing without sample
     }),
     w = dom.window;
   w.scrollTo = () => {};
+  w.testVisitDateLabel = visitDateLabel;
   w.HTMLDialogElement.prototype.showModal = function () {
     this.setAttribute("open", "");
   };
@@ -166,7 +168,9 @@ test("production guest UI presents published private-room pricing without sample
     new URL("../website/booking.mjs", import.meta.url),
     "utf8",
   );
-  source = source.replace(/import \{mountHostOperations,mountHostSummary,openManualBooking\} from '\.\/host-operations.mjs';/, 'const mountHostOperations=async()=>{},mountHostSummary=async()=>{},openManualBooking=()=>{};').replace(/import \{auth\} from '\.\/firebase-auth.mjs';/, 'const auth={currentUser:null};').replace(/import \{mountStayPanel\} from '\.\/stay-panel.mjs';/, "").replace(
+  source = source.replace(/import \{[^\n]+\} from ['"]\.\/material-controls.mjs['"];/, 'const installMaterialControls=()=>{},confirmMaterial=async()=>window.confirm();');
+  source = source.replace(/import \{visitDateLabel\} from "\.\/booking-visit-label.mjs";/, "const visitDateLabel=window.testVisitDateLabel;");
+  source = source.replace(/import \{hostShell,mountFrontDesk\} from '\.\/frontdesk.mjs';/,'const hostShell=({content})=>content,mountFrontDesk=async()=>{};').replace(/import \{mountHostOperations,mountHostSummary,openManualBooking\} from '\.\/host-operations.mjs';/, 'const mountHostOperations=async()=>{},mountHostSummary=async()=>{},openManualBooking=()=>{};').replace(/import \{auth\} from '\.\/firebase-auth.mjs';/, 'const auth={currentUser:null};').replace(/import \{mountStayPanel\} from '\.\/stay-panel.mjs';/, "").replace(
     /import \{ bookingApi \} from "\.\/booking-api.mjs";/,
     "const bookingApi=window.testBookingApi; const mountStayPanel=async()=>{};",
   );

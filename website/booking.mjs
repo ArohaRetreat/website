@@ -1,5 +1,9 @@
+import {installMaterialControls, confirmMaterial} from './material-controls.mjs';
+installMaterialControls();
+import {hostShell,mountFrontDesk} from './frontdesk.mjs';
 import {mountHostOperations,mountHostSummary,openManualBooking} from './host-operations.mjs';
 import {auth} from './firebase-auth.mjs';
+import {visitDateLabel} from "./booking-visit-label.mjs";
 import {mountStayPanel} from './stay-panel.mjs';
 import { journeyStep } from "./booking-journey.mjs";
 import { bookingApi } from "./booking-api.mjs";
@@ -489,9 +493,7 @@ function hostPage() {
   if(!nav.some(([id])=>id===hostTab))hostTab="overview";
   if (state.actor?.role !== "host")
     return `<div class="host-welcome"><img src="/assets/brand/logo-forest.svg" width="200" alt="Aroha Retreat"><p class="eyebrow">HOST STUDIO</p><h1>A thoughtful stay<br>starts with you.</h1><p>Explore your reservation desk with a host account.<br>Guest sessions do not have access to host booking controls.</p><button class="button" id="host-login">Sign in to Host Studio ↗</button><a class="text-button" href="/book/">← Back to guest experience</a></div>`;
-  const navButton=([id,label,icon])=>`<button data-host-tab="${id}" ${hostTab===id?'aria-current="page"':""}><span aria-hidden="true">${icon}</span>${label}</button>`;
-  const setup=["inventory","offers","settings"];
-  return `<div class="studio"><aside class="studio-nav"><a href="/book/"><img src="/assets/brand/logo-forest.svg" alt="Aroha Retreat" width="180" height="62"></a><p class="eyebrow">HOST STUDIO</p><label class="ops-mobile-nav">Booking section<select data-host-section>${nav.map(([id,label])=>`<option value="${id}" ${hostTab===id?"selected":""}>${label}</option>`).join("")}</select></label><nav aria-label="Booking sections"><p class="nav-group-label">Bookings</p>${nav.filter(([id])=>["overview","reservations","calendar"].includes(id)).map(navButton).join("")}<p class="nav-group-label">Guests & follow-up</p>${nav.filter(([id])=>!["overview","reservations","calendar",...setup].includes(id)).map(navButton).join("")}<details class="nav-setup" ${setup.includes(hostTab)?"open":""}><summary>Retreat settings</summary>${nav.filter(([id])=>setup.includes(id)).map(navButton).join("")}</details></nav><div class="studio-bottom"><p>Host workspace</p><a href="/book/">View guest portal ↗</a><button class="text-button" id="logout">Leave account</button></div></aside><div class="studio-content"><header class="studio-header"><span>BOOKINGS <b>/</b> ${nav.find((x) => x[0] === hostTab)[1]}</span>${state.actor?.bookingAccess!=="viewer"?'<button class="button" id="manual-reservation">+ Add booking</button>':'<span class="ops-readonly">View-only access</span>'}</header><main id="main" class="studio-main" tabindex="-1">${hostContent()}</main></div></div>`;
+  return hostShell({tab:hostTab,manager:state.actor.bookingAccess!=='viewer',content:hostContent()});
 }
 function hostContent() {
   if (["reservations","guests","loyalty","payments","feedback"].includes(hostTab)) return '<div data-host-operations></div>';
@@ -621,6 +623,8 @@ function hostContent() {
   return `${title("YOUR PUBLIC RETREAT", "Website changes.", "Website content stays separate from reservation operations.")}<div class="paper"><h2>Website content editor</h2><p>Manage website content in the existing editor. Booking operations are saved separately and never publish or overwrite website drafts.</p><div class="website-categories">${["Brand & welcome", "Page layout", "Farm tour & films", "Living Map stories", "Cottages", "Experiences", "Visit packages", "Contact & FAQs", "Design & motion", "Published history"].map((s) => `<div><span>${s}</span><small>Existing CMS editor</small></div>`).join("")}</div><a class="outline-button" href="https://aroharetreat.com/admin/" target="_blank" rel="noopener noreferrer">Open existing Host Studio ↗</a><p class="form-note">Opens the real Studio in a new tab and requires your existing host account. Publishing there affects the live site.</p></div>`;
 }
 function render() {
+  document.documentElement.classList.toggle("frontdesk-v2",hostRoute());
+  document.documentElement.classList.toggle("studio-embedded",hostRoute()&&window.parent!==window);
   const view = hostRoute()
     ? `host:${hostTab}`
     : location.hash === "#profile"
@@ -674,12 +678,15 @@ function render() {
   const identity=state.actor?.id;
   const call=async(operation,input,key)=>{if(auth.currentUser?.uid!==identity)throw {code:'SESSION_CHANGED'};const r=await bookingApi('platform',{operation,input},key);if(auth.currentUser?.uid!==identity)throw {code:'SESSION_CHANGED'};return r;};
   if(operations)void mountHostOperations(operations,{tab:hostTab,call,manager:state.actor?.bookingAccess!=='viewer',openBooking:async id=>run(async()=>{const b=await api('reservation-detail',{id});state.bookings=state.bookings.filter(x=>x.id!==id);state.bookings.push(b);detail(id);})});
-  if(hostRoute()&&hostTab==='overview'&&state.actor?.role==='host'){const totals=document.querySelector('[data-host-summary]');if(totals)void mountHostSummary(totals,{call});}
+  const desk=document.querySelector('[data-frontdesk]');
+  const deskApi=async(operation,input,key)=>{if(auth.currentUser?.uid!==identity)throw {code:'SESSION_CHANGED',status:403};const r=await bookingApi(operation,input,key,{admin:true});if(auth.currentUser?.uid!==identity)throw {code:'SESSION_CHANGED',status:403};return r;};
+  if(desk)void mountFrontDesk(desk,{tab:hostTab,call,api:deskApi,manager:state.actor?.bookingAccess!=='viewer',identity,onManual:done=>openManualBooking({identity,units:state.units,call,onBooked:async booked=>{await done(booked);toast('Booking confirmed. Check Messages for delivery.');}}),openLegacy:async id=>{const b=await api('reservation-detail',{id});state.bookings=state.bookings.filter(x=>x.id!==id);state.bookings.push(b);detail(id);}});
+  document.querySelector('[data-desk-more]')?.addEventListener('click',()=>{const d=document.createElement('dialog');d.className='filter-dialog';d.innerHTML='<div class="dialog-head"><h2>More</h2><button data-close-more aria-label="Close navigation">×</button></div>'+[['payments','Payments'],['calendar','Room calendar'],['loyalty','Loyalty programme'],['feedback','Feedback'],['inventory','Rooms'],['offers','Offers'],['settings','Booking policies']].filter(([id])=>state.actor.bookingAccess!=='viewer'||!['loyalty','feedback'].includes(id)).map(([id,t])=>`<button data-go="${id}">${t}</button>`).join('');document.body.append(d);d.showModal();d.querySelector('[data-close-more]').onclick=()=>d.close();d.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{hostTab=b.dataset.go;d.close();render();});d.addEventListener('close',()=>d.remove(),{once:true});});
 
   if (hostRoute() && state.actor?.bookingAccess === "viewer") {
     document
       .querySelectorAll(
-        ".studio-main form:not([data-search]) input,.studio-main form:not([data-search]) select,.studio-main form:not([data-search]) textarea,.studio-main form:not([data-search]) button,[data-action],[data-cancel],[data-unblock],[data-block-unit],[data-ready-unit],#manual-reservation",
+        "#main form:not([data-search]) input,#main form:not([data-search]) select,#main form:not([data-search]) textarea,#main form:not([data-search]) button,[data-action],[data-cancel],[data-unblock],[data-block-unit],[data-ready-unit],#manual-reservation",
       )
       .forEach((el) => {
         el.disabled = true;
@@ -722,6 +729,23 @@ function detail(id) {
   open(
     `<p class="eyebrow">${esc(b.reference)} ${isHost && owner ? "· " + esc(owner.name.split(" ·")[0]) : ""}</p><h2>${isHost ? (b.status === "pending_approval" ? "Review booking request" : "Booking details") : b.source === "host_private" ? "Privately booked" : "Your little corner of Aroha."}</h2>${isHost ? `<p class="host-guest-name">${esc(b.guestName || owner?.name?.split(" ·")[0] || "Guest")}</p>` : ""}${badge(b.status)}<div class="detail-dates"><strong>${format(b.arrival, { day: "numeric", month: "long" })} — ${format(endDateOf(b), { day: "numeric", month: "long", year: "numeric" })}</strong><p>${esc(b.kind ? kindLabel(b.kind) : b.unitNames.join(" + "))} · ${b.guestCountPending ? "Guest count to be arranged" : (b.adults ?? b.guests)+" adult(s) · "+(b.children ?? 0)+" under 10(s)"}</p></div>${b.source === "host_private" ? `<p>${esc(b.guestName)} · ${money(b.dayRate)} per day × ${b.days} days</p>` : ""}<dl class="detail-price"><div><dt>Visit subtotal</dt><dd>${money(b.subtotal)}</dd></div><div><dt>Offer</dt><dd>−${money(b.discount)}</dd></div><div class="total"><dt>Visit total</dt><dd>${money(b.total)}</dd></div></dl>${b.note ? `<div class="private-note"><p class="eyebrow">${b.source === "host_private" ? "HOST BOOKING NOTE" : "PRIVATE GUEST REQUEST"}</p><p>${esc(b.note)}</p></div>` : ""}${b.status === "pending_approval" ? `<div class="approval-note"><strong>${isHost ? "Your decision is needed" : "Awaiting your host’s approval"}</strong><p>Review deadline: ${new Date(b.expiresAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} IST. ${b.kind === "event" && !b.pricingVersion ? "Legacy event enquiries do not hold the property." : "Your places are held until then."}</p></div>` : ""}${isHost ? '<details class="booking-history"><summary>Booking history</summary>' : ""}<div class="status-history">${b.history.map((h) => `<div><span></span><p><strong>${esc(pretty(h.status))}</strong><small>${new Date(h.at).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short" })}</small></p></div>`).join("")}</div>${isHost ? "</details>" : ""}<div class="detail-actions">${isHost && b.status === "pending_approval" ? `<button class="button" data-action="approve" data-id="${b.id}" ${b.kind === "event" && !b.pricingVersion && !b.quoteAccepted ? "disabled" : ""}>Accept booking & email guest</button><button class="outline-button" data-action="decline" data-id="${b.id}">Decline request</button>` : ""}${isHost && b.status === "confirmed" ? `<button class="button" data-action="checkin" data-id="${b.id}">Check in</button><button class="text-button" data-action="no_show" data-id="${b.id}">Mark no-show</button>` : ""}${isHost && b.status === "checked_in" ? `<button class="button" data-action="complete" data-id="${b.id}">Check out</button>` : ""}${["pending_approval", "confirmed"].includes(b.status) && !(isHost && b.status === "pending_approval") ? `<button class="text-button danger" data-cancel="${b.id}">Cancel ${b.status === "pending_approval" ? "request" : "booking"}</button>` : ""}</div><p class="form-note">${emailEnabled() ? "Booking emails are enabled; check Email updates for delivery status." : "Email notifications are not enabled."} No online payment collected. Confirmed-stay cancellation cutoff: ${b.cancelHours ?? state.settings.cancelHours} hours before arrival. For later cancellation, contact the host.</p>`,
   );
+  const content=document.createElement('div');content.className='booking-detail-content';
+  const header=document.createElement('header');header.className='booking-detail-header';
+  const dates=dialog.querySelector('.detail-dates');
+  let inContent=false;
+  for(const node of [...dialog.children]){
+    if(node.matches('[data-close]'))continue;
+    if(node===dates)inContent=true;
+    if(inContent)content.append(node);else header.append(node);
+  }
+  dialog.append(header,content);
+  if(isHost){
+    const starts=b.startsAt||Date.parse(b.arrival+'T00:00:00+05:30'),ends=b.endsAt||Date.parse(b.departure+'T00:00:00+05:30');
+    for(const [action,at,caption] of [['checkin',starts,'Check-in'],['complete',ends,'Checkout'],['no_show',ends,'No-show reporting']]){
+      const button=dialog.querySelector(`[data-action="${action}"]`);
+      if(button&&Date.now()<at){button.disabled=true;button.title=caption+' opens '+new Date(at).toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})+' IST';}
+    }
+  }
   dialog.classList.toggle("host-booking-detail",isHost);
   if(isHost){
     const tools=document.createElement('div');tools.className='booking-tools';
@@ -734,7 +758,7 @@ function detail(id) {
       fold.innerHTML='<summary>Room allocation</summary>';allocation.before(fold);fold.append(allocation);
     }
   }
-  const panel=document.createElement('div');panel.dataset.stayPanel='';dialog.querySelector('.dialog-content, #detail-content')?.append(panel);
+  const panel=document.createElement('div');panel.dataset.stayPanel='';dialog.querySelector('.booking-detail-content, .dialog-content, #detail-content')?.append(panel);
   if(!panel.isConnected)dialog.append(panel);
   const manager=isHost&&state.actor?.bookingAccess!=='viewer';
   if(!isHost||b.status!=="pending_approval")void mountStayPanel(panel,{booking:b,manager,staff:isHost,call:(operation,input,key)=>bookingApi('platform',{operation,input},key),onMutation:async()=>{await refresh();render();}});
@@ -756,7 +780,7 @@ function bindDialog() {
       run(async()=>{
         const booking=state.bookings.find(x=>x.id===button.dataset.id);
         const prompts={no_show:'Mark this guest as a no-show? No stay credits will be earned.',checkin:'Confirm the guest has arrived and check them in?',complete:'Check out this guest? Eligible night credits and the checkout statement will be recorded.'};
-        if(prompts[action]&&!confirm(prompts[action]))return;
+        if(prompts[action]&&!await confirmMaterial(prompts[action]))return;
         decisionRequest ??= {id:booking.id,action,expectedVersion:booking.version};
         decisionKey ??= crypto.randomUUID();
         await api('booking-action',decisionRequest,decisionKey);
@@ -850,7 +874,7 @@ function extendPage() {
       run(async () => {
         if (
           app.querySelector("form") &&
-          !confirm("Reload the workspace? Unsaved form edits will be lost.")
+          !await confirmMaterial("Reload the workspace? Unsaved form edits will be lost.")
         )
           return;
         await refresh();

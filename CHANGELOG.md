@@ -1,3 +1,20 @@
+## Website 0.30.1 — preserve popup privacy boundaries
+
+- Mask calendar, selection, time and confirmation popups explicitly, including when native top-layer placement puts them outside the masked booking container. API0.15 unchanged; preprod review only.
+
+## Website 0.30.0 / API 0.15.0 — Material 3 Studio and booking review
+
+- Use Aroha Material 3 roles, locally bundled Google Sans/Source Sans 3 and shared controls throughout booking and Studio.
+- Replace native staff selectors/date popups/spinners with labelled menus, keyboard calendars, guest steppers and visible visit choices; group booking detail actions consistently.
+- Add the versioned cancellation email with a subtly disappointed Hrudhi; use the requested Reply-To for new preprod mail while preserving old retries.
+- Isolate shared external API suite fixtures without weakening concurrency assertions (#126). Preprod only; production held. See docs/material-studio-v1.md.
+
+## Website 0.29.0 / API 0.14.0 — front desk v2 (preprod review)
+
+- Replace booking navigation with the reviewed desktop/mobile front-desk workspace, contextual booking decisions and focused walk-in flow.
+- Add scoped server-side reservation searches with typed filters, bounded cursors and derived query fields; preserve booking, email, ledger and credit policy.
+- Keep production promotion held for owner review. See docs/host-studio-frontdesk-v2.md.
+
 ## Website 0.28.1 — isolate staff styling
 
 - Scope the booking-desk additions to Host Studio so guest credit cards retain their daylight/sunset colors and mobile layout.

@@ -1,4 +1,5 @@
 import { lifecycleEmailTemplate } from "./templates-lifecycle.mjs";
+import { statusEmailTemplate as legacyStatusEmailTemplate } from './templates-status-legacy.mjs';
 import { statusEmailTemplate } from "./templates-status.mjs";
 import { emailTemplate as legacyTemplate } from "./templates-legacy.mjs";
 import { approvedEmailTemplate } from "./templates-approved.mjs";
@@ -19,6 +20,8 @@ export function emailTemplate(job) {
     };
   }
   if (job.templateVersion === "email-v4-status")
+    return legacyStatusEmailTemplate(job);
+  if (job.templateVersion === "email-v5-status")
     return statusEmailTemplate(job);
   if (job.templateVersion === "email-v4-lifecycle")
     return lifecycleEmailTemplate(job);

@@ -1,3 +1,4 @@
+import {confirmMaterial} from './material-controls.mjs';
 const esc = (v) =>
   String(v ?? "").replace(
     /[&<>"']/g,
@@ -101,7 +102,7 @@ export async function mountCreditWallet(
           reason = String(d.get("reason")).trim();
         if (
           !credits ||
-          !confirm(
+          !await confirmMaterial(
             `${credits > 0 ? "Add" : "Remove"} ${Math.abs(credits)} credits?\nReason: ${reason}`,
           )
         )
@@ -399,23 +400,13 @@ export function openManualBooking({ call, units, onBooked, identity }) {
     dialog.remove();
   };
   const draw = () => {
-    dialog.innerHTML = `<button type="button" class="ops-close" aria-label="Close manual booking">×</button><p class="eyebrow">MANUAL BOOKING · ${state.step} OF 3</p><h2>${["", "Who is staying?", "Plan their visit", "Review & confirm"][state.step]}</h2><p>${["", "Use the guest’s own email. Their booking and credits will appear when they sign in with that verified email.", "Choose dates, guests and accommodation. The server checks availability and the full price.", "Confirming reserves capacity and emails the guest. Record any payment separately."][state.step]}</p><form class="ops-form">${
+    dialog.innerHTML = `<button type="button" class="ops-close" aria-label="Close manual booking">×</button><p class="eyebrow">MANUAL BOOKING · ${state.step} OF 3</p><ol class="ops-progress" aria-label="Booking progress">${['Guest','Visit','Review'].map((t,i)=>`<li ${state.step===i+1?'aria-current="step"':''}><span>${state.step>i+1?'✓':i+1}</span>${t}</li>`).join('')}</ol><h2>${["", "Who is staying?", "Plan their visit", "Review & confirm"][state.step]}</h2><p>${["", "Use the guest’s own email. Their booking and credits will appear when they sign in with that verified email.", "Choose dates, guests and accommodation. We’ll check availability and show the full price before you confirm.", "Confirming reserves capacity and emails the guest. Record any payment separately."][state.step]}</p><form class="ops-form">${
       state.step === 1
         ? `<label>Guest’s full name<input name="name" autocomplete="name" minlength="2" maxlength="120" required value="${esc(state.customer.name)}"></label><label>Guest’s email<input name="email" type="email" autocomplete="email" maxlength="254" required value="${esc(state.customer.email)}"></label><label>Phone with country code<input name="phone" type="tel" autocomplete="tel" maxlength="32" placeholder="+91 98765 43210" required value="${esc(state.customer.phone)}"></label>`
         : state.step === 2
-          ? `<label>Visit type<select name="kind">${[
-              ["individual", "Individual stay · host-allocated place"],
-              ["private", "Private room stay"],
-              ["day", "Day outing"],
-              ["event", "Exclusive retreat"],
-            ]
-              .map(
-                ([v, t]) =>
-                  `<option value="${v}" ${state.kind === v ? "selected" : ""}>${t}</option>`,
-              )
-              .join(
-                "",
-              )}</select></label><div class="ops-columns"><label>Arrival<input name="arrival" type="date" required value="${state.arrival}"></label><label data-end-label><span data-end-text>Departure</span><input name="departure" type="date" required value="${state.kind === "event" && state.departure ? new Date(Date.parse(state.departure + "T00:00:00Z") - 86400000).toISOString().slice(0, 10) : state.departure}"></label></div><p class="ops-note" data-date-help>Departure is the checkout date, not a night stayed.</p><label>Adults (10 years and above)<input name="adults" type="number" min="1" max="100" required value="${state.adults}"></label><label>Children under 10<input name="childrenCount" type="number" min="0" max="100" step="1" value="${state.ageValues?.length || 0}"></label><div data-child-ages class="ops-columns"></div><fieldset data-room-fields><legend>Choose private rooms</legend>${units
+          ? `<fieldset class="visit-choices"><legend>Visit type</legend><input type="hidden" name="kind" value="${state.kind}">${[
+ ['individual','Individual stay','A shared sleeping place'],['private','Private rooms','Rooms just for this party'],['day','Day outing','Visit without staying over'],['event','Exclusive retreat','Reserve the whole property']
+].map(([v,t,h])=>`<label class="visit-choice"><input type="radio" name="visitKind" value="${v}" ${state.kind===v?'checked':''}><strong>${t}</strong><small>${h}</small></label>`).join('')}</fieldset><div class="ops-columns"><label>Arrival<input name="arrival" type="date" required value="${state.arrival}"></label><label data-end-label><span data-end-text>Departure</span><input name="departure" type="date" required value="${state.kind === "event" && state.departure ? new Date(Date.parse(state.departure + "T00:00:00Z") - 86400000).toISOString().slice(0, 10) : state.departure}"></label></div><p class="ops-note" data-date-help>Departure is the checkout date, not a night stayed.</p><div class="ops-columns"><label>Adults · age 10+<input name="adults" type="number" min="1" max="35" required value="${state.adults}"></label><label>Children under 10<input name="childrenCount" type="number" min="0" max="100" step="1" value="${state.ageValues?.length || 0}"></label></div><div data-child-ages class="ops-columns"></div><fieldset data-room-fields><legend>Choose private rooms</legend>${units
               .filter((u) => u.active)
               .map(
                 (u) =>
@@ -424,14 +415,27 @@ export function openManualBooking({ call, units, onBooked, identity }) {
               .join(
                 "",
               )}</fieldset><div class="ops-columns"><label>Invitation code (optional)<input name="promo" maxlength="32" value="${esc(state.promo)}"></label><label data-credit-field>Credits to redeem<input name="credits" type="number" min="0" max="1000000000" step="1" value="${state.credits}"></label></div>`
-          : `<section class="ops-card"><h3>${esc(state.quote.contact.name)}</h3><p>${esc(state.quote.contact.email)}<br>${esc(state.quote.contact.phone)}</p><p>${esc(label(state.quote.kind))} · ${state.quote.adults} adult(s) · ${state.quote.childrenCount} children<br>${state.quote.arrival} → ${state.quote.departure}</p><p>${esc(state.quote.unitNames.join(" · "))}</p><dl class="ops-price"><div><dt>Subtotal</dt><dd>${cash(state.quote.subtotalPaise)}</dd></div><div><dt>Best offer benefit</dt><dd>−${cash(state.quote.priceBenefitDiscountPaise)}</dd></div><div><dt>Credits (${state.quote.loyaltyCredits})</dt><dd>−${cash(state.quote.loyaltyDiscountPaise)}</dd></div><div><dt>Total payable</dt><dd><strong>${cash(state.quote.totalPaise)}</strong></dd></div></dl></section><label class="ops-check"><input name="consent" type="checkbox" required>I checked the guest contact, dates and price, and have their agreement to confirm and email this booking.</label>`
-    }<p role="status" data-message></p><div class="ops-actions">${state.step > 1 && !state.pending ? '<button type="button" class="text-button" data-back>← Back</button>' : ""}<button class="button" type="submit">${state.step === 1 ? "Continue to visit →" : state.step === 2 ? "Check availability & price →" : state.pending ? "Retry same confirmation" : "Confirm booking & email guest"}</button></div></form>`;
+          : `<section class="ops-card"><h3>${esc(state.quote.contact.name)}</h3><p>${esc(state.quote.contact.email)}<br>${esc(state.quote.contact.phone)}</p><p>${esc(visitKind(state.quote.kind))} · ${state.quote.adults} adult(s) · ${state.quote.childrenCount} children<br>${esc(shortDate(state.quote.arrival))} → ${esc(shortDate(state.quote.departure))}</p><p>${esc(state.quote.unitNames.join(" · "))}</p><dl class="ops-price"><div><dt>Subtotal</dt><dd>${cash(state.quote.subtotalPaise)}</dd></div><div><dt>Best offer benefit</dt><dd>−${cash(state.quote.priceBenefitDiscountPaise)}</dd></div><div><dt>Credits (${state.quote.loyaltyCredits})</dt><dd>−${cash(state.quote.loyaltyDiscountPaise)}</dd></div><div><dt>Total payable</dt><dd><strong>${cash(state.quote.totalPaise)}</strong></dd></div></dl></section><label class="ops-check"><input name="consent" type="checkbox" required>I checked the guest contact, dates and price, and have their agreement to confirm and email this booking.</label>`
+    }<p role="status" data-message></p><div class="ops-actions">${state.step > 1 && !state.pending ? '<button type="button" class="text-button" data-back>← Back</button>' : ""}<button class="button" type="submit">${state.step === 1 ? "Continue to visit →" : state.step === 2 ? "Check availability & price" : state.pending ? "Retry same confirmation" : "Confirm booking & email guest"}</button></div></form>`;
     dialog.querySelector(".ops-close").onclick = close;
     dialog.querySelector("[data-back]")?.addEventListener("click", () => {
+      captureDraft();
       state.step--;
       draw();
     });
     const form = dialog.querySelector("form");
+    function captureDraft(){
+      if(state.pending)return;
+      if(state.step===1)state.customer=Object.fromEntries(['name','email','phone'].map(k=>[k,form.elements[k].value]));
+      if(state.step===2){
+        state.kind=form.elements.kind.value;state.arrival=form.elements.arrival.value;
+        const end=form.elements.departure.value;
+        state.departure=state.kind==='event'&&end?new Date(Date.parse(end+'T12:00:00Z')+86400000).toISOString().slice(0,10):end;
+        state.adults=Number(form.elements.adults.value);state.ageValues=[...form.querySelectorAll('[name=childAge]')].map(x=>x.value);
+        state.unitIds=[...form.querySelectorAll('[name=units]:checked')].map(x=>x.value);state.promo=form.elements.promo.value;state.credits=Number(form.elements.credits.value);
+      }
+    }
+    form.addEventListener('input',captureDraft);form.addEventListener('change',captureDraft);
     if (state.step === 2) {
       const kind = form.elements.kind,
         arrival = form.elements.arrival,
@@ -467,7 +471,14 @@ export function openManualBooking({ call, units, onBooked, identity }) {
         form.querySelector("[data-credit-field]").hidden = day || event;
         if (day || event) form.elements.credits.value = "0";
       };
-      kind.onchange = updateKind;
+      form.querySelector('.visit-choices').onchange = () => {
+        kind.value=form.elements.visitKind.value;updateKind();
+      };
+      const today=new Date(Date.now()+19800000).toISOString().slice(0,10);
+      arrival.min=today;arrival.max=new Date(Date.now()+366*86400000).toISOString().slice(0,10);
+      const bounds=()=>{if(!arrival.value){end.removeAttribute('min');end.removeAttribute('max');return;}end.min=kind.value==='event'?arrival.value:new Date(Date.parse(arrival.value+'T12:00:00Z')+86400000).toISOString().slice(0,10);end.max=new Date(Date.parse(arrival.value+'T12:00:00Z')+(kind.value==='event'?30:31)*86400000).toISOString().slice(0,10);};
+      arrival.addEventListener('change',()=>{if(arrival.value)bounds();});
+      form.querySelector('.visit-choices').addEventListener('change',bounds);bounds();
       count.oninput = drawAges;
       drawAges();
       updateKind();

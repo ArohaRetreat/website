@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { visitDateLabel } from "../website/booking-visit-label.mjs";
 import { JSDOM } from "jsdom";
 import {
   initialState,
@@ -26,6 +27,7 @@ async function mount(s, role = "guest", hash = "") {
     ),
     w = dom.window;
   w.scrollTo = () => {};
+  w.testVisitDateLabel = visitDateLabel;
   w.HTMLDialogElement.prototype.showModal = function () {
     this.setAttribute("open", "");
   };
@@ -68,6 +70,9 @@ async function mount(s, role = "guest", hash = "") {
   const source = (
     await readFile(new URL("../website/booking.mjs", import.meta.url), "utf8")
   )
+    .replace(/import \{visitDateLabel\} from "\.\/booking-visit-label.mjs";/, "const visitDateLabel=window.testVisitDateLabel;")
+    .replace(/import \{[^\n]+\} from ['"]\.\/material-controls.mjs['"];/, 'const installMaterialControls=()=>{},confirmMaterial=async()=>window.confirm();')
+    .replace(/import \{hostShell,mountFrontDesk\} from '\.\/frontdesk.mjs';/,`const hostShell=({content})=>'<button data-host-tab="calendar">Calendar</button>'+content,mountFrontDesk=async()=>{};`)
     .replace(/import \{mountHostOperations,mountHostSummary,openManualBooking\} from '\.\/host-operations.mjs';/, 'const mountHostOperations=async()=>{},mountHostSummary=async()=>{},openManualBooking=()=>{};').replace(/import \{auth\} from '\.\/firebase-auth.mjs';/, 'const auth={currentUser:null};').replace(/import \{mountStayPanel\} from '\.\/stay-panel.mjs';/, "").replace(
       /import \{\s*journeyStep\s*\} from "\.\/booking-journey.mjs";/,
       "const journeyStep=()=>{};",

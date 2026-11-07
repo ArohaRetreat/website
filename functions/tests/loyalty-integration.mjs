@@ -1,3 +1,4 @@
+import {deskFields} from '../booking/desk.mjs';
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
@@ -129,11 +130,14 @@ test("manual identity, actual nightly rewards and concurrent redemption use real
     await assert.rejects(auth.getUserByEmail("walkin@example.test"), {
       code: "auth/user-not-found",
     });
+    // A customer's account label must not replace the reviewed manual booking name.
+    await db.collection('aroha_preprod_booking_profiles').doc(q.customerId).update({name:'Synthetic account label'});
     const key = randomUUID(),
       b = okay(
         await op(host, "createManualBooking", { quoteId: q.id }, { key }),
       );
     assert.equal(b.status, "confirmed");
+    assert.equal(b.guestName, selection.customer.name);
     assert.equal(b.source, "host_manual");
     assert.equal(b.owner, q.customerId);
     assert.deepEqual(
@@ -398,10 +402,26 @@ test("manual identity, actual nightly rewards and concurrent redemption use real
     );
     assert.equal(queue.items.length, 1);
     assert.equal(queue.items[0].id, b.id);
+    const desk=okay(await op(host,'searchHostReservations',{view:'all',reference:b.reference,kind:b.kind,limit:1}));
+    assert.equal(desk.items.length,1);assert.equal(desk.items[0].id,b.id);assert.ok(desk.items[0].guestName);assert.equal(desk.items[0].attention,'none');
+    assert.ok(Array.isArray(okay(await op(host,'searchHostReservations',{view:'all',status:'expired'})).items));
+    assert.ok(Array.isArray(okay(await op(host,'searchHostReservations',{view:'review',arrivalFrom:'2025-01-01',arrivalThrough:'2030-12-31'})).items));
+    assert.equal((await op(stranger,'searchHostReservations',{view:'review'})).httpStatus,403);
+    assert.equal((await op(host,'searchHostReservations',{view:'all',arrivalFrom:'2026-02-02',arrivalThrough:'2026-01-01'})).error.code,'INVALID_DATE_RANGE');
     const totals = okay(await op(host, "getHostBookingSummary"));
     assert.equal(totals.confirmed, 1);
     assert.equal(totals.cancelled, 1);
     assert.equal(totals.completed, 2);
+    const today=todayIST(),ending=[['stay','individual',addDays(today,-2),today],['day','day',today,addDays(today,1)],['event','event',addDays(today,-2),addDays(today,1)],['later','individual',today,addDays(today,1)]];
+    const deskFixtures=ending.map(([tag,kind,arrival,departure])=>({id:'desk-ending-'+tag,reference:'AR-DESK-'+tag,owner:host.localId,version:1,kind,status:'checked_in',arrival,departure,adults:1,children:0,units:[],total:350000,guestName:'Synthetic ending guest',...deskFields({kind,status:'checked_in'})}));
+    try {
+      const seed=db.batch();for(const row of deskFixtures)seed.set(db.collection('aroha_preprod_bookings').doc(row.id),row);await seed.commit();
+      const due=okay(await op(host,'searchHostReservations',{view:'departures'}));
+      for(const tag of ['stay','day','event'])assert.ok(due.items.some(b=>b.id==='desk-ending-'+tag));
+      assert.ok(!due.items.some(b=>b.id==='desk-ending-later'));
+      const dayDue=okay(await op(host,'searchHostReservations',{view:'departures',kind:'day'}));assert.ok(dayDue.items.some(b=>b.id==='desk-ending-day'));assert.ok(dayDue.items.every(b=>b.kind==='day'));
+    } finally {const clean=db.batch();for(const row of deskFixtures)clean.delete(db.collection('aroha_preprod_bookings').doc(row.id));await clean.commit();}
+
     assert.equal((await op(stranger, "getHostBookingSummary")).httpStatus, 403);
     assert.ok(
       okay(
@@ -613,6 +633,8 @@ test("manual identity, actual nightly rewards and concurrent redemption use real
             {
               id: "scale-booking-" + i,
               reference: "AR-SCALE-" + i,
+              ...deskFields({kind:"individual",status:"completed"}),
+              guestName:"Synthetic scale guest",
               owner: "scale-customer-" + (i % 10000),
               version: 1,
               kind: "individual",
@@ -669,6 +691,11 @@ test("manual identity, actual nightly rewards and concurrent redemption use real
         ).error.code,
         "INVALID_CURSOR",
       );
+      const ds1=okay(await op(host,'searchHostReservations',{view:'all',kind:'individual',status:'completed',arrivalFrom:'2025-01-01',arrivalThrough:'2025-01-01',limit:25}));
+      assert.equal(ds1.items.length,25);assert.ok(ds1.nextCursor);
+      const ds2=okay(await op(host,'searchHostReservations',{view:'all',kind:'individual',status:'completed',arrivalFrom:'2025-01-01',arrivalThrough:'2025-01-01',limit:25,cursor:ds1.nextCursor}));
+      assert.equal(ds2.items.length,25);assert.ok(!ds2.items.some(b=>ds1.items.some(a=>a.id===b.id)));
+      assert.equal((await op(host,'searchHostReservations',{view:'all',kind:'private',status:'completed',arrivalFrom:'2025-01-01',arrivalThrough:'2025-01-01',limit:25,cursor:ds1.nextCursor})).error.code,'INVALID_CURSOR');
       const count = okay(await op(host, "getHostBookingSummary"));
       assert.equal(count.completed, 100002);
       console.log(

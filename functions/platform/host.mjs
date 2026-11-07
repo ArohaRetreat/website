@@ -1,3 +1,6 @@
+import {deskFields} from '../booking/desk.mjs';
+import { todayIST, addDays } from "../booking/domain.mjs";
+import { digest } from "./core.mjs";
 import { col, fail, queryPage } from "./core.mjs";
 import {
   customerProfiles,
@@ -6,6 +9,35 @@ import {
 import { projectReservation } from "../external/read.mjs";
 export async function hostHandler({ tx, db, ctx, input }) {
   const bookings = col(db, "bookings");
+  if (ctx.operation === "searchHostReservations") {
+    if (input.arrivalFrom && input.arrivalThrough && input.arrivalFrom > input.arrivalThrough) fail('INVALID_DATE_RANGE');
+    const {cursor,limit,...filters}=input;
+    const view=input.view, today=todayIST(ctx.now);
+    if(view!=='all' && input.status) fail('INVALID_FILTER_COMBINATION');
+    if(view!=='review' && input.attention) fail('INVALID_FILTER_COMBINATION');
+    let q=bookings;
+    if(input.reference) q=q.where('reference','==',input.reference.trim().toUpperCase());
+    if(input.kind) q=q.where('deskKind','==',input.kind);
+    if(view==='review') q=q.where('deskAttention','in',input.attention?[input.attention]:['new','change','offer']).where('deskDeadline','>',ctx.now);
+    if(view==='arrivals') q=q.where('status','==','confirmed').where('arrival','==',today);
+    if(view==='in_house') q=q.where('status','==','checked_in');
+    if(view==='departures') q=q.where('status','==','checked_in');
+    if(view==='all' && input.status && input.status!=='expired') q=q.where('status','==',input.status);
+    if(view==='all' && ['pending_approval','expired'].includes(input.status))q=q.where('arrival','>=',input.arrivalFrom||'0001-01-01');
+    if(view==='all' && input.status==='pending_approval')q=q.where('expiresAt','>',ctx.now);
+    if(input.arrivalFrom) q=q.where('arrival','>=',input.arrivalFrom);
+    if(input.arrivalThrough) q=q.where('arrival','<=',input.arrivalThrough);
+    const orderField=view==='review'?'deskDeadline':'arrival';
+    let queries=view==='all'&&input.status==='expired'?[q.where('status','==','expired'),q.where('status','==','pending_approval').where('expiresAt','<=',ctx.now)]:q;
+    if(view==='departures') {
+      queries=[];
+      if(!input.kind||['private','individual'].includes(input.kind))queries.push((input.kind?q:q.where('deskKind','in',['private','individual'])).where('departure','==',today));
+      if(!input.kind||input.kind==='day')queries.push((input.kind?q:q.where('deskKind','==','day')).where('arrival','==',today));
+      if(!input.kind||input.kind==='event')queries.push((input.kind?q:q.where('deskKind','==','event')).where('departure','==',addDays(today,1)));
+    }
+    const result=await queryPage(tx,db,ctx,'desk:'+digest({...filters,today:view==='arrivals'||view==='departures'?today:null}),input,queries,b=>({...projectReservation(b),guestName:String(b.contact?.name||b.guestName||'Guest').slice(0,120),attention:deskFields({...b,status:projectReservation(b).status}).deskAttention,responseDeadline:b.deskDeadline===Number.MAX_SAFE_INTEGER?null:b.deskDeadline}),{orderField,secondaryFields:view==='review'&&(input.arrivalFrom||input.arrivalThrough)?['arrival']:view==='all'&&['pending_approval','expired'].includes(input.status)?['expiresAt']:[]});
+    return {...result,asOf:ctx.now};
+  }
   if (ctx.operation === "getHostBookingSummary") {
     const statuses = [
       "pending_approval",

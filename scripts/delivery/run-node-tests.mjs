@@ -16,6 +16,7 @@ const r = spawnSync(
   process.execPath,
   [
     "--test",
+    ...(suite === "api-external" ? ["--test-concurrency=1"] : []),
     "--test-reporter=spec",
     "--test-reporter-destination=stdout",
     "--test-reporter=./scripts/delivery/node-test-reporter.mjs",

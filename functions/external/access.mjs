@@ -9,7 +9,7 @@ import {
 import {can} from "../domain.mjs";
 import { studioAccess } from "../access.mjs";
 import { BookingError } from "../booking/domain.mjs";
-export const CONTRACT_VERSION = "1.3.0";
+export const CONTRACT_VERSION = "1.4.0";
 export const READ_SCOPES = Object.freeze([
   "runtime:read",
   "availability:read",

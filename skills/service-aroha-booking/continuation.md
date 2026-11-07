@@ -1,3 +1,7 @@
+## Material 3 preprod review — 7 November 2026
+
+Issue111: website0.30/API0.15. Read [interface contract](../../docs/material-studio-v1.md). Shared Material controls/roles and responsive booking/Studio surfaces; visible visit choices; legacy booking options grouped. New email-v5-status includes cancellation Hrudhi; oldv4 renderer retained. Preprod new-mail Reply-To explicitly retreataroha@gmail.com; existing immutable jobs preserved. No domain/API contract/index/data migration. Deploy API+email dispatch/retry and exact-source Hosting only after checks; production held. Source preparation is not deployment or owner acceptance. Fresh private receipts: local/material-release/.
+
 ## Prepared manual booking and loyalty — 6 November 2026
 
 Issue114/111: website0.27.0/API0.13.0, external contract1.3.0/121operations. Read [contract](../../docs/api/manual-booking-loyalty-v1.3.md). New customer alias/linking, nightly wallet, search-first host modules and guest redemption share transactional policy. Source prepared; verify CI and actual environment release before claiming deployment. Preprod first, independent selected production promotion; frozen email-v3/PDF-v4, CMS/Natura and unrelated bookings preserved. New credit invoices use pdf-v4-loyalty; manual confirmations email-v4-manual. Never replay historical emails or award bulk historical credits. Matching derived-search migration is CAS guarded and dry-run first. Real guest changes belong only in private delivery receipts.
@@ -67,3 +71,7 @@ API0.12.0/contract1.2.0 and website0.26.0 implement the authorized full-CRUD exp
 ## Host Studio0.28 — issue111
 
 The missing navigation/decision redesign is implemented against existing API0.13/contract1.3: Needs review landing queue, grouped daily/guest/setup navigation, header Add booking, aligned responsive rows, replacing Next/Previous pages, one reviewed acceptance/inline decline and separate utilities/history/allocation. Read docs/host-studio-ux-0.28.md for actual scope and remaining boundaries. No backend/data/CMS/template changes. Production guest concierge is already live; older preprod-only entries above are historical. Verify actual source/Hosting receipts separately; this source note alone is not deployment proof.
+
+## Front desk v2 preprod candidate — issue111
+
+Website0.29/API0.14/contract1.4 implements the approved compact guest-first workspace. Read docs/host-studio-frontdesk-v2.md. Sources website/frontdesk.{mjs,css}, platform/host.mjs, booking/desk.mjs. The derived fields/indexes need preprod readiness/backfill before Hosting. Existing booking actions, manual quote/confirmation and policy remain authoritative. Production is explicitly held for owner review; do not infer approval from green tests or preprod deployment. Verify actual release receipts separately.

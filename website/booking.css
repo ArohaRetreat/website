@@ -1,10 +1,6 @@
+@import url("/assets/frontdesk.css");
 @import url("/assets/host-operations.css");
 @import url("/assets/stay-panel.css");
-@font-face {
-  font-family: Lora;
-  src: url("/assets/fonts/Lora.woff2") format("woff2");
-  font-display: swap;
-}
 @font-face {
   font-family: Source;
   src: url("/assets/fonts/Source.woff2") format("woff2");
@@ -76,7 +72,7 @@ p {
 h1,
 h2,
 h3 {
-  font-family: Lora, Georgia, serif;
+  font-family: 'Google Sans', Arial, sans-serif;
   font-weight: 450;
   letter-spacing: -0.035em;
 }
@@ -196,7 +192,7 @@ textarea:focus-visible,
   background: #dce7d4;
   display: inline-grid;
   place-items: center;
-  font-family: Lora;
+  font-family: 'Google Sans';
   font-size: 1.1rem;
 }
 .avatar.small {
@@ -272,7 +268,7 @@ textarea:focus-visible,
   padding: 8px 14px;
   border-radius: 4px;
   color: #33432c;
-  font-family: Lora;
+  font-family: 'Google Sans';
   font-style: italic;
   font-size: 0.8rem;
 }
@@ -356,7 +352,7 @@ input[type="checkbox"] {
   margin: 10px 0 0;
 }
 .calendar-heading strong {
-  font-family: Lora;
+  font-family: 'Google Sans';
   font-size: 1rem;
   font-weight: 500;
 }
@@ -522,7 +518,7 @@ html[data-atmosphere="sunset"] .date-calendar .date-cell.endpoint {
   padding-top: 22px;
 }
 .note-item > span {
-  font-family: Lora;
+  font-family: 'Google Sans';
   color: #8c9b7b;
   font-size: 0.8rem;
   margin-top: 4px;
@@ -912,7 +908,7 @@ dd {
 }
 .visit-date strong {
   display: block;
-  font-family: Lora;
+  font-family: 'Google Sans';
   font-weight: 450;
   font-size: 2rem;
 }
@@ -1081,7 +1077,7 @@ dialog form > .two-fields {
   margin: 22px 0;
 }
 .detail-dates > strong {
-  font-family: Lora;
+  font-family: 'Google Sans';
   font-weight: 500;
   font-size: 1.2rem;
 }
@@ -1166,7 +1162,7 @@ dialog form > .two-fields {
 .loading {
   padding: 20vh 30px;
   text-align: center;
-  font-family: Lora;
+  font-family: 'Google Sans';
   font-size: 1.6rem;
 }
 .host-welcome {
@@ -1284,7 +1280,7 @@ dialog form > .two-fields {
   height: 34px;
   border-radius: 50%;
   background: #dce6d0;
-  font-family: Lora;
+  font-family: 'Google Sans';
 }
 .studio-main {
   padding: 42px 40px 70px;
@@ -1318,7 +1314,7 @@ dialog form > .two-fields {
 }
 .stat-grid strong {
   display: block;
-  font-family: Lora;
+  font-family: 'Google Sans';
   font-weight: 400;
   font-size: 2.6rem;
   margin: 15px 0 8px;
@@ -1593,7 +1589,7 @@ dialog form > .two-fields {
   margin-bottom: 20px;
 }
 .offer-amount {
-  font-family: Lora;
+  font-family: 'Google Sans';
   font-size: 2.5rem;
   font-weight: 400;
   display: block;
