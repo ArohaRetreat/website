@@ -173,6 +173,15 @@
         "project-deployment",
         "project-observability"
       ]
+    },
+    {
+      "id": "firebase-finops",
+      "kind": "workflow",
+      "path": ".agents/skills/firebase-finops/SKILL.md",
+      "description": "Measure and control Firebase cost, transfer, schedules, and release overhead.",
+      "dependsOn": [
+        "app-launchpad"
+      ]
     }
   ],
   "services": [

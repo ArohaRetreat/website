@@ -203,9 +203,9 @@ export function createGateWelcome(
           if (entries.some((e) => e.isIntersecting)) load();
           schedule();
         },
-        { rootMargin: "300px" },
+        { rootMargin: "0px" },
       );
-      observer.observe(journey);
+      observer.observe(section);
     } else load();
     schedule();
   }

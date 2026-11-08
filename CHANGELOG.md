@@ -1,3 +1,9 @@
+## Website 0.30.2 — pre-production Firebase cost controls
+
+- Serve public retreat media through immutable Firebase Storage URLs and preserve existing media paths with redirects. Enforce a 3 MB pre-production Hosting shell.
+- Verify the deployed shell, media metadata and byte ranges without downloading every film. Combine pre-production email retries and telemetry delivery on one five-minute Firebase schedule. Immediate booking email dispatch remains event driven.
+- Add the Firebase FinOps skill and a production promotion plan.
+
 ## Website 0.30.1 — preserve popup privacy boundaries
 
 - Mask calendar, selection, time and confirmation popups explicitly, including when native top-layer placement puts them outside the masked booking container. API0.15 unchanged; preprod review only.

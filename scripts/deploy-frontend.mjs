@@ -6,6 +6,7 @@ import {verifyHostingComposition} from "./hosting-composition.mjs";
 import {verifyDesignPreserved} from "./delivery/preserve-design.mjs";
 import {hostingRelease,deliveryToken} from "./delivery/credentials.mjs";
 import {reportDeployment} from "./delivery/deployment.mjs";
+import {assertShellBudget,readMediaManifest,verifyMediaMetadata,writePreprodHostingConfig} from "./preprod-media.mjs";
 import {verifyLive} from "./delivery/verify-live.mjs";
 const target=deliveryTarget(process.env.GITHUB_REF);
 if(process.env.GITHUB_REPOSITORY!==repository || !["push","workflow_dispatch"].includes(process.env.GITHUB_EVENT_NAME))throw Error("TRUSTED_BRANCH_EVENT_REQUIRED");
@@ -13,11 +14,18 @@ const root=process.cwd()+"/",cli=process.env.FIREBASE_CLI_PATH;
 if(!cli)throw Error("FIREBASE_CLI_REQUIRED");
 const git=(...args)=>{const r=spawnSync("git",args,{encoding:"utf8"});if(r.status)throw Error("GIT_CHECK_FAILED");return r.stdout.trim();};
 if(git("status","--porcelain") || git("rev-parse","HEAD")!==process.env.GITHUB_SHA)throw Error("CLEAN_EXACT_SOURCE_REQUIRED");
-const configFile=target.branch==="main"?"firebase.json":"firebase.preprod.json";
+let configFile=target.branch==="main"?"firebase.json":"firebase.preprod.json";
 const config=JSON.parse(await readFile(configFile));
 const website=JSON.parse(await readFile(target.directory+"/website-release.json"));
 assertArtifact(target,website,process.env.GITHUB_SHA,config);
 if(target.branch==="main"){await verifyHostingComposition(root,website.revision);await verifyDesignPreserved(root);}
+if(target.branch==="preprod"){
+  if(website.mediaStorage!=="firebase")throw Error("PREPROD_MEDIA_OFFLOAD_REQUIRED");
+  await assertShellBudget(root+target.directory);
+  const assets=await readMediaManifest(root);
+  await verifyMediaMetadata(assets);
+  configFile=await writePreprodHostingConfig(root,assets);
+}
 const request=async path=>{const r=await fetch(target.origin+path,{signal:AbortSignal.timeout(15000)});if(!r.ok)throw Error("API_COMPATIBILITY_CHECK_FAILED");return r.json();};
 const runtime=await request("/api/v1/runtime-config"),booking=await request("/api/v1/booking/public");
 if(runtime.environment!==target.environment || booking.environment!==target.environment || !compatibleBookingApi(website.version,booking.apiVersion) || !Number.isSafeInteger(runtime.configVersion))throw Error("UPGRADE_MATCHING_BACKEND_BEFORE_FRONTEND");

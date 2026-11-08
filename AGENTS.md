@@ -6,6 +6,7 @@
 - Use [issue-linked PR delivery](.agents/skills/app-launchpad/references/github-release.md).
 - Apply the [secrets and trust policy](.agents/skills/app-launchpad/references/safety.md).
 - Maintain [service skills and continuation](.agents/skills/app-launchpad/references/services.md).
+- Apply [Firebase FinOps](.agents/skills/firebase-finops/SKILL.md) when a change adds usage, stored assets, scheduled work or a cloud service.
 - Run applicable [tests](.agents/skills/app-launchpad/references/testing.md).
 - Report only [source-owned evidence](.agents/skills/app-launchpad/references/evidence.md).
 - Apply [illustration selection](.agents/skills/app-launchpad/references/illustrations.md) and [template versioning](docs/versioning.md).

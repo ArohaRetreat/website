@@ -5,6 +5,7 @@ import { productionBaseline } from "./delivery/production-baseline.mjs";
 import { randomUUID } from "node:crypto";
 import { hostingRelease, deliveryToken } from "./delivery/credentials.mjs";
 import { reportDeployment } from "./delivery/deployment.mjs";
+import { assertShellBudget, readMediaManifest, verifyMediaMetadata, writePreprodHostingConfig } from "./preprod-media.mjs";
 import { verifyLive } from "./delivery/verify-live.mjs";
 const root = process.cwd() + "/",
   cli = process.env.FIREBASE_CLI_PATH;
@@ -54,6 +55,11 @@ const readiness = spawnSync(
   { stdio: "inherit" },
 );
 if (readiness.status !== 0) throw Error("PREPROD_READINESS_REQUIRED");
+if (website.mediaStorage !== "firebase") throw Error("PREPROD_MEDIA_OFFLOAD_REQUIRED");
+await assertShellBudget("dist-preprod");
+const media = await readMediaManifest(root);
+await verifyMediaMetadata(media);
+const hostingConfig = await writePreprodHostingConfig(root, media);
 const token = await deliveryToken(),
   productionBefore = await productionBaseline();
 const record = {
@@ -74,7 +80,7 @@ const result = spawnSync(
     cli,
     "deploy",
     "--config",
-    "firebase.preprod.json",
+    hostingConfig,
     "--project",
     "aroha-retreat",
     "--only",
