@@ -23,7 +23,7 @@ export async function productionBaseline() {
       auth: true,
     });
   const revisions = [];
-  for (const name of ["arohaApi", "arohaBookingEvents"]) {
+  for (const name of ["arohaApi", "arohaBookingEmailDispatch", "arohaBookingEmailRetry"]) {
     const f = (
       await functions.get(
         "/projects/aroha-retreat/locations/asia-south2/functions/" + name,
