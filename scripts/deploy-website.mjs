@@ -2,6 +2,8 @@ import { readFile } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { deployObserved, replayDeployment } from "./delivery/deployment.mjs";
+import { assertShellBudget, readMediaManifest, verifyMediaMetadata, writeMediaHostingConfig } from "./hosting-media.mjs";
+import { verifyDesignPreserved } from "./delivery/preserve-design.mjs";
 import { verifyHostingComposition } from "./hosting-composition.mjs";
 const root = fileURLToPath(new URL("../", import.meta.url));
 const replayIndex = process.argv.indexOf("--replay-telemetry");
@@ -39,6 +41,12 @@ const args = production
       "7d",
       "--no-authorized-domains",
     ];
+const website = JSON.parse(await readFile(root + "dist/website-release.json", "utf8"));
+if (website.mediaStorage !== "firebase") throw Error("MEDIA_OFFLOAD_REQUIRED");
+await assertShellBudget(root + "dist", { includeDesign: true });
+const assets = await readMediaManifest(root);
+await verifyMediaMetadata(assets);
+args.push("--config", await writeMediaHostingConfig(root, assets, "production"));
 const cli = process.env.FIREBASE_CLI_PATH;
 if (production) {
   const runtime = await fetch(
@@ -56,6 +64,7 @@ if (production) {
     throw Error(
       "FIREBASE_CLI_PATH is required for observed production deployment.",
     );
+  await verifyDesignPreserved(root);
   process.exitCode = await deployObserved(root, cli, args);
 } else {
   const result = spawnSync(
