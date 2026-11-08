@@ -224,12 +224,14 @@ export async function customerOwnerContext(tx, db, owner, existing) {
   const uid = p.linkedUid || owner,
     link = (await tx.get(links(db).doc(uid))).data();
   const profiles = new Map([[owner, p]]);
+  let customerId = owner;
   if (link?.active) {
     const linked =
       link.customerId === owner
         ? p
         : (await tx.get(customerProfiles(db).doc(link.customerId))).data();
     if (linked?.linkedUid === uid) {
+      customerId = link.customerId;
       profiles.set(link.customerId, linked);
       if (uid !== owner) {
         const account = (await tx.get(customerProfiles(db).doc(uid))).data();
@@ -238,6 +240,7 @@ export async function customerOwnerContext(tx, db, owner, existing) {
     }
   }
   return {
+    customerId,
     ownerIds: [...profiles.keys()],
     profiles,
     completedStays: [...profiles.values()].reduce(

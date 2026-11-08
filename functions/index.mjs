@@ -1,3 +1,4 @@
+import { guestIdentity, drainGuestIdentity, isIdentityAction, MAX_ID_REQUEST } from "./booking/guest-identity.mjs";
 import {invoicePdf} from './email/documents.mjs';
 import {legacyPlatform} from './platform/legacy.mjs';
 import {platformOperation} from './platform/service.mjs';
@@ -247,7 +248,9 @@ export const arohaApi = onRequest(
           return {};
         }
         res.set('Access-Control-Expose-Headers','ETag, X-Request-Id');
-        if (req.rawBody?.length > 220000)
+        const identityAction = req.path.match(/^\/api\/v1\/guest-identity\/([a-z]+)\/?$/)?.[1];
+        const identityUpload = identityAction === "upload" && req.method === "POST";
+        if (req.rawBody?.length > (identityUpload ? MAX_ID_REQUEST : 220000))
           throw new DomainError("PAYLOAD_TOO_LARGE", 413);
         captureAllowed = true;
         if(req.path.startsWith('/api/external/v1/')){operation='external.request';return await externalApi(db,getAuth(),req,res,requestId);}
@@ -354,6 +357,15 @@ export const arohaApi = onRequest(
         if(path==='/integration-tokens'||path.startsWith('/integration-tokens/')){operation='integration.tokens';await throttleBooking(db,token.uid);if(req.method==='POST'&&!req.is('application/json'))throw new DomainError('JSON_REQUIRED',415);return await tokenManagement(db,token,req.method,path.split('/')[2],b,req.get('Idempotency-Key'));}
         if (req.method === "POST" && !req.is("application/json"))
           throw new DomainError("JSON_REQUIRED", 415);
+        if (identityAction) {
+          if (req.method !== "POST" || !isIdentityAction(identityAction))
+            throw new DomainError("NOT_FOUND", 404);
+          operation = "guest-identity." + identityAction;
+          if (!identityUpload && req.rawBody?.length > 2048)
+            throw new DomainError("PAYLOAD_TOO_LARGE", 413);
+          await throttleBooking(db, token.uid, { lane: "identity", limit: 12 });
+          return await guestIdentity(db, token, identityAction, b, requestId);
+        }
         if(path==='/platform'&&req.method==='POST'){
           operation='platform';
           await throttleBooking(db,token.uid);
@@ -658,5 +670,9 @@ const retryBookingMail = () =>
 
 export const arohaBookingEmailRetry = onSchedule(
   { ...emailWorkerOptions, schedule: "every 5 minutes" },
-  () => runBookingMaintenance({ drainMail: retryBookingMail, drainTelemetry: exportBookingEvents }),
+  () => runBookingMaintenance({
+    drainMail: retryBookingMail,
+    drainTelemetry: exportBookingEvents,
+    drainIdentity: () => drainGuestIdentity(db),
+  }),
 );

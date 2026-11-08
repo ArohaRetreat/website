@@ -1,6 +1,6 @@
 {
   "name": "aroha-retreat-website",
-  "version": "0.30.3",
+  "version": "0.31.1",
   "private": true,
   "type": "module",
   "scripts": {

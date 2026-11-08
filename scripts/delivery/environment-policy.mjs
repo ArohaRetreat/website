@@ -40,9 +40,10 @@ export function compatibleBookingApi(websiteVersion, apiVersion) {
   const api=/^0\.(\d+)\.(\d+)$/.exec(apiVersion || "");
   const requiredPatch = Number(website[1])>=24 ? 0 : (Number(website[1])===23 && Number(website[2])>=2) ? 3
     : Number(website[1])===23 && Number(website[2])>=1 ? 2 : Number(website[1])>=23 ? 1 : 0;
-  if(Number(website[1])===30)return !!api&&Number(api[1])===15;
+  if(Number(website[1])===31)return !!api&&Number(api[1])===16;
+  if(Number(website[1])===30)return !!api&&[15,16].includes(Number(api[1]));
   if(Number(website[1])===29)return !!api&&[14,15].includes(Number(api[1]));
-  if(Number(website[1])>30)return false;
+  if(Number(website[1])>31)return false;
   if([27,28].includes(Number(website[1])))return !!api&&Number(api[1])===13;
   if(Number(website[1])===26)return !!api&&[12,13].includes(Number(api[1]));
   // External API 0.10/0.11/0.12 retain the existing booking wire contract.
