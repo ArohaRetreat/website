@@ -25,3 +25,6 @@ gha-creds-*.json
 .production-api.firebase.json
 
 qa/local/
+
+.preprod-media.firebase.json
+.production-media.firebase.json

@@ -97,7 +97,6 @@ try {
     `if(process.env.AROHA_ENVIRONMENT!==${JSON.stringify(environment)}||process.env.MAIL_ENABLED!=='true')throw Error('RUNTIME_ENVIRONMENT_REQUIRED');\nconst application=await import('./application.mjs');\n` +
       [
         "arohaApi",
-        "arohaBookingEvents",
         "arohaBookingEmailDispatch",
         "arohaBookingEmailRetry",
       ]

@@ -1,3 +1,4 @@
+import {readMediaManifest, verifyLiveMedia} from "../hosting-media.mjs";
 import {compatibleBookingApi} from "./environment-policy.mjs";
 import { ADDITIONAL_MEDIA } from "../content/farm-media-refresh.mjs";
 import { readFile, readdir } from "node:fs/promises";
@@ -71,10 +72,13 @@ export async function verifyLive(
   );
   for (const name of await readdir(root + directory + "/assets/chunks"))
     paths.push("/assets/chunks/" + name);
+  const offloaded = expected.mediaStorage === "firebase";
+  let checkedBytes = 0;
   const checks = [];
-  for (const path of paths.filter(
-    (p) => includeDesign || !p.startsWith("/design/"),
-  )) {
+  const livePaths = paths.filter(
+    (p) => (includeDesign || !p.startsWith("/design/")) && (!offloaded || !p.startsWith("/assets/retreat/")),
+  );
+  async function verifyFile(path) {
     const response = await fetchImpl(origin + path, {
       headers: { "Cache-Control": "no-cache" },
       signal: AbortSignal.timeout(15000),
@@ -85,7 +89,12 @@ export async function verifyLive(
         root + directory + (path.endsWith("/") ? path + "index.html" : path),
       );
     if (sha(actual) !== sha(local)) throw Error("LIVE_HASH_MISMATCH");
-    checks.push({ path, status: response.status, sha256: sha(actual) });
+    checkedBytes += actual.length;
+    return { path, status: response.status, sha256: sha(actual) };
+  }
+  const batch = offloaded ? 8 : 1;
+  for (let i = 0; i < livePaths.length; i += batch) {
+    checks.push(...await Promise.all(livePaths.slice(i, i + batch).map(verifyFile)));
   }
   const release = JSON.parse(
     await readFile(root + directory + "/website-release.json", "utf8"),
@@ -129,11 +138,16 @@ export async function verifyLive(
     )
       throw Error("LIVE_PREPROD_RUNTIME_MISMATCH");
   }
+  const mediaRangeChecks = offloaded
+    ? await verifyLiveMedia(origin, await readMediaManifest(root), fetchImpl)
+    : 0;
   return {
     status: "verified",
     verifiedAt: new Date().toISOString(),
     release,
     hashMatchedFiles: checks.length,
+    checkedBytes,
+    mediaRangeChecks,
     checks,
     protectedDraftStatus: denied.status,
   };

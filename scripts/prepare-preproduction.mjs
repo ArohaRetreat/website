@@ -71,7 +71,7 @@ await cp(resolve(root, "functions"), output, {
 await cp(resolve(output, "index.mjs"), resolve(output, "application.mjs"));
 await writeFile(
   resolve(output, "index.mjs"),
-  `if(process.env.AROHA_ENVIRONMENT!=='pre-prod')throw Error('PREPROD_ENVIRONMENT_REQUIRED');\nconst application=await import('./application.mjs');\nexport const arohaApiPreprod=application.arohaApi;\nexport const arohaBookingEventsPreprod=application.arohaBookingEvents;\nexport const arohaBookingEmailDispatchPreprod=application.arohaBookingEmailDispatch;\nexport const arohaBookingEmailRetryPreprod=application.arohaBookingEmailRetry;\n`,
+  `if(process.env.AROHA_ENVIRONMENT!=='pre-prod')throw Error('PREPROD_ENVIRONMENT_REQUIRED');\nconst application=await import('./application.mjs');\nexport const arohaApiPreprod=application.arohaApi;\nexport const arohaBookingEmailDispatchPreprod=application.arohaBookingEmailDispatch;\nexport const arohaBookingEmailRetryPreprod=application.arohaBookingEmailRetry;\n`,
 );
 await writeFile(
   resolve(output, ".env.aroha-retreat"),

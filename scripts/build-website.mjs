@@ -1,5 +1,7 @@
+import { assertRetreatInventory, assertShellBudget, readMediaManifest, rewriteStaticMedia } from "./hosting-media.mjs";
 import {environmentProfile} from "../functions/environment-profile.mjs";
 const deploymentEnvironment=environmentProfile(process.env.AROHA_ENVIRONMENT||"production");
+const remoteMedia = process.env.AROHA_EMULATORS !== "1";
 import { welcomeMarkup, natureContent } from "../website/nature-render.mjs";
 import { tourContent } from "../website/field-render.mjs";
 import { build } from "esbuild";
@@ -7,6 +9,7 @@ import { PUBLIC_ORIGIN } from "../functions/origins.mjs";
 import { renderMap, mapDefaults } from "../website/map-render.mjs";
 import { verifyBundledFilms } from "./media-integrity.mjs";
 import { verifyNaturaAssets } from "./natura-assets.mjs";
+import { fileURLToPath } from "node:url";
 import { mkdir, cp, readFile, writeFile, copyFile, rm } from "node:fs/promises";
 import { renderSite, esc } from "../website/render.mjs";
 import {
@@ -35,7 +38,12 @@ validateTour(
 validateNature(natureContent(tourContent(content)));
 validateStoryMap(mapDefaults, tourContent(content));
 await mkdir(new URL("map/", dist), { recursive: true });
-await cp(new URL("website/assets/", root), assets, { recursive: true });
+const mediaManifest = remoteMedia ? await readMediaManifest(fileURLToPath(root)) : null;
+if (mediaManifest) await assertRetreatInventory(fileURLToPath(root), mediaManifest);
+await cp(new URL("website/assets/", root), assets, {
+  recursive: true,
+  filter: source => !remoteMedia || source !== fileURLToPath(new URL("website/assets/retreat", root)),
+});
 await mkdir(new URL("brand/", assets), { recursive: true });
 await mkdir(new URL("fonts/", assets), { recursive: true });
 for (const [source, target] of [
@@ -236,4 +244,9 @@ if(deploymentEnvironment.preprod){
   }
   await writeFile(new URL('robots.txt',dist),'User-agent: *\nDisallow: /\n');
 }
-const releaseFile=new URL('website-release.json',dist),release=JSON.parse(await readFile(releaseFile,'utf8'));release.environment=deploymentEnvironment.name;await writeFile(releaseFile,JSON.stringify(release,null,2));
+const releaseFile=new URL('website-release.json',dist),release=JSON.parse(await readFile(releaseFile,'utf8'));release.environment=deploymentEnvironment.name;if(mediaManifest)release.mediaStorage="firebase";await writeFile(releaseFile,JSON.stringify(release,null,2));
+
+if (mediaManifest) {
+  await rewriteStaticMedia(fileURLToPath(dist), mediaManifest);
+  console.log(deploymentEnvironment.name + " Hosting shell: " + await assertShellBudget(fileURLToPath(dist)) + " bytes.");
+}
