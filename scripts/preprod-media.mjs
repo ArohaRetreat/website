@@ -38,7 +38,7 @@ export async function readMediaManifest(root) {
 
 export async function assertRetreatInventory(root, assets) {
   const names = await readdir(resolve(root, "website/assets/retreat"));
-  const expected = names.filter(name => !excludedRetreatMedia.has(name)).sort();
+  const expected = names.filter(name => !name.startsWith(".") && !excludedRetreatMedia.has(name)).sort();
   if (JSON.stringify(expected) !== JSON.stringify(Object.keys(assets).sort()))
     throw Error("PREPROD_MEDIA_MANIFEST_MUST_COVER_RETREAT_ASSETS");
 }
@@ -49,7 +49,7 @@ export async function rewriteStaticMedia(directory, assets) {
     if (!entry.isFile() || !/\.(?:html|css)$/.test(entry.name)) continue;
     const path = resolve(entry.parentPath, entry.name);
     const original = await readFile(path, "utf8");
-    const updated = original.replace(/(?:https:\/\/aroharetreat\.com)?\/assets\/retreat\/([\w.-]+\.(?:webp|mp4))(?![\w.-])/g,
+    const updated = original.replace(/(?<![\w:/])(?:https:\/\/aroharetreat\.com)?\/assets\/retreat\/([\w.-]+\.(?:webp|mp4))(?![\w.-])/g,
       (match, file) => {
         if (!assets[file]) throw Error("STATIC_MEDIA_NOT_IN_MANIFEST:" + file);
         return mediaUrl(file, assets[file].sha256);

@@ -8,7 +8,19 @@ const run = promisify(execFile);
 const source = "website/assets/retreat";
 const stage = "local/finops/media";
 await mkdir(stage, { recursive: true });
-const names = (await readdir(source)).filter(name => !excludedRetreatMedia.has(name)).sort();
+const names = (await readdir(source)).filter(name => !name.startsWith(".") && !excludedRetreatMedia.has(name)).sort();
+// The landing page loads these images before scrolling. Keep separate hero
+// widths for phone and desktop and retain higher-resolution originals in source.
+const landingWidths = {
+  "DSC_3878.webp": 960,
+  "DSC_3890.webp": 960,
+  "DSC_3897.webp": 960,
+  "DSC_3780.webp": 960,
+  "hero-mobile.webp": 900,
+  "hero-desktop.webp": 1600,
+  "nature-frond-v1.webp": 960,
+  "nature-seedling-v1.webp": 1120,
+};
 const assets = {};
 let inputBytes = 0, outputBytes = 0;
 
@@ -26,11 +38,13 @@ async function prepare(name) {
       "-c:a", "aac", "-b:a", "96k", "-movflags", "+faststart", output]);
     result = await readFile(output);
   } else if (name.endsWith(".webp")) {
-    if (original.length > 360_000 && !/sheet|sprite/i.test(name)) {
+    const width = landingWidths[name];
+    if (width || (original.length > 360_000 && !/sheet|sprite/i.test(name))) {
       const temp = output + ".png";
       try {
         await run("dwebp", [input, "-o", temp]);
-        await run("cwebp", ["-quiet", "-q", "80", "-m", "5", "-metadata", "none", temp, "-o", output]);
+        await run("cwebp", ["-quiet", "-q", width ? "75" : "80", "-m", "5", "-metadata", "none",
+          ...(width ? ["-resize", String(width), "0"] : []), temp, "-o", output]);
         result = await readFile(output);
       } finally {
         await rm(temp, { force: true });

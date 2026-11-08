@@ -9,6 +9,7 @@ import { PUBLIC_ORIGIN } from "../functions/origins.mjs";
 import { renderMap, mapDefaults } from "../website/map-render.mjs";
 import { verifyBundledFilms } from "./media-integrity.mjs";
 import { verifyNaturaAssets } from "./natura-assets.mjs";
+import { fileURLToPath } from "node:url";
 import { mkdir, cp, readFile, writeFile, copyFile, rm } from "node:fs/promises";
 import { renderSite, esc } from "../website/render.mjs";
 import {
@@ -37,11 +38,11 @@ validateTour(
 validateNature(natureContent(tourContent(content)));
 validateStoryMap(mapDefaults, tourContent(content));
 await mkdir(new URL("map/", dist), { recursive: true });
-const mediaManifest = remoteMedia ? await readMediaManifest(root.pathname) : null;
-if (mediaManifest) await assertRetreatInventory(root.pathname, mediaManifest);
+const mediaManifest = remoteMedia ? await readMediaManifest(fileURLToPath(root)) : null;
+if (mediaManifest) await assertRetreatInventory(fileURLToPath(root), mediaManifest);
 await cp(new URL("website/assets/", root), assets, {
   recursive: true,
-  filter: source => !remoteMedia || source !== new URL("website/assets/retreat", root).pathname,
+  filter: source => !remoteMedia || source !== fileURLToPath(new URL("website/assets/retreat", root)),
 });
 await mkdir(new URL("brand/", assets), { recursive: true });
 await mkdir(new URL("fonts/", assets), { recursive: true });
@@ -253,6 +254,6 @@ if(deploymentEnvironment.preprod){
 const releaseFile=new URL('website-release.json',dist),release=JSON.parse(await readFile(releaseFile,'utf8'));release.environment=deploymentEnvironment.name;if(mediaManifest)release.mediaStorage="firebase";await writeFile(releaseFile,JSON.stringify(release,null,2));
 
 if (mediaManifest) {
-  await rewriteStaticMedia(dist.pathname, mediaManifest);
-  console.log("Pre-production Hosting shell: " + await assertShellBudget(dist.pathname) + " bytes.");
+  await rewriteStaticMedia(fileURLToPath(dist), mediaManifest);
+  console.log("Pre-production Hosting shell: " + await assertShellBudget(fileURLToPath(dist)) + " bytes.");
 }
