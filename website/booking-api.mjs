@@ -118,7 +118,9 @@ async function request(
   const response = await fetch(
     operation === "platform"
       ? "/api/v1/platform"
-      : "/api/v1/booking/" + operation + (query.size ? "?" + query : ""),
+      : operation.startsWith("guest-identity/")
+        ? "/api/v1/" + operation
+        : "/api/v1/booking/" + operation + (query.size ? "?" + query : ""),
     {
       method: body === undefined ? "GET" : "POST",
       headers: {

@@ -1,3 +1,4 @@
+import { assignGuestNumber } from "./guest-number.mjs";
 import { deskFields } from './desk.mjs';
 import {
   customerBinding,
@@ -423,13 +424,13 @@ export async function bookingState(
     calendarDays,
   });
 }
-export async function throttleBooking(db, uid) {
-  const ref = collection(db, "limits").doc(hash(uid)),
+export async function throttleBooking(db, uid, { lane = "", limit = 60 } = {}) {
+  const ref = collection(db, "limits").doc(hash(lane ? lane + ":" + uid : uid)),
     minute = Math.floor(Date.now() / 60000);
   await db.runTransaction(async (tx) => {
     const snap = await tx.get(ref),
       p = snap.data();
-    if (p?.minute === minute && p.count >= 60) fail("RATE_LIMIT", 429);
+    if (p?.minute === minute && p.count >= limit) fail("RATE_LIMIT", 429);
     tx.set(ref, { minute, count: p?.minute === minute ? p.count + 1 : 1 });
   });
 }
@@ -879,6 +880,11 @@ export async function bookingCommand(
       result.manualEmail = manualCustomer.email;
       result.customerId = owner;
     }
+    if (environment.preprod && operation === "booking-action" &&
+        input.action === "checkin" && result.status === "checked_in")
+      result.guestNumber = await assignGuestNumber(
+        tx, db, ownerContext.ownerIds, ownerContext.customerId || owner, now,
+      );
     if (operation === "create" || operation === "booking-action")
       commitLoyalty(tx, db, loyalty, {
         booking: result,

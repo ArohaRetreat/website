@@ -195,3 +195,24 @@
 @media(max-width:760px){.material-app .md-datetime{grid-template-columns:1fr}.material-app .md-time-picker{max-width:calc(100vw - 24px)}}
 :root.material-app .md-time-picker .md-time-fields input[type=number]{font:400 36px/1.2 'Google Sans',Arial,sans-serif;text-align:center;background:var(--md-container);border:0;border-radius:12px;min-height:80px;padding:16px 8px}
 .material-app input[type=range]{appearance:none;min-height:44px;height:44px;width:100%;background:transparent;accent-color:var(--md-primary)}.material-app input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:8px;background:var(--md-primary-container)}.material-app input[type=range]::-webkit-slider-thumb{appearance:none;width:24px;height:24px;margin-top:-8px;border-radius:50%;background:var(--md-primary);border:0}.material-app input[type=range]::-moz-range-track{height:8px;border-radius:8px;background:var(--md-primary-container)}.material-app input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:var(--md-primary);border:0}.material-app input[type=color]{height:48px;min-height:48px;width:100%;border:1px solid var(--md-outline);border-radius:8px;background:var(--md-paper);padding:8px}.material-app input[type=file]::file-selector-button{min-height:40px;padding:8px 16px;margin-right:12px;border:1px solid var(--md-outline);border-radius:100px;background:var(--md-container);color:var(--md-primary);font:500 14px 'Google Sans',Arial,sans-serif;cursor:pointer}
+
+/* Private guest identity: shared between the profile and front desk. */
+.material-app .identity-card{margin:20px 0 0;padding:clamp(16px,3vw,24px);border:1px solid var(--md-line);border-radius:20px;background:var(--md-paper);text-align:left;min-width:0}
+.material-app .panel-body .identity-card{margin-top:0}
+.material-app .identity-heading{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.material-app .identity-heading h3{margin:0;font-size:20px}
+.material-app .identity-number{display:inline-block;padding:4px 10px;border-radius:20px;background:var(--md-primary-container);color:var(--md-on-container);font-weight:600;font-size:13px;white-space:nowrap}
+.material-app .identity-card p{margin:8px 0 14px;color:var(--md-muted)}
+.material-app .identity-actions{display:flex;flex-wrap:wrap;gap:8px}
+.material-app .identity-card button{min-height:44px}
+.material-app .identity-upload{margin-top:12px}
+.material-app .identity-upload summary{cursor:pointer;min-height:44px;display:list-item;align-content:center;font-weight:600;color:var(--md-primary)}
+.material-app .identity-upload form{display:grid;gap:12px}
+.material-app .identity-upload form>button{justify-self:start}
+.material-app .identity-file{display:grid;gap:6px;font-weight:600;min-width:0}
+.material-app .identity-card input[type=file]{max-width:100%;font:inherit;padding:8px;min-width:0}
+.material-app .identity-card input::file-selector-button{border:0;border-radius:16px;padding:8px 12px;background:var(--md-container);color:var(--md-primary);font:inherit;cursor:pointer}
+.material-app .identity-consent{display:flex;align-items:flex-start;gap:8px;font-weight:400}
+.material-app .identity-card .identity-consent input[type=checkbox]{flex:0 0 20px;width:20px;height:20px;min-height:20px;margin:2px 0 0;accent-color:var(--md-primary)}
+.material-app .identity-card [data-id-preview] img{display:block;max-width:100%;max-height:360px;object-fit:contain;margin:12px 0;border-radius:12px}
+.material-app .identity-card [data-id-status]:empty{display:none}

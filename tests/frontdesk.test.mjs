@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {JSDOM} from 'jsdom';
 import {deskFields} from '../functions/booking/desk.mjs';
-const code=(await readFile(new URL('../website/frontdesk.mjs',import.meta.url),'utf8')).replace(/^import .*;$/gm,'const mountStayPanel=async()=>{};').replaceAll('export ','')+'\nwindow.desk={hostShell,mountFrontDesk};';
+const code='const mountStayPanel=async()=>{};const mountGuestIdentity=async()=>{};\n'+(await readFile(new URL('../website/frontdesk.mjs',import.meta.url),'utf8')).replace(/^import .*;$/gm,'').replaceAll('export ','')+'\nwindow.desk={hostShell,mountFrontDesk};';
 const pause=()=>new Promise(r=>setTimeout(r,0));
 async function mount({manager=true,failAction=false,failRefresh=false}={}){
  const dom=new JSDOM('<div id="app"></div>',{url:'https://example.test',runScripts:'outside-only'}),w=dom.window;w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;this.dispatchEvent(new w.Event('close'));};w.eval(code);
