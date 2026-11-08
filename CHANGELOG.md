@@ -1,3 +1,9 @@
+## Website 0.31.1 / API 0.16.1 — production guest identity
+
+- Align the Studio guest heading, dates and accommodation details on mobile and desktop.
+- Let guests manage optional private ID photos and booking managers review them from active reservations.
+- Require the historical first guest assignment before the production sequence can issue numbers.
+
 ## Website 0.30.3 — production Firebase cost controls
 
 - Promote the optimized retreat media and 3 MB app-shell budget to production. Preserve the pinned Natura export and the archived CMS photo URL.

@@ -1,3 +1,4 @@
+import { mountGuestIdentity } from "./guest-identity.mjs";
 import {mountCreditWallet} from './host-operations.mjs';
 import {mountStayPanel} from './stay-panel.mjs';
 import { recommendPrivate } from "./booking-options.mjs";
@@ -282,7 +283,7 @@ export async function startConcierge({
   }
   function credits(){return `<section class="wrap"><span class="eyebrow">YOUR AROHA CREDITS</span><h1>A little more to return to.</h1><div data-credit-wallet role="region" aria-label="Your loyalty balance">Loading your credits…</div></section>`;}
   function profile() {
-    return `<section class="wrap"><span class="eyebrow">YOUR GUEST PROFILE</span><h1 style="font-size:42px;margin-top:12px">So we can welcome you.</h1><div class="inline-actions"><button class="secondary" data-act="enquire">Enquire on WhatsApp ↗</button><button class="primary" data-act="find">Book a visit →</button></div><form id="profile-form" class="reviewpanel" style="margin-top:25px"><div class="columns"><label class="field">Full name<input id="profile-name" minlength="2" maxlength="120" autocomplete="name" required value="${esc(S.account.profile?.name || S.account.actor?.name)}"></label><label class="field">Phone with country code<input id="profile-phone" type="tel" autocomplete="tel" required maxlength="32" placeholder="+91 98765 43210" value="${esc(S.account.profile?.phone)}"></label></div><label class="field">Verified Google email<input type="email" readonly value="${esc(S.account.profile?.email)}"></label><p class="planner-note">Your phone is used by authorised hosts and included in operational booking business events in Dynatrace. Names, private notes and child ages are not sent. Existing booking contacts stay unchanged.</p><div class="inline-actions">${primary("Save profile", "saveprofile")}</div></form></section>`;
+    return `<section class="wrap"><span class="eyebrow">YOUR GUEST PROFILE</span><h1 style="font-size:42px;margin-top:12px">So we can welcome you.</h1><div class="inline-actions"><button class="secondary" data-act="enquire">Enquire on WhatsApp ↗</button><button class="primary" data-act="find">Book a visit →</button></div><form id="profile-form" class="reviewpanel" style="margin-top:25px"><div class="columns"><label class="field">Full name<input id="profile-name" minlength="2" maxlength="120" autocomplete="name" required value="${esc(S.account.profile?.name || S.account.actor?.name)}"></label><label class="field">Phone with country code<input id="profile-phone" type="tel" autocomplete="tel" required maxlength="32" placeholder="+91 98765 43210" value="${esc(S.account.profile?.phone)}"></label></div><label class="field">Verified Google email<input type="email" readonly value="${esc(S.account.profile?.email)}"></label><p class="planner-note">Your phone is used by authorised hosts and included in operational booking business events in Dynatrace. Names, private notes and child ages are not sent. Existing booking contacts stay unchanged.</p><div class="inline-actions">${primary("Save profile", "saveprofile")}</div></form><div data-guest-identity></div></section>`;
   }
   function render() {
     $("#pending-request").innerHTML = S.submissionUnknown
@@ -302,6 +303,17 @@ export async function startConcierge({
       : "";
     updateAccount();
     if(S.account?.customerLinkNotice){const note=document.createElement('p');note.className='profile-note';note.textContent=S.account.customerLinkNotice;$('#main').prepend(note);}
+    if (S.view === "profile") {
+      const identity = getIdentity?.();
+      void mountGuestIdentity($("[data-guest-identity]"), {
+        call: async (operation, input) => {
+          if (getIdentity?.() !== identity) throw { status: 403 };
+          const result = await api(operation, input);
+          if (getIdentity?.() !== identity) throw { status: 403 };
+          return result;
+        },
+      });
+    }
     if(S.view==='credits')void mountCreditWallet($('[data-credit-wallet]'),{call:(operation,input,key)=>api('platform',{operation,input},key)});
     if(S.view==='confirmation'&&S.record){const target=document.createElement('div');$('#main').append(target);void mountStayPanel(target,{booking:S.record,call:(operation,input,key)=>api('platform',{operation,input},key)});}
   }

@@ -1,3 +1,4 @@
+import { prepareIdentityErasure } from "../booking/guest-identity.mjs";
 import { randomUUID } from "node:crypto";
 import { col, bounded, fail, version, page, queryPage } from "./core.mjs";
 export async function profileHandler({ tx, db, ctx, input }) {
@@ -45,6 +46,8 @@ export async function profileHandler({ tx, db, ctx, input }) {
     const ref = col(db, "booking_profiles").doc(owner);
     related.push({ ref, profile: (await tx.get(ref)).data() || {}, id: owner });
   }
+  const eraseIdentity = await prepareIdentityErasure(tx, db, ctx.ownerIds || [ctx.uid]);
+  eraseIdentity(ctx.now);
   const id = randomUUID(),
     operation = {
       id,
