@@ -43,7 +43,7 @@ export async function mountGuestIdentity(root, { call, bookingId, onNumber = () 
       ${state?.canUpload && (!staff || !item) ? `<details class="identity-upload">
         <summary>${item ? "Replace ID photo" : "Upload ID photo"}</summary>
         <form>
-          <p>Optional. Use a photo of an adult’s accepted ID with the document number covered. Do not upload Aadhaar or children’s documents. Save only what the front desk needs to match the guest’s name and face. Bring an original if required for check-in.</p>
+          <p>Optional. Use a photo of an adult’s ID with the document number covered. No Aadhaar or children’s documents. Bring the original if required. Use synthetic files only in pre-prod.</p>
           <label class="identity-file">ID photo (JPG or PNG, up to 1 MB)<input name="photo" type="file" accept="image/jpeg,image/png" required></label>
           <label class="identity-consent"><input name="consent" type="checkbox" required><span>${staff
             ? "The guest agreed to save this photo privately for check-in for up to 90 days."
