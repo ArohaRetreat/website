@@ -2,6 +2,8 @@ import test from "node:test";
 import { readFile } from "node:fs/promises";
 import { initializeTestEnvironment, assertFails, assertSucceeds } from "@firebase/rules-unit-testing";
 import { doc, getDoc, setDoc } from "firebase/firestore";
+import { getBytes, ref } from "firebase/storage";
+import sharp from "sharp";
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { randomUUID, createHmac } from "node:crypto";
@@ -410,6 +412,7 @@ test("pre-prod HTTP booking, approval, private invoice and webhook stay inside t
     const lifeId="synthetic-lifecycle-"+randomUUID(),lifeNow=Date.now(),beforeLife=messages.length;
     await db.collection('aroha_preprod_bookings').doc(lifeId).set({id:lifeId,reference:'SYNTHETIC-LIFECYCLE',owner:guest.localId,status:'confirmed',kind:'day',arrival:'2026-01-01',departure:'2026-01-02',startsAt:lifeNow-7200000,endsAt:lifeNow-3600000,adults:1,children:0,guests:1,units:[],allocations:[],subtotal:100000,discount:0,total:100000,history:[],version:1,createdAt:lifeNow});
     const checkedIn=await call(owner,'/booking/booking-action',{id:lifeId,action:'checkin',expectedVersion:1},{admin:true});assert.equal(checkedIn.httpStatus,200,JSON.stringify(checkedIn));
+    assert.equal(checkedIn.guestNumber, 1);
     await until(()=>messages.length===beforeLife+1);
     const checkedOut=await call(owner,'/booking/booking-action',{id:lifeId,action:'complete',expectedVersion:checkedIn.version},{admin:true});assert.equal(checkedOut.httpStatus,200,JSON.stringify(checkedOut));
     await until(()=>messages.length===beforeLife+2);
@@ -430,6 +433,94 @@ test("pre-prod HTTP booking, approval, private invoice and webhook stay inside t
     const cancellation=(await db.collection('aroha_preprod_notifications').where('bookingId','==',cancelId).get()).docs;assert.equal(cancellation.length,1);await until(async()=>(await cancellation[0].ref.get()).data().status==='accepted');assert.equal((await cancellation[0].ref.get()).data().status,'accepted');
     assert.equal((await call(owner,'/booking/booking-action',{id:cancelId,action:'cancel',expectedVersion:1},{admin:true,key:cancelKey})).httpStatus,200);
     await runWorker();assert.equal((await db.collection('aroha_preprod_notifications').where('bookingId','==',cancelId).get()).size,1);
+    const bookings = db.collection("aroha_preprod_bookings");
+    const profiles = db.collection("aroha_preprod_booking_profiles");
+    const walkId = randomUUID(), repeatId = randomUUID(), parallelId = randomUUID();
+    const manualCustomerId = "customer-" + randomUUID();
+    await profiles.doc(manualCustomerId).set({
+      id: manualCustomerId, name: "Synthetic Walk-in", email: "other@example.test",
+      identitySource: "host_manual", completedStays: 0, activeIds: [],
+    });
+    const fixture = (id, who, source = "host_manual") => ({
+      id, reference: "SYNTHETIC-IDENTITY", owner: who, status: "confirmed", kind: "day",
+      arrival: "2026-01-01", departure: "2026-01-02",
+      startsAt: lifeNow - 7200000, endsAt: lifeNow - 3600000,
+      adults: 1, children: 0, guests: 1, units: [], allocations: [],
+      subtotal: 100000, discount: 0, total: 100000, history: [], version: 1, createdAt: lifeNow, source,
+    });
+    await Promise.all([
+      bookings.doc(walkId).set(fixture(walkId, manualCustomerId)),
+      bookings.doc(repeatId).set(fixture(repeatId, guest.localId, "guest")),
+      bookings.doc(parallelId).set(fixture(parallelId, owner.localId)),
+      profiles.doc(owner.localId).set({
+        id: owner.localId, name: "Synthetic manager", email: "owner@example.test", completedStays: 0, activeIds: [],
+      }, { merge: true }),
+    ]);
+    const identity = (user, action, body = {}) => call(user, "/guest-identity/" + action, body);
+    const image = await sharp({ create: {
+      width: 16, height: 16, channels: 3, background: "#325642",
+    }}).png().toBuffer();
+    const upload = { version: null, consent: true, contentType: "image/png", contentBase64: image.toString("base64") };
+    assert.equal((await identity(null, "status")).httpStatus, 401);
+    assert.equal((await identity(outsider, "status")).httpStatus, 403);
+    assert.equal((await identity(guest, "status", { bookingId: walkId })).httpStatus, 403);
+    assert.equal((await identity(guest, "upload", { ...upload, consent: false })).error.code, "IDENTITY_CONSENT_REQUIRED");
+    assert.equal((await identity(guest, "upload", { ...upload, contentBase64: "QUJD" })).error.code, "INVALID_ID_IMAGE");
+    assert.equal((await identity(owner, "upload", { ...upload, bookingId: repeatId })).httpStatus, 403);
+    const manual = await identity(owner, "upload", { ...upload, bookingId: walkId });
+    assert.equal(manual.httpStatus, 200, JSON.stringify(manual));
+    const manualVersion = manual.document.version;
+    assert.equal(manual.document.status, "pending_review");
+    assert.equal((await identity(owner, "preview", { bookingId: walkId, version: manualVersion })).contentType, "image/jpeg");
+    assert.equal((await identity(guest, "preview", { version: manualVersion })).httpStatus, 409);
+    const verified = await identity(owner, "verify", { bookingId: walkId, version: manualVersion });
+    assert.equal(verified.document.status, "verified");
+    const claimed = await call(other, "/platform", { operation: "claimMyCustomer", input: {} });
+    assert.equal(claimed.customerId, manualCustomerId, JSON.stringify(claimed));
+    assert.equal((await identity(other, "status")).document.version, manualVersion);
+    await db.collection("aroha_members").doc(other.localId).set({ role: "viewer", active: true, bookingAccess: "viewer" });
+    assert.equal((await identity(other, "status", { bookingId: walkId })).httpStatus, 403);
+    const replaced = await identity(other, "upload", { ...upload, version: manualVersion });
+    assert.equal(replaced.document.status, "pending_review");
+    assert.equal((await identity(owner, "verify", { bookingId: walkId, version: manualVersion })).httpStatus, 409);
+    const ruleEnv = await initializeTestEnvironment({
+      projectId: project,
+      storage: { host: "127.0.0.1", port: Number(process.env.FIREBASE_STORAGE_EMULATOR_HOST.split(":").at(-1)),
+        rules: await readFile("storage.rules", "utf8") },
+    });
+    try {
+      for (const client of [ruleEnv.unauthenticatedContext(), ruleEnv.authenticatedContext(other.localId)]) {
+        await assertFails(getBytes(ref(client.storage("gs://demo-aroha.appspot.com"),
+          "identity/pre-prod/" + replaced.document.version)));
+      }
+    } finally { await ruleEnv.cleanup(); }
+    const checkin = (id, key) => call(owner, "/booking/booking-action",
+      { id, action: "checkin", expectedVersion: 1 }, { admin: true, key });
+    const firstWalkKey = randomUUID();
+    const [returnVisit, walkCheckin, otherCheckin] = await Promise.all([
+      checkin(repeatId), checkin(walkId, firstWalkKey), checkin(parallelId),
+    ]);
+    assert.equal(returnVisit.guestNumber, 1, JSON.stringify(returnVisit));
+    assert.equal(walkCheckin.httpStatus, 200, JSON.stringify(walkCheckin));
+    assert.equal(otherCheckin.httpStatus, 200, JSON.stringify(otherCheckin));
+    assert.deepEqual([walkCheckin.guestNumber, otherCheckin.guestNumber].sort(), [2, 3]);
+    assert.equal((await checkin(walkId, firstWalkKey)).guestNumber, walkCheckin.guestNumber);
+    assert.equal((await identity(other, "status")).guestNumber, walkCheckin.guestNumber);
+    assert.equal((await identity(other, "remove", { version: replaced.document.version })).document, null);
+    assert.equal((await identity(owner, "preview", { bookingId: walkId, version: replaced.document.version })).httpStatus, 409);
+    await promisify(execFile)(process.execPath, ["--input-type=module", "-e",
+      `import { initializeApp } from 'firebase-admin/app'; import { getFirestore } from 'firebase-admin/firestore';
+       import { drainGuestIdentity } from './booking/guest-identity.mjs'; initializeApp({ projectId: 'demo-aroha' });
+       await drainGuestIdentity(getFirestore());`], {
+      cwd: new URL("../", import.meta.url), env: { ...process.env, AROHA_ENVIRONMENT: "pre-prod", FUNCTIONS_EMULATOR: "true" }, timeout: 15000,
+    });
+    assert.equal((await db.collection("aroha_preprod_booking_guest_id_files").get()).size, 0);
+    assert.equal((await db.collection("aroha_booking_guest_numbers").get()).size, 0);
+    // Retire only this test's synthetic check-ins before the shared scenario runner.
+    const cleanup = db.batch();
+    for (const id of [walkId, repeatId, parallelId]) cleanup.delete(bookings.doc(id));
+    cleanup.update(profiles.doc(owner.localId), { activeIds: [] });
+    await cleanup.commit();
     const {mkdir,writeFile}=await import('node:fs/promises');await mkdir('qa/local/platform-emails',{recursive:true});
     for(const m of messages.slice(beforeLife).filter(m=>!m.body.subject.includes('Booking cancelled'))){let html=m.body.html;for(const a of m.body.attachments.filter(a=>a.contentId)){const mime=a.filename.endsWith('.png')?'image/png':'image/jpeg';const data=typeof a.content==='string'?a.content:Buffer.from(a.content.data).toString('base64');html=html.replaceAll('cid:'+a.contentId,'data:'+mime+';base64,'+data);}const name=m.body.subject.includes('Welcome')?'checkin':m===checkoutMail?'checkout':'feedback';await writeFile('qa/local/platform-emails/'+name+'.html',html);}
     assert.equal((await db.collection("aroha_bookings").get()).size, 1);

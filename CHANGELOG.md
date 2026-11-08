@@ -1,3 +1,9 @@
+## Website 0.31.0 / API 0.16.0 — pre-production guest identity
+
+- Align the Studio guest heading, show check-in and checkout side by side, and keep accommodation details readable at narrow widths.
+- Add private, optional ID photo upload for guests and for walk-in bookings with consent. Booking managers can review IDs from active bookings.
+- Allocate a durable guest number in the first successful check-in transaction. Production rollout and the first historical guest assignment remain separate.
+
 ## Website 0.30.2 — pre-production Firebase cost controls
 
 - Serve public retreat media through immutable Firebase Storage URLs and preserve existing media paths with redirects. Enforce a 3 MB pre-production Hosting shell.
