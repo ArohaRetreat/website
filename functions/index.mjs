@@ -8,6 +8,7 @@ import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { sendEmail } from "./email/provider.mjs";
 import { mailSettings } from "./email/config.mjs";
 import { mailCollection } from "./email/jobs.mjs";
+import { runPreprodMaintenance } from "./booking/preprod-maintenance.mjs";
 import { deliverEmail, drainEmails } from "./email/delivery.mjs";
 import { communicationCommand } from "./email/api.mjs";
 import { captureEmailWebhook } from "./email/webhook.mjs";
@@ -586,6 +587,25 @@ export const arohaApi = onRequest(
   },
 );
 
+async function exportBookingEvents() {
+  if (process.env.DT_EXPORT_ENABLED !== "true") return;
+  await refreshTelemetryConfig(db);
+  if (!activeTelemetryConfig()) return;
+  await traceBookingDelivery(() =>
+    drainEvents(db, (event) =>
+      fetch(activeTelemetryConfig().businessEventsEndpoint, {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + activeTelemetryConfig().token,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify([event]),
+        signal: AbortSignal.timeout(3000),
+      }),
+    ),
+  );
+}
+
 // At-least-once delivery. Existing pre-cutover booking/email outbox is never drained.
 export const arohaBookingEvents = onSchedule(
   {
@@ -596,24 +616,7 @@ export const arohaBookingEvents = onSchedule(
     maxInstances: 1,
     secrets: process.env.DT_EXPORT_ENABLED === "true" ? [monitoringSecret] : [],
   },
-  async () => {
-    if (process.env.DT_EXPORT_ENABLED !== "true") return;
-    await refreshTelemetryConfig(db);
-    if (!activeTelemetryConfig()) return;
-    await traceBookingDelivery(() =>
-      drainEvents(db, (event) =>
-        fetch(activeTelemetryConfig().businessEventsEndpoint, {
-          method: "POST",
-          headers: {
-            Authorization: "Bearer " + activeTelemetryConfig().token,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify([event]),
-          signal: AbortSignal.timeout(3000),
-        }),
-      ),
-    );
-  },
+  exportBookingEvents,
 );
 
 const emailWorkerOptions = {
@@ -655,16 +658,20 @@ export const arohaBookingEmailDispatch = onDocumentCreated(
     }, event.data.data()?.sourceContext);
   },
 );
-export const arohaBookingEmailRetry = onSchedule(
-  { ...emailWorkerOptions, schedule: "every 1 minutes" },
-  async () =>
-    withEmailDelivery(() =>
-      drainEmails(db, (body, options) =>
-        sendEmail(
-          process.env.FUNCTIONS_EMULATOR ? "" : resendSecret.value(),
-          body,
-          options,
-        ),
+const retryBookingMail = () =>
+  withEmailDelivery(() =>
+    drainEmails(db, (body, options) =>
+      sendEmail(
+        process.env.FUNCTIONS_EMULATOR ? "" : resendSecret.value(),
+        body,
+        options,
       ),
     ),
+  );
+
+export const arohaBookingEmailRetry = onSchedule(
+  { ...emailWorkerOptions, schedule: environment.preprod ? "every 5 minutes" : "every 1 minutes" },
+  environment.preprod
+    ? () => runPreprodMaintenance({ drainMail: retryBookingMail, drainTelemetry: exportBookingEvents })
+    : retryBookingMail,
 );

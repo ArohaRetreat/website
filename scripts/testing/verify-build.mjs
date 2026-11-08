@@ -1,7 +1,15 @@
+import {assertShellBudget} from "../preprod-media.mjs";
 import {readFile,access,readdir} from 'node:fs/promises';
 const preprod=process.argv[2]==='pre-prod',root=preprod?'dist-preprod':'dist';
 const exists=async p=>{try{await access(p);return true;}catch{return false;}};
 for(const path of ['admin/testing/index.html','assets/booking-e2e.js'])if(await exists(root+'/'+path)!==preprod)throw Error('TEST_CONSOLE_BUILD_SCOPE');
+if(preprod){
+  const release=JSON.parse(await readFile(root+'/website-release.json','utf8'));
+  if(!release.emulators){
+    if(release.mediaStorage!=='firebase')throw Error('PREPROD_MEDIA_OFFLOAD_REQUIRED');
+    await assertShellBudget(root);
+  }
+}
 if(!preprod){
   for(const dir of ['assets','assets/chunks'])for(const f of await readdir(root+'/'+dir))if(f.endsWith('.js')){const s=await readFile(root+'/'+dir+'/'+f,'utf8');if(/aroha-e2e-recovery-v1|Internal E2E |TEST_ACCOUNT_ACTIVE_LIMIT_HEADROOM/.test(s))throw Error('TEST_RUNNER_LEAKED_TO_PRODUCTION');}
 }

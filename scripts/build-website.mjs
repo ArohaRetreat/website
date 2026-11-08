@@ -1,5 +1,7 @@
+import { assertRetreatInventory, assertShellBudget, readMediaManifest, rewriteStaticMedia } from "./preprod-media.mjs";
 import {environmentProfile} from "../functions/environment-profile.mjs";
 const deploymentEnvironment=environmentProfile(process.env.AROHA_ENVIRONMENT||"production");
+const remoteMedia = deploymentEnvironment.preprod && process.env.AROHA_EMULATORS !== "1";
 import { welcomeMarkup, natureContent } from "../website/nature-render.mjs";
 import { tourContent } from "../website/field-render.mjs";
 import { build } from "esbuild";
@@ -35,7 +37,12 @@ validateTour(
 validateNature(natureContent(tourContent(content)));
 validateStoryMap(mapDefaults, tourContent(content));
 await mkdir(new URL("map/", dist), { recursive: true });
-await cp(new URL("website/assets/", root), assets, { recursive: true });
+const mediaManifest = remoteMedia ? await readMediaManifest(root.pathname) : null;
+if (mediaManifest) await assertRetreatInventory(root.pathname, mediaManifest);
+await cp(new URL("website/assets/", root), assets, {
+  recursive: true,
+  filter: source => !remoteMedia || source !== new URL("website/assets/retreat", root).pathname,
+});
 await mkdir(new URL("brand/", assets), { recursive: true });
 await mkdir(new URL("fonts/", assets), { recursive: true });
 for (const [source, target] of [
@@ -243,4 +250,9 @@ if(deploymentEnvironment.preprod){
   }
   await writeFile(new URL('robots.txt',dist),'User-agent: *\nDisallow: /\n');
 }
-const releaseFile=new URL('website-release.json',dist),release=JSON.parse(await readFile(releaseFile,'utf8'));release.environment=deploymentEnvironment.name;await writeFile(releaseFile,JSON.stringify(release,null,2));
+const releaseFile=new URL('website-release.json',dist),release=JSON.parse(await readFile(releaseFile,'utf8'));release.environment=deploymentEnvironment.name;if(mediaManifest)release.mediaStorage="firebase";await writeFile(releaseFile,JSON.stringify(release,null,2));
+
+if (mediaManifest) {
+  await rewriteStaticMedia(dist.pathname, mediaManifest);
+  console.log("Pre-production Hosting shell: " + await assertShellBudget(dist.pathname) + " bytes.");
+}

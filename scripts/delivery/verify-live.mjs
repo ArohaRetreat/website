@@ -1,3 +1,4 @@
+import {readMediaManifest, verifyLiveMedia} from "../preprod-media.mjs";
 import {compatibleBookingApi} from "./environment-policy.mjs";
 import { ADDITIONAL_MEDIA } from "../content/farm-media-refresh.mjs";
 import { readFile, readdir } from "node:fs/promises";
@@ -71,9 +72,11 @@ export async function verifyLive(
   );
   for (const name of await readdir(root + directory + "/assets/chunks"))
     paths.push("/assets/chunks/" + name);
+  const offloaded = !includeDesign && expected.mediaStorage === "firebase";
+  let checkedBytes = 0;
   const checks = [];
   for (const path of paths.filter(
-    (p) => includeDesign || !p.startsWith("/design/"),
+    (p) => (includeDesign || !p.startsWith("/design/")) && (!offloaded || !p.startsWith("/assets/retreat/")),
   )) {
     const response = await fetchImpl(origin + path, {
       headers: { "Cache-Control": "no-cache" },
@@ -85,6 +88,7 @@ export async function verifyLive(
         root + directory + (path.endsWith("/") ? path + "index.html" : path),
       );
     if (sha(actual) !== sha(local)) throw Error("LIVE_HASH_MISMATCH");
+    checkedBytes += actual.length;
     checks.push({ path, status: response.status, sha256: sha(actual) });
   }
   const release = JSON.parse(
@@ -129,11 +133,16 @@ export async function verifyLive(
     )
       throw Error("LIVE_PREPROD_RUNTIME_MISMATCH");
   }
+  const mediaRangeChecks = offloaded
+    ? await verifyLiveMedia(origin, await readMediaManifest(root), fetchImpl)
+    : 0;
   return {
     status: "verified",
     verifiedAt: new Date().toISOString(),
     release,
     hashMatchedFiles: checks.length,
+    checkedBytes,
+    mediaRangeChecks,
     checks,
     protectedDraftStatus: denied.status,
   };
