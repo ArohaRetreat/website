@@ -507,11 +507,12 @@ function studioTabs(items) {
 const calendarTabs = () => studioTabs([["calendar","Timeline"],["calendar-month","Month"],["reservations","List"],...(managesBookings() ? [["feedback","Feedback"]] : [])]);
 const spaceTabs = () => studioTabs([["inventory","Cottages"],["facilities","Facilities"],["blocks","Date blocks"],["settings","Booking rules"]]);
 const paymentTabs = () => studioTabs([["payments","Ledger"],...(managesBookings() ? [["documents","Documents"],["loyalty","Credits"]] : [])]);
+const hostName = () => state.actor.name && state.actor.name !== "Guest" ? state.actor.name : "Aroha host";
 function hostPage() {
   if (!hostTabAllowed(hostTab,managesBookings())) hostTab = "dashboard";
   if (state.actor?.role !== "host")
     return `<div class="host-welcome"><img src="/assets/brand/logo-forest.svg" width="200" alt="Aroha Retreat"><p class="eyebrow">HOST STUDIO</p><h1>A thoughtful stay<br>starts with you.</h1><p>Explore your reservation desk with a host account.<br>Guest sessions do not have access to host booking controls.</p><button class="button" id="host-login">Sign in to Host Studio ↗</button><a class="text-button" href="/book/">← Back to guest experience</a></div>`;
-  return hostShell({ tab:hostTab, manager:managesBookings(), content:hostContent(), modules:studioModules, initials:studioInitials(state.actor.name) });
+  return hostShell({ tab:hostTab, manager:managesBookings(), content:hostContent(), modules:studioModules, initials:studioInitials(hostName()) });
 }
 function hostContent() {
   if (hostTab === "dashboard") return '<div data-studio-dashboard></div>';
@@ -782,7 +783,7 @@ function mountStudioWorkspace() {
     panel.className = "filter-dialog workspace-menu";
     panel.setAttribute("data-dt-mask","");
     panel.setAttribute("aria-label",title);
-    panel.innerHTML = `<header class="dialog-head"><h2>${title}</h2><button type="button" class="text-button" data-dismiss aria-label="Close">×</button></header><div class="workspace-menu-body">${body}</div>`;
+    panel.innerHTML = `<header class="dialog-head"><h2>${esc(title)}</h2><button type="button" class="text-button" data-dismiss aria-label="Close">×</button></header><div class="workspace-menu-body">${body}</div>`;
     document.body.append(panel);
     panel.querySelector("[data-dismiss]").onclick = () => panel.close();
     panel.addEventListener("close",()=>{panel.remove();if(trigger?.isConnected)trigger.focus();},{once:true});
@@ -816,7 +817,7 @@ function mountStudioWorkspace() {
       openPrivacy((markup) => { panel.querySelector("[data-privacy-notice]").innerHTML = markup; });
     } else if ("studioTerms" in data) {
       const p = policy();
-      modal("Terms &amp; conditions",`<div class="studio-policy">
+      modal("Terms & conditions",`<div class="studio-policy">
         <h3>Booking terms</h3><dl>
           <div><dt>Confirmation</dt><dd>The host must approve a booking request. The accommodation and price are shown when you review the booking.</dd></div>
           <div><dt>Overnight visits</dt><dd>Check-in at ${esc(p.stayStart)} and checkout at ${esc(p.stayEnd)} IST. For day visits, arrival is at ${esc(p.dayStart)} and departure at ${esc(p.dayEnd)} IST.</dd></div>
@@ -844,7 +845,7 @@ function mountStudioWorkspace() {
       panel.querySelectorAll("[data-go-module]").forEach((item)=>item.onclick=()=>{panel.close();activateModule(item.dataset.goModule);});
       panel.querySelector("[data-quick-book]")?.addEventListener("click",()=>{panel.close();openManual();});
     } else if ("studioAccount" in data) {
-      const name = state.actor.name || "Aroha host";
+      const name = hostName();
       const panel = modal("Studio account",`<div class="studio-account-card"><span class="workspace-icon profile-avatar" aria-hidden="true">${esc(studioInitials(name))}</span><div><strong>${esc(name)}</strong><p>${manager ? "Booking manager" : "Booking viewer"}</p></div></div>
         <div class="studio-account-actions"><button type="button" class="tonal" data-theme>Appearance settings</button><button type="button" class="text-button" data-sign-out>Sign out</button></div>`,control);
       panel.querySelector("[data-theme]").onclick = () => { panel.close();switchHostTab("appearance"); };
