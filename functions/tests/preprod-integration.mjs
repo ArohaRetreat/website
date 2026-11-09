@@ -433,6 +433,7 @@ test("pre-prod HTTP booking, approval, private invoice and webhook stay inside t
     assert.equal((await identity(owner, "upload", { ...upload, bookingId: repeatId })).httpStatus, 403);
     const manual = await identity(owner, "upload", { ...upload, bookingId: walkId });
     assert.equal(manual.httpStatus, 200, JSON.stringify(manual));
+    assert.ok(manual.document.expiresAt > Date.now());
     const manualVersion = manual.document.version;
     assert.equal(manual.document.status, "pending_review");
     assert.equal((await identity(owner, "preview", { bookingId: walkId, version: manualVersion })).contentType, "image/jpeg");
@@ -442,9 +443,29 @@ test("pre-prod HTTP booking, approval, private invoice and webhook stay inside t
     const claimed = await call(other, "/platform", { operation: "claimMyCustomer", input: {} });
     assert.equal(claimed.customerId, manualCustomerId, JSON.stringify(claimed));
     assert.equal((await identity(other, "status")).document.version, manualVersion);
+    const retain = { version: manualVersion, consent: true, consentPolicy: "guest-id-v2" };
+    assert.equal((await identity(owner, "retain", { ...retain, bookingId: walkId })).httpStatus, 403);
+    assert.equal((await identity(other, "retain", { ...retain, consent: false })).httpStatus, 422);
+    const retained = await identity(other, "retain", retain);
+    assert.equal(retained.document.version, manualVersion);
+    assert.equal(retained.document.expiresAt, null);
+    assert.equal(retained.document.status, "verified");
     await db.collection("aroha_members").doc(other.localId).set({ role: "viewer", active: true, bookingAccess: "viewer" });
     assert.equal((await identity(other, "status", { bookingId: walkId })).httpStatus, 403);
-    const replaced = await identity(other, "upload", { ...upload, version: manualVersion });
+    const replaced = await identity(other, "upload", {
+      ...upload, version: manualVersion, consentPolicy: "guest-id-v2",
+    });
+    assert.equal(replaced.document.expiresAt, null);
+    const runIdentityCleanup = (future = false) => promisify(execFile)(process.execPath, ["--input-type=module", "-e",
+      `import { initializeApp } from 'firebase-admin/app'; import { getFirestore } from 'firebase-admin/firestore';
+       import { drainGuestIdentity } from './booking/guest-identity.mjs'; initializeApp({ projectId: 'demo-aroha' });
+       await drainGuestIdentity(getFirestore(), {now: Date.now() + ${future ? 100 : 0} * 86400000});`], {
+      cwd: new URL("../", import.meta.url), env: { ...process.env, AROHA_ENVIRONMENT: "pre-prod", FUNCTIONS_EMULATOR: "true" }, timeout: 15000,
+    });
+    await runIdentityCleanup(true);
+    const kept = await identity(other, "status");
+    assert.equal(kept.document.version, replaced.document.version);
+    assert.equal((await identity(other, "preview", { version: replaced.document.version })).contentType, "image/jpeg");
     assert.equal(replaced.document.status, "pending_review");
     assert.equal((await identity(owner, "verify", { bookingId: walkId, version: manualVersion })).httpStatus, 409);
     const ruleEnv = await initializeTestEnvironment({
@@ -472,12 +493,7 @@ test("pre-prod HTTP booking, approval, private invoice and webhook stay inside t
     assert.equal((await identity(other, "status")).guestNumber, walkCheckin.guestNumber);
     assert.equal((await identity(other, "remove", { version: replaced.document.version })).document, null);
     assert.equal((await identity(owner, "preview", { bookingId: walkId, version: replaced.document.version })).httpStatus, 409);
-    await promisify(execFile)(process.execPath, ["--input-type=module", "-e",
-      `import { initializeApp } from 'firebase-admin/app'; import { getFirestore } from 'firebase-admin/firestore';
-       import { drainGuestIdentity } from './booking/guest-identity.mjs'; initializeApp({ projectId: 'demo-aroha' });
-       await drainGuestIdentity(getFirestore());`], {
-      cwd: new URL("../", import.meta.url), env: { ...process.env, AROHA_ENVIRONMENT: "pre-prod", FUNCTIONS_EMULATOR: "true" }, timeout: 15000,
-    });
+    await runIdentityCleanup();
     assert.equal((await db.collection("aroha_preprod_booking_guest_id_files").get()).size, 0);
     assert.equal((await db.collection("aroha_booking_guest_numbers").get()).size, 0);
     // Retire only this test's synthetic check-ins before the shared scenario runner.

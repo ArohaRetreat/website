@@ -1,3 +1,7 @@
+## Website 0.31.2 / API 0.16.2 — saved IDs for future check-ins
+
+- Keep newly consented guest ID photos in private Cloud Storage without a fixed expiry. Preserve the expiry previously agreed to for existing photos.
+
 ## Website 0.31.1 / API 0.16.1 — production guest identity
 
 - Align the Studio guest heading, dates and accommodation details on mobile and desktop.
