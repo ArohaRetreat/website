@@ -2,7 +2,8 @@ import { DomainError } from "../domain.mjs";
 import { operationSpan } from "../telemetry.mjs";
 import { randomUUID } from "node:crypto";
 import { FieldValue } from "firebase-admin/firestore";
-import { environment, collectionName } from "../environment.mjs";
+import { environment, collectionName, isTesterEmail } from "../environment.mjs";
+import { normalizedEmail } from "../booking/customers.mjs";
 import { mailSettings, recipientAllowed } from "./config.mjs";
 import { mailCollection, invoiceCollection } from "./jobs.mjs";
 import { invoicePdf } from "./documents.mjs";
@@ -65,15 +66,18 @@ export async function deliverEmail(
       errorCode="MAIL_RECIPIENT_BOUNDARY";
       throw Object.assign(Error(errorCode), { terminal: true });
     }
-    const booking = (
-      await db.collection(collectionName("bookings")).doc(job.bookingId).get()
-    ).data();
-    if (!booking || booking.owner !== job.owner)
+    const manual = job.channel === "guest_manual";
+    const target = db.collection(collectionName(manual ? "booking_profiles" : "bookings")).doc(manual ? job.owner : job.bookingId);
+    const booking = (await target.get()).data();
+    if (!manual && (!booking || booking.owner !== job.owner))
       throw Object.assign(Error("BOOKING_NOT_FOUND"), { terminal: true });
     let feedback,feedbackProfile;
     if(job.channel==='guest_feedback'){feedback=(await db.collection(collectionName('booking_feedback')).doc(job.bookingId).get()).data();feedbackProfile=(await db.collection(collectionName('booking_profiles')).doc(job.owner).get()).data();}
     const isCurrent = (b) =>
-      b?.owner === job.owner &&
+      manual
+        ? Boolean(b && !b.erasedAt && normalizedEmail(b.email) === job.recipientEmail &&
+          (job.recipientMode === "test-inbox" || isTesterEmail(job.to)))
+        : b?.owner === job.owner &&
       (['guest_cancelled','guest_declined'].includes(job.channel)
         ? b.status===job.snapshot.status&&b.version===job.snapshot.bookingVersion
         : job.channel === 'guest_checkin'
@@ -111,7 +115,7 @@ export async function deliverEmail(
           filename: invoice.number + ".pdf",
           content: pdf.buffer,
         });
-        await ref.update({ documentStatus: "ready", object: pdf.object, documentDesignVersion:job.documentTemplateVersion||invoice.documentTemplateVersion||'legacy' });
+        await ref.update({ documentStatus: "ready", documentDesignVersion:job.documentTemplateVersion||invoice.documentTemplateVersion||'legacy' });
         await queueEvent(
           db,
           bookingEvent({
@@ -134,9 +138,7 @@ export async function deliverEmail(
       }
       if(job.channel==='guest_feedback'){feedback=(await db.collection(collectionName('booking_feedback')).doc(job.bookingId).get()).data();feedbackProfile=(await db.collection(collectionName('booking_profiles')).doc(job.owner).get()).data();}
       // PDF generation can outlive a cancellation or replacement approval.
-      const latest = (
-        await db.collection(collectionName("bookings")).doc(job.bookingId).get()
-      ).data();
+      const latest = (await target.get()).data();
       if (!isCurrent(latest)) {
         suppressed = true;
         errorCode = "MAIL_SUPPRESSED";
@@ -210,6 +212,7 @@ export async function deliverEmail(
       const attempts = (v.attempts || 0) + 1;
       tx.update(ref, {
         status,
+        deliveryStatusAt: now,
         attempts,
         uncertain,
         errorCode,
@@ -271,6 +274,7 @@ export async function deliverEmail(
     if (v?.lease !== lease) return false;
     tx.update(ref, {
       status,
+      deliveryStatusAt: now,
       uncertain: suppressed ? job.uncertain === true : false,
       attempts: (v.attempts || 0) + 1,
       ...(messageId ? { providerMessageId: messageId, acceptedAt: now } : {}),

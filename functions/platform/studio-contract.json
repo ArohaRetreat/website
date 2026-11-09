@@ -1,0 +1,197 @@
+[
+  {
+    "operationId": "getStudioDashboard",
+    "policy": "booking-staff",
+    "input": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    },
+    "readOnly": true,
+    "handler": "studio",
+    "method": "POST"
+  },
+  {
+    "operationId": "getStudioGuest",
+    "policy": "booking-manager",
+    "input": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{1,128}$"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "readOnly": true,
+    "handler": "studio",
+    "method": "POST"
+  },
+  {
+    "operationId": "listStudioDocuments",
+    "policy": "booking-manager",
+    "input": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{1,128}$"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^[a-f0-9-]{36}$"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "readOnly": true,
+    "handler": "studio",
+    "method": "POST"
+  },
+  {
+    "operationId": "listMyDocuments",
+    "policy": "self",
+    "input": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^[a-f0-9-]{36}$"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "readOnly": true,
+    "handler": "studio",
+    "method": "POST"
+  },
+  {
+    "operationId": "listStudioEmail",
+    "policy": "booking-manager",
+    "input": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{1,128}$"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^[a-f0-9-]{36}$"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "readOnly": true,
+    "handler": "studio",
+    "method": "POST"
+  },
+  {
+    "operationId": "getStudioEmail",
+    "policy": "booking-manager",
+    "input": {
+      "type": "object",
+      "properties": {
+        "jobId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "jobId"
+      ],
+      "additionalProperties": false
+    },
+    "readOnly": true,
+    "handler": "studio",
+    "method": "POST"
+  },
+  {
+    "operationId": "sendStudioEmail",
+    "policy": "booking-manager",
+    "input": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{1,128}$"
+        },
+        "bookingId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{1,128}$"
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2500
+        }
+      },
+      "required": [
+        "id",
+        "subject",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "readOnly": false,
+    "handler": "studio",
+    "method": "POST"
+  },
+  {
+    "operationId": "listStudioGuestPayments",
+    "policy": "booking-manager",
+    "input": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]{1,128}$"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "cursor": {
+          "type": "string",
+          "pattern": "^[a-f0-9-]{36}$"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "readOnly": true,
+    "handler": "studio",
+    "method": "POST"
+  }
+]

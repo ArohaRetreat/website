@@ -13,7 +13,7 @@ import {
 } from "../booking/loyalty.mjs";
 import { loadConfig } from "../booking/store.mjs";
 import { validEmail } from "../email/config.mjs";
-const customerView = (p) => ({
+export const customerView = (p) => ({
   id: p.id,
   name: p.erasedAt ? "Profile erased" : p.contact?.name || p.name || "Guest",
   email: p.erasedAt ? "" : p.email || "",

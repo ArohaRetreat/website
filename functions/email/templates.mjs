@@ -6,6 +6,15 @@ import { approvedEmailTemplate } from "./templates-approved.mjs";
 
 // Jobs retain their original payload on retry, including provider idempotency.
 export function emailTemplate(job) {
+  if (job.templateVersion === "email-v1-studio-message") {
+    const { subject, message } = job.manual;
+    const safe = message.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+    return {
+      subject: (job.test ? "[TEST] " : "") + subject,
+      text: message,
+      html: `<!doctype html><html lang="en"><body style="background:#f1f4ee;color:#20352a;font-family:Arial,sans-serif;padding:16px"><main style="margin:auto;max-width:560px;border-radius:20px;background:#fff;padding:24px"><p style="font-weight:bold;color:#28533f">Aroha Retreat</p><p style="line-height:1.6">${safe.replace(/\n/g, "<br>")}</p></main></body></html>`,
+    };
+  }
   if (job.templateVersion === "email-v4-manual") {
     const result = approvedEmailTemplate(job),
       note =

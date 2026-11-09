@@ -24,6 +24,10 @@ export function isTester(token) {
     token?.firebase?.sign_in_provider !== "google.com"
   )
     return false;
+  return isTesterEmail(token.email);
+}
+export function isTesterEmail(email) {
+  if (!environment.preprod) return true;
   const allow = new Set(
     (process.env.PREPROD_TESTER_EMAILS || process.env.SUPER_ADMIN_EMAILS || "")
       .toLowerCase()
@@ -31,7 +35,7 @@ export function isTester(token) {
       .map((x) => x.trim())
       .filter(Boolean),
   );
-  return allow.has(String(token.email || "").toLowerCase());
+  return allow.has(String(email || "").toLowerCase());
 }
 
 export function runtimeServiceName(target = process.env.FUNCTION_TARGET || "") {

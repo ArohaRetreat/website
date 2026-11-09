@@ -14,8 +14,22 @@ import { transaction, fail } from "./core.mjs";
 import { financeHandler } from "./finance.mjs";
 import { feedbackHandler } from "./feedback.mjs";
 import { hostHandler } from "./host.mjs";
+import studioContracts from "./studio-contract.json" with { type: "json" };
+import { studioDashboard, studioDocuments, studioGuest, studioGuestPayments } from "./studio-data.mjs";
+import { studioEmail } from "./studio-email.mjs";
+
+const studioOperations = new Map(studioContracts.map((definition) => [definition.operationId, definition]));
+function studioHandler(args) {
+  const op = args.ctx.operation;
+  if (op === "getStudioDashboard") return studioDashboard(args);
+  if (op === "getStudioGuest") return studioGuest(args);
+  if (op === "listStudioGuestPayments") return studioGuestPayments(args);
+  if (op === "listStudioDocuments" || op === "listMyDocuments") return studioDocuments(args);
+  return studioEmail(args);
+}
 const handlers = {
   host: hostHandler,
+  studio: studioHandler,
   customers: customersHandler,
   communications: communicationsHandler,
   media: mediaHandler,
@@ -36,7 +50,9 @@ export async function platformOperation(
   key,
   options = {},
 ) {
-  const definition = definitionsById.get(operation);
+  const studio = studioOperations.get(operation);
+  if (studio && token._integration) fail("FORBIDDEN", 403);
+  const definition = studio || definitionsById.get(operation);
   if (!definition) fail("NOT_FOUND", 404);
   if (definition.handler === "booking-alias") {
     validate(definition.input, input);
