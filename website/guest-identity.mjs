@@ -47,10 +47,10 @@ export async function mountGuestIdentity(root, { call, bookingId, onNumber = () 
         <form>
           <p>Optional. Use a photo of an adult’s ID with the document number covered. No Aadhaar or children’s documents. Bring the original if required.${location.hostname.startsWith("aroha-retreat-preprod.") ? " Use synthetic files only in pre-prod." : ""}</p>
           <label class="identity-file">ID photo (JPG or PNG, up to 1 MB)<input name="photo" type="file" accept="image/jpeg,image/png" required></label>
-          <label class="identity-consent"><input name="consent" type="checkbox" required><span>${staff
-            ? "The guest agreed to keep this photo in private storage for future check-ins until they ask us to remove it or remove it from their profile."
-            : futureCheckinConsent}</span></label>
-          <button type="submit" class="primary">Save ID photo</button>
+          ${staff
+            ? '<label class="identity-consent"><input name="consent" type="checkbox" required><span>The guest agreed to save this photo privately for future check-ins. They can remove it from their profile or ask us to remove it.</span></label>'
+            : '<p>Your photo stays in private storage for future check-ins. Booking managers can review it during an active booking. You can remove it any time.</p>'}
+          <button type="submit" class="primary">${staff ? "Save ID photo" : "Save ID for future check-ins"}</button>
         </form></details>` : ""}
       <p role="status" data-id-status></p>
     </section>`;
@@ -64,7 +64,7 @@ export async function mountGuestIdentity(root, { call, bookingId, onNumber = () 
       event.preventDefault();
       const { photo: photoInput, consent } = event.currentTarget.elements;
       const file = photoInput.files[0];
-      const agreed = consent.checked;
+      const agreed = !staff || consent?.checked === true;
       if (!file || file.size > maxBytes || !["image/jpeg", "image/png"].includes(file.type)) {
         announce("Choose a JPG or PNG photo no larger than 1 MB.");
         return;
