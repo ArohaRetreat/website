@@ -15,8 +15,8 @@ const esc = (v) =>
       ],
   );
 const modules = () => [
-  ...(session?.modules?.website ? ["website"] : []),
   ...(["viewer", "manager"].includes(session?.modules?.bookings) ? ["bookings"] : []),
+  ...(session?.modules?.website ? ["website"] : []),
   ...(session?.modules?.access ? ["access"] : []),
 ];
 const labels = {
@@ -29,6 +29,7 @@ function message(text) {
 }
 function loginScreen(error = "") {
   frames.clear();
+  document.body.classList.remove("booking-workspace","booking-navigation-ready");
   root.innerHTML = `<main class="studio-login"><img src="/assets/brand/logo-forest.svg" alt="Aroha Retreat" width="190"><h1>Host Studio</h1><p>One workspace for your website and bookings. Your access determines which modules you can use.</p><p role="status">${esc(error)}</p><button id="studio-login">Sign in with Google</button><a href="/">Return to Aroha</a></main>`;
   document.querySelector("#studio-login").onclick = () =>
     login().catch(() =>
@@ -90,6 +91,7 @@ async function showModule() {
     frame.title = labels[selected];
     frame.src = "/admin/modules/" + selected + "/";
     frame.className = "studio-module";
+    if (selected === "bookings") frame.addEventListener("load", shareBookingNavigation);
     document.querySelector("#studio-workspace").append(frame);
     frames.set(selected, frame);
   }
@@ -182,13 +184,23 @@ async function renderAccessPage(cursor) {
   accessCursor = cursor;
   await renderAccess();
 }
-window.addEventListener("message", (e) => {
-  if (
-    e.origin !== location.origin ||
-    e.source !== frames.get("website")?.contentWindow
-  )
-    return;
-  if (e.data?.type === "aroha-studio-dirty") dirty = e.data.dirty === true;
+function shareBookingNavigation() {
+  frames.get("bookings")?.contentWindow?.postMessage({
+    type:"aroha-studio-navigation",
+    website:modules().includes("website"),
+    access:modules().includes("access"),
+  },location.origin);
+}
+window.addEventListener("message", (event) => {
+  if (event.origin !== location.origin || !session) return;
+  if (event.source === frames.get("website")?.contentWindow && event.data?.type === "aroha-studio-dirty")
+    dirty = event.data.dirty === true;
+  if (event.source !== frames.get("bookings")?.contentWindow) return;
+  if (event.data?.type === "aroha-studio-bookings-ready") shareBookingNavigation();
+  if (event.data?.type === "aroha-studio-navigation-ready")
+    document.body.classList.add("booking-navigation-ready");
+  if (event.data?.type === "aroha-studio-open-module" && ["website","access"].includes(event.data.module) && modules().includes(event.data.module))
+    location.hash = event.data.module;
 });
 window.addEventListener("hashchange", () => void showModule());
 window.addEventListener("beforeunload", (e) => {

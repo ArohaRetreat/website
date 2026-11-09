@@ -560,3 +560,107 @@ test('reusable acceptance scenarios use real HTTP contracts and retire only thei
     assert.equal((await db.collection('aroha_bookings').get()).size,1);
   }finally{for(const b of existing)await call(user,'/booking/booking-action',{id:b.id,expectedVersion:b.version,action:'cancel'});await new Promise(r=>server.close(r));}
 });
+
+test("Studio dashboard, guest summaries, issued documents and manual email use shared pre-prod authorization", async () => {
+  const messages = [];
+  const collector = createServer(async (req, res) => {
+    let raw = "";
+    for await (const chunk of req) raw += chunk;
+    const payload = JSON.parse(raw);
+    const id = randomUUID();
+    messages.push({ id, payload });
+    res.setHeader("Content-Type", "application/json");
+    res.end(JSON.stringify({ data: { id }, error: null }));
+  });
+  await new Promise((resolve) => collector.listen(17881, "127.0.0.1", resolve));
+  try {
+    const owner = await google("owner@example.test");
+    const guest = await google("other@example.test");
+    const stranger = await google("guest@example.test");
+    await db.collection("aroha_members").doc(owner.localId).set({ role: "superadmin", active: true });
+    const studio = (actor, operation, input = {}, key) => call(actor, "/platform", { operation, input }, { key });
+    const now = Date.now();
+    const id = "studio-" + randomUUID();
+    const today = new Date(now + 19800000).toISOString().slice(0, 10);
+    const tomorrow = new Date(Date.parse(today) + 86400000).toISOString().slice(0, 10);
+    const invoiceId = id + "-v1";
+    const b = {
+      id, owner: guest.localId, reference: "AR-STUDIO-TEST", version: 1, status: "confirmed",
+      kind: "private", deskKind: "private", arrival: today, departure: tomorrow,
+      guests: 1, adults: 1, units: [], allocations: [], createdAt: now, contact: { name: "Studio Sample", phone: "+910000000001" },
+      startsAt: now, endsAt: now + 86400000, subtotal: 120000, total: 120000, discount: 0, invoiceId,
+    };
+    await db.collection("aroha_preprod_booking_profiles").doc(guest.localId).set({
+      id: guest.localId, name: "Studio Sample", email: "other@example.test", contact: b.contact, searchName: "studio sample",
+    }, { merge: true });
+    await db.collection("aroha_preprod_bookings").doc(id).set(b);
+    await db.collection("aroha_preprod_invoices").doc(invoiceId).set({
+      id: invoiceId, number: "TEST-AR-STUDIO-0001", bookingId: id, owner: b.owner, environment: "pre-prod",
+      currency: "INR", documentTemplateVersion: "pdf-v4", createdAt: now, version: 1, reference: b.reference,
+      kind: b.kind, arrival: b.arrival, departure: b.departure, startsAt: b.startsAt, endsAt: b.endsAt,
+      guestName: b.contact.name, guestEmail: "other@example.test", issuer: { name: "Aroha Retreat", address: "Synthetic address", paymentInstructions: "Synthetic instructions" },
+      test: true, status: "unpaid", lineItems: [{ label: "Private room", amount: b.total }],
+      subtotal: b.total, total: b.total, discount: 0, amountPaid: 0, balanceDue: b.total,
+    });
+    const dashboard = await studio(owner, "getStudioDashboard");
+    assert.equal(dashboard.httpStatus, 200, JSON.stringify(dashboard));
+    assert.ok(dashboard.arrivals >= 1);
+    const viewerDashboard = await studio(guest, "getStudioDashboard");
+    assert.equal(viewerDashboard.httpStatus, 200);
+    assert.equal(viewerDashboard.balanceDuePaise, null);
+    assert.equal((await studio(stranger, "getStudioDashboard")).httpStatus, 403);
+    assert.equal((await studio(guest, "getStudioGuest", { id: guest.localId })).httpStatus, 403);
+    const before = await studio(owner, "getStudioGuest", { id: guest.localId });
+    assert.equal(before.httpStatus, 200, JSON.stringify(before));
+    const unpaid = await studio(guest, "listMyDocuments");
+    assert.equal(unpaid.httpStatus, 200, JSON.stringify(unpaid));
+    assert.ok(!unpaid.items.some((d) => d.id === invoiceId));
+    const payment = await studio(owner, "recordPayment", { id, expectedVersion: 0, amountPaise: 40000, method: "cash", receivedAt: now, verified: true });
+    assert.equal(payment.httpStatus, 200, JSON.stringify(payment));
+    const after = await studio(owner, "getStudioGuest", { id: guest.localId });
+    assert.equal(after.netVerifiedPaidPaise, before.netVerifiedPaidPaise + 40000);
+    const history = await studio(owner, "listStudioGuestPayments", { id: guest.localId });
+    assert.ok(history.items.some((p) => p.id === payment.payment.id));
+    const list = await studio(guest, "listMyDocuments");
+    assert.equal(list.items.find((d) => d.id === invoiceId).currentBalanceDuePaise, 80000);
+    const receipt = list.items.find((d) => d.id === payment.document.id);
+    assert.equal(receipt.paymentPaise, 40000);
+    assert.equal(receipt.balanceDuePaise, 80000);
+    const own = await studio(guest, "downloadDocument", { id, documentId: invoiceId });
+    assert.equal(own.httpStatus, 200);
+    assert.match(Buffer.from(own.contentBase64, "base64").toString("ascii", 0, 8), /^%PDF-/);
+    assert.equal((await studio(stranger, "downloadDocument", { id, documentId: invoiceId })).httpStatus, 404);
+    assert.equal((await studio(owner, "listStudioDocuments", { id: guest.localId, limit: 1 })).items.length, 1);
+    assert.equal((await db.collection("aroha_preprod_invoices").doc(invoiceId).get()).data().object, undefined);
+
+    const input = { id: guest.localId, bookingId: id, subject: "Studio confirmation", message: "Welcome <guest>." };
+    assert.equal((await studio(stranger, "sendStudioEmail", input)).httpStatus, 403);
+    assert.equal((await studio(owner, "sendStudioEmail", { ...input, id: stranger.localId })).httpStatus, 404);
+    const key = randomUUID();
+    const queued = await studio(owner, "sendStudioEmail", input, key);
+    assert.equal(queued.httpStatus, 200, JSON.stringify(queued));
+    assert.equal(queued.status, "queued");
+    assert.equal((await studio(owner, "sendStudioEmail", input, key)).id, queued.id);
+    assert.equal((await studio(owner, "sendStudioEmail", { ...input, message: "Different" }, key)).httpStatus, 409);
+    await until(() => messages.some((m) => m.payload.body.tags?.some((tag) => tag.name === "job_id" && tag.value === queued.id)));
+    const accepted = messages.find((m) => m.payload.body.tags.some((tag) => tag.name === "job_id" && tag.value === queued.id));
+    assert.deepEqual(accepted.payload.body.to, ["other@example.test"]);
+    assert.equal(accepted.payload.body.replyTo, "owner@example.test");
+    assert.equal(accepted.payload.body.subject, "[TEST] Studio confirmation");
+    assert.match(accepted.payload.body.html, /Welcome &lt;guest&gt;/);
+    const event = JSON.stringify({ type: "email.delivered", data: { email_id: accepted.id, to: ["other@example.test"], tags: { environment: "pre-prod", job_id: queued.id } } });
+    const eventId = "msg_" + randomUUID(), timestamp = String(Math.floor(Date.now() / 1000));
+    const signature = createHmac("sha256", Buffer.from("c3ludGhldGljLXdlYmhvb2stc2VjcmV0", "base64")).update(eventId + "." + timestamp + "." + event).digest("base64");
+    const webhook = await fetch(base + "/email/webhook", { method: "POST", body: event, headers: {
+      "Content-Type": "application/json", "svix-id": eventId, "svix-timestamp": timestamp, "svix-signature": "v1," + signature,
+    } });
+    assert.equal(webhook.status, 200);
+    const detail = await studio(owner, "getStudioEmail", { jobId: queued.id });
+    assert.equal(detail.status, "delivered");
+    assert.equal(detail.message, input.message);
+    assert.ok((await studio(owner, "listStudioEmail", { id: guest.localId })).items.some((j) => j.id === queued.id));
+    assert.equal((await studio(guest, "getStudioEmail", { jobId: queued.id })).httpStatus, 403);
+  } finally {
+    await new Promise((resolve) => collector.close(resolve));
+  }
+});

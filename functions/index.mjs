@@ -368,7 +368,7 @@ export const arohaApi = onRequest(
         }
         if(path==='/platform'&&req.method==='POST'){
           operation='platform';
-          await throttleBooking(db,token.uid);
+          await throttleBooking(db,token.uid,b.operation==='sendStudioEmail'?{lane:'studio-mail',limit:10}:undefined);
           if(!b||Object.keys(b).some(k=>!['operation','input'].includes(k)))throw new DomainError('INVALID_FIELDS',422);
           const result=await platformOperation(db,token,b.operation,b.input,req.get('Idempotency-Key'),{requestId});
           if(b.operation==='downloadDocument'){const pdf=await invoicePdf(result.snapshot);return{contentBase64:pdf.buffer.toString('base64'),filename:result.metadata.number.replace(/[^A-Za-z0-9_.-]/g,'_')+'.pdf',contentType:'application/pdf'};}
@@ -438,6 +438,7 @@ export const arohaApi = onRequest(
                 admin,
                 start: req.query.start,
                 cursor: req.query.cursor,
+                workspace: req.query.workspace === "1",
               });
             if (req.method !== "POST") throw new DomainError("NOT_FOUND", 404);
             if (
