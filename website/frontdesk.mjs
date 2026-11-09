@@ -77,7 +77,7 @@ export function hostShell({ tab, manager, content, modules = {}, initials = "AR"
   const mobileLabels = ["Dashboard","Today","Calendar",manager?"Guests":"Requests"];
   return `<div class="workspace">
     <header class="topbar">
-      <a class="workspace-brand" href="/" aria-label="Aroha Retreat website"><span class="workspace-mark">A</span><span><strong>Host Studio</strong><small>Aroha Retreat</small></span></a>
+      <a class="workspace-brand" href="/" aria-label="Aroha Retreat website"><img src="/assets/brand/logo-white.svg" width="1000" height="340" alt=""><strong>Host Studio</strong></a>
       <form class="global-search" data-desk-search><label class="sr-only" for="desk-reference">${manager?"Find a booking or guest":"Find a booking reference"}</label><input id="desk-reference" name="reference" maxlength="254" minlength="2" autocomplete="off" placeholder="${manager?"Find a booking or guest":"Find booking reference"}" required><button aria-label="Search Studio" type="submit">${studioIcon("search")}</button></form>
       <div class="workspace-top-actions"><button type="button" class="workspace-mobile-search" data-mobile-search aria-label="Search Studio">${studioIcon("search")}</button><button type="button" class="workspace-account" data-studio-account aria-label="Studio account">${e(initials)}</button></div>
     </header>
