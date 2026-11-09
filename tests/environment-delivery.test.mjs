@@ -93,7 +93,7 @@ test("CRUD frontends require the deployed lifecycle API",()=>{assert.equal(compa
 test("nightly credit UI requires its deployed policy and unknown future versions stay blocked",()=>{assert.equal(compatibleBookingApi("0.27.0","0.12.1"),false);assert.equal(compatibleBookingApi("0.27.0","0.13.0"),true);assert.equal(compatibleBookingApi("0.27.0","0.14.0"),false);assert.equal(compatibleBookingApi("0.29.0","0.13.0"),false);});
 
 
-test("Host Studio 0.28 explicitly retains API 0.13 without allowing unknown backend contracts",async()=>{
+test("Host Studio releases require their compatible booking API versions",async()=>{
  const pkg=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8'));
  assert.equal(compatibleBookingApi(pkg.version,'0.17.0'),true);
  assert.equal(compatibleBookingApi(pkg.version,'0.16.2'),false);

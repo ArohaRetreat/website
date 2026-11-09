@@ -918,7 +918,7 @@ function render() {
   if (hostRoute() && state.actor?.bookingAccess === "viewer") {
     document
       .querySelectorAll(
-        "#main form:not([data-search]) input,#main form:not([data-search]) select,#main form:not([data-search]) textarea,#main form:not([data-search]) button,[data-action],[data-cancel],[data-unblock],[data-block-unit],[data-ready-unit],#manual-reservation",
+        "#main form:not([data-search], [data-appearance-form]) :is(input, select, textarea, button),[data-action],[data-cancel],[data-unblock],[data-block-unit],[data-ready-unit],#manual-reservation",
       )
       .forEach((el) => {
         el.disabled = true;

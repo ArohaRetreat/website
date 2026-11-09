@@ -496,7 +496,7 @@ export function mountStudioAppearance(target, identity) {
   const options = (key) => Object.entries(appearanceChoices[key]).map(([value, label]) =>
     `<option value="${value}" ${settings[key] === value ? "selected" : ""}>${label}</option>`).join("");
   target.innerHTML = `${heading("Settings","Personalise the way Host Studio looks on this browser.")}
-    <form class="workspace-card appearance-settings">
+    <form class="workspace-card appearance-settings" data-appearance-form>
       <h2>Appearance</h2>
       <fieldset><legend>Colour mode</legend><div class="appearance-modes">
         ${Object.entries(appearanceChoices.theme).map(([value,label]) => `<label><input type="radio" name="theme" value="${value}" ${settings.theme === value ? "checked" : ""}><span>${label}</span></label>`).join("")}

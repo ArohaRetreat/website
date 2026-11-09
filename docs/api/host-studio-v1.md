@@ -20,3 +20,7 @@ Document downloads use the existing owner-or-manager `downloadDocument` operatio
 Email is an explicit, idempotent staff action. Recipients come from the selected guest’s stored email and any associated booking must belong to that customer. Plain text is escaped before HTML rendering. Pre-prod respects the configured test inbox or restricts sends in booking mode to the tester allowlist. The existing worker and signed Resend webhook supply accepted, delayed, delivered, bounced and failed states. Delivery means the recipient mail server accepted the message. Replies use the configured Reply-To inbox.
 
 Invalid input returns a bounded error code. Missing permissions return `403`, an unrelated booking or unknown message returns `404`, duplicate idempotency keys with different payloads return `409`, expired cursors return `410`, and send throttles return `429`. Operations use existing platform audit and request telemetry. Names, addresses, email bodies and document details stay out of telemetry.
+
+## Production promotion
+
+Website 0.32.1 requires API 0.17.0. Verify the production counterparts of the Studio payment, document, invoice and notification indexes before deploying the API and existing mail workers. Publish Hosting from the checked production branch. Preserve the mail configuration, guest numbering and ID retention rules. Exercise booking creation, payments, PDFs and email delivery with synthetic data in Firebase emulators. Use live version, asset, access and configuration reads for production verification.
