@@ -1,3 +1,7 @@
+## Website 0.32.3 — Natura media in Firebase Storage
+
+- Preserve Natura’s pinned design pages and download links while serving its media from immutable Storage objects. Avoid downloading design archives on each Hosting build.
+
 ## Website 0.32.2 — Host Studio branding and footer
 
 - Show the Aroha Retreat logo in the Studio header and keep copyright and legal links visible at the bottom while the workspace scrolls.

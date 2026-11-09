@@ -60,7 +60,7 @@ jobs:
           AROHA_EMULATORS: '0'
         run: |
           npm run build
-          if [ "$GITHUB_REF" = refs/heads/main ]; then node scripts/prepare-pinned-design.mjs; fi
+          node scripts/prepare-pinned-design.mjs
       - name: Recheck current source after build
         env:
           GH_TOKEN: ${{ github.token }}
