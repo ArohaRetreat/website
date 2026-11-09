@@ -443,6 +443,13 @@ test("pre-prod HTTP booking, approval, private invoice and webhook stay inside t
     const claimed = await call(other, "/platform", { operation: "claimMyCustomer", input: {} });
     assert.equal(claimed.customerId, manualCustomerId, JSON.stringify(claimed));
     assert.equal((await identity(other, "status")).document.version, manualVersion);
+    const retain = { version: manualVersion, consent: true, consentPolicy: "guest-id-v2" };
+    assert.equal((await identity(owner, "retain", { ...retain, bookingId: walkId })).httpStatus, 403);
+    assert.equal((await identity(other, "retain", { ...retain, consent: false })).httpStatus, 422);
+    const retained = await identity(other, "retain", retain);
+    assert.equal(retained.document.version, manualVersion);
+    assert.equal(retained.document.expiresAt, null);
+    assert.equal(retained.document.status, "verified");
     await db.collection("aroha_members").doc(other.localId).set({ role: "viewer", active: true, bookingAccess: "viewer" });
     assert.equal((await identity(other, "status", { bookingId: walkId })).httpStatus, 403);
     const replaced = await identity(other, "upload", {

@@ -12,13 +12,14 @@ The Firebase API accepts JSON `POST /api/v1/guest-identity/{action}`. Every acti
 | `upload` | `version` (null on first upload), `consent: true`, optional `consentPolicy`, `contentType`, `contentBase64` | New pending-review document and guest number |
 | `preview` | current document `version` | Private JPEG bytes encoded as base64 |
 | `verify` | current document `version`; manager plus active `bookingId` | Document status and verification time |
+| `retain` | current document `version`, `consent: true`, `consentPolicy: "guest-id-v2"`; guest only | The same document with no fixed expiry |
 | `remove` | current document `version`; guest only | Null document and unchanged guest number |
 
 A summary contains an opaque version, upload time, expiry time or null and review status. A newer image resets review. Version conflicts return 409; reload before retrying. Missing or invalid sessions return 401, staff without access receive 403, malformed fields or images return 422, and requests are limited to 12/minute per caller. No storage path, original filename, ID number or public URL is returned. Mutations have version preconditions, so a client with an interrupted response can resolve through status. Verify marks a staff decision; the system does not authenticate the document or independently establish the guest’s identity.
 
 Consent is optional. The guest or booking manager must cover document numbers before upload; the server cannot detect Aadhaar or read redactions. Do not upload Aadhaar or children’s documents. The app accepts JPG/PNG up to 1 MiB, decodes a single image (12 MP input cap), removes metadata by re-encoding to JPEG and stores it under a private environment-specific prefix. Only the authenticated Function can return bytes; browser previews use revocable in-memory URLs. No image, filename, document ID, guest name or email is included in request telemetry. Private audit captures the action, actor, request ID and timestamp.
 
-New website uploads send `guest-id-v2` after the guest agrees to private storage for future check-ins. These photos have no fixed expiry and are retired on replacement, removal or profile erasure. Photos under `guest-id-v1` retain their 90-day expiry. An upload without a policy still uses `guest-id-v1` for older clients. Guests can replace an older photo using the new consent.
+New website uploads send `guest-id-v2` after the guest agrees to private storage for future check-ins. These photos have no fixed expiry and are retired on replacement, removal or profile erasure. Photos under `guest-id-v1` retain their 90-day expiry. An upload without a policy still uses `guest-id-v1` for older clients. Guests can opt in from their profile while an older photo is still active. The version and verification status stay the same.
 
 The existing five-minute retry worker removes up to 20 due blobs per run. Interrupted uploads expire from its queue after one day. Shared bucket soft-delete can retain deleted object generations beyond application access. After any `guest-id-v2` upload, preserve API 0.16.2 or later when rolling back Hosting so the active photo stays visible and removable.
 

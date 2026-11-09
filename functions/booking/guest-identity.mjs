@@ -21,6 +21,7 @@ const actions = {
   preview: ["version"],
   verify: ["version"],
   remove: ["version"],
+  retain: ["version", "consent", "consentPolicy"],
 };
 export const isIdentityAction = (action) => Object.hasOwn(actions, action);
 const fail = (code, status = 422) => { throw new BookingError(code, status); };
@@ -47,6 +48,12 @@ function validate(action, input) {
   if (action !== "status" && !(action === "upload" && input.version === null) && !validVersion(input.version))
     fail("INVALID_FIELDS");
   if (action === "verify" && !input.bookingId) fail("FORBIDDEN", 403);
+  if (action === "retain") {
+    if (input.bookingId) fail("FORBIDDEN", 403);
+    if (input.consent !== true || input.consentPolicy !== FUTURE_CHECKIN_CONSENT)
+      fail("IDENTITY_CONSENT_REQUIRED");
+    return null;
+  }
   if (action !== "upload") return null;
   if (input.consent !== true) fail("IDENTITY_CONSENT_REQUIRED");
   if ("consentPolicy" in input && ![LEGACY_CONSENT, FUTURE_CHECKIN_CONSENT].includes(input.consentPolicy))
@@ -206,6 +213,19 @@ export async function guestIdentity(db, token, action, input, requestId, options
 
   const result = await db.runTransaction(async (tx) => {
     const c = await getContext(tx), record = update(tx, c);
+    if (action === "retain") {
+      if (record.consentPolicy === FUTURE_CHECKIN_CONSENT && record.expiresAt === null)
+        return { number: c.number, record };
+      const jobRef = files(db).doc(record.version);
+      const job = (await tx.get(jobRef)).data();
+      if (job?.state !== "active" || job.owner !== c.ref.id ||
+          record.expiresAt <= (options.now ?? Date.now()))
+        fail("IDENTITY_VERSION_CONFLICT", 409);
+      record.expiresAt = null;
+      record.consentPolicy = FUTURE_CHECKIN_CONSENT;
+      tx.update(c.ref, { expiresAt: null, consentPolicy: FUTURE_CHECKIN_CONSENT });
+      tx.set(jobRef, { state: "active", owner: c.ref.id });
+    }
     if (action === "remove") {
       retire(tx, db, record, now);
       tx.delete(c.ref);

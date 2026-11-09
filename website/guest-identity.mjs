@@ -1,4 +1,5 @@
 const maxBytes = 1024 * 1024;
+const futureCheckinConsent = "I agree to keep this photo in private storage for future check-ins. Booking managers can review it during an active booking. I can remove it any time.";
 const date = (time) => new Intl.DateTimeFormat("en-IN", {
   day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata",
 }).format(time);
@@ -36,6 +37,7 @@ export async function mountGuestIdentity(root, { call, bookingId, onNumber = () 
         : "No saved ID."}</p>
       ${state?.canInspect ? `<div class="identity-actions">
         ${item ? button(photo ? "Hide photo" : "View ID photo", "preview") : ""}
+        ${item && !staff && item.expiresAt !== null ? button("Keep for future check-ins", "retain") : ""}
         ${item && !staff ? button("Remove ID", "remove") : ""}
         ${item && staff && openedVersion === item.version && item.status !== "verified"
           ? button("Mark as verified", "verify", true) : ""}
@@ -47,7 +49,7 @@ export async function mountGuestIdentity(root, { call, bookingId, onNumber = () 
           <label class="identity-file">ID photo (JPG or PNG, up to 1 MB)<input name="photo" type="file" accept="image/jpeg,image/png" required></label>
           <label class="identity-consent"><input name="consent" type="checkbox" required><span>${staff
             ? "The guest agreed to keep this photo in private storage for future check-ins until they ask us to remove it or remove it from their profile."
-            : "I agree to keep this photo in private storage for future check-ins. Booking managers can review it during an active booking. I can remove it any time."}</span></label>
+            : futureCheckinConsent}</span></label>
           <button type="submit" class="primary">Save ID photo</button>
         </form></details>` : ""}
       <p role="status" data-id-status></p>
@@ -91,9 +93,13 @@ export async function mountGuestIdentity(root, { call, bookingId, onNumber = () 
           return;
         }
         if (action === "remove" && !window.confirm("Remove your saved ID photo?")) return;
+        if (action === "retain" && !window.confirm(futureCheckinConsent)) return;
         if (action === "verify" && !window.confirm("Confirm that you checked the photo against the guest and the booking?")) return;
         void run(async () => {
-          const result = await request(action, { version: item.version });
+          const result = await request(action, {
+            version: item.version,
+            ...(action === "retain" ? { consent: true, consentPolicy: "guest-id-v2" } : {}),
+          });
           if (action === "preview") {
             if (!root.isConnected) return;
             const bytes = Uint8Array.from(atob(result.contentBase64), (c) => c.charCodeAt(0));
@@ -103,6 +109,7 @@ export async function mountGuestIdentity(root, { call, bookingId, onNumber = () 
           }
           revoke();
           Object.assign(state, result);
+          if (action === "retain") return "ID photo saved for future check-ins.";
           return action === "verify" ? "ID marked as verified." : "ID photo removed.";
         });
       };
