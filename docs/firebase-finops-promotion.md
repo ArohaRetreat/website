@@ -17,3 +17,13 @@ Pre-production implementation for #130. Production promotion requires its own ap
 3. Choose the serving bucket and delivery path using India latency and actual combined costs. Delhi is outside the Cloud Storage Always Free regions. Verify the rollback path and public/private boundary before any production move. Retain the private billing objects and template CID artwork.
 4. Review shared Artifact Registry cleanup and any budget controls as their own decision. Check active revisions and rollback first. A project cap can affect both environments. Keep native cost alerts, bounded scaling and opt-out for optional load. Do not add another managed Google Cloud service to achieve an apparent saving.
 5. Use an independently reviewed production PR and exact-source release. Promote the media manifest and worker only after production approval. Verify mobile, desktop, booking and Studio permissions, immediate and deferred email, secure invoices, telemetry and rollback before closing the rollout.
+
+## Natura Hosting cutover
+
+The website workflow stages the pinned Natura export in pre-production before publishing it to production. The build verifies every file in the design shell against `config/natura-export-files.json`. It limits the Natura shell to 650 KB and keeps the website’s 3 MB shell guard separate. Hosting retains Natura’s HTML, scripts, styles, core catalogue data, captions and the farm icon sprite. The sprite needs same-origin access for SVG references.
+
+Serve the remaining approved design files from immutable objects in the existing Firebase Storage bucket. Generate temporary redirects from the exact export pin so established asset paths and ZIP checksums work. Future Hosting builds restore only the small pinned shell. They verify a bounded set of media types, legacy URLs and byte ranges without fetching the archives.
+
+For a pin update, verify the new upstream build against the published raw export hashes. Upload the objects with `scripts/publish-natura-media.mjs --pre-prod --apply --source <absolute-natura-export>`, test pre-production links and browser downloads, then promote the same bytes. `scripts/configure-natura-cors.mjs` adds GET and HEAD only for the selected environment's Hosting origins. Each rule uses a metadata generation precondition. Existing private object permissions continue to apply.
+
+Keep the live and a known-good rollback version for each site. Check release references before removing older versions or expired preview channels. Hosting storage samples can lag version deletion, and bandwidth already transferred remains in that billing period. Use Hosting domain counters for volume and request logs for URL attribution where available.

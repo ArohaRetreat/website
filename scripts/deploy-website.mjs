@@ -20,7 +20,8 @@ const config = JSON.parse(
 );
 if (config.hosting.site !== "aroha-retreat" || config.hosting.public !== "dist")
   throw Error("Unexpected Hosting target.");
-await verifyHostingComposition(root, git.stdout.trim());
+const composition = await verifyHostingComposition(root, git.stdout.trim());
+if (composition.designMedia) throw Error("PUBLISH_NATURA_VIA_ENVIRONMENT_WORKFLOW");
 const channelFlag = process.argv.indexOf("--channel"),
   channel = process.argv[channelFlag + 1];
 const production = process.argv.includes("--production");

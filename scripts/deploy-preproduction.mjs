@@ -6,6 +6,8 @@ import { randomUUID } from "node:crypto";
 import { hostingRelease, deliveryToken } from "./delivery/credentials.mjs";
 import { reportDeployment } from "./delivery/deployment.mjs";
 import { assertShellBudget, readMediaManifest, verifyMediaMetadata, writePreprodHostingConfig } from "./preprod-media.mjs";
+import { configureNaturaHosting, naturaSamples, readNaturaLayout, verifyNaturaObject } from "./natura-media.mjs";
+import { verifyHostingComposition } from "./hosting-composition.mjs";
 import { verifyLive } from "./delivery/verify-live.mjs";
 const root = process.cwd() + "/",
   cli = process.env.FIREBASE_CLI_PATH;
@@ -56,10 +58,14 @@ const readiness = spawnSync(
 );
 if (readiness.status !== 0) throw Error("PREPROD_READINESS_REQUIRED");
 if (website.mediaStorage !== "firebase") throw Error("PREPROD_MEDIA_OFFLOAD_REQUIRED");
-await assertShellBudget("dist-preprod");
+await assertShellBudget("dist-preprod", { includeDesign: true });
+const naturaLayout = await readNaturaLayout(root);
+const composition = await verifyHostingComposition(root, source, { directory: "dist-preprod" });
+if (!composition.designMedia) throw Error("NATURA_MEDIA_OFFLOAD_REQUIRED");
 const media = await readMediaManifest(root);
 await verifyMediaMetadata(media);
-const hostingConfig = await writePreprodHostingConfig(root, media);
+await Promise.all(naturaSamples(naturaLayout).map(file => verifyNaturaObject(file)));
+const hostingConfig = await configureNaturaHosting(await writePreprodHostingConfig(root, media), naturaLayout);
 const token = await deliveryToken(),
   productionBefore = await productionBaseline();
 const record = {
@@ -123,7 +129,8 @@ if (record.status === "deployed") {
     record.verification = await verifyLive(root, website, {
       origin: "https://aroha-retreat-preprod.web.app",
       directory: "dist-preprod",
-      includeDesign: false,
+      includeDesign: true,
+      naturaLayout,
     });
   } catch {
     record.verification = {

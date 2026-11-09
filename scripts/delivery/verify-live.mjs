@@ -1,3 +1,4 @@
+import {verifyNaturaRoutes} from "../natura-media.mjs";
 import {readMediaManifest, verifyLiveMedia} from "../preprod-media.mjs";
 import {compatibleBookingApi} from "./environment-policy.mjs";
 import { ADDITIONAL_MEDIA } from "../content/farm-media-refresh.mjs";
@@ -12,6 +13,7 @@ export async function verifyLive(
     origin = "https://aroharetreat.com",
     directory = "dist",
     includeDesign = true,
+    naturaLayout,
   } = {},
 ) {
   const paths = [
@@ -57,6 +59,8 @@ export async function verifyLive(
     "/assets/sunset.css",
     "/assets/footer.css",
   ];
+  if (naturaLayout) paths.push("/hosting-composition.json", ...naturaLayout.shell
+    .filter(file => file.path !== "/design/index.html").map(file => file.path));
   const bookingDocument = await readFile(
     root + directory + "/book/index.html",
     "utf8",
@@ -72,7 +76,7 @@ export async function verifyLive(
   );
   for (const name of await readdir(root + directory + "/assets/chunks"))
     paths.push("/assets/chunks/" + name);
-  const offloaded = !includeDesign && expected.mediaStorage === "firebase";
+  const offloaded = expected.mediaStorage === "firebase";
   let checkedBytes = 0;
   const checks = [];
   for (const path of paths.filter(
@@ -110,7 +114,7 @@ export async function verifyLive(
   });
   if (bookingDenied.status !== 401)
     throw Error("LIVE_BOOKING_ACCESS_CHECK_FAILED");
-  if (!includeDesign) {
+  if (expected.environment === "pre-prod") {
     const booking = await (
       await fetchImpl(origin + "/api/v1/booking/public", {
         signal: AbortSignal.timeout(15000),
@@ -143,6 +147,7 @@ export async function verifyLive(
     hashMatchedFiles: checks.length,
     checkedBytes,
     mediaRangeChecks,
+    naturaMediaChecks: naturaLayout ? await verifyNaturaRoutes(origin, naturaLayout, fetchImpl) : 0,
     checks,
     protectedDraftStatus: denied.status,
   };
