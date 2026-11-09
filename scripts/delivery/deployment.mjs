@@ -114,7 +114,7 @@ export async function reportDeployment(record, token) {
   }
   return exportDelivery(events, otel, token, marker);
 }
-export async function deployObserved(root, cli, args) {
+export async function deployObserved(root, cli, args, { naturaLayout } = {}) {
   // Require export credentials before changing production. They never enter Firebase arguments.
   const token = await deliveryToken(),
     before = await hostingRelease();
@@ -155,7 +155,7 @@ export async function deployObserved(root, cli, args) {
     record.verificationStartedAt = new Date().toISOString();
     for (let attempt = 0; attempt < 5; attempt++) {
       try {
-        record.verification = await verifyLive(root, website);
+        record.verification = await verifyLive(root, website, { naturaLayout });
         break;
       } catch {
         record.verification = {

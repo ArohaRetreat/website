@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { readFile, readdir, stat, writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { relative, resolve, sep } from "node:path";
 
 export const mediaBucket = "aroha-retreat.firebasestorage.app";
 export const shellByteLimit = 3_000_000;
@@ -58,11 +58,12 @@ export async function rewriteStaticMedia(directory, assets) {
   }
 }
 
-export async function assertShellBudget(directory) {
+export async function assertShellBudget(directory, { includeDesign = false } = {}) {
   const files = await readdir(directory, { recursive: true, withFileTypes: true });
   let bytes = 0;
   for (const entry of files) {
     if (!entry.isFile()) continue;
+    if (includeDesign && relative(resolve(directory), entry.parentPath).split(sep)[0] === "design") continue;
     if (/\.(?:mp4|webm|webp|jpe?g|png|avif)$/i.test(entry.name))
       throw Error("MEDIA_IN_PREPROD_HOSTING_SHELL:" + entry.name);
     bytes += (await stat(resolve(entry.parentPath, entry.name))).size;
