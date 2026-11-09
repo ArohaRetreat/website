@@ -930,7 +930,7 @@ function render() {
       ?.focus({ preventScroll: true });
   if (view !== renderedView) {
     playMotion("view", document.querySelector("#main"), [
-      { opacity: 0, transform: "translateY(6px)" },
+      { opacity: 0, transform: hostRoute() ? "none" : "translateY(6px)" },
       { opacity: 1, transform: "translateY(0)" },
     ]);
     renderedView = view;

@@ -1,6 +1,8 @@
 /* Host Studio layout. Shared controls and typography live in material.css. */
 .frontdesk-v2 .review-banner,.frontdesk-v2.studio-embedded .preprod-banner{display:none}
 .frontdesk-v2 body:has(#app > .workspace) {
+  position: fixed;
+  inset: 0;
   display: flex;
   flex-direction: column;
   height: 100dvh;
@@ -98,7 +100,7 @@
   grid-template-columns: 220px minmax(0, 1fr);
   grid-template-rows: var(--studio-bar-height) minmax(0, 1fr);
 }
-.frontdesk-v2 .workspace .topbar{grid-column:1/-1;grid-row:1;position:sticky;top:0;z-index:7;min-height:var(--studio-bar-height);height:var(--studio-bar-height);display:grid;grid-template-columns:220px minmax(0,1fr) auto;gap:18px;padding:0 20px;background:var(--studio-topbar,#214833);border:0;color:#f0f7ee}
+.frontdesk-v2 .workspace .topbar{grid-column:1/-1;grid-row:1;position:sticky;top:0;z-index:7;min-height:var(--studio-bar-height);height:var(--studio-bar-height);display:grid;grid-template-columns:max-content minmax(0,1fr) auto;gap:18px;padding:0 20px;background:var(--studio-topbar,#214833);border:0;color:#f0f7ee}
 .frontdesk-v2 .workspace-brand{display:flex;align-items:center;gap:10px;min-width:0;color:inherit;text-decoration:none}
 .frontdesk-v2 .workspace-brand img{display:block;flex:none;width:112px;height:auto}
 .frontdesk-v2 .workspace-brand strong{font:600 16px/1.2 var(--md-display-font);padding-inline-start:10px;border-inline-start:1px solid #ffffff33}
@@ -208,6 +210,7 @@
   }
   .frontdesk-v2 .workspace .topbar{grid-template-columns:minmax(0,1fr) auto;gap:7px;padding-inline:12px}
   .frontdesk-v2 .workspace-brand img{width:94px}
+  .frontdesk-v2 .workspace-brand strong{font-size:14px}
   .frontdesk-v2 .workspace .global-search{display:none}
   .frontdesk-v2 .workspace .workspace-mobile-search{display:inline-flex}
   .frontdesk-v2 .workspace .page{grid-column:1}
