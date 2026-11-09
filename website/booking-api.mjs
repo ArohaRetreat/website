@@ -11,7 +11,7 @@ export async function bookingApi(
   operation,
   body,
   key,
-  { admin = false, start, cursor } = {},
+  { admin = false, start, cursor, workspace = false } = {},
 ) {
   await ready;
   if (operation === "session") {
@@ -55,7 +55,7 @@ export async function bookingApi(
   if (operation === "calendar") return request(operation, body);
   if (!auth.currentUser) throw Error("Sign in with Google to continue.");
   try {
-    return await request(operation, body, key, { admin, start, cursor });
+    return await request(operation, body, key, { admin, start, cursor, workspace });
   } catch (e) {
     if (operation === "state" && admin && e.code === "FORBIDDEN")
       return request("public");
@@ -66,7 +66,7 @@ async function request(
   operation,
   body,
   key,
-  { admin = false, start, cursor } = {},
+  { admin = false, start, cursor, workspace = false } = {},
 ) {
   let customerLinkNotice;
   if (operation === "state" && !admin && auth.currentUser) {
@@ -107,6 +107,7 @@ async function request(
   if (admin) query.set("admin", "1");
   if (start) query.set("start", start);
   if (cursor) query.set("cursor", cursor);
+  if (admin && workspace) query.set("workspace", "1");
   const token = await auth.currentUser?.getIdToken();
   const stage = {
     availability: "availability",

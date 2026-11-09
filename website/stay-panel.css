@@ -20,3 +20,16 @@
 .stay-panel summary { cursor: pointer; padding: 10px 0; font-weight: 600; }
 .stay-panel [data-stay-message] { min-height: 24px; color: #8a402e; }
 @media (max-width: 480px) { .stay-panel .reviewpanel { padding: 18px; border-radius: 14px; } .stay-panel h3 { font-size: 22px; } }
+
+.profile-sections{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 20px}
+.profile-sections [aria-current=page]{background:var(--md-primary-container);color:var(--md-on-container);border-color:transparent}
+.financial-documents{min-width:0}
+.financial-empty{padding:18px 0;color:var(--md-muted)}
+.financial-preview{width:min(540px,calc(100vw - 24px))}
+.financial-preview header,.financial-preview dl div,.financial-preview .current-balance{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.financial-preview h2{margin:4px 0 0}
+.financial-preview dl{border:1px solid var(--md-line);border-radius:12px;padding:10px 14px}
+.financial-preview dl div{padding:7px 0;border-bottom:1px solid var(--md-line)}
+.financial-preview dl div:last-child{border:0}
+.financial-preview dd{text-align:right;margin:0;font-weight:600;min-width:0;white-space:normal;overflow-wrap:anywhere}
+.financial-preview .current-balance{background:var(--md-primary-container);border-radius:10px;padding:9px 12px}

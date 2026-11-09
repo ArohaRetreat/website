@@ -294,6 +294,7 @@ export async function financeHandler({ tx, db, ctx, input, booking }) {
       });
     tx.update(col(db, "bookings").doc(booking.id), {
       financialVersion: summary.version + 1,
+      verifiedPaidPaise: next.paidPaise,
       version: booking.version + 1,
     });
     commitDocument(tx, db, prepared, ctx.now);
@@ -333,6 +334,7 @@ export async function financeHandler({ tx, db, ctx, input, booking }) {
     tx.set(col(db, "booking_payments").doc(reversal.id), reversal);
     tx.update(col(db, "bookings").doc(booking.id), {
       financialVersion: summary.version + 1,
+      verifiedPaidPaise: next.paidPaise,
       version: booking.version + 1,
     });
     if (receipt?.exists)

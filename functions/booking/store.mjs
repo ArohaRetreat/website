@@ -227,7 +227,7 @@ export async function publicBookingCalendar(db, input) {
 export async function bookingState(
   db,
   token,
-  { admin = false, start = todayIST(), cursor } = {},
+  { admin = false, start = todayIST(), cursor, workspace = false } = {},
 ) {
   const configRef = collection(db, "config").doc("site"),
     profileRef = collection(db, "profiles").doc(token.uid),
@@ -304,6 +304,7 @@ export async function bookingState(
       };
     },
   );
+  if (admin && workspace && !cursor) return project(s, actor, profile, [], { workspaceOnly: true });
   const now = Date.now(),
     col = reservations(db);
   let query = admin ? col : col.where("owner", "in", ownerIds);

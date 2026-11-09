@@ -1,3 +1,12 @@
+## Website 0.32.1 / API 0.17.0 — production Host Studio
+
+- Keep the walk-in action visible while editing, give guest search a padded responsive dialog, and show private-room choices only for private stays.
+- Show booking activity as a timeline. Use paged tables for payments, booking documents, guest history and sent email, with indexed guest filters for documents and email.
+- Give email separate compose and delivery views. Add host appearance settings, revised account cards, and the privacy and booking terms footer.
+- Open on the Dashboard with arrival, checkout and request queues. Use one booking inspector from the dashboard, calendar, guest profile and ledger.
+- Search for guests with bounded server queries. Review completed visits, recorded nights, verified payments, credits, booking history and issued documents.
+- Add Invoices & receipts to guest profiles. Generate authorized PDFs from issued snapshots without storing rendered files.
+
 ## Website 0.31.2 / API 0.16.2 — saved IDs for future check-ins
 
 - Keep newly consented guest ID photos in private Cloud Storage without a fixed expiry. Preserve the expiry previously agreed to for existing photos.

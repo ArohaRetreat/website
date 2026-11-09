@@ -70,7 +70,7 @@ export function openPrivacy(show) {
     if(analytics) initializeAnalytics(); else withdrawAnalytics();
     if(monitoring) initializeMonitoring(); else withdrawMonitoring();
     window.dispatchEvent(new Event("aroha-consent-change"));
-    document.querySelector("#details-dialog").close();
+    document.querySelector("#save-privacy").closest("dialog").close();
     if(wasMonitoring && !monitoring) location.reload();
   }
   document.querySelector("#save-privacy").onclick=()=>save();

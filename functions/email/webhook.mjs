@@ -103,6 +103,8 @@ export async function captureEmailWebhook(
     if ((rank[status] || 0) >= (rank[j.status] || 0))
       tx.update(ref, {
         status,
+        deliveryStatusAt: Date.now(),
+        ...(!j.acceptedAt && ["accepted", "delivered"].includes(status) ? { acceptedAt: Date.now() } : {}),
         uncertain: false,
         ...(event.type === "email.suppressed"
           ? { errorCode: "MAIL_PROVIDER_SUPPRESSED" }

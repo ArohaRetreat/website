@@ -399,6 +399,17 @@ test("expired quote keeps contact and notes and requires refreshed review rather
     ui.close();
   }
 });
+test("the production guest profile keeps identity access alongside invoices", async () => {
+  const ui = await mount({ environment: "production" });
+  try {
+    ui.click("#profile");
+    await ui.wait();
+    assert.ok(ui.d.querySelector("[data-guest-identity]"));
+    assert.ok(ui.d.querySelector('[data-act="invoices"]'));
+  } finally {
+    ui.close();
+  }
+});
 test("profile saves versioned contact; actor changes mask private UI and reject a delayed booking response", async () => {
   const ui = await mount({ deferDetail: true });
   try {

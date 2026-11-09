@@ -1,3 +1,5 @@
+import { downloadBookingDocument } from "./booking-documents.mjs";
+
 const esc = (v) =>
   String(v ?? "").replace(
     /[&<>"']/g,
@@ -168,21 +170,7 @@ export async function mountStayPanel(
         (button.onclick = async () => {
           button.disabled = true;
           try {
-            const r = await call("downloadDocument", {
-              id,
-              documentId: button.dataset.document,
-            });
-            const bytes = Uint8Array.from(atob(r.contentBase64), (c) =>
-              c.charCodeAt(0),
-            );
-            const url = URL.createObjectURL(
-              new Blob([bytes], { type: "application/pdf" }),
-            );
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = r.filename;
-            a.click();
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            await downloadBookingDocument(call, id, button.dataset.document);
           } catch {
             message(
               "This document could not be downloaded. Refresh the booking and try again.",
