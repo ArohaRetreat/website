@@ -9,13 +9,15 @@ import { readGuestNumber } from "./guest-number.mjs";
 export const MAX_ID_BYTES = 1024 * 1024;
 export const MAX_ID_REQUEST = Math.ceil(MAX_ID_BYTES / 3) * 4 + 1024;
 const DAY = 86400000;
-const RETENTION = 90 * DAY;
+const LEGACY_RETENTION = 90 * DAY;
+const LEGACY_CONSENT = "guest-id-v1";
+const FUTURE_CHECKIN_CONSENT = "guest-id-v2";
 let imageDecodes = 0;
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/;
 const validVersion = (value) => typeof value === "string" && uuid.test(value);
 const actions = {
   status: [],
-  upload: ["version", "consent", "contentType", "contentBase64"],
+  upload: ["version", "consent", "consentPolicy", "contentType", "contentBase64"],
   preview: ["version"],
   verify: ["version"],
   remove: ["version"],
@@ -47,6 +49,8 @@ function validate(action, input) {
   if (action === "verify" && !input.bookingId) fail("FORBIDDEN", 403);
   if (action !== "upload") return null;
   if (input.consent !== true) fail("IDENTITY_CONSENT_REQUIRED");
+  if ("consentPolicy" in input && ![LEGACY_CONSENT, FUTURE_CHECKIN_CONSENT].includes(input.consentPolicy))
+    fail("INVALID_IDENTITY_CONSENT_POLICY");
   const { contentBase64, contentType } = input;
   if (typeof contentBase64 !== "string" || contentBase64.length > MAX_ID_REQUEST ||
       !["image/jpeg", "image/png"].includes(contentType))
@@ -84,7 +88,11 @@ async function context(tx, db, token, bookingId, now) {
   const number = await readGuestNumber(tx, db, ownerIds);
   if (!canInspect) return { number, canInspect, canUpload };
   const snapshots = await tx.getAll(...ownerIds.map((id) => records(db).doc(id)));
-  const current = snapshots.filter((s) => s.data()?.expiresAt > now);
+  const current = snapshots.filter((snapshot) => {
+    const record = snapshot.data();
+    return record?.expiresAt > now ||
+      (record?.expiresAt === null && record.consentPolicy === FUTURE_CHECKIN_CONSENT);
+  });
   if (current.length > 1) fail("IDENTITY_REVIEW_REQUIRED", 409);
   const chosen = current[0] || snapshots.find((s) => s.id === customerId);
   return {
@@ -173,14 +181,20 @@ export async function guestIdentity(db, token, action, input, requestId, options
         const pending = (await tx.get(job)).data();
         if (pending?.state !== "pending" || pending.dueAt <= (options.now ?? Date.now()))
           fail("IDENTITY_UPLOAD_EXPIRED", 409);
+        const consentPolicy = input.consentPolicy ?? LEGACY_CONSENT;
+        const expiresAt = consentPolicy === FUTURE_CHECKIN_CONSENT ? null : now + LEGACY_RETENTION;
         const record = {
-          version: id, uploadedAt: now, expiresAt: now + RETENTION,
+          version: id, uploadedAt: now, expiresAt,
           contentType: "image/jpeg", uploadedBy: token.uid,
-          consentPolicy: "guest-id-v1", source: input.bookingId ? "host_manual" : "guest",
+          consentPolicy, source: input.bookingId ? "host_manual" : "guest",
         };
         retire(tx, db, previous, now);
         tx.set(c.ref, record);
-        tx.set(job, { dueAt: record.expiresAt, state: "active", owner: c.ref.id });
+        // Active photos saved for future check-ins join the cleanup queue only when retired.
+        tx.set(job, {
+          state: "active", owner: c.ref.id,
+          ...(expiresAt === null ? {} : { dueAt: expiresAt }),
+        });
         audit(tx, db, action, token.uid, requestId, now);
         return view(c.number, record);
       });

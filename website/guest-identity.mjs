@@ -32,7 +32,7 @@ export async function mountGuestIdentity(root, { call, bookingId, onNumber = () 
       }</div>
       <p>${!state ? "Loading guest identity…" : !state.canInspect
         ? "ID review is available once the booking is confirmed."
-        : item ? (item.status === "verified" ? "Verified by Aroha" : "Ready for review") + " · Expires " + date(item.expiresAt)
+        : item ? (item.status === "verified" ? "Verified by Aroha" : "Ready for review") + (item.expiresAt === null ? " · Saved for future check-ins" : " · Expires " + date(item.expiresAt))
         : "No saved ID."}</p>
       ${state?.canInspect ? `<div class="identity-actions">
         ${item ? button(photo ? "Hide photo" : "View ID photo", "preview") : ""}
@@ -46,8 +46,8 @@ export async function mountGuestIdentity(root, { call, bookingId, onNumber = () 
           <p>Optional. Use a photo of an adult’s ID with the document number covered. No Aadhaar or children’s documents. Bring the original if required.${location.hostname.startsWith("aroha-retreat-preprod.") ? " Use synthetic files only in pre-prod." : ""}</p>
           <label class="identity-file">ID photo (JPG or PNG, up to 1 MB)<input name="photo" type="file" accept="image/jpeg,image/png" required></label>
           <label class="identity-consent"><input name="consent" type="checkbox" required><span>${staff
-            ? "The guest agreed to save this photo privately for check-in for up to 90 days."
-            : "I agree to save this photo privately for check-in for up to 90 days. I can remove it any time."}</span></label>
+            ? "The guest agreed to keep this photo in private storage for future check-ins until they ask us to remove it or remove it from their profile."
+            : "I agree to keep this photo in private storage for future check-ins. Booking managers can review it during an active booking. I can remove it any time."}</span></label>
           <button type="submit" class="primary">Save ID photo</button>
         </form></details>` : ""}
       <p role="status" data-id-status></p>
@@ -73,7 +73,7 @@ export async function mountGuestIdentity(root, { call, bookingId, onNumber = () 
         for (let i = 0; i < bytes.length; i += 8192)
           binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
         const result = await request("upload", {
-          version: item?.version ?? null, consent: agreed,
+          version: item?.version ?? null, consent: agreed, consentPolicy: "guest-id-v2",
           contentType: file.type, contentBase64: btoa(binary),
         });
         revoke();

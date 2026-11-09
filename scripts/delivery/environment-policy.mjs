@@ -40,7 +40,7 @@ export function compatibleBookingApi(websiteVersion, apiVersion) {
   const api=/^0\.(\d+)\.(\d+)$/.exec(apiVersion || "");
   const requiredPatch = Number(website[1])>=24 ? 0 : (Number(website[1])===23 && Number(website[2])>=2) ? 3
     : Number(website[1])===23 && Number(website[2])>=1 ? 2 : Number(website[1])>=23 ? 1 : 0;
-  if(Number(website[1])===31)return !!api&&Number(api[1])===16;
+  if(Number(website[1])===31)return !!api&&Number(api[1])===16&&(Number(website[2])<2||Number(api[2])>=2);
   if(Number(website[1])===30)return !!api&&[15,16].includes(Number(api[1]));
   if(Number(website[1])===29)return !!api&&[14,15].includes(Number(api[1]));
   if(Number(website[1])>31)return false;
