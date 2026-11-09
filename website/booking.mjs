@@ -1,7 +1,7 @@
 import {installMaterialControls, confirmMaterial} from './material-controls.mjs';
 installMaterialControls();
 import { hostShell, hostDestinations, hostTabAllowed, mountFrontDesk, openStudioBooking } from "./frontdesk.mjs";
-import { chooseStudioGuest, mountStudioDashboard, mountStudioGuests, mountStudioMail } from "./studio-views.mjs";
+import { applyStudioAppearance, chooseStudioGuest, mountStudioAppearance, mountStudioDashboard, mountStudioGuests, mountStudioMail, studioInitials } from "./studio-views.mjs";
 import { mountBookingDocuments } from "./booking-documents.mjs";
 import {mountHostOperations,openManualBooking} from './host-operations.mjs';
 import {auth} from './firebase-auth.mjs';
@@ -9,6 +9,7 @@ import {visitDateLabel} from "./booking-visit-label.mjs";
 import {mountStayPanel} from './stay-panel.mjs';
 import { journeyStep } from "./booking-journey.mjs";
 import { bookingApi } from "./booking-api.mjs";
+import { openPrivacy } from "./guest-dialogs.mjs";
 const app = document.querySelector("#app"),
   dialog = document.querySelector("#detail");
 const esc = (v) =>
@@ -505,14 +506,16 @@ function studioTabs(items) {
 const calendarTabs = () => studioTabs([["calendar","Timeline"],["calendar-month","Month"],["reservations","List"],...(managesBookings() ? [["feedback","Feedback"]] : [])]);
 const spaceTabs = () => studioTabs([["inventory","Cottages"],["facilities","Facilities"],["blocks","Date blocks"],["settings","Booking rules"]]);
 const paymentTabs = () => studioTabs([["payments","Ledger"],...(managesBookings() ? [["documents","Documents"],["loyalty","Credits"]] : [])]);
+const hostName = () => state.actor.name && state.actor.name !== "Guest" ? state.actor.name : "Aroha host";
 function hostPage() {
   if (!hostTabAllowed(hostTab,managesBookings())) hostTab = "dashboard";
   if (state.actor?.role !== "host")
     return `<div class="host-welcome"><img src="/assets/brand/logo-forest.svg" width="200" alt="Aroha Retreat"><p class="eyebrow">HOST STUDIO</p><h1>A thoughtful stay<br>starts with you.</h1><p>Explore your reservation desk with a host account.<br>Guest sessions do not have access to host booking controls.</p><button class="button" id="host-login">Sign in to Host Studio ↗</button><a class="text-button" href="/book/">← Back to guest experience</a></div>`;
-  return hostShell({ tab:hostTab, manager:managesBookings(), content:hostContent(), modules:studioModules });
+  return hostShell({ tab:hostTab, manager:managesBookings(), content:hostContent(), modules:studioModules, initials:studioInitials(hostName()) });
 }
 function hostContent() {
   if (hostTab === "dashboard") return '<div data-studio-dashboard></div>';
+  if (hostTab === "appearance") return '<div data-studio-appearance></div>';
   if (hostTab === "guests") return '<div data-studio-guests></div>';
   if (hostTab === "mail") return '<div data-studio-mail></div>';
   if (hostTab === "reservations") return calendarTabs();
@@ -524,7 +527,7 @@ function hostContent() {
   if (hostTab === "loyalty") return paymentTabs() + '<div data-studio-guests></div>';
   if (hostTab === "payments") return paymentTabs() + '<div data-host-operations></div>';
   if (hostTab === "feedback") return calendarTabs() + '<div data-host-operations></div>';
-  if (hostTab === "documents") return paymentTabs() + '<section class="workspace-card"><h1>Booking documents</h1><p>View issued details and download invoices, receipts and checkout statements.</p><div data-studio-documents></div></section>';
+  if (hostTab === "documents") return paymentTabs() + '<header class="workspace-heading"><h1>Booking documents</h1><p>Find and export issued invoices, receipts and checkout statements.</p></header><div data-studio-documents></div>';
   const rooms = state.units.filter((u) => u.active);
   const title = (eye, h, p, action = "") => `<div class="section-heading studio-title"><div><p class="eyebrow">${eye}</p><h1>${h}</h1><p>${p}</p></div>${action}</div>`;
   if (hostTab === "calendar-month") {
@@ -733,6 +736,8 @@ function mountStudioWorkspace() {
   if (desk) void mountFrontDesk(desk,{ tab:hostTab, call, identity, openBooking, initialView:hostOptions.initialView });
   const dashboard = query("[data-studio-dashboard]");
   if (dashboard) void mountStudioDashboard(dashboard,{call,manager,openBooking});
+  const appearance = query("[data-studio-appearance]");
+  if (appearance) mountStudioAppearance(appearance,identity);
   const guests = query("[data-studio-guests]");
   if (guests) mountStudioGuests(guests,{call,openBooking,openManual,initial:hostOptions.search,initialCustomerId:hostOptions.customerId,tab:hostTab === "loyalty" ? "Credits" : "Overview"});
   const mail = query("[data-studio-mail]");
@@ -748,7 +753,7 @@ function mountStudioWorkspace() {
     } else mountStudioMail(mail,{call});
   }
   const documents = query("[data-studio-documents]");
-  if (documents) void mountBookingDocuments(documents,{call,staff:true});
+  if (documents) void mountBookingDocuments(documents,{call,staff:true,chooseGuest:(select) => chooseStudioGuest(call,select)});
 
   const search = async (raw, trigger) => {
     const term = raw.trim();
@@ -777,7 +782,7 @@ function mountStudioWorkspace() {
     panel.className = "filter-dialog workspace-menu";
     panel.setAttribute("data-dt-mask","");
     panel.setAttribute("aria-label",title);
-    panel.innerHTML = `<div class="dialog-head"><h2>${title}</h2><button type="button" data-dismiss aria-label="Close">×</button></div>${body}`;
+    panel.innerHTML = `<header class="dialog-head"><h2>${esc(title)}</h2><button type="button" class="text-button" data-dismiss aria-label="Close">×</button></header><div class="workspace-menu-body">${body}</div>`;
     document.body.append(panel);
     panel.querySelector("[data-dismiss]").onclick = () => panel.close();
     panel.addEventListener("close",()=>{panel.remove();if(trigger?.isConnected)trigger.focus();},{once:true});
@@ -806,11 +811,18 @@ function mountStudioWorkspace() {
       switchHostTab("calendar",{refresh:true});
     } else if ("hostRefresh" in data) {
       void run(async () => { await refresh();render(); });
-    } else if ("studioTheme" in data) {
-      const theme = document.documentElement.dataset.studioTheme === "dark" ? "light" : "dark";
-      document.documentElement.dataset.studioTheme = theme;
-      control.setAttribute("aria-pressed",String(theme === "dark"));
-      try { localStorage.setItem("aroha-studio-theme",theme); } catch {}
+    } else if ("studioPrivacy" in data) {
+      const panel = modal("Privacy policy",'<div data-privacy-notice></div>',control);
+      openPrivacy((markup) => { panel.querySelector("[data-privacy-notice]").innerHTML = markup; });
+    } else if ("studioTerms" in data) {
+      const p = policy();
+      modal("Terms & conditions",`<div class="studio-policy">
+        <h3>Booking terms</h3><dl>
+          <div><dt>Confirmation</dt><dd>The host must approve a booking request. The accommodation and price are shown when you review the booking.</dd></div>
+          <div><dt>Overnight visits</dt><dd>Check-in at ${esc(p.stayStart)} and checkout at ${esc(p.stayEnd)} IST. For day visits, arrival is at ${esc(p.dayStart)} and departure at ${esc(p.dayEnd)} IST.</dd></div>
+          <div><dt>Cancellation</dt><dd>Guests can cancel a confirmed booking online up to ${esc(state.settings.cancelHours)} hours before arrival. For later changes, contact the host.</dd></div>
+          <div><dt>Payment</dt><dd>The portal shows the booking price. Payment is arranged with your host.</dd></div>
+        </dl><p>For an existing visit, refer to the terms shown on its booking.</p></div>`,control);
     } else if ("mobileSearch" in data) {
       const panel = modal("Search Studio",`<form><label>${manager ? "Guest name, email, phone or booking reference" : "Booking reference"}<input type="search" name="query" minlength="2" maxlength="254" required autocomplete="off"></label><button type="submit" class="primary">Search</button></form>`,control);
       const searchForm = panel.querySelector("form");
@@ -822,18 +834,25 @@ function mountStudioWorkspace() {
       };
       searchForm.elements.query.focus();
     } else if ("deskMore" in data) {
-      const destinations = hostDestinations(manager).filter(([id])=>!["dashboard","today","calendar",manager?"guests":"overview"].includes(id));
+      const destinations = hostDestinations(manager).filter(([id])=>!["dashboard","today","calendar","appearance",manager?"guests":"overview"].includes(id));
       const modules = [["website","Site Studio"],["access","Staff & Access"]].filter(([id])=>studioModules[id]);
       const panel = modal("More",`<div class="workspace-menu-items">${manager ? '<button type="button" data-quick-book class="primary">＋ New booking</button>' : ""}
         ${destinations.map(([id,label])=>`<button type="button" data-go="${id}">${esc(label)}</button>`).join("")}
-        ${modules.map(([id,label])=>`<button type="button" data-go-module="${id}">${esc(label)}</button>`).join("")}</div>`,control);
+        ${modules.map(([id,label])=>`<button type="button" data-go-module="${id}">${esc(label)}</button>`).join("")}
+        <button type="button" data-go="appearance">Settings</button></div>`,control);
       panel.querySelectorAll("[data-go]").forEach((item)=>item.onclick=()=>{panel.close();switchHostTab(item.dataset.go);});
       panel.querySelectorAll("[data-go-module]").forEach((item)=>item.onclick=()=>{panel.close();activateModule(item.dataset.goModule);});
       panel.querySelector("[data-quick-book]")?.addEventListener("click",()=>{panel.close();openManual();});
     } else if ("studioAccount" in data) {
-      const panel = modal("Studio account",`<p>${manager ? "Booking manager" : "Booking viewer"}</p><div class="workspace-menu-items"><button type="button" data-theme>Switch appearance</button><button type="button" data-sign-out>Sign out</button></div>`,control);
-      panel.querySelector("[data-theme]").onclick = () => query("[data-studio-theme]").click();
+      const name = hostName();
+      const panel = modal("Studio account",`<div class="studio-account-card"><span class="workspace-icon profile-avatar" aria-hidden="true">${esc(studioInitials(name))}</span><div><strong>${esc(name)}</strong><p>${manager ? "Booking manager" : "Booking viewer"}</p></div></div>
+        <div class="studio-account-actions"><button type="button" class="tonal" data-theme>Appearance settings</button><button type="button" class="text-button" data-sign-out>Sign out</button></div>`,control);
+      panel.querySelector("[data-theme]").onclick = () => { panel.close();switchHostTab("appearance"); };
       panel.querySelector("[data-sign-out]").onclick = () => {
+        if (app.querySelector("[data-email-pending]")) {
+          toast("Resolve the queued email before signing out.",true);
+          return;
+        }
         panel.close();
         void run(async () => { await api("logout"); await refresh(); render(); });
       };
@@ -844,6 +863,7 @@ function mountStudioWorkspace() {
 function render() {
   document.documentElement.classList.toggle("frontdesk-v2",hostRoute());
   document.documentElement.classList.toggle("studio-embedded",hostRoute()&&window.parent!==window);
+  if (hostRoute()) applyStudioAppearance(state.actor?.role === "host" ? state.actor.id : null);
   const view = hostRoute()
     ? `host:${hostTab}`
     : location.hash === "#profile"
@@ -1812,11 +1832,6 @@ window.addEventListener("focus", () => {
         render();
     });
 });
-if (hostRoute()) {
-  try {
-    document.documentElement.dataset.studioTheme = localStorage.getItem("aroha-studio-theme") === "dark" ? "dark" : "light";
-  } catch {}
-}
 try {
   await refresh();
   render();

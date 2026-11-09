@@ -5,6 +5,26 @@ const e=escape, money=v=>v==null?'Quote needed':new Intl.NumberFormat('en-IN',{s
 const kinds={individual:'Individual stay',private:'Private room',day:'Day visit',event:'Exclusive retreat'};
 const statuses={pending_approval:'Needs review',confirmed:'Confirmed',checked_in:'Checked in',completed:'Completed',cancelled:'Cancelled',declined:'Declined',expired:'Expired',no_show:'No show'};
 const attention={new:'New request',change:'Date change',offer:'Offer requested'};
+const activityLabels = {
+  ...statuses, pending_approval:"Request received", dates_changed:"Dates changed", change_declined:"Date change declined",
+  rooms_assigned:"Rooms assigned", request_change:"Date change requested", withdraw_change:"Date change withdrawn",
+  quote_sent:"Quote sent", offer_sent:"Offer sent",
+};
+const activityDate = new Intl.DateTimeFormat("en-IN", { day:"numeric", month:"short", year:"numeric", timeZone:"Asia/Kolkata" });
+const activityTime = new Intl.DateTimeFormat("en-IN", { hour:"numeric", minute:"2-digit", timeZone:"Asia/Kolkata" });
+function bookingTimeline(history) {
+  const entries = Array.isArray(history)
+    ? history.filter((event) => event?.status && Number.isFinite(event.at)).reverse().sort((a,b) => b.at - a.at)
+    : [];
+  return `<section class="booking-activity"><h3>Booking activity</h3>
+    ${entries.length ? `<p class="activity-caption">Latest first · India Standard Time</p>
+      <ol class="booking-timeline">${entries.map((event,index) => `<li>
+        <span class="timeline-marker" aria-hidden="true"></span>
+        <div><strong>${e(activityLabels[event.status] || event.status.replaceAll("_"," "))}</strong>${index === 0 ? '<span class="table-status current">Latest</span>' : ""}
+          <time datetime="${new Date(event.at).toISOString()}">${activityDate.format(event.at)} · ${activityTime.format(event.at)}</time>
+        </div></li>`).join("")}</ol>` : '<p class="workspace-empty">No activity has been recorded for this booking.</p>'}
+  </section>`;
+}
 const format=d=>new Date(d+'T12:00:00Z').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
 const eventLastDay = (day) => new Date(Date.parse(day + "T00:00:00Z") - 86400000).toISOString().slice(0, 10);
 const dateField = (label, day) => `<div><small>${label}</small><time datetime="${e(day)}">${format(day)}</time></div>`;
@@ -26,12 +46,14 @@ const icons = {
   access: '<path d="M12 3 3 7v5c0 6 9 10 9 10s9-4 9-10V7zM8 12l3 3 5-6"/>',
   search: '<circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/>',
   more: '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+  appearance: '<path d="M5 6h14M5 12h14M5 18h14"/><circle cx="9" cy="6" r="2" fill="currentColor"/><circle cx="15" cy="12" r="2" fill="currentColor"/><circle cx="10" cy="18" r="2" fill="currentColor"/>',
 };
 export const studioIcon = (id) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[id] || ""}</svg>`;
 export const hostDestinations = (manager) => [
   ["dashboard","Dashboard"],["today","Today on the Farm"],["overview","Requests & Quotes"],
   ["calendar","Bookings & Calendar"], ...(manager ? [["guests","Guests"]] : []),
   ["inventory","Cottages & Spaces"],["payments","Payments & Credits"], ...(manager ? [["mail","Guest email"]] : []),
+  ["appearance","Settings"],
 ];
 const groups = {
   reservations:"calendar", "calendar-month":"calendar", feedback:"calendar",
@@ -42,7 +64,7 @@ const activeGroup = (tab) => groups[tab] || tab;
 export const hostTabAllowed = (tab, manager) =>
   hostDestinations(manager).some(([id]) => id === activeGroup(tab)) &&
   (manager || !["documents","loyalty","feedback"].includes(tab));
-export function hostShell({ tab, manager, content, modules = {} }) {
+export function hostShell({ tab, manager, content, modules = {}, initials = "AR" }) {
   const link = ([id,label], smallLabel = label) => `<button type="button" data-host-tab="${id}" aria-label="${e(label)}" title="${e(label)}" ${activeGroup(tab)===id?'aria-current="page"':''}>${studioIcon(id)}<span>${e(smallLabel)}</span></button>`;
   const moduleLinks = [["website","Site Studio"],["access","Staff & Access"]].filter(([id])=>modules[id]);
   const title = hostDestinations(manager).find(([id])=>id===activeGroup(tab))?.[1] || "Dashboard";
@@ -57,15 +79,19 @@ export function hostShell({ tab, manager, content, modules = {} }) {
     <header class="topbar">
       <a class="workspace-brand" href="/" aria-label="Aroha Retreat website"><span class="workspace-mark">A</span><span><strong>Host Studio</strong><small>Aroha Retreat</small></span></a>
       <form class="global-search" data-desk-search><label class="sr-only" for="desk-reference">${manager?"Find a booking or guest":"Find a booking reference"}</label><input id="desk-reference" name="reference" maxlength="254" minlength="2" autocomplete="off" placeholder="${manager?"Find a booking or guest":"Find booking reference"}" required><button aria-label="Search Studio" type="submit">${studioIcon("search")}</button></form>
-      <div class="workspace-top-actions"><button type="button" class="workspace-mobile-search" data-mobile-search aria-label="Search Studio">${studioIcon("search")}</button><button type="button" data-studio-theme aria-label="Switch Studio theme">${studioIcon("today")}</button><button type="button" class="workspace-account" data-studio-account aria-label="Studio account">AR</button></div>
+      <div class="workspace-top-actions"><button type="button" class="workspace-mobile-search" data-mobile-search aria-label="Search Studio">${studioIcon("search")}</button><button type="button" class="workspace-account" data-studio-account aria-label="Studio account">${e(initials)}</button></div>
     </header>
     <aside class="rail">
       ${manager ? '<button type="button" class="primary workspace-new" data-new-booking>＋ <span>New booking</span></button>' : ""}
-      <nav aria-label="Studio navigation"><span class="nav-caption">Workspace</span>${hostDestinations(manager).map((item)=>link(item)).join("")}
-      ${moduleLinks.filter(([id])=>id==="website").map(([id,label])=>`<button type="button" data-studio-module="${id}">${studioIcon(id)}<span>${e(label)}</span></button>`).join("")}</nav>
-      ${moduleLinks.some(([id])=>id==="access") ? `<div class="rail-bottom"><button type="button" data-studio-module="access">${studioIcon("access")}<span>Staff &amp; Access</span></button></div>` : ""}
+      <nav aria-label="Studio navigation"><span class="nav-caption">Workspace</span>${hostDestinations(manager).filter(([id]) => id !== "appearance").map((item)=>link(item)).join("")}
+      ${moduleLinks.map(([id,label])=>`<button type="button" data-studio-module="${id}" aria-label="${e(label)}" title="${e(label)}">${studioIcon(id)}<span>${e(label)}</span></button>`).join("")}
+      <div class="rail-bottom">${link(["appearance","Settings"])}</div></nav>
     </aside>
-    <div class="page"><main id="main" tabindex="-1">${section ? `<div class="page-heading"><div><p class="eyebrow">${e(title)}</p><h1>${e(section[0])}</h1><p>${e(section[1])}</p></div>${manager?'<button class="primary mobile-new" data-new-booking>＋ New booking</button>':""}</div>${content}<div data-frontdesk></div>` : content}</main></div>
+    <div class="page"><main id="main" tabindex="-1">${section ? `<div class="page-heading"><div><p class="eyebrow">${e(title)}</p><h1>${e(section[0])}</h1><p>${e(section[1])}</p></div>${manager?'<button class="primary mobile-new" data-new-booking>＋ New booking</button>':""}</div>${content}<div data-frontdesk></div>` : content}</main>
+      <footer class="studio-footer"><span>© ${new Date().getFullYear()} Aroha Retreat</span><nav aria-label="Legal">
+        <button type="button" class="text-button" data-studio-privacy>Privacy policy</button>
+        <button type="button" class="text-button" data-studio-terms>Terms &amp; conditions</button>
+      </nav></footer></div>
     <nav class="bottom-nav" aria-label="Studio mobile navigation">${shortcuts.map((item,i)=>link(item,mobileLabels[i])).join("")}<button type="button" data-desk-more>${studioIcon("more")}<span>More</span></button></nav>
   </div>`;
 }
@@ -144,7 +170,7 @@ export async function openStudioBooking({
       const starts=b.startsAt||Date.parse(b.arrival+'T00:00:00+05:30'), checkinOpen=Date.now()>=starts;
       d.innerHTML=`<div class="dialog-head booking-heading"><div class="booking-heading-copy"><div class="eyebrow">${review||change?'Review request':'Booking details'}</div><h2>${e(b.contact?.name||b.guestName||'Guest')}</h2><div class="dialog-reference">${e(b.reference)} <span class="badge">${e(statuses[b.status])}</span>${b.guestNumber ? `<span class="identity-number">Guest #${Number(b.guestNumber)}</span>` : ""}</div></div><button class="icon-button ghost" data-close aria-label="Close booking details" ${working||uncertain?'disabled':''}>×</button></div><div class="panel-tabs" role="group" aria-label="Booking sections">${['overview',...(manager&&guestIdentityEnabled?['identity']:[]),'payments','messages','activity'].map(x=>`<button data-section="${x}" aria-pressed="${section===x}">${x[0].toUpperCase()+x.slice(1)}</button>`).join('')}</div><div class="panel-body" data-body></div><footer class="panel-footer"><p role="status" data-action-status></p><div class="action-row">${manager?(uncertain?'<button class="primary" data-retry>Retry same action</button>':change?'<button class="danger" data-action="decline_change">Keep original dates</button><button class="primary" data-action="approve_change">Approve new dates</button>':review?`<button class="danger" data-action="decline">Decline</button>${b.kind==='event'&&!b.pricingVersion&&!b.quoteAccepted?'':'<button class="primary" data-action="approve">Accept request</button>'}`:b.status==='confirmed'?`<button class="primary" data-action="checkin" ${checkinOpen?'':'disabled'}>Check in guest</button>`:b.status==='checked_in'?'<button class="primary" data-action="complete">Review checkout</button>':''):''}<button class="${review&&b.kind==='event'&&!b.pricingVersion&&!b.quoteAccepted?'primary':'ghost'}" data-legacy ${uncertain||working?'disabled':''}>${review&&b.kind==='event'&&!b.pricingVersion&&!b.quoteAccepted?'Prepare offer':'More booking options'}</button></div><small>${uncertain?'The response is uncertain. Resolve this same action before continuing.':b.status==='confirmed'&&!checkinOpen?'Check-in opens '+new Date(starts).toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})+' IST.':'Booking changes and email delivery are tracked separately.'}</small></footer>`;
       d.querySelector('[data-close]').onclick=close;
-      d.querySelectorAll('[data-section]').forEach(x=>{x.disabled=working||uncertain;x.onclick=()=>{section=x.dataset.section;render();};});
+      d.querySelectorAll('[data-section]').forEach(x=>{x.disabled=working||uncertain;x.onclick=()=>{section=x.dataset.section;render();d.querySelector('[aria-pressed=true][data-section]')?.focus();};});
       d.querySelector('[data-legacy]').onclick=()=>{d.close();void openLegacy(id);};
       d.querySelectorAll('[data-action]').forEach(x=>x.onclick=()=>confirmAction(x.dataset.action));d.querySelector('[data-retry]')?.addEventListener('click',()=>void submit());
       const body=d.querySelector('[data-body]');
@@ -155,7 +181,7 @@ export async function openStudioBooking({
         void mountGuestIdentity(target, { call: api, bookingId: id });
       }
       if(section==='payments')void mountStayPanel(body,{booking:b,manager,staff:true,call,onMutation:async()=>{await fetchBooking();await onChanged();}});
-      if(section==='activity')body.innerHTML='<h3>Booking activity</h3>'+b.history.map(h=>`<div class="activity"><span></span><div><strong>${e(statuses[h.status]||h.status.replaceAll('_',' '))}</strong><p>${new Date(h.at).toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})} IST</p></div></div>`).join('');
+      if(section==='activity')body.innerHTML=bookingTimeline(b.history);
       if(section==='messages'){body.textContent='Loading email updates…';void api('communications',{id}).then(p=>{if(!body.isConnected)return;const rows = (p.notifications || []).map((item) => `<article class="note-card"><strong>${e(item.channel.replace(/^guest_/,"").replaceAll("_"," "))}</strong><p>${e(item.status.replaceAll("_"," "))}</p></article>`).join("");
         body.innerHTML = '<h3>Email updates</h3>' + (rows || '<p>No email updates yet.</p>') + (manager && composeEmail && b.owner ? '<button type="button" class="outline-button" data-compose-booking>Compose email</button>' : '');
         body.querySelector('[data-compose-booking]')?.addEventListener('click', () => { d.close(); composeEmail(b.owner, b.id); });}).catch(()=>{if(body.isConnected)body.textContent='Email updates could not load. Reopen Messages to retry.';});}

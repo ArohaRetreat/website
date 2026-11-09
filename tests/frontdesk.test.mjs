@@ -23,3 +23,25 @@ test('request tabs clear cursors and apply the selected server filter',async()=>
 test('a decline confirmation replaces competing footer actions until the reviewer returns',async()=>{const m=await mount();try{m.d.querySelector('[data-desk-open]').click();await pause();m.d.querySelector('[data-action=decline]').click();assert.equal(m.d.querySelector('.action-row').hidden,true);assert.match(m.d.querySelector('[data-confirm]').textContent,/decline/);m.d.querySelector('[data-keep]').click();assert.equal(m.d.querySelector('.action-row').hidden,false);}finally{m.close();}});
 test('an unpriced exclusive request leads to offer preparation rather than a disabled acceptance',async()=>{const m=await mount();try{m.b.kind='event';m.d.querySelector('[data-desk-open]').click();await pause();assert.equal(m.d.querySelector('[data-action=approve]'),null);assert.equal(m.d.querySelector('[data-legacy]').textContent,'Prepare offer');}finally{m.close();}});
 test('a committed action followed by a failed detail refresh retains its retry key',async()=>{const m=await mount({failRefresh:true});try{m.d.querySelector('[data-desk-open]').click();await pause();m.d.querySelector('[data-action=approve]').click();await pause();assert.equal(m.b.status,'confirmed');assert.ok(m.d.querySelector('[data-retry]'));m.d.querySelector('[data-retry]').click();await pause();assert.deepEqual(m.actions[0],m.actions[1]);assert.equal(m.d.querySelector('[data-retry]'),null);}finally{m.close();}});
+
+test("booking activity shows recorded events newest first", async () => {
+  const m = await mount();
+  try {
+    m.b.history = [
+      { status: "pending_approval", at: Date.parse("2026-11-08T04:00:00Z") },
+      { status: "dates_changed", at: Date.parse("2026-11-09T07:00:00Z") },
+      { status: "confirmed", at: Date.parse("2026-11-08T07:00:00Z") },
+    ];
+    m.d.querySelector("[data-desk-open]").click();
+    await pause();
+    m.d.querySelector("[data-section=activity]").click();
+    const events = [...m.d.querySelectorAll(".booking-timeline li")];
+    assert.deepEqual(events.map((item) => item.querySelector("strong").textContent), [
+      "Dates changed", "Confirmed", "Request received",
+    ]);
+    assert.equal(events[0].querySelector("time").dateTime,"2026-11-09T07:00:00.000Z");
+    assert.equal(m.d.querySelectorAll(".booking-timeline .current").length,1);
+  } finally {
+    m.close();
+  }
+});
