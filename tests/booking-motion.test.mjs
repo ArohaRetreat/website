@@ -66,7 +66,7 @@ async function mount(reduced = false) {
     await readFile(new URL("../website/booking.mjs", import.meta.url), "utf8")
   )
     .replace(/import \{[^\n]+\} from ['"]\.\/material-controls.mjs['"];/, 'const installMaterialControls=()=>{},confirmMaterial=async()=>window.confirm();')
-    .replace(/^import .* from ["']\.\/frontdesk\.mjs["'];$/m,'const hostShell=({content})=>content,mountFrontDesk=async()=>{},hostTabAllowed=()=>true,hostDestinations=()=>[],openStudioBooking=async()=>{};').replace(/^import .* from ["']\.\/(?:studio-views|booking-documents)\.mjs["'];$/gm, "").replace(/import \{mountHostOperations,openManualBooking\} from '\.\/host-operations.mjs';/, 'const mountHostOperations=async()=>{},openManualBooking=()=>{};').replace(/import \{auth\} from '\.\/firebase-auth.mjs';/, 'const auth={currentUser:null};').replace(/import \{mountStayPanel\} from '\.\/stay-panel.mjs';/, "").replace(
+    .replace(/^import .* from ["']\.\/frontdesk\.mjs["'];$/m,'const hostShell=({content})=>content,mountFrontDesk=async()=>{},hostTabAllowed=()=>true,hostDestinations=()=>[],openStudioBooking=async()=>{};').replace(/^import .* from ["']\.\/(?:studio-views|booking-documents|guest-dialogs)\.mjs["'];$/gm, "").replace("const hostShell=", "const applyStudioAppearance=()=>{},studioInitials=()=>'';const hostShell=").replace(/import \{mountHostOperations,openManualBooking\} from '\.\/host-operations.mjs';/, 'const mountHostOperations=async()=>{},openManualBooking=()=>{};').replace(/import \{auth\} from '\.\/firebase-auth.mjs';/, 'const auth={currentUser:null};').replace(/import \{mountStayPanel\} from '\.\/stay-panel.mjs';/, "").replace(
       /import \{\s*journeyStep\s*\} from "\.\/booking-journey.mjs";/,
       "const journeyStep=()=>{};",
     )

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { JSDOM } from "jsdom";
-const helpers = (await Promise.all(["studio-date-range","booking-visit-label"].map((name)=>
+const helpers = (await Promise.all(["studio-date-range","booking-visit-label","studio-table"].map((name)=>
   readFile(new URL("../website/" + name + ".mjs", import.meta.url), "utf8")
 ))).join("\n").replaceAll("export ", "");
 const source = (
@@ -186,14 +186,21 @@ test('review desk queries pending requests and pagination replaces rather than a
 
 test("walk-in draft survives closing and switching between single-day and range dates", async () => {
   const m = await mount();
-  const options = {identity:"draft-host",units:[],call:async()=>{throw Error("No quote expected");},onBooked:()=>{}};
+  const options = {identity:"draft-host",units:[{id:"one",name:"Tree house 01",capacity:2,active:true}],call:async()=>{throw Error("No quote expected");},onBooked:()=>{},chooseGuest:()=>{}};
   try {
     m.openManualBooking(options);
     const form = m.w.document.querySelector("dialog form");
+    assert.ok(form.querySelector("[data-new-guest]").hidden);
+    assert.ok(form.querySelector("[data-room-fields]").hidden);
+    form.elements.kind.value = "private";
+    form.elements.kind.dispatchEvent(new m.w.Event("input",{bubbles:true}));
+    assert.equal(form.querySelector("[data-room-fields]").hidden,false);
     form.elements.name.value="Synthetic Draft";
     form.elements.email.value="draft@example.test";
     form.elements.phone.value="+12025550123";
-    form.querySelector('[value="day"]').click();
+    form.elements.kind.value = "day";
+    form.elements.kind.dispatchEvent(new m.w.Event("input",{bubbles:true}));
+    assert.ok(form.querySelector("[data-room-fields]").disabled);
     form.elements.promo.value="DRAFT";
     form.elements.promo.dispatchEvent(new m.w.Event("input",{bubbles:true}));
     form.querySelector("[data-dates]").click();
@@ -204,7 +211,35 @@ test("walk-in draft survives closing and switching between single-day and range 
     m.openManualBooking(options);
     assert.equal(m.w.document.querySelector("[name=promo]").value,"DRAFT");
     assert.equal(m.w.document.querySelector("[name=name]").value,"Synthetic Draft");
-    assert.equal(m.w.document.querySelector("[name=kind]:checked").value,"day");
+    assert.equal(m.w.document.querySelector("[name=kind]").value,"day");
+  } finally {
+    m.dom.window.close();
+  }
+});
+
+test("ledger rows stay paged and keep the applied filter when a new search fails", async () => {
+  const m = await mount();
+  const calls = [];
+  const row = {bookingId:"book",bookingReference:"AR-LEDGER",kind:"payment",method:"upi",amountPaise:76500,createdAt:Date.now()};
+  try {
+    await m.mountHostOperations(m.target,{tab:"payments",manager:true,openBooking:()=>{},call:async (op,input) => {
+      assert.equal(op,"listPaymentLedger");
+      calls.push({...input});
+      if (input.reference === "AR-FAIL") throw Error("Synthetic lookup failure");
+      return {items:input.cursor ? [{...row,amountPaise:1000}] : [row],nextCursor:input.cursor ? null : "next"};
+    }});
+    const form = m.target.querySelector("form");
+    form.elements.reference.value = " ar-ledger ";
+    submit(m.w,form);
+    await until(() => m.target.querySelector("[data-message]").textContent === "Filtered to AR-LEDGER");
+    assert.equal(m.target.querySelector("th[scope=row]").textContent,"AR-LEDGER");
+    form.elements.reference.value = "AR-FAIL";
+    submit(m.w,form);
+    await until(() => m.target.querySelector("[data-message]").textContent.includes("Could not load"));
+    m.target.querySelector("[data-more]").click();
+    await until(() => m.target.querySelector("[data-pagination]").textContent.includes("Page 2"));
+    assert.deepEqual(calls.at(-1),{reference:"AR-LEDGER",limit:25,cursor:"next"});
+    assert.equal(m.target.querySelectorAll("tbody tr").length,1);
   } finally {
     m.dom.window.close();
   }

@@ -1,3 +1,5 @@
+import {studioTable} from "./studio-table.mjs";
+
 const escape = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
 })[c]);
@@ -63,54 +65,80 @@ async function download(button, message, call, record) {
   }
 }
 
-export async function mountBookingDocuments(target, { call, staff = false, customerId } = {}) {
+export async function mountBookingDocuments(target, { call, staff = false, customerId, chooseGuest } = {}) {
   const operation = staff ? "listStudioDocuments" : "listMyDocuments";
   let page = { items: [], nextCursor: null };
   const cursors = [undefined];
   let position = 0;
+  let generation = 0;
+  let guest;
   target.classList.add("financial-documents");
-  target.innerHTML = `<div data-documents-list></div><p role="status" data-documents-status></p><div class="document-navigation" data-documents-pagination></div>`;
+  target.innerHTML = `${chooseGuest ? `<div class="table-filter">
+    <button type="button" class="outline-button" data-filter-guest>Filter by guest</button>
+    <span data-guest-filter-label>All guests</span>
+    <button type="button" class="text-button" data-clear-guest hidden>Clear filter</button>
+  </div>` : ""}<p role="status" data-documents-status></p><div data-documents-list></div><div class="document-navigation" data-documents-pagination></div>`;
   const status = target.querySelector("[data-documents-status]");
   const list = target.querySelector("[data-documents-list]");
   const pagination = target.querySelector("[data-documents-pagination]");
+  function filter(person) {
+    guest = person;
+    target.querySelector("[data-guest-filter-label]").textContent = guest?.name || "All guests";
+    target.querySelector("[data-clear-guest]").hidden = !guest;
+    cursors.length = 1;
+    list.replaceChildren();
+    pagination.replaceChildren();
+    void load(0);
+  }
+  target.querySelector("[data-filter-guest]")?.addEventListener("click", () => chooseGuest(filter));
+  target.querySelector("[data-clear-guest]")?.addEventListener("click", () => {
+    filter(null);
+    target.querySelector("[data-filter-guest]").focus();
+  });
   function draw() {
-    list.innerHTML = page.items.map((record, index) => {
+    const rows = page.items.map((record, index) => {
       const label = titles[record.kind] || "Booking document";
-      const amount = record.kind === "receipt" ? record.paymentPaise ?? record.paidPaise : record.totalPaise;
+      const receipt = record.kind === "receipt";
+      const amount = receipt ? record.paymentPaise : record.totalPaise;
       const statusText = record.status === "void" ? "Void" : record.status === "superseded" ? "Replaced" : "Issued";
-      return `<article class="financial-row">
-        <span class="financial-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 3h9l5 5v13H5zM14 3v5h5M8 13h8m-8 4h6"/></svg></span>
-        <div><h3>${label}</h3><p>${escape(record.number)} · ${escape(record.reference)}</p><small>${issuedDate(record.createdAt)} · ${money(amount)} · ${statusText}</small>
-          ${record.kind === "receipt" && canDownload(record) ? `<small>Balance after this payment ${money(record.balanceDuePaise)}</small>` : ""}
-        </div><div class="financial-actions">
-          <button type="button" class="text-button" data-preview="${index}">View</button>
-          ${canDownload(record) ? `<button type="button" class="outline-button" data-export="${index}">Download PDF</button>` : ""}
-        </div>
-      </article>`;
-    }).join("") || `<p class="financial-empty">${page.nextCursor ? "No available documents on this page." : staff ? "No issued documents yet." : "Your invoice and receipt will appear here when payment is verified."}</p>`;
+      return `<tr>
+        <th scope="row"><button type="button" class="text-button table-key" data-preview="${index}" aria-label="View ${escape(record.number)}">${escape(record.number)}</button><small>${label}</small></th>
+        <td>${escape(record.reference)}</td><td>${escape(issuedDate(record.createdAt))}</td>
+        <td><span class="table-status ${statusText === "Issued" ? "current" : ""}">${statusText}</span></td>
+        <td class="table-number">${Number.isSafeInteger(amount) ? money(amount) : "—"}<small>${receipt ? "Payment" : "Booking total"}</small></td>
+        <td class="table-actions">
+          ${canDownload(record) ? `<button type="button" class="outline-button" data-export="${index}" aria-label="Download PDF for ${escape(record.number)}">Download PDF</button>` : ""}
+        </td>
+      </tr>`;
+    }).join("");
+    list.innerHTML = rows ? studioTable("Booking documents", [
+      ["Document"], ["Booking"], ["Issued (IST)"], ["Status"], ["Amount", "table-number"], ["Actions", "table-actions"],
+    ], rows) : `<p class="financial-empty">${page.nextCursor ? "No available documents on this page." : staff ? "No issued documents match this view." : "Your invoice and receipt will appear here when payment is verified."}</p>`;
     list.querySelectorAll("[data-preview]").forEach((button) => {
       button.onclick = () => showDocument(page.items[Number(button.dataset.preview)], call, button);
     });
     list.querySelectorAll("[data-export]").forEach((button) => {
       button.onclick = () => void download(button, status, call, page.items[Number(button.dataset.export)]);
     });
-    pagination.innerHTML = position || page.nextCursor ? `<button type="button" data-prev ${position ? "" : "disabled"}>Previous</button><span>Page ${position + 1}</span><button type="button" data-next ${page.nextCursor ? "" : "disabled"}>Next</button>` : "";
+    pagination.innerHTML = position || page.nextCursor ? `<button type="button" data-prev ${position ? "" : "disabled"}>Previous</button><span>Page ${position + 1} · ${page.items.length} documents</span><button type="button" data-next ${page.nextCursor ? "" : "disabled"}>Next</button>` : "";
     pagination.querySelector("[data-prev]")?.addEventListener("click", () => void load(position - 1));
     pagination.querySelector("[data-next]")?.addEventListener("click", () => void load(position + 1, page.nextCursor));
   }
   async function load(next, cursor = cursors[next]) {
+    const request = ++generation;
     pagination.querySelectorAll("button").forEach((b) => b.disabled = true);
     status.textContent = "Loading documents…";
+    const id = guest?.id || customerId;
     try {
-      const response = await call(operation, { ...(customerId ? { id: customerId } : {}), limit: 12, ...(cursor ? { cursor } : {}) });
-      if (!target.isConnected) return;
+      const response = await call(operation, { ...(id ? { id } : {}), limit: 12, ...(cursor ? { cursor } : {}) });
+      if (!target.isConnected || request !== generation) return;
       page = response;
       cursors[next] = cursor;
       position = next;
       status.textContent = "";
       draw();
     } catch (error) {
-      if (!target.isConnected) return;
+      if (!target.isConnected || request !== generation) return;
       status.textContent = error.code === "CURSOR_EXPIRED" ? "This page expired. Reload the document list." : "Documents could not load.";
       const retry = document.createElement("button");
       retry.type = "button";
