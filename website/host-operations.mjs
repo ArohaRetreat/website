@@ -1,4 +1,6 @@
-import {confirmMaterial} from './material-controls.mjs';
+import {chooseStudioDates} from './studio-date-range.mjs';
+import {visitDateLabel} from './booking-visit-label.mjs';
+import {calendarIcon,confirmMaterial} from './material-controls.mjs';
 const esc = (v) =>
   String(v ?? "").replace(
     /[&<>"']/g,
@@ -376,250 +378,254 @@ export async function mountHostOperations(
   await load();
 }
 const manualDrafts = new Map();
-export function openManualBooking({ call, units, onBooked, identity }) {
-  const dialog = document.createElement("dialog");
-  dialog.className = "ops-dialog";
-  dialog.setAttribute("data-dt-mask", "");
-  dialog.setAttribute("aria-label", "Add a manual booking");
-  document.body.append(dialog);
-  const state = manualDrafts.get(identity) || {
-    step: 1,
-    customer: { name: "", email: "", phone: "" },
-    kind: "individual",
-    arrival: new Date(Date.now() + 19800000).toISOString().slice(0, 10),
-    departure: "",
-    adults: 1,
-    ages: "",
-    unitIds: [],
-    promo: "",
-    credits: 0,
-  };
-  manualDrafts.set(identity, state);
-  const close = () => {
-    dialog.close();
-    dialog.remove();
-  };
-  const draw = () => {
-    dialog.innerHTML = `<button type="button" class="ops-close" aria-label="Close manual booking">×</button><p class="eyebrow">MANUAL BOOKING · ${state.step} OF 3</p><ol class="ops-progress" aria-label="Booking progress">${['Guest','Visit','Review'].map((t,i)=>`<li ${state.step===i+1?'aria-current="step"':''}><span>${state.step>i+1?'✓':i+1}</span>${t}</li>`).join('')}</ol><h2>${["", "Who is staying?", "Plan their visit", "Review & confirm"][state.step]}</h2><p>${["", "Use the guest’s own email. Their booking and credits will appear when they sign in with that verified email.", "Choose dates, guests and accommodation. We’ll check availability and show the full price before you confirm.", "Confirming reserves capacity and emails the guest. Record any payment separately."][state.step]}</p><form class="ops-form">${
-      state.step === 1
-        ? `<label>Guest’s full name<input name="name" autocomplete="name" minlength="2" maxlength="120" required value="${esc(state.customer.name)}"></label><label>Guest’s email<input name="email" type="email" autocomplete="email" maxlength="254" required value="${esc(state.customer.email)}"></label><label>Phone with country code<input name="phone" type="tel" autocomplete="tel" maxlength="32" placeholder="+91 98765 43210" required value="${esc(state.customer.phone)}"></label>`
-        : state.step === 2
-          ? `<fieldset class="visit-choices"><legend>Visit type</legend><input type="hidden" name="kind" value="${state.kind}">${[
- ['individual','Individual stay','A shared sleeping place'],['private','Private rooms','Rooms just for this party'],['day','Day outing','Visit without staying over'],['event','Exclusive retreat','Reserve the whole property']
-].map(([v,t,h])=>`<label class="visit-choice"><input type="radio" name="visitKind" value="${v}" ${state.kind===v?'checked':''}><strong>${t}</strong><small>${h}</small></label>`).join('')}</fieldset><div class="ops-columns"><label>Arrival<input name="arrival" type="date" required value="${state.arrival}"></label><label data-end-label><span data-end-text>Departure</span><input name="departure" type="date" required value="${state.kind === "event" && state.departure ? new Date(Date.parse(state.departure + "T00:00:00Z") - 86400000).toISOString().slice(0, 10) : state.departure}"></label></div><p class="ops-note" data-date-help>Departure is the checkout date, not a night stayed.</p><div class="ops-columns"><label>Adults · age 10+<input name="adults" type="number" min="1" max="35" required value="${state.adults}"></label><label>Children under 10<input name="childrenCount" type="number" min="0" max="100" step="1" value="${state.ageValues?.length || 0}"></label></div><div data-child-ages class="ops-columns"></div><fieldset data-room-fields><legend>Choose private rooms</legend>${units
-              .filter((u) => u.active)
-              .map(
-                (u) =>
-                  `<label class="ops-check"><input name="units" type="checkbox" value="${esc(u.id)}" ${state.unitIds.includes(u.id) ? "checked" : ""}>${esc(u.name)}</label>`,
-              )
-              .join(
-                "",
-              )}</fieldset><div class="ops-columns"><label>Invitation code (optional)<input name="promo" maxlength="32" value="${esc(state.promo)}"></label><label data-credit-field>Credits to redeem<input name="credits" type="number" min="0" max="1000000000" step="1" value="${state.credits}"></label></div>`
-          : `<section class="ops-card"><h3>${esc(state.quote.contact.name)}</h3><p>${esc(state.quote.contact.email)}<br>${esc(state.quote.contact.phone)}</p><p>${esc(visitKind(state.quote.kind))} · ${state.quote.adults} adult(s) · ${state.quote.childrenCount} children<br>${esc(shortDate(state.quote.arrival))} → ${esc(shortDate(state.quote.departure))}</p><p>${esc(state.quote.unitNames.join(" · "))}</p><dl class="ops-price"><div><dt>Subtotal</dt><dd>${cash(state.quote.subtotalPaise)}</dd></div><div><dt>Best offer benefit</dt><dd>−${cash(state.quote.priceBenefitDiscountPaise)}</dd></div><div><dt>Credits (${state.quote.loyaltyCredits})</dt><dd>−${cash(state.quote.loyaltyDiscountPaise)}</dd></div><div><dt>Total payable</dt><dd><strong>${cash(state.quote.totalPaise)}</strong></dd></div></dl></section><label class="ops-check"><input name="consent" type="checkbox" required>I checked the guest contact, dates and price, and have their agreement to confirm and email this booking.</label>`
-    }<p role="status" data-message></p><div class="ops-actions">${state.step > 1 && !state.pending ? '<button type="button" class="text-button" data-back>← Back</button>' : ""}<button class="button" type="submit">${state.step === 1 ? "Continue to visit →" : state.step === 2 ? "Check availability & price" : state.pending ? "Retry same confirmation" : "Confirm booking & email guest"}</button></div></form>`;
-    dialog.querySelector(".ops-close").onclick = close;
-    dialog.querySelector("[data-back]")?.addEventListener("click", () => {
-      captureDraft();
-      state.step--;
-      draw();
-    });
-    const form = dialog.querySelector("form");
-    function captureDraft(){
-      if(state.pending)return;
-      if(state.step===1)state.customer=Object.fromEntries(['name','email','phone'].map(k=>[k,form.elements[k].value]));
-      if(state.step===2){
-        state.kind=form.elements.kind.value;state.arrival=form.elements.arrival.value;
-        const end=form.elements.departure.value;
-        state.departure=state.kind==='event'&&end?new Date(Date.parse(end+'T12:00:00Z')+86400000).toISOString().slice(0,10):end;
-        state.adults=Number(form.elements.adults.value);state.ageValues=[...form.querySelectorAll('[name=childAge]')].map(x=>x.value);
-        state.unitIds=[...form.querySelectorAll('[name=units]:checked')].map(x=>x.value);state.promo=form.elements.promo.value;state.credits=Number(form.elements.credits.value);
-      }
-    }
-    form.addEventListener('input',captureDraft);form.addEventListener('change',captureDraft);
-    if (state.step === 2) {
-      const kind = form.elements.kind,
-        arrival = form.elements.arrival,
-        end = form.elements.departure,
-        count = form.elements.childrenCount;
-      const drawAges = () => {
-        const old = [...form.querySelectorAll("[name=childAge]")].map(
-          (x) => x.value,
-        );
-        const n = Number(count.value);
-        if (!Number.isInteger(n) || n < 0 || n > 100) return;
-        form.querySelector("[data-child-ages]").innerHTML = Array.from(
-          { length: n },
-          (_, i) =>
-            `<label>Child ${i + 1} · age at arrival<select name="childAge" required><option value="">Choose age</option>${Array.from({ length: 10 }, (_, age) => `<option value="${age}" ${String(old[i] ?? state.ageValues?.[i]) === String(age) ? "selected" : ""}>${age === 0 ? "Under 1" : age + " years"}</option>`).join("")}</select></label>`,
-        ).join("");
-      };
-      const updateKind = () => {
-        const day = kind.value === "day",
-          event = kind.value === "event";
-        form.querySelector("[data-end-label]").hidden = day;
-        end.required = !day;
-        form.querySelector("[data-end-text]").textContent = event
-          ? "Last event day (included)"
-          : "Departure";
-        form.querySelector("[data-date-help]").textContent = day
-          ? "A day outing includes no overnight stay."
-          : event
-            ? "Select the first and last day of exclusive use. Every selected day is included."
-            : "Departure is the checkout date, not a night stayed.";
-        form.querySelector("[data-room-fields]").hidden =
-          kind.value !== "private";
-        form.querySelector("[data-credit-field]").hidden = day || event;
-        if (day || event) form.elements.credits.value = "0";
-      };
-      form.querySelector('.visit-choices').onchange = () => {
-        kind.value=form.elements.visitKind.value;updateKind();
-      };
-      const today=new Date(Date.now()+19800000).toISOString().slice(0,10);
-      arrival.min=today;arrival.max=new Date(Date.now()+366*86400000).toISOString().slice(0,10);
-      const bounds=()=>{if(!arrival.value){end.removeAttribute('min');end.removeAttribute('max');return;}end.min=kind.value==='event'?arrival.value:new Date(Date.parse(arrival.value+'T12:00:00Z')+86400000).toISOString().slice(0,10);end.max=new Date(Date.parse(arrival.value+'T12:00:00Z')+(kind.value==='event'?30:31)*86400000).toISOString().slice(0,10);};
-      arrival.addEventListener('change',()=>{if(arrival.value)bounds();});
-      form.querySelector('.visit-choices').addEventListener('change',bounds);bounds();
-      count.oninput = drawAges;
-      drawAges();
-      updateKind();
-    }
-    form.onsubmit = async (e) => {
-      e.preventDefault();
-      const d = new FormData(form);
-      if (state.step === 1) {
-        state.customer = {
-          name: String(d.get("name")).trim(),
-          email: String(d.get("email")).trim(),
-          phone: String(d.get("phone")).trim(),
-        };
-        state.step = 2;
-        draw();
-        return;
-      }
-      const msg = form.querySelector("[data-message]");
-      const controls = [
-        ...form.querySelectorAll("input,select,textarea,button"),
-      ];
-      controls.forEach((b) => (b.disabled = true));
-      try {
-        if (state.step === 2) {
-          state.kind = String(d.get("kind"));
-          state.arrival = String(d.get("arrival"));
-          state.departure = String(d.get("departure"));
-          const addDate = (v, n) =>
-            new Date(Date.parse(v + "T00:00:00Z") + n * 86400000)
-              .toISOString()
-              .slice(0, 10);
-          if (state.kind === "day") state.departure = addDate(state.arrival, 1);
-          if (state.kind === "event")
-            state.departure = addDate(state.departure, 1);
-          state.adults = Number(d.get("adults"));
-          const ages = d.getAll("childAge").map(Number);
-          state.ageValues = ages;
-          if (ages.some((a) => !Number.isInteger(a) || a < 0 || a > 9))
-            throw { code: "INVALID_CHILD_AGE" };
-          state.unitIds = d.getAll("units").map(String);
-          state.promo = String(d.get("promo"));
-          state.credits = Number(d.get("credits"));
-          state.quote = await call(
-            "quoteManualBooking",
-            {
-              customer: state.customer,
-              kind: state.kind,
-              arrival: state.arrival,
-              departure: state.departure,
-              adults: state.adults,
-              childrenAges: ages,
-              units: state.kind === "private" ? state.unitIds : [],
-              promo: state.promo,
-              redeemCredits: state.credits,
-            },
-            crypto.randomUUID(),
-          );
-          state.step = 3;
-          draw();
-        } else {
-          state.pending ??= {
-            input: { quoteId: state.quote.id },
-            key: crypto.randomUUID(),
-          };
-          const booked = await call(
-            "createManualBooking",
-            state.pending.input,
-            state.pending.key,
-          );
-          manualDrafts.delete(identity);
-          close();
-          await onBooked(booked);
-        }
-      } catch (err) {
-        if (!dialog.isConnected) return;
-        const messages = {
-          QUOTE_EXPIRED:
-            "This price expired. Check availability and review a fresh price.",
-          QUOTE_STALE: "The price changed. Please review a fresh quote.",
-          QUOTE_CHANGED:
-            "The price or availability changed. Please review again.",
-          INSUFFICIENT_LOYALTY_CREDITS:
-            "The customer has fewer available credits. Reduce the credits and check the price again.",
-          CREDITS_EXCEED_PAYABLE:
-            "Credits cannot exceed the stay price. Enter a lower whole number.",
-          INVALID_REDEEM_CREDITS: "Enter a whole number of credits.",
-          AVAILABILITY_CHANGED:
-            "These places are no longer available. Choose other dates or rooms.",
-          ROOM_UNAVAILABLE:
-            "The selected room is unavailable. Choose another room or date.",
-          CAPACITY_EXCEEDED:
-            "The party exceeds available capacity. Change the dates or number of guests.",
-          VERSION_CONFLICT:
-            "This booking information changed. Review the latest availability.",
-          INVALID_CHILD_AGE:
-            "Choose an age under 10 for each child. Guests aged 10 or above are adults.",
-          INVALID_CONTACT:
-            "Enter the guest’s full name and a valid phone with country code.",
-          INVALID_EMAIL: "Enter the guest’s valid email address.",
-          SELECT_ROOMS: "Choose rooms for this private stay.",
-          ROOM_PARTY_LIMIT:
-            "The selected rooms cannot accommodate this party. Choose more rooms or adjust the guests.",
-          CHILDREN_REQUIRE_PRIVATE_ROOM:
-            "Choose private rooms for a stay with children.",
-          INVALID_DATE: "Enter valid calendar dates.",
-          INVALID_STAY_DATES:
-            "Choose dates within the next year, departure after arrival and up to 31 nights.",
-          CUSTOMER_LINK_REVIEW_REQUIRED:
-            "This email has conflicting customer records. Ask an Aroha administrator to review the identity before booking.",
-          PROFILE_RECREATE_REQUIRED:
-            "This customer erased their profile. They must explicitly recreate it before a new booking.",
-          BOOKINGS_PAUSED:
-            "New bookings are paused. Review the booking policies before continuing.",
-          PROMO_NOT_VALID:
-            "This invitation code is not valid for the selected visit.",
-          PROMO_EXHAUSTED: "This invitation code has been fully used.",
-        };
-        if (messages[err.code]) {
-          state.pending = null;
-          if (state.step === 3) state.step = 2;
-          draw();
-          dialog.querySelector("[data-message]").textContent =
-            messages[err.code];
-          return;
-        }
-        msg.textContent = state.pending
-          ? "The confirmation response is uncertain. Retry this same confirmation safely before starting another."
-          : "Could not check this visit. Check the dates, guest contact and your current access, then try again.";
-        controls.forEach((b) => (b.disabled = false));
-        if (state.pending) {
-          dialog.querySelector("[data-back]")?.remove();
-          form.querySelector('button[type="submit"]').textContent =
-            "Retry same confirmation";
-        }
-      }
+const bookingErrors = {
+  QUOTE_EXPIRED:
+    "This price expired. Check availability and review a fresh price.",
+  QUOTE_STALE: "The price changed. Please review a fresh quote.",
+  QUOTE_CHANGED:
+    "The price or availability changed. Please review again.",
+  INSUFFICIENT_LOYALTY_CREDITS:
+    "The customer has fewer available credits. Reduce the credits and check the price again.",
+  CREDITS_EXCEED_PAYABLE:
+    "Credits cannot exceed the stay price. Enter a lower whole number.",
+  INVALID_REDEEM_CREDITS: "Enter a whole number of credits.",
+  AVAILABILITY_CHANGED:
+    "These places are no longer available. Choose other dates or rooms.",
+  ROOM_UNAVAILABLE:
+    "The selected room is unavailable. Choose another room or date.",
+  CAPACITY_EXCEEDED:
+    "The party exceeds available capacity. Change the dates or number of guests.",
+  VERSION_CONFLICT:
+    "This booking information changed. Review the latest availability.",
+  INVALID_CHILD_AGE:
+    "Choose an age under 10 for each child. Guests aged 10 or above are adults.",
+  INVALID_CONTACT:
+    "Enter the guest’s full name and a valid phone with country code.",
+  INVALID_EMAIL: "Enter the guest’s valid email address.",
+  SELECT_ROOMS: "Choose rooms for this private stay.",
+  ROOM_PARTY_LIMIT:
+    "The selected rooms cannot accommodate this party. Choose more rooms or adjust the guests.",
+  CHILDREN_REQUIRE_PRIVATE_ROOM:
+    "Choose private rooms for a stay with children.",
+  INVALID_DATE: "Enter valid calendar dates.",
+  INVALID_STAY_DATES:
+    "Choose dates within the next year, departure after arrival and up to 31 nights.",
+  CUSTOMER_LINK_REVIEW_REQUIRED:
+    "This email has conflicting customer records. Ask an Aroha administrator to review the identity before booking.",
+  PROFILE_RECREATE_REQUIRED:
+    "This customer erased their profile. They must explicitly recreate it before a new booking.",
+  BOOKINGS_PAUSED:
+    "New bookings are paused. Review the booking policies before continuing.",
+  PROMO_NOT_VALID:
+    "This invitation code is not valid for the selected visit.",
+  PROMO_EXHAUSTED: "This invitation code has been fully used.",
+};
+export function openManualBooking({ call, units, onBooked, identity, chooseGuest, customer }) {
+  const trigger = document.activeElement;
+  const today = new Date(Date.now()+19800000).toISOString().slice(0,10);
+  const tomorrow = new Date(Date.parse(today)+86400000).toISOString().slice(0,10);
+  let state = manualDrafts.get(identity);
+  if (!state || customer && !state.pending) {
+    state = {
+      customer: customer ? { name:customer.name, email:customer.email, phone:customer.phone } : { name:"", email:"", phone:"" },
+      selectedGuest:customer?.name || "",
+      kind:"individual", arrival:today, departure:tomorrow, adults:1, ages:[], unitIds:[], promo:"", credits:0,
     };
+    manualDrafts.set(identity,state);
+  }
+  const dialog = document.createElement("dialog");
+  dialog.className = "ops-dialog manual-composer";
+  dialog.setAttribute("data-dt-mask","");
+  dialog.setAttribute("aria-labelledby","manual-composer-title");
+  dialog.innerHTML = `<header class="manual-head"><div><p class="eyebrow">HOST STUDIO</p><h2 id="manual-composer-title">New booking</h2><p>Add a walk-in or record a booking for a guest.</p></div><button type="button" data-close aria-label="Close new booking">×</button></header>
+    <form class="manual-layout">
+      <div class="manual-fields">
+        <fieldset class="manual-card" data-guest-fields><legend><span>1</span> Guest</legend>
+          <div class="manual-guest-pick"><div><strong data-selected-guest></strong><small>Use the guest’s own email to link their booking and credits.</small></div>
+          ${chooseGuest ? '<div><button type="button" data-find>Find guest</button><button type="button" class="text-button" data-new-guest>Use new guest</button></div>' : ""}
+          </div>
+          <div class="ops-columns guest-contact-fields"><label>Full name<input name="name" autocomplete="name" minlength="2" maxlength="120" required></label>
+            <label>Email<input name="email" type="email" autocomplete="email" maxlength="254" required></label>
+            <label>Phone with country code<input name="phone" type="tel" autocomplete="tel" maxlength="32" placeholder="+91 98765 43210" required></label></div>
+        </fieldset>
+        <fieldset class="manual-card" data-visit-fields><legend><span>2</span> Visit &amp; rooms</legend>
+          <fieldset class="visit-choices"><legend>Visit type</legend>${[["individual","Individual stay"],["private","Private rooms"],["day","Day outing"],["event","Exclusive retreat"]].map(([value,label])=>`<label class="visit-choice"><input type="radio" name="kind" value="${value}" ${value===state.kind?"checked":""}><strong>${label}</strong></label>`).join("")}</fieldset>
+          <button type="button" class="manual-date-field" data-dates aria-haspopup="dialog"></button><p class="ops-note" data-date-help></p>
+          <div class="ops-columns"><label>Adults · age 10+<input name="adults" type="number" min="1" max="35" required value="${state.adults}"></label>
+            <label>Children under 10<input name="childrenCount" type="number" min="0" max="100" value="${state.ages.length}"></label></div>
+          <div data-child-ages class="ops-columns"></div>
+          <fieldset data-room-fields><legend>Choose private rooms</legend><div class="manual-room-grid">${units.filter((unit)=>unit.active).map((unit)=>`<label class="ops-check"><input type="checkbox" name="units" value="${esc(unit.id)}" ${state.unitIds.includes(unit.id)?"checked":""}><span>${esc(unit.name)}<small>Up to ${unit.capacity} adults</small></span></label>`).join("")}</div></fieldset>
+          <details><summary>Offer code or credits</summary><div class="ops-columns">
+            <label>Invitation code<input name="promo" maxlength="32" value="${esc(state.promo)}"></label>
+            <label data-credit-field>Credits to redeem<input name="credits" type="number" min="0" max="1000000000" step="1" value="${state.credits}"></label>
+          </div></details>
+        </fieldset>
+      </div>
+      <section class="manual-card manual-quote"><h3><span>3</span> Quote &amp; confirm</h3>
+        <div data-quote></div><p role="status" data-message></p>
+        <button type="submit" class="primary" data-get-quote>Check availability &amp; price</button>
+        <div data-confirm-area></div>
+      </section>
+    </form>`;
+  document.body.append(dialog);
+  const form = dialog.querySelector("form");
+  const quoteSlot = form.querySelector("[data-quote]");
+  const confirmArea = form.querySelector("[data-confirm-area]");
+  const notice = form.querySelector("[data-message]");
+  const getQuote = form.querySelector("[data-get-quote]");
+  const close = dialog.querySelector("[data-close]");
+  let working = false;
+  const showContact = () => {
+    for (const name of ["name","email","phone"]) form.elements[name].value = state.customer[name];
+    form.elements.email.readOnly = Boolean(state.selectedGuest);
+    form.querySelector("[data-selected-guest]").textContent = state.selectedGuest || "New guest";
+    if (chooseGuest) {
+      form.querySelector("[data-find]").textContent = state.selectedGuest ? "Change guest" : "Find guest";
+      form.querySelector("[data-new-guest]").hidden = !state.selectedGuest;
+    }
   };
-  draw();
+  const capture = () => {
+    state.customer = Object.fromEntries(["name","email","phone"].map((field)=>[field,form.elements[field].value.trim()]));
+    state.kind = form.elements.kind.value;
+    state.adults = Number(form.elements.adults.value);
+    state.ages = [...form.querySelectorAll("[name=childAge]")].map((field)=>field.value);
+    state.unitIds = [...form.querySelectorAll("[name=units]:checked")].map((field)=>field.value);
+    state.promo = form.elements.promo.value;
+    state.credits = Number(form.elements.credits.value);
+  };
+  const drawAges = () => {
+    const count = Number(form.elements.childrenCount.value);
+    if (!Number.isInteger(count) || count < 0 || count > 100) return;
+    const ages = [...form.querySelectorAll("[name=childAge]")].map((field)=>field.value);
+    form.querySelector("[data-child-ages]").innerHTML = Array.from({length:count},(_,i)=>`<label>Child ${i+1} age at arrival<select name="childAge" required>
+      <option value="">Choose age</option>${Array.from({length:10},(_,age)=>`<option value="${age}" ${String(ages[i]??state.ages[i])===String(age)?"selected":""}>${age===0?"Under 1":age+" years"}</option>`).join("")}</select></label>`).join("");
+  };
+  const drawVisit = () => {
+    const day = state.kind === "day", event = state.kind === "event";
+    const end = event ? new Date(Date.parse(state.departure)-86400000).toISOString().slice(0,10) : state.departure;
+    form.querySelector("[data-dates]").innerHTML = `<span><small>${day?"Visit date":event?"First event day":"Check-in"}</small><strong>${esc(shortDate(state.arrival))}</strong></span>
+      ${day?"":`<span aria-hidden="true">→</span><span><small>${event?"Last event day":"Checkout"}</small><strong>${esc(shortDate(end))}</strong></span>`}<span class="manual-date-icon" aria-hidden="true">${calendarIcon}</span>`;
+    form.querySelector("[data-room-fields]").hidden = state.kind !== "private";
+    form.querySelector("[data-credit-field]").hidden = day || event;
+    if (day || event) form.elements.credits.value = "0";
+    form.querySelector("[data-date-help]").textContent = day ? "Choose one day for the visit." : event ? "The first and last event days are included." : "Choose an arrival and checkout date.";
+  };
+  function lock(value) {
+    form.querySelector("[data-guest-fields]").disabled = value;
+    form.querySelector("[data-visit-fields]").disabled = value;
+    getQuote.disabled = value;
+    close.disabled = working;
+  }
+  function drawQuote() {
+    const quote = state.quote;
+    quoteSlot.innerHTML = quote ? `<div class="manual-quote-summary"><strong>${esc(quote.contact.name)}</strong><small>${esc(quote.contact.email)}</small><p>${esc(visitKind(quote.kind))} · ${esc(visitDateLabel(quote,shortDate))}</p>
+      ${quote.unitNames.length?`<p>${esc(quote.unitNames.join(" · "))}</p>`:""}
+      <dl class="ops-price"><div><dt>Subtotal</dt><dd>${cash(quote.subtotalPaise)}</dd></div>
+      <div><dt>Best offer benefit</dt><dd>−${cash(quote.priceBenefitDiscountPaise)}</dd></div>
+      <div><dt>Credits applied</dt><dd>−${cash(quote.loyaltyDiscountPaise)}</dd></div>
+      <div><dt>Total payable</dt><dd><strong>${cash(quote.totalPaise)}</strong></dd></div></dl></div>` :
+      '<p>Check availability and price before you confirm.</p>';
+    getQuote.textContent = quote ? "Refresh quote" : "Check availability & price";
+    confirmArea.innerHTML = !quote ? "" : `${state.pending ? "" : '<label class="ops-check"><input name="consent" type="checkbox">I checked the guest contact, dates and price, and have their agreement to confirm and email this booking.</label>'}
+      <button type="button" class="primary" data-confirm>${state.pending ? "Retry same confirmation" : "Confirm booking & email guest"}</button>`;
+    confirmArea.querySelector("[data-confirm]")?.addEventListener("click",confirm);
+    lock(working || Boolean(state.pending));
+  }
+  function changed() {
+    if (working || state.pending) return;
+    if (state.quote) {
+      state.quote = null;
+      notice.textContent = "Details changed. Check availability and price again.";
+      drawQuote();
+    }
+  }
+  function selectGuest(person) {
+    state.selectedGuest = person?.name || "";
+    state.customer = person ? { name:person.name,email:person.email,phone:person.phone } : { name:"",email:"",phone:"" };
+    showContact();
+    changed();
+  }
+  form.querySelector("[data-find]")?.addEventListener("click",()=>chooseGuest(selectGuest));
+  form.querySelector("[data-new-guest]")?.addEventListener("click",()=>{selectGuest(null);form.elements.name.focus();});
+  form.querySelector("[data-dates]").onclick=()=>chooseStudioDates({
+    kind:state.kind, arrival:state.arrival, departure:state.departure, today,
+    onApply:(arrival,departure)=>{Object.assign(state,{arrival,departure});drawVisit();changed();},
+  });
+  form.addEventListener("input",(event)=>{
+    if (event.target.name === "consent" || working || state.pending) return;
+    if (event.target.name === "childrenCount") drawAges();
+    capture();
+    if (event.target.name === "kind") drawVisit();
+    changed();
+  });
+  close.onclick=()=>{if(!working)dialog.close();};
+  dialog.addEventListener("cancel",(event)=>{if(working)event.preventDefault();});
+  dialog.addEventListener("close",()=>{dialog.remove();if(trigger?.isConnected)trigger.focus();},{once:true});
+  form.onsubmit = async (event) => {
+    event.preventDefault();
+    if (working || state.pending) return;
+    capture();
+    const ages = state.ages.map((age)=>age === "" ? NaN : Number(age));
+    if (ages.some((age)=>!Number.isInteger(age)||age<0||age>9)) { notice.textContent=bookingErrors.INVALID_CHILD_AGE;return; }
+    if (state.kind === "day") state.departure = new Date(Date.parse(state.arrival)+86400000).toISOString().slice(0,10);
+    working=true;
+    lock(true);
+    notice.textContent="Checking availability and price…";
+    state.quote=null;
+    drawQuote();
+    try {
+      state.quote=await call("quoteManualBooking",{
+        customer:state.customer,kind:state.kind,arrival:state.arrival,departure:state.departure,
+        adults:state.adults,childrenAges:ages,units:state.kind==="private"?state.unitIds:[],
+        promo:state.promo,redeemCredits:["day","event"].includes(state.kind)?0:state.credits,
+      },crypto.randomUUID());
+      notice.textContent="Quote ready. Review the guest, dates and price.";
+    } catch (error) {
+      notice.textContent=bookingErrors[error.code] || "Could not check this visit. Check the dates, guest contact and your access.";
+    } finally {
+      working=false;
+      drawQuote();
+      (confirmArea.querySelector("[data-confirm]") || getQuote).focus();
+    }
+  };
+  async function confirm() {
+    if (working || !state.quote) return;
+    if (!state.pending && !form.elements.consent.checked) {
+      notice.textContent="Confirm that the guest agreed to the booking and email.";
+      form.elements.consent.focus();
+      return;
+    }
+    state.pending ??= {input:{quoteId:state.quote.id},key:crypto.randomUUID()};
+    working=true;
+    lock(true);
+    confirmArea.querySelector("button").disabled=true;
+    notice.textContent="Confirming booking…";
+    try {
+      const booking=await call("createManualBooking",state.pending.input,state.pending.key);
+      manualDrafts.delete(identity);
+      dialog.close();
+      await onBooked(booking);
+    } catch (error) {
+      if (!dialog.isConnected) return;
+      if (bookingErrors[error.code] || error.status >= 400 && error.status < 500 && error.status !== 429) {
+        state.pending=null;
+        state.quote=null;
+        notice.textContent=bookingErrors[error.code] || "The booking could not be confirmed. Review the details and try again.";
+      } else {
+        notice.textContent="The response is uncertain. Retry the same confirmation.";
+      }
+    } finally {
+      working=false;
+      if(dialog.isConnected)drawQuote();
+    }
+  }
+  showContact();
+  drawAges();
+  drawVisit();
+  drawQuote();
   dialog.showModal();
-  dialog.addEventListener("close", () => dialog.remove());
 }
+
 export async function mountHostSummary(target, { call }) {
   try {
     const s = await call("getHostBookingSummary", {});

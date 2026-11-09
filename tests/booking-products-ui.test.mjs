@@ -12,7 +12,7 @@ import {
   todayIST,
 } from "../functions/booking/domain.mjs";
 const guest = { id: "ui-guest", name: "Review guest", role: "guest" },
-  host = { id: "ui-host", name: "Review host", role: "host" };
+  host = { id: "ui-host", name: "Review host", role: "host", bookingAccess: "manager" };
 async function mount(s, role = "guest", hash = "") {
   const actor = role === "host" ? host : guest,
     dom = new JSDOM(
@@ -72,8 +72,8 @@ async function mount(s, role = "guest", hash = "") {
   )
     .replace(/import \{visitDateLabel\} from "\.\/booking-visit-label.mjs";/, "const visitDateLabel=window.testVisitDateLabel;")
     .replace(/import \{[^\n]+\} from ['"]\.\/material-controls.mjs['"];/, 'const installMaterialControls=()=>{},confirmMaterial=async()=>window.confirm();')
-    .replace(/import \{hostShell,mountFrontDesk\} from '\.\/frontdesk.mjs';/,`const hostShell=({content})=>'<button data-host-tab="calendar">Calendar</button>'+content,mountFrontDesk=async()=>{};`)
-    .replace(/import \{mountHostOperations,mountHostSummary,openManualBooking\} from '\.\/host-operations.mjs';/, 'const mountHostOperations=async()=>{},mountHostSummary=async()=>{},openManualBooking=()=>{};').replace(/import \{auth\} from '\.\/firebase-auth.mjs';/, 'const auth={currentUser:null};').replace(/import \{mountStayPanel\} from '\.\/stay-panel.mjs';/, "").replace(
+    .replace(/^import .* from ["']\.\/frontdesk\.mjs["'];$/m,`const hostShell=({content})=>'<button data-host-tab="calendar">Calendar</button>'+content,mountFrontDesk=async()=>{},hostTabAllowed=()=>true,hostDestinations=()=>[],openStudioBooking=({id})=>detail(id),mountStudioDashboard=async()=>{};`)
+    .replace(/^import .* from ["']\.\/(?:studio-views|booking-documents)\.mjs["'];$/gm, "").replace(/import \{mountHostOperations,openManualBooking\} from '\.\/host-operations.mjs';/, 'const mountHostOperations=async()=>{},openManualBooking=()=>{};').replace(/import \{auth\} from '\.\/firebase-auth.mjs';/, 'const auth={currentUser:null};').replace(/import \{mountStayPanel\} from '\.\/stay-panel.mjs';/, "").replace(
       /import \{\s*journeyStep\s*\} from "\.\/booking-journey.mjs";/,
       "const journeyStep=()=>{};",
     )

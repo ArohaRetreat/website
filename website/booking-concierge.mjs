@@ -1,5 +1,7 @@
 import { mountGuestIdentity } from "./guest-identity.mjs";
 import {mountCreditWallet} from './host-operations.mjs';
+import {visitDateLabel} from "./booking-visit-label.mjs";
+import { mountBookingDocuments } from "./booking-documents.mjs";
 import {mountStayPanel} from './stay-panel.mjs';
 import { recommendPrivate } from "./booking-options.mjs";
 export async function startConcierge({
@@ -148,7 +150,7 @@ export async function startConcierge({
         ? "#visits"
         : v === "credits" ? "#credits" : v === "profile"
           ? "#profile"
-          : "#plan";
+          : v === "invoices" ? "#invoices" : "#plan";
     history.replaceState(null, "", hash);
     journeyStep(
       v === "find"
@@ -157,7 +159,7 @@ export async function startConcierge({
           ? "rooms"
           : v === "confirmation" || v === "visits"
             ? "visits"
-            : v === "profile"
+            : v === "profile" || v === "invoices"
               ? "profile"
               : "review",
       "viewed",
@@ -282,8 +284,16 @@ export async function startConcierge({
     return `<section class="wrap reveal"><span class="eyebrow">YOUR AROHA VISITS</span><h1 style="font-size:42px;margin-top:12px">Something to look forward to.</h1><p class="lead">${esc(t?.name || "Visitor")} · ${t?.stays || 0} completed stays.${t?.nextAt ? " " + Math.max(0, t.nextAt - t.stays) + " more stays to your next tier." : ""}${t?.discount ? " " + t.discount + "% overnight benefit." : ""}</p><div class="inline-actions">${primary("Plan another visit", "find")}${["upcoming", "past", "cancelled"].map((f) => `<button class="secondary" data-filter="${f}" aria-pressed="${S.filter === f}">${f[0].toUpperCase() + f.slice(1)}</button>`).join("")}</div>${rows.length ? rows.map((b) => `<article class="reviewpanel visit-item"><span class="pill">${esc(statusLabel(b.status))}</span><h3>${esc(productLabel(b.kind))}</h3><p>${dateLabel(b.arrival)} – ${dateLabel(b.kind === "event" ? add(b.departure, -1) : b.departure)} · ${b.adults ?? b.guests} adults · ${b.children ?? 0} under 10s</p><p>${esc(b.reference)} · ${cash(b.total)}</p><div class="inline-actions"><button class="textbutton" data-booking="${esc(b.id)}">View booking ↗</button></div></article>`).join("") : '<div class="empty"><h2>No visits in this category yet.</h2><p>New requests and confirmed visits will appear here.</p></div>'}${a.nextCursor ? '<button class="secondary" data-act="morevisits">Load more history</button>' : ""}</section>`;
   }
   function credits(){return `<section class="wrap"><span class="eyebrow">YOUR AROHA CREDITS</span><h1>A little more to return to.</h1><div data-credit-wallet role="region" aria-label="Your loyalty balance">Loading your credits…</div></section>`;}
+  const profileTabs = (selected) => `<nav class="profile-sections" aria-label="Guest profile sections">
+    <button type="button" data-act="profile" ${selected === "profile" ? 'aria-current="page"' : ""}>Profile</button>
+    <button type="button" data-act="invoices" ${selected === "invoices" ? 'aria-current="page"' : ""}>Invoices &amp; receipts</button>
+  </nav>`;
+  function invoices() {
+    return `<section class="wrap"><span class="eyebrow">YOUR AROHA ACCOUNT</span><h1>Invoices &amp; receipts</h1>
+      ${profileTabs("invoices")}<div class="reviewpanel"><p>Find documents for your visits. Choose View or download a PDF whenever you need it.</p><div data-account-documents></div></div></section>`;
+  }
   function profile() {
-    return `<section class="wrap"><span class="eyebrow">YOUR GUEST PROFILE</span><h1 style="font-size:42px;margin-top:12px">So we can welcome you.</h1><div class="inline-actions"><button class="secondary" data-act="enquire">Enquire on WhatsApp ↗</button><button class="primary" data-act="find">Book a visit →</button></div><form id="profile-form" class="reviewpanel" style="margin-top:25px"><div class="columns"><label class="field">Full name<input id="profile-name" minlength="2" maxlength="120" autocomplete="name" required value="${esc(S.account.profile?.name || S.account.actor?.name)}"></label><label class="field">Phone with country code<input id="profile-phone" type="tel" autocomplete="tel" required maxlength="32" placeholder="+91 98765 43210" value="${esc(S.account.profile?.phone)}"></label></div><label class="field">Verified Google email<input type="email" readonly value="${esc(S.account.profile?.email)}"></label><p class="planner-note">Your phone is used by authorised hosts and included in operational booking business events in Dynatrace. Names, private notes and child ages are not sent. Existing booking contacts stay unchanged.</p><div class="inline-actions">${primary("Save profile", "saveprofile")}</div></form><div data-guest-identity></div></section>`;
+    return `<section class="wrap"><span class="eyebrow">YOUR GUEST PROFILE</span><h1 style="font-size:42px;margin-top:12px">So we can welcome you.</h1>${profileTabs("profile")}<div class="inline-actions"><button class="secondary" data-act="enquire">Enquire on WhatsApp ↗</button><button class="primary" data-act="find">Book a visit →</button></div><form id="profile-form" class="reviewpanel" style="margin-top:25px"><div class="columns"><label class="field">Full name<input id="profile-name" minlength="2" maxlength="120" autocomplete="name" required value="${esc(S.account.profile?.name || S.account.actor?.name)}"></label><label class="field">Phone with country code<input id="profile-phone" type="tel" autocomplete="tel" required maxlength="32" placeholder="+91 98765 43210" value="${esc(S.account.profile?.phone)}"></label></div><label class="field">Verified Google email<input type="email" readonly value="${esc(S.account.profile?.email)}"></label><p class="planner-note">Your phone is used by authorised hosts and included in operational booking business events in Dynatrace. Names, private notes and child ages are not sent. Existing booking contacts stay unchanged.</p><div class="inline-actions">${primary("Save profile", "saveprofile")}</div></form>${expectedEnvironment === "pre-prod" ? '<div data-guest-identity></div>' : ""}</section>`;
   }
   function render() {
     $("#pending-request").innerHTML = S.submissionUnknown
@@ -293,7 +303,7 @@ export async function startConcierge({
       : "";
     if (S.view === "review") syncContact();
     $("#main").innerHTML = (
-      { find, options, review, confirmation, visits, profile, credits }[S.view] || find
+      { find, options, review, confirmation, visits, profile, credits, invoices }[S.view] || find
     )();
     let visible =
       ["options", "review"].includes(S.view) && S.data?.available && !S.busy;
@@ -310,6 +320,17 @@ export async function startConcierge({
           if (getIdentity?.() !== identity) throw { status: 403 };
           const result = await api(operation, input);
           if (getIdentity?.() !== identity) throw { status: 403 };
+          return result;
+        },
+      });
+    }
+    if (S.view === "invoices" && S.account?.actor) {
+      const identity = getIdentity?.();
+      void mountBookingDocuments($("[data-account-documents]"), {
+        call: async (operation, input) => {
+          if (getIdentity?.() !== identity) throw { code: "SESSION_CHANGED" };
+          const result = await api("platform", { operation, input });
+          if (getIdentity?.() !== identity) throw { code: "SESSION_CHANGED" };
           return result;
         },
       });
@@ -762,6 +783,10 @@ export async function startConcierge({
     if (a === "options") {
       if (S.data && !S.promo) view("options");
       else await search();
+    }
+    if (a === "invoices") {
+      if (S.account?.actor) view("invoices");
+      return;
     }
     if (a === "atmosphere") {
       setAtmosphere(getAtmosphere() === "evening" ? "day" : "evening");
@@ -1341,7 +1366,7 @@ export async function startConcierge({
     });
   }
   function initialView() {
-    return location.hash === "#credits" && S.account.actor ? "credits" : location.hash === "#visits"
+    return location.hash === "#invoices" && S.account.actor ? "invoices" : location.hash === "#credits" && S.account.actor ? "credits" : location.hash === "#visits"
       ? "visits"
       : location.hash === "#profile" && S.account.actor
         ? "profile"

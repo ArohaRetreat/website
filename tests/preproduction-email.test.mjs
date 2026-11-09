@@ -606,16 +606,16 @@ test("legacy confirmation retries keep their original PDF after a design correct
  assert.equal(version,"legacy");assert.equal((await ref.get()).data().status,"accepted");
 });
 
-test("approved document objects coexist with immutable originals and reject snapshot mismatches",async()=>{
+test("issued PDF templates render on demand without a Storage object", async () => {
  const {invoicePdf}=await import('../functions/email/documents.mjs');
- const invoice=invoiceSnapshot(booking,profile,1,mailSettings());delete invoice.documentTemplateVersion;
- const objects=new Map(),bucket={file:name=>({getMetadata:async()=>{if(!objects.has(name))throw Object.assign(Error('missing'),{code:404});return[objects.get(name).metadata];},download:async()=>[objects.get(name).buffer],save:async(buffer,options)=>{assert.equal(options.preconditionOpts.ifGenerationMatch,0);assert.ok(!objects.has(name));objects.set(name,{buffer,metadata:{...options.metadata,size:String(buffer.length)}});}})};
- const old=await invoicePdf(invoice,{bucket,designVersion:'legacy'}),approved=await invoicePdf(invoice,{bucket,designVersion:'pdf-v4'});
- assert.notEqual(old.object,approved.object);assert.equal(objects.size,2);
- assert.deepEqual((await invoicePdf(invoice,{bucket,designVersion:'legacy'})).buffer,old.buffer);
- assert.deepEqual((await invoicePdf(invoice,{bucket,designVersion:'pdf-v4'})).buffer,approved.buffer);
- await assert.rejects(invoicePdf({...invoice,snapshotHash:'changed'},{bucket,designVersion:'pdf-v4'}),/INVOICE_DOCUMENT_MISMATCH/);
- assert.equal(objects.size,2);assert.deepEqual(objects.get(old.object).buffer,old.buffer);
+ const invoice=invoiceSnapshot(booking,profile,1,mailSettings());
+ const legacy=await invoicePdf(invoice,{designVersion:'legacy'}), approved=await invoicePdf(invoice,{designVersion:'pdf-v4'});
+ assert.deepEqual(Object.keys(legacy),["buffer"]);
+ assert.deepEqual(Object.keys(approved),["buffer"]);
+ assert.match(legacy.buffer.toString("ascii",0,8),/^%PDF-/);
+ assert.notDeepEqual(legacy.buffer,approved.buffer);
+ assert.deepEqual((await invoicePdf(invoice,{designVersion:'pdf-v4'})).buffer,approved.buffer);
+ await assert.rejects(invoicePdf({...invoice,environment:'production'}),/INVOICE_ENVIRONMENT_MISMATCH/);
 });
 
 test('cancellation mail preserves truthful status and suppresses a stale booking version', async()=>{

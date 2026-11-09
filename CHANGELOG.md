@@ -1,3 +1,11 @@
+## Website 0.32.0 / API 0.17.0 — pre-production Host Studio
+
+- Open on the Dashboard with arrival, checkout and request queues. Use one booking inspector from the dashboard, calendar, guest profile and ledger.
+- Search for guests with bounded server queries. Review completed visits, recorded nights, verified payments, credits, booking history and issued documents.
+- Compose guest emails in Studio and review delivery receipts from the existing provider webhook.
+- Review walk-in contacts, dates and room choices in one composer. Quote and confirmation keep existing availability and price checks.
+- Add Invoices & receipts to guest profiles. Generate authorized PDFs from issued snapshots without storing rendered files.
+
 ## Website 0.31.2 / API 0.16.2 — saved IDs for future check-ins
 
 - Keep newly consented guest ID photos in private Cloud Storage without a fixed expiry. Preserve the expiry previously agreed to for existing photos.

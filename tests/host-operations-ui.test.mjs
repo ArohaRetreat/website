@@ -2,13 +2,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { JSDOM } from "jsdom";
+const helpers = (await Promise.all(["studio-date-range","booking-visit-label"].map((name)=>
+  readFile(new URL("../website/" + name + ".mjs", import.meta.url), "utf8")
+))).join("\n").replaceAll("export ", "");
 const source = (
   await readFile(
     new URL("../website/host-operations.mjs", import.meta.url),
     "utf8",
   )
 )
-  .replace(/import \{[^\n]+\} from ['"]\.\/material-controls.mjs['"];/, 'const installMaterialControls=()=>{},confirmMaterial=async()=>window.confirm();')
+  .replace(/import \{[^\n]+\} from ['"]\.\/material-controls.mjs['"];/, 'const calendarIcon=String(),confirmMaterial=async()=>window.confirm();')
+  .replace(/^import .*;$/gm,"")
   .replaceAll("export async function", "async function")
   .replaceAll("export function", "function");
 async function mount() {
@@ -26,7 +30,7 @@ async function mount() {
     this.dispatchEvent(new w.Event("close"));
   };
   w.eval(
-    source +
+    helpers + "\n" + source +
       "\nwindow.operations={mountHostOperations,openManualBooking,mountCreditWallet};",
   );
   return { dom, w, target: w.document.querySelector("main"), ...w.operations };
@@ -121,20 +125,20 @@ test("manual booking review precedes one confirmation and an uncertain response 
       phone: "+12025550123",
     }))
       d.querySelector(`[name=${k}]`).value = v;
+    d.querySelector("[data-dates]").click();
+    const calendar = m.w.document.querySelector(".studio-range");
+    assert.ok(calendar.open);
+    calendar.querySelector("[data-apply]").click();
     submit(m.w, d.querySelector("form"));
-    assert.match(d.textContent, /Plan their visit/);
-    d.querySelector("[name=arrival]").value = "2026-11-08";
-    d.querySelector("[name=departure]").value = "2026-11-10";
-    submit(m.w, d.querySelector("form"));
-    await until(() => d.textContent.includes("Review & confirm"));
+    await until(() => d.textContent.includes("Quote ready"));
     assert.equal(calls.length, 1);
     assert.match(d.textContent, /walkin@example.test/);
     assert.match(d.textContent, /7,000/);
     d.querySelector("[name=consent]").checked = true;
-    submit(m.w, d.querySelector("form"));
+    d.querySelector("[data-confirm]").click();
     await until(() => d.textContent.includes("uncertain"));
-    assert.equal(d.querySelector("[data-back]"), null);
-    submit(m.w, d.querySelector("form"));
+    assert.equal(d.querySelector("[data-get-quote]").disabled, true);
+    d.querySelector("[data-confirm]").click();
     await until(() => saved);
     assert.equal(saved.id, "saved");
     assert.deepEqual(calls[1], calls[2]);
@@ -180,11 +184,28 @@ test('review desk queries pending requests and pagination replaces rather than a
  }finally{m.dom.window.close();}
 });
 
-test('walk-in draft survives Back and changing visit type with an empty arrival stays valid',async()=>{
- const m=await mount();try{
- m.openManualBooking({identity:'draft-host',units:[],call:async()=>{throw Error('No quote expected');},onBooked:()=>{}});
- let f=m.w.document.querySelector('dialog form');f.elements.name.value='Synthetic Draft';f.elements.email.value='draft@example.test';f.elements.phone.value='+12025550123';submit(m.w,f);
- f=m.w.document.querySelector('dialog form');f.elements.arrival.value='';f.elements.visitKind.value='event';f.querySelector('.visit-choices').dispatchEvent(new m.w.Event('change',{bubbles:true}));assert.equal(f.elements.kind.value,'event');assert.equal(f.elements.departure.hasAttribute('min'),false);
- f.elements.promo.value='DRAFT';f.dispatchEvent(new m.w.Event('input',{bubbles:true}));m.w.document.querySelector('[data-back]').click();submit(m.w,m.w.document.querySelector('dialog form'));assert.equal(m.w.document.querySelector('[name=promo]').value,'DRAFT');assert.equal(m.w.document.querySelector('[name=arrival]').value,'');
- }finally{m.dom.window.close();}
+test("walk-in draft survives closing and switching between single-day and range dates", async () => {
+  const m = await mount();
+  const options = {identity:"draft-host",units:[],call:async()=>{throw Error("No quote expected");},onBooked:()=>{}};
+  try {
+    m.openManualBooking(options);
+    const form = m.w.document.querySelector("dialog form");
+    form.elements.name.value="Synthetic Draft";
+    form.elements.email.value="draft@example.test";
+    form.elements.phone.value="+12025550123";
+    form.querySelector('[value="day"]').click();
+    form.elements.promo.value="DRAFT";
+    form.elements.promo.dispatchEvent(new m.w.Event("input",{bubbles:true}));
+    form.querySelector("[data-dates]").click();
+    const calendar=m.w.document.querySelector(".studio-range");
+    assert.equal(calendar.getAttribute("aria-label"),"Choose visit date");
+    calendar.querySelector("[data-apply]").click();
+    m.w.document.querySelector("[data-close]").click();
+    m.openManualBooking(options);
+    assert.equal(m.w.document.querySelector("[name=promo]").value,"DRAFT");
+    assert.equal(m.w.document.querySelector("[name=name]").value,"Synthetic Draft");
+    assert.equal(m.w.document.querySelector("[name=kind]:checked").value,"day");
+  } finally {
+    m.dom.window.close();
+  }
 });
