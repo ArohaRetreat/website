@@ -8,6 +8,7 @@ import {hostingRelease,deliveryToken} from "./delivery/credentials.mjs";
 import {reportDeployment} from "./delivery/deployment.mjs";
 import {assertShellBudget,readMediaManifest,verifyMediaMetadata,writeMediaHostingConfig} from "./hosting-media.mjs";
 import {verifyLive} from "./delivery/verify-live.mjs";
+import {configureNaturaHosting,naturaSamples,readNaturaLayout,verifyNaturaObject} from "./natura-media.mjs";
 const target=deliveryTarget(process.env.GITHUB_REF);
 if(process.env.GITHUB_REPOSITORY!==repository || !["push","workflow_dispatch"].includes(process.env.GITHUB_EVENT_NAME))throw Error("TRUSTED_BRANCH_EVENT_REQUIRED");
 const root=process.cwd()+"/",cli=process.env.FIREBASE_CLI_PATH;
@@ -18,12 +19,16 @@ let configFile=target.branch==="main"?"firebase.json":"firebase.preprod.json";
 const config=JSON.parse(await readFile(configFile));
 const website=JSON.parse(await readFile(target.directory+"/website-release.json"));
 assertArtifact(target,website,process.env.GITHUB_SHA,config);
-if(target.branch==="main"){await verifyHostingComposition(root,website.revision);await verifyDesignPreserved(root);}
+const naturaLayout=await readNaturaLayout(root);
+const composition=await verifyHostingComposition(root,website.revision,{directory:target.directory});
+if(!composition.designMedia)throw Error("NATURA_MEDIA_OFFLOAD_REQUIRED");
+if(target.branch==="main")await verifyDesignPreserved(root,{layout:naturaLayout});
 if(website.mediaStorage!=="firebase")throw Error("MEDIA_OFFLOAD_REQUIRED");
-await assertShellBudget(root+target.directory,{includeDesign:target.branch==="main"});
+await assertShellBudget(root+target.directory,{includeDesign:true});
 const assets=await readMediaManifest(root);
 await verifyMediaMetadata(assets);
-configFile=await writeMediaHostingConfig(root,assets,target.environment);
+await Promise.all(naturaSamples(naturaLayout).map(file=>verifyNaturaObject(file)));
+configFile=await configureNaturaHosting(await writeMediaHostingConfig(root,assets,target.environment),naturaLayout);
 const request=async path=>{const r=await fetch(target.origin+path,{signal:AbortSignal.timeout(15000)});if(!r.ok)throw Error("API_COMPATIBILITY_CHECK_FAILED");return r.json();};
 const runtime=await request("/api/v1/runtime-config"),booking=await request("/api/v1/booking/public");
 if(runtime.environment!==target.environment || booking.environment!==target.environment || !compatibleBookingApi(website.version,booking.apiVersion) || !Number.isSafeInteger(runtime.configVersion))throw Error("UPGRADE_MATCHING_BACKEND_BEFORE_FRONTEND");
@@ -40,7 +45,7 @@ record.status=r.status===0 && record.after.version!==record.before.version && Da
 if(record.status==="deployed"){
   record.verificationStartedAt=new Date().toISOString();
   for(let attempt=0;attempt<5;attempt++){
-    try{record.verification=await verifyLive(root,website,{origin:target.origin,directory:target.directory,includeDesign:target.branch==="main"});break;}
+    try{record.verification=await verifyLive(root,website,{origin:target.origin,directory:target.directory,includeDesign:true,naturaLayout});break;}
     catch{record.verification={status:"failed",reason:"LIVE_VERIFICATION_FAILED"};if(attempt<4)await new Promise(r=>setTimeout(r,2000));}
   }
   record.verificationFinishedAt=new Date().toISOString();

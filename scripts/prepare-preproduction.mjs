@@ -108,6 +108,10 @@ const result = spawnSync(process.execPath, ["scripts/build-website.mjs"], {
   },
 });
 if (result.status !== 0) throw Error("PREPROD_BUILD_FAILED");
+const design = spawnSync(process.execPath, ["scripts/prepare-pinned-design.mjs"], {
+  stdio: "inherit", env: { ...process.env, AROHA_ENVIRONMENT: "pre-prod" },
+});
+if (design.status !== 0) throw Error("PREPROD_NATURA_BUILD_FAILED");
 const install = spawnSync("npm", ["ci", "--ignore-scripts"], {
   cwd: output,
   stdio: "inherit",

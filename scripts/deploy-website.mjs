@@ -3,6 +3,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { deployObserved, replayDeployment } from "./delivery/deployment.mjs";
 import { assertShellBudget, readMediaManifest, verifyMediaMetadata, writeMediaHostingConfig } from "./hosting-media.mjs";
+import { configureNaturaHosting, naturaSamples, readNaturaLayout, verifyNaturaObject } from "./natura-media.mjs";
 import { verifyDesignPreserved } from "./delivery/preserve-design.mjs";
 import { verifyHostingComposition } from "./hosting-composition.mjs";
 const root = fileURLToPath(new URL("../", import.meta.url));
@@ -22,7 +23,9 @@ const config = JSON.parse(
 );
 if (config.hosting.site !== "aroha-retreat" || config.hosting.public !== "dist")
   throw Error("Unexpected Hosting target.");
-await verifyHostingComposition(root, git.stdout.trim());
+const layout = await readNaturaLayout(root);
+const composition = await verifyHostingComposition(root, git.stdout.trim());
+if (!composition.designMedia) throw Error("NATURA_MEDIA_OFFLOAD_REQUIRED");
 const channelFlag = process.argv.indexOf("--channel"),
   channel = process.argv[channelFlag + 1];
 const production = process.argv.includes("--production");
@@ -46,7 +49,8 @@ if (website.mediaStorage !== "firebase") throw Error("MEDIA_OFFLOAD_REQUIRED");
 await assertShellBudget(root + "dist", { includeDesign: true });
 const assets = await readMediaManifest(root);
 await verifyMediaMetadata(assets);
-args.push("--config", await writeMediaHostingConfig(root, assets, "production"));
+await Promise.all(naturaSamples(layout).map(file => verifyNaturaObject(file)));
+args.push("--config", await configureNaturaHosting(await writeMediaHostingConfig(root, assets, "production"), layout));
 const cli = process.env.FIREBASE_CLI_PATH;
 if (production) {
   const runtime = await fetch(
@@ -64,8 +68,8 @@ if (production) {
     throw Error(
       "FIREBASE_CLI_PATH is required for observed production deployment.",
     );
-  await verifyDesignPreserved(root);
-  process.exitCode = await deployObserved(root, cli, args);
+  await verifyDesignPreserved(root, { layout });
+  process.exitCode = await deployObserved(root, cli, args, { naturaLayout: layout });
 } else {
   const result = spawnSync(
     cli ? process.execPath : "firebase",

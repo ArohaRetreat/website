@@ -27,3 +27,13 @@ The 3 MB guard covers the retreat website, booking and Studio shell. Natura is a
 Deploy only `arohaBookingEmailRetry` from the merged, environment-guarded production package. Check its scheduler and a successful real request against the new revision. Once the successor is healthy, retire only `arohaBookingEvents` and verify that its scheduler was removed. Immediate dispatch and the booking API retain their deployed revisions. Both drains run independently with existing leases and limits.
 
 The previous production Hosting version remains the rollback target. Restore the prior Hosting release and prior worker definitions independently if needed. Keep the corresponding source revision and provider receipts. Apply the longer usage observation after this owner-authorized promotion. Use actual Hosting, Storage and runtime metrics and billed SKUs before claiming net savings. The shared Artifact Registry policy and budgets are outside this cutover.
+
+## Natura Hosting cutover
+
+The website workflow stages the pinned Natura export in pre-production before publishing it to production. The build verifies every file in the design shell against `config/natura-export-files.json`. It limits the Natura shell to 650 KB and keeps the website’s 3 MB shell guard separate. Hosting retains Natura’s HTML, scripts, styles, core catalogue data, captions and the farm icon sprite. The sprite needs same-origin access for SVG references.
+
+Serve the remaining approved design files from immutable objects in the existing Firebase Storage bucket. Generate temporary redirects from the exact export pin so established asset paths and ZIP checksums work. Future Hosting builds restore only the small pinned shell. They verify a bounded set of media types, legacy URLs and byte ranges without fetching the archives.
+
+For a pin update, verify the new upstream build against the published raw export hashes. Upload the objects with `scripts/publish-natura-media.mjs --pre-prod --apply --source <absolute-natura-export>`, test pre-production links and browser downloads, then promote the same bytes. `scripts/configure-natura-cors.mjs` adds GET and HEAD only for the selected environment's Hosting origins. Each rule uses a metadata generation precondition. Existing private object permissions continue to apply.
+
+Keep the live and a known-good rollback version for each site. Check release references before removing older versions or expired preview channels. Hosting storage samples can lag version deletion, and bandwidth already transferred remains in that billing period. Use Hosting domain counters for volume and request logs for URL attribution where available.
