@@ -1,3 +1,9 @@
+## Website 0.32.1 — pre-production Host Studio refinement
+
+- Keep the walk-in action visible while editing, give guest search a padded responsive dialog, and show private-room choices only for private stays.
+- Show booking activity as a timeline. Use paged tables for payments, booking documents, guest history and sent email, with indexed guest filters for documents and email.
+- Give email separate compose and delivery views. Add host appearance settings, revised account cards, and the privacy and booking terms footer.
+
 ## Website 0.32.0 / API 0.17.0 — pre-production Host Studio
 
 - Open on the Dashboard with arrival, checkout and request queues. Use one booking inspector from the dashboard, calendar, guest profile and ledger.
