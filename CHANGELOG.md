@@ -1,3 +1,7 @@
+## Website 0.32.2 — Host Studio branding and footer
+
+- Show the Aroha Retreat logo in the Studio header and keep copyright and legal links visible at the bottom while the workspace scrolls.
+
 ## Website 0.32.1 / API 0.17.0 — production Host Studio
 
 - Keep the walk-in action visible while editing, give guest search a padded responsive dialog, and show private-room choices only for private stays.
