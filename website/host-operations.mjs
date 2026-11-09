@@ -28,6 +28,11 @@ const label = (s) =>
     restore: "Credits restored",
     expired_release: "Expired reservation released",
     adjustment: "Host adjustment",
+    payment: "Payment",
+    reversal: "Reversal",
+    cash: "Cash",
+    upi: "UPI",
+    bank: "Bank transfer",
   })[s] || String(s).replaceAll("_", " ");
 const statuses = [
   "pending_approval",
@@ -53,7 +58,7 @@ const ledgerTable = (items) => studioTable("Payment ledger", [
   <th scope="row"><button type="button" class="text-button table-key" data-open="${esc(item.bookingId)}" aria-label="Open booking ${esc(item.bookingReference || "")}">${esc(item.bookingReference || "Historical booking")}</button></th>
   <td>${Number.isFinite(item.createdAt) ? esc(ledgerDate.format(item.createdAt)) : "—"}</td>
   <td><span class="table-status">${esc(label(item.kind))}</span></td>
-  <td class="table-status">${item.method === "upi" ? "UPI" : esc(item.method ? label(item.method) : "—")}</td>
+  <td>${esc(item.method ? label(item.method) : "—")}</td>
   <td class="table-number">${cash(item.amountPaise)}</td>
 </tr>`).join(""));
 const visitKind = kind => ({individual:'Individual stay',private:'Private room',day:'Day visit',event:'Exclusive retreat'})[kind] || 'Stay';

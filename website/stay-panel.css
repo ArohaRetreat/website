@@ -31,5 +31,5 @@
 .financial-preview dl{border:1px solid var(--md-line);border-radius:12px;padding:10px 14px}
 .financial-preview dl div{padding:7px 0;border-bottom:1px solid var(--md-line)}
 .financial-preview dl div:last-child{border:0}
-.financial-preview dd{text-align:right;margin:0;font-weight:600}
+.financial-preview dd{text-align:right;margin:0;font-weight:600;min-width:0;white-space:normal;overflow-wrap:anywhere}
 .financial-preview .current-balance{background:var(--md-primary-container);border-radius:10px;padding:9px 12px}

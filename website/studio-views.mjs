@@ -221,7 +221,7 @@ export function mountStudioGuests(target, { call, openBooking, openManual, initi
           <div><p class="eyebrow">GUEST PROFILE</p><h1>${e(guest.name)}</h1><div class="profile-badges"><span class="table-status">${guest.accountConnected ? "Linked guest account" : "Host-recorded guest"}</span>${guest.guestNumber ? `<span class="table-status current">Guest #${Number(guest.guestNumber)}</span>` : ""}</div></div>
         </div>
         <div class="workspace-actions">${button("Email guest","data-profile-email",{extra:guest.email ? "" : "disabled"})}${button("+ New booking","data-profile-book",{className:"primary"})}</div>
-        <dl class="profile-contact"><div><dt>Email</dt><dd>${e(guest.email || "Unavailable")}</dd></div><div><dt>Phone</dt><dd>${e(guest.phone || "Unavailable")}</dd></div>${guest.guestNumber ? "" : "<div><dt>Guest number</dt><dd>Assigned at first check-in</dd></div>"}</dl>
+        <dl class="studio-profile-contact"><div><dt>Email</dt><dd>${e(guest.email || "Unavailable")}</dd></div><div><dt>Phone</dt><dd>${e(guest.phone || "Unavailable")}</dd></div>${guest.guestNumber ? "" : "<div><dt>Guest number</dt><dd>Assigned at first check-in</dd></div>"}</dl>
       </header><nav class="workspace-tabs" aria-label="Guest profile sections">${tabs.map((name) => button(name,`data-profile-section="${e(name)}" aria-current="${selected === name ? "page" : "false"}"`,{className:"text-button"})).join("")}</nav><div data-profile-body></div>`;
       target.querySelector("[data-back-guests]").onclick = directory;
       target.querySelectorAll("[data-profile-section]").forEach((control) => control.onclick = () => draw(control.dataset.profileSection));
