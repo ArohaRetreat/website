@@ -1,3 +1,4 @@
+import { openStudioDialog } from "./studio-feedback.mjs";
 const toDate = (day) => new Date(day + "T12:00:00Z");
 const iso = (value) => value.toISOString().slice(0,10);
 const shift = (day, offset) => iso(new Date(+toDate(day) + offset * 86400000));
@@ -88,6 +89,6 @@ export function chooseStudioDates({ kind, arrival, departure, today, onApply }) 
   }
   focus=limit(focus);
   draw();
-  dialog.showModal();
+  openStudioDialog(dialog);
   dialog.querySelector('[data-range-day][tabindex="0"]')?.focus();
 }

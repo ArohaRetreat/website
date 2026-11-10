@@ -1,3 +1,4 @@
+import { studioStatus } from "./studio-feedback.mjs";
 import {installMaterialControls, confirmMaterial} from './material-controls.mjs';
 installMaterialControls();
 import { api, login, logout, observeAuth } from "./firebase.mjs";
@@ -30,11 +31,13 @@ function message(text) {
 function loginScreen(error = "") {
   frames.clear();
   document.body.classList.remove("booking-workspace","booking-navigation-ready");
-  root.innerHTML = `<main class="studio-login"><img src="/assets/brand/logo-forest.svg" alt="Aroha Retreat" width="190"><h1>Host Studio</h1><p>One workspace for your website and bookings. Your access determines which modules you can use.</p><p role="status">${esc(error)}</p><button id="studio-login">Sign in with Google</button><a href="/">Return to Aroha</a></main>`;
-  document.querySelector("#studio-login").onclick = () =>
-    login().catch(() =>
-      loginScreen("Sign-in could not complete. Please try again."),
-    );
+  root.innerHTML = `<main class="studio-login"><img src="/assets/brand/logo-forest.svg" alt="Aroha Retreat" width="190"><h1>Host Studio</h1><p>One workspace for your website and bookings. Your access determines which modules you can use.</p><p role="status" data-studio-session-status>${esc(error)}</p><button id="studio-login">Sign in with Google</button><a href="/">Return to Aroha</a></main>`;
+  const signIn = document.querySelector("#studio-login");
+  signIn.onclick = () => {
+    signIn.disabled = true;
+    studioStatus(root.querySelector("[data-studio-session-status]"), "Opening Google sign-in…", true);
+    void login().catch(() => loginScreen("Sign-in could not complete. Please try again."));
+  };
 }
 function shell() {
   root.innerHTML = `<header class="studio-bar"><a href="/"><img src="/assets/brand/logo-white.svg" alt="Aroha Retreat" width="142"></a><strong>Host Studio</strong><nav aria-label="Studio modules">${modules()
@@ -98,7 +101,7 @@ async function showModule() {
 }
 async function renderAccess() {
   const target = document.querySelector("#studio-access");
-  target.innerHTML = "<p>Loading access settings…</p>";
+  target.innerHTML = '<p role="status" data-studio-progress>Loading access settings…</p>';
   try {
     const { members, nextCursor } = await api(
       "/members" +
@@ -217,6 +220,8 @@ observeAuth(async (user) => {
     loginScreen();
     return;
   }
+  const status = root.querySelector("[data-studio-session-status]");
+  if (status) studioStatus(status, "Verifying your Studio access…", true);
   try {
     const r = await api("/session", "POST", {});
     if (current !== generation) return;

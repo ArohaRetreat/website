@@ -168,6 +168,8 @@ test("production guest UI presents published private-room pricing without sample
     new URL("../website/booking.mjs", import.meta.url),
     "utf8",
   );
+  const feedback = (await readFile(new URL("../website/studio-feedback.mjs", import.meta.url), "utf8")).replaceAll("export ", "");
+  source = source.replace(/^import .*studio-feedback\.mjs.*;$/m, feedback);
   source = source.replace(/import \{[^\n]+\} from ['"]\.\/material-controls.mjs['"];/, 'const installMaterialControls=()=>{},confirmMaterial=async()=>window.confirm();');
   source = source.replace(/import \{visitDateLabel\} from "\.\/booking-visit-label.mjs";/, "const visitDateLabel=window.testVisitDateLabel;");
   source = source.replace(/^import .* from ["']\.\/frontdesk\.mjs["'];$/m,'const hostShell=({content})=>content,mountFrontDesk=async()=>{},hostTabAllowed=()=>true,hostDestinations=()=>[],openStudioBooking=async()=>{};').replace(/^import .* from ["']\.\/(?:studio-views|booking-documents|guest-dialogs)\.mjs["'];$/gm, "").replace("const hostShell=", "const applyStudioAppearance=()=>{},studioInitials=()=>'';const hostShell=").replace(/import \{mountHostOperations,openManualBooking\} from '\.\/host-operations.mjs';/, 'const mountHostOperations=async()=>{},openManualBooking=()=>{};').replace(/import \{auth\} from '\.\/firebase-auth.mjs';/, 'const auth={currentUser:null};').replace(/import \{mountStayPanel\} from '\.\/stay-panel.mjs';/, "").replace(
