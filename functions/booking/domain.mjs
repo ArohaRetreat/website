@@ -408,6 +408,8 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
     return b;
   }
   if (operation === "booking-action") {
+    if (input.earlyCheckout !== undefined && input.action !== "complete")
+      fail("INVALID_FIELDS");
     const b = state.bookings.find((b) => b.id === input.id);
     if (!b || (actor.role !== "host" && !(actor.ownerIds||[actor.id]).includes(b.owner)))
       fail("NOT_FOUND", 404);
@@ -541,7 +543,7 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
       complete: ["checked_in", "completed"],
       no_show: ["confirmed", "no_show"],
     };
-    let next;
+    let next, earlyCheckout = false;
     if (input.action === "cancel") {
       if (!["pending_approval", "confirmed"].includes(b.status))
         fail("INVALID_TRANSITION", 409);
@@ -559,11 +561,13 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
       host(actor);
       const t = transitions[input.action];
       if (!t || b.status !== t[0]) fail("INVALID_TRANSITION", 409);
+      const beforeDeparture = ["complete", "no_show"].includes(input.action) &&
+        (b.kind ? now < b.endsAt : todayIST(now) < b.departure);
+      earlyCheckout = beforeDeparture && input.action === "complete" && input.earlyCheckout === true;
       if (
         (input.action === "checkin" &&
           (b.kind ? now < b.startsAt : todayIST(now) < b.arrival)) ||
-        (["complete", "no_show"].includes(input.action) &&
-          (b.kind ? now < b.endsAt : todayIST(now) < b.departure))
+        (beforeDeparture && !earlyCheckout)
       )
         fail("STAY_NOT_STARTED_OR_FINISHED", 409);
       next = t[1];
@@ -598,7 +602,7 @@ export function mutate(state, actor, operation, input, now = Date.now()) {
     if(next==='completed')b.checkedOutAt=now;
     delete b.changeRequest;
     b.version++;
-    b.history.push({ status: next, at: now });
+    b.history.push({ status: next, at: now, ...(earlyCheckout ? { earlyCheckout: true } : {}) });
     event(state, actor, `booking.${next}`, b.id, now);
     return b;
   }
