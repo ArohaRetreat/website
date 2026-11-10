@@ -12,6 +12,12 @@ const activityLabels = {
 };
 const activityDate = new Intl.DateTimeFormat("en-IN", { day:"numeric", month:"short", year:"numeric", timeZone:"Asia/Kolkata" });
 const activityTime = new Intl.DateTimeFormat("en-IN", { hour:"numeric", minute:"2-digit", timeZone:"Asia/Kolkata" });
+const checkoutOpensAt = booking => booking.kind && Number.isFinite(booking.endsAt)
+  ? booking.endsAt
+  : Date.parse(booking.departure + "T00:00:00+05:30");
+const checkoutOpensMessage = at => Number.isFinite(at)
+  ? `Checkout opens on ${activityDate.format(at)} at ${activityTime.format(at)} IST.`
+  : "Checkout opens at the scheduled departure time.";
 function bookingTimeline(history) {
   const entries = Array.isArray(history)
     ? history.filter((event) => event?.status && Number.isFinite(event.at)).reverse().sort((a,b) => b.at - a.at)
@@ -159,20 +165,40 @@ export async function openStudioBooking({
   initialSection = "overview", onChanged = () => {}, composeEmail,
 }) {
     const d=document.createElement('dialog');d.className='booking-panel';d.setAttribute('data-dt-mask','');d.setAttribute('aria-label','Booking details');d.innerHTML='<div class="dialog-head"><h2>Opening booking…</h2><button data-close aria-label="Close booking details">×</button></div><p role="status">Loading…</p>';document.body.append(d);d.showModal();
-    let b,section=initialSection,pending,working=false,uncertain=false;
+    let b,section=initialSection,pending,working=false,uncertain=false,checkoutTimer;
     const close=()=>{if(!working&&!uncertain)d.close();};
     d.addEventListener('cancel',ev=>{if(working||uncertain)ev.preventDefault();});
-    d.addEventListener('close',()=>{d.remove();if(trigger?.isConnected)trigger.focus();},{once:true});d.querySelector('[data-close]').onclick=close;
+    d.addEventListener('close',()=>{clearTimeout(checkoutTimer);d.remove();if(trigger?.isConnected)trigger.focus();},{once:true});d.querySelector('[data-close]').onclick=close;
     async function fetchBooking(){const name=b?.guestName;b=await api('reservation-detail',{id});if(!b.guestName&&name)b.guestName=name;}
     function render(){
+      clearTimeout(checkoutTimer);
       if(!d.isConnected)return;
       const review=b.status==='pending_approval',change=b.status==='confirmed'&&b.changeRequest;
       const starts=b.startsAt||Date.parse(b.arrival+'T00:00:00+05:30'), checkinOpen=Date.now()>=starts;
-      d.innerHTML=`<div class="dialog-head booking-heading"><div class="booking-heading-copy"><div class="eyebrow">${review||change?'Review request':'Booking details'}</div><h2>${e(b.contact?.name||b.guestName||'Guest')}</h2><div class="dialog-reference">${e(b.reference)} <span class="badge">${e(statuses[b.status])}</span>${b.guestNumber ? `<span class="identity-number">Guest #${Number(b.guestNumber)}</span>` : ""}</div></div><button class="icon-button ghost" data-close aria-label="Close booking details" ${working||uncertain?'disabled':''}>×</button></div><div class="panel-tabs" role="group" aria-label="Booking sections">${['overview',...(manager&&guestIdentityEnabled?['identity']:[]),'payments','messages','activity'].map(x=>`<button data-section="${x}" aria-pressed="${section===x}">${x[0].toUpperCase()+x.slice(1)}</button>`).join('')}</div><div class="panel-body" data-body></div><footer class="panel-footer"><p role="status" data-action-status></p><div class="action-row">${manager?(uncertain?'<button class="primary" data-retry>Retry same action</button>':change?'<button class="danger" data-action="decline_change">Keep original dates</button><button class="primary" data-action="approve_change">Approve new dates</button>':review?`<button class="danger" data-action="decline">Decline</button>${b.kind==='event'&&!b.pricingVersion&&!b.quoteAccepted?'':'<button class="primary" data-action="approve">Accept request</button>'}`:b.status==='confirmed'?`<button class="primary" data-action="checkin" ${checkinOpen?'':'disabled'}>Check in guest</button>`:b.status==='checked_in'?'<button class="primary" data-action="complete">Review checkout</button>':''):''}<button class="${review&&b.kind==='event'&&!b.pricingVersion&&!b.quoteAccepted?'primary':'ghost'}" data-legacy ${uncertain||working?'disabled':''}>${review&&b.kind==='event'&&!b.pricingVersion&&!b.quoteAccepted?'Prepare offer':'More booking options'}</button></div><small>${uncertain?'The response is uncertain. Resolve this same action before continuing.':b.status==='confirmed'&&!checkinOpen?'Check-in opens '+new Date(starts).toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})+' IST.':'Booking changes and email delivery are tracked separately.'}</small></footer>`;
+      const checkoutTime = checkoutOpensAt(b);
+      const checkoutLocked = b.status === "checked_in" && Date.now() < checkoutTime;
+      const hint = uncertain ? "The response is uncertain. Resolve this same action before continuing."
+        : manager && checkoutLocked ? checkoutOpensMessage(checkoutTime)
+        : b.status === "confirmed" && !checkinOpen ? "Check-in opens " + new Date(starts).toLocaleString("en-IN",{timeZone:"Asia/Kolkata"}) + " IST."
+        : "Booking changes and email delivery are tracked separately.";
+      d.innerHTML=`<div class="dialog-head booking-heading"><div class="booking-heading-copy"><div class="eyebrow">${review||change?'Review request':'Booking details'}</div><h2>${e(b.contact?.name||b.guestName||'Guest')}</h2><div class="dialog-reference">${e(b.reference)} <span class="badge">${e(statuses[b.status])}</span>${b.guestNumber ? `<span class="identity-number">Guest #${Number(b.guestNumber)}</span>` : ""}</div></div><button class="icon-button ghost" data-close aria-label="Close booking details" ${working||uncertain?'disabled':''}>×</button></div><div class="panel-tabs" role="group" aria-label="Booking sections">${['overview',...(manager&&guestIdentityEnabled?['identity']:[]),'payments','messages','activity'].map(x=>`<button data-section="${x}" aria-pressed="${section===x}">${x[0].toUpperCase()+x.slice(1)}</button>`).join('')}</div><div class="panel-body" data-body></div><footer class="panel-footer"><p role="status" data-action-status></p><div class="action-row">${manager?(uncertain?'<button class="primary" data-retry>Retry same action</button>':change?'<button class="danger" data-action="decline_change">Keep original dates</button><button class="primary" data-action="approve_change">Approve new dates</button>':review?`<button class="danger" data-action="decline">Decline</button>${b.kind==='event'&&!b.pricingVersion&&!b.quoteAccepted?'':'<button class="primary" data-action="approve">Accept request</button>'}`:b.status==='confirmed'?`<button class="primary" data-action="checkin" ${checkinOpen?'':'disabled'}>Check in guest</button>`:b.status==='checked_in'?`<button class="primary" data-action="complete" ${checkoutLocked?'disabled':''}>Review checkout</button>`:''):''}<button class="${review&&b.kind==='event'&&!b.pricingVersion&&!b.quoteAccepted?'primary':'ghost'}" data-legacy ${uncertain||working?'disabled':''}>${review&&b.kind==='event'&&!b.pricingVersion&&!b.quoteAccepted?'Prepare offer':'More booking options'}</button></div><small data-action-hint aria-live="polite">${e(hint)}</small></footer>`;
       d.querySelector('[data-close]').onclick=close;
       d.querySelectorAll('[data-section]').forEach(x=>{x.disabled=working||uncertain;x.onclick=()=>{section=x.dataset.section;render();d.querySelector('[aria-pressed=true][data-section]')?.focus();};});
       d.querySelector('[data-legacy]').onclick=()=>{d.close();void openLegacy(id);};
       d.querySelectorAll('[data-action]').forEach(x=>x.onclick=()=>confirmAction(x.dataset.action));d.querySelector('[data-retry]')?.addEventListener('click',()=>void submit());
+      const checkoutButton = d.querySelector('[data-action="complete"]');
+      if (checkoutButton?.disabled) {
+        const unlockCheckout = () => {
+          const remaining = checkoutTime - Date.now();
+          if (remaining > 0) {
+            checkoutTimer = setTimeout(unlockCheckout, Math.min(remaining, 2_147_483_647));
+            return;
+          }
+          checkoutButton.disabled = false;
+          d.querySelector("[data-action-hint]").textContent = "Checkout is now available.";
+        };
+        unlockCheckout();
+      }
       const body=d.querySelector('[data-body]');
       if(section==='overview')body.innerHTML=`${change?`<div class="review-warning"><strong>Requested date change</strong><p>Original: ${format(b.arrival)} → ${format(b.departure)} · ${money(b.total)}</p><p>Requested: ${format(b.changeRequest.arrival)} → ${format(b.changeRequest.departure)} · ${money(b.changeRequest.total)}</p></div>`:''}<div class="section-label">Their visit</div>${visitDates(b)}<dl class="booking-facts"><div><dt>Visit</dt><dd>${kinds[b.kind]||'Private room'}</dd></div><div><dt>Guests</dt><dd>${b.adults??b.guests} ${(b.adults??b.guests)===1?"adult":"adults"} · ${b.children||0} under 10</dd></div><div class="accommodation-fact"><dt>Accommodation</dt><dd>${e((b.unitNames||[]).join(', ')||'Host allocation')}</dd></div></dl>${b.note?`<section class="panel-section"><h3>Guest request</h3><div class="note-card">${e(b.note)}</div></section>`:''}<section class="panel-section"><h3>Booking total</h3><div class="price-line total"><span>Total</span><span>${money(b.total)}</span></div>${review?`<p>Respond by ${new Date(b.expiresAt).toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})} IST.</p>`:''}</section>`;
       if (section === "identity" && guestIdentityEnabled && manager) {
@@ -188,6 +214,10 @@ export async function openStudioBooking({
     }
     function confirmAction(action){
       const status=d.querySelector('[data-action-status]');
+      if (action === "complete" && Date.now() < checkoutOpensAt(b)) {
+        render();
+        return;
+      }
       if(action==='complete'&&section!=='payments'){section='payments';render();d.querySelector('[data-action-status]').textContent='Review recorded payments and balance before confirming checkout.';return;}
       if(action==='approve'){pending={input:{id,action,expectedVersion:b.version},key:crypto.randomUUID()};void submit();return;}
       d.querySelector('.action-row').hidden=true;
@@ -197,7 +227,32 @@ export async function openStudioBooking({
     async function submit(){
       working=true;d.querySelectorAll('button').forEach(x=>x.disabled=true);d.querySelector('[data-action-status]').textContent='Saving…';
       try{await api('booking-action',pending.input,pending.key);await fetchBooking();pending=null;uncertain=false;working=false;render();void onChanged();d.querySelector('[data-action-status]').textContent='Booking updated. Check Messages for delivery status.';}
-      catch(err){working=false;if([401,403].includes(err.status)||err.code==='SESSION_CHANGED'){d.innerHTML='<div class="dialog-head"><h2>Booking access changed</h2><button data-denied-close>Close</button></div><p>You no longer have access to these details. Sign in again or contact the retreat owner.</p>';uncertain=false;d.querySelector('[data-denied-close]').onclick=close;return;}const definitive=err.status>=400&&err.status<500||['VERSION_CONFLICT','INVALID_TRANSITION','CAPACITY_EXCEEDED','ROOM_UNAVAILABLE','AVAILABILITY_CHANGED','STAY_NOT_STARTED_OR_FINISHED','QUOTE_NOT_ACCEPTED'].includes(err.code);if(definitive){pending=null;uncertain=false;try{await fetchBooking();}catch{}render();d.querySelector('[data-action-status]').textContent='This action could not complete. Review the latest booking, dates and availability before trying again.';}else{uncertain=true;render();}}
+      catch (err) {
+        working = false;
+        if ([401,403].includes(err.status) || err.code === "SESSION_CHANGED") {
+          d.innerHTML = '<div class="dialog-head"><h2>Booking access changed</h2><button data-denied-close>Close</button></div><p>You no longer have access to these details. Sign in again or contact the retreat owner.</p>';
+          uncertain = false;
+          d.querySelector("[data-denied-close]").onclick = close;
+          return;
+        }
+        const definitive = err.status >= 400 && err.status < 500 || [
+          "VERSION_CONFLICT", "INVALID_TRANSITION", "CAPACITY_EXCEEDED", "ROOM_UNAVAILABLE",
+          "AVAILABILITY_CHANGED", "STAY_NOT_STARTED_OR_FINISHED", "QUOTE_NOT_ACCEPTED",
+        ].includes(err.code);
+        if (definitive) {
+          const earlyCheckout = pending?.input.action === "complete" && err.code === "STAY_NOT_STARTED_OR_FINISHED";
+          pending = null;
+          uncertain = false;
+          try { await fetchBooking(); } catch {}
+          render();
+          d.querySelector("[data-action-status]").textContent = earlyCheckout
+            ? checkoutOpensMessage(checkoutOpensAt(b))
+            : "This action could not complete. Review the latest booking, dates and availability before trying again.";
+        } else {
+          uncertain = true;
+          render();
+        }
+      }
     }
     try{await fetchBooking();if(d.isConnected)render();}catch{if(d.isConnected)d.querySelector('[role=status]').textContent='Booking could not load. Close and reopen to retry.';}
   }
