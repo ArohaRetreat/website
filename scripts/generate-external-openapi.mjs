@@ -194,7 +194,7 @@ for (const [
           ? ["amount", "holdHours"]
           : action === "assign_rooms"
             ? ["units"]
-            : [];
+            : action === "complete" ? ["earlyCheckout"] : [];
       input.properties = Object.fromEntries(
         Object.entries(input.properties).filter(([k]) => allowed.includes(k)),
       );

@@ -9,6 +9,7 @@ import { createServer } from "node:http";
 import { randomUUID, createHmac } from "node:crypto";
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
+import { addDays, todayIST } from "../booking/domain.mjs";
 import {runBookingScenarios} from '../../website/testing/booking-scenarios.mjs';
 import {writeFile,mkdir} from 'node:fs/promises';
 if (
@@ -523,6 +524,62 @@ test("pre-prod HTTP booking, approval, private invoice and webhook stay inside t
     await cleanup.commit();
     const {mkdir,writeFile}=await import('node:fs/promises');await mkdir('qa/local/platform-emails',{recursive:true});
     for(const m of messages.slice(beforeLife).filter(m=>!m.body.subject.includes('Booking cancelled'))){let html=m.body.html;for(const a of m.body.attachments.filter(a=>a.contentId)){const mime=a.filename.endsWith('.png')?'image/png':'image/jpeg';const data=typeof a.content==='string'?a.content:Buffer.from(a.content.data).toString('base64');html=html.replaceAll('cid:'+a.contentId,'data:'+mime+';base64,'+data);}const name=m.body.subject.includes('Welcome')?'checkin':m===checkoutMail?'checkout':'feedback';await writeFile('qa/local/platform-emails/'+name+'.html',html);}
+    {
+      const earlyNow = Date.now(), earlyDay = todayIST(earlyNow);
+      const earlyId = "synthetic-early-" + randomUUID(), earlyReference = "SYNTHETIC-EARLY";
+      const arrival = addDays(earlyDay, -1), departure = addDays(earlyDay, 2);
+      const startsAt = Date.parse(arrival + "T11:00:00+05:30");
+      const endsAt = Date.parse(departure + "T11:00:00+05:30");
+      const config = db.collection("aroha_preprod_booking_config").doc("site");
+      const originalUnits = (await config.get()).data().units;
+      const unit = originalUnits.find(row => row.active && row.ready !== false);
+      assert.ok(unit);
+      const earlyBooking = {
+        id: earlyId, reference: earlyReference, owner: guest.localId, kind: "private", status: "checked_in",
+        arrival, departure, startsAt, endsAt, checkedInAt: startsAt, units: [unit.id], allocations: [],
+        adults: 1, children: 0, guests: 1, subtotal: 100000, discount: 0, total: 100000,
+        history: [], version: 1, createdAt: startsAt, loyaltyEarnRate: 100,
+      };
+      const future = db.collection("aroha_preprod_booking_days").doc(addDays(earlyDay, 1));
+      await Promise.all([
+        bookings.doc(earlyId).set(earlyBooking),
+        future.set({ entries: { [earlyId]: earlyBooking } }, { merge: true }),
+      ]);
+      const earlyInput = { id: earlyId, action: "complete", expectedVersion: 1 };
+      const tooSoon = await call(owner, "/booking/booking-action", earlyInput, { admin: true });
+      assert.equal(tooSoon.httpStatus, 409);
+      assert.equal(tooSoon.error.code, "STAY_NOT_STARTED_OR_FINISHED");
+      const confirmedEarly = { ...earlyInput, earlyCheckout: true };
+      assert.equal((await call(guest, "/booking/booking-action", confirmedEarly)).httpStatus, 403);
+      assert.equal((await bookings.doc(earlyId).get()).data().status, "checked_in");
+
+      const key = randomUUID();
+      const early = await call(owner, "/booking/booking-action", confirmedEarly, { admin: true, key });
+      assert.equal(early.httpStatus, 200, JSON.stringify(early));
+      assert.equal(early.status, "completed");
+      assert.equal(early.departure, departure);
+      assert.ok(early.checkedOutAt >= earlyNow && early.checkedOutAt < endsAt);
+      assert.deepEqual(early.history.at(-1), { status: "completed", at: early.checkedOutAt, earlyCheckout: true });
+      const actualDay = todayIST(early.checkedOutAt);
+      const nights = (Date.parse(actualDay) - Date.parse(arrival)) / 86400000;
+      assert.equal(early.loyaltyEarnedNights, nights);
+      assert.equal(early.loyaltyEarnedCredits, nights * 100);
+      assert.equal((await future.get()).data().entries[earlyId], undefined);
+      assert.equal((await config.get()).data().units.find(row => row.id === unit.id).ready, false);
+      const statement = (await db.collection("aroha_preprod_booking_documents").doc(early.checkoutStatementId).get()).data();
+      assert.equal(statement.total, earlyBooking.total);
+      assert.equal(statement.balanceDue, earlyBooking.total);
+      assert.equal(statement.endsAt, early.checkedOutAt);
+      assert.equal(statement.departure, actualDay);
+      assert.deepEqual(await call(owner, "/booking/booking-action", confirmedEarly, { admin: true, key }), early);
+      await until(() => messages.some(message => message.body.text.includes(earlyReference)));
+      assert.equal(messages.filter(message => message.body.text.includes(earlyReference)).length, 1);
+      const earlyJobs = (await db.collection("aroha_preprod_notifications").where("bookingId", "==", earlyId).get()).docs.map(doc => doc.data());
+      assert.equal(earlyJobs.length, 2);
+      assert.ok(earlyJobs.every(job => job.snapshot.endsAt === early.checkedOutAt));
+      assert.equal(earlyJobs.find(job => job.channel === "guest_feedback").nextAttemptAt, early.checkedOutAt + 86400000);
+      await config.update({ units: originalUnits });
+    }
     assert.equal((await db.collection("aroha_bookings").get()).size, 1);
   } finally {
     await new Promise((r) => server.close(r));
