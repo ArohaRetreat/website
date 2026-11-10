@@ -1,3 +1,4 @@
+import { openStudioDialog, studioStatus } from "./studio-feedback.mjs";
 import { mountGuestIdentity } from "./guest-identity.mjs";
 import {mountStayPanel} from './stay-panel.mjs';
 export const escape = v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -86,6 +87,7 @@ export function hostShell({ tab, manager, content, modules = {}, initials = "AR"
       <a class="workspace-brand" href="/" aria-label="Aroha Retreat website"><img src="/assets/brand/logo-white.svg" width="1000" height="340" alt=""><strong>Host Studio</strong></a>
       <form class="global-search" data-desk-search><label class="sr-only" for="desk-reference">${manager?"Find a booking or guest":"Find a booking reference"}</label><input id="desk-reference" name="reference" maxlength="254" minlength="2" autocomplete="off" placeholder="${manager?"Find a booking or guest":"Find booking reference"}" required><button aria-label="Search Studio" type="submit">${studioIcon("search")}</button></form>
       <div class="workspace-top-actions"><button type="button" class="workspace-mobile-search" data-mobile-search aria-label="Search Studio">${studioIcon("search")}</button><button type="button" class="workspace-account" data-studio-account aria-label="Studio account">${e(initials)}</button></div>
+      <p class="studio-search-feedback" data-desk-search-status role="status"></p>
     </header>
     <aside class="rail">
       ${manager ? '<button type="button" class="primary workspace-new" data-new-booking>＋ <span>New booking</span></button>' : ""}
@@ -114,7 +116,7 @@ export async function mountFrontDesk(target, { tab, call, identity, openBooking,
   }
   let generation=0,busy=false;
   const alive=()=>target.isConnected;
-  const notify=t=>{if(alive())target.querySelector('[data-desk-status]').textContent=t;};
+  const notify=(text,pending=false)=>{if(alive())studioStatus(target.querySelector('[data-desk-status]'),text,pending);};
   const labels={review:'Review requests',arrivals:'Check-ins today',in_house:'In house',departures:'Check-outs',all:'All bookings'};
   const clearPage=()=>{s.cursor=undefined;s.stack=[];};
   const draw=()=>{
@@ -141,7 +143,7 @@ export async function mountFrontDesk(target, { tab, call, identity, openBooking,
     target.querySelectorAll('[data-desk-open]').forEach(b=>b.onclick=()=>void openBooking(b.dataset.deskOpen,b,s.view==='departures'?'payments':'overview',()=>load()));
   };
   async function load(paging=false){
-    const g=++generation;busy=true;draw();notify('Loading bookings…');
+    const g=++generation;busy=true;draw();notify('Loading bookings…',true);
     target.querySelectorAll('button').forEach(b=>b.disabled=true);
     try {const result=await call('searchHostReservations',{view:s.view,...s.filter,limit:25,...(s.cursor?{cursor:s.cursor}:{})});if(g!==generation||!alive())return;s.page=result;s.lastCursor=s.cursor;s.lastStack=[...s.stack];busy=false;draw();notify('Updated '+new Date(result.asOf).toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit',timeZone:'Asia/Kolkata'})+' IST');}
     catch(err){if(g!==generation||!alive())return;busy=false;if(paging){s.cursor=s.lastCursor;s.stack=[...(s.lastStack||[])];}if([401,403].includes(err.status)||err.code==='SESSION_CHANGED')s.page=null;draw();notify(err.code==='CURSOR_EXPIRED'?'This page expired. Refresh to start again.':'Bookings could not load. Your last results remain shown. Check your access and refresh.');}
@@ -150,7 +152,7 @@ export async function mountFrontDesk(target, { tab, call, identity, openBooking,
     const d=document.createElement('dialog');d.className='filter-dialog';d.setAttribute('aria-label',type==='date'?'Arrival dates':'Filter bookings');
     const opts=type==='kind'?kinds:type==='attention'?attention:statuses;
     d.innerHTML=`<form><div class="dialog-head"><h2>${type==='date'?'Arrival dates':type==='kind'?'Visit type':type==='attention'?'Request type':'Status'}</h2><button type="button" class="icon-button ghost" data-close aria-label="Close filters">×</button></div>${type==='date'?`<div class="filter-options"><label>From<input name="arrivalFrom" type="date" value="${e(s.filter.arrivalFrom||'')}"></label><label>Through<input name="arrivalThrough" type="date" value="${e(s.filter.arrivalThrough||'')}"></label><p>Filter by the date the visit begins.</p></div>`:`<div class="filter-options"><label class="filter-option"><input type="radio" name="value" value="" ${!s.filter[type]?'checked':''}>All ${type==='kind'?'visit types':type==='attention'?'requests':'statuses'}</label>${Object.entries(opts).map(([v,l])=>`<label class="filter-option"><input type="radio" name="value" value="${v}" ${s.filter[type]===v?'checked':''}>${l}</label>`).join('')}</div>`}<p role="status"></p><div class="filter-foot"><button type="button" class="ghost" data-reset>Reset</button><button class="primary">Apply filters</button></div></form>`;
-    document.body.append(d);d.showModal();
+    document.body.append(d);openStudioDialog(d);
     const close=()=>d.close();d.querySelector('[data-close]').onclick=close;
     d.addEventListener('close',()=>{d.remove();if(trigger?.isConnected)trigger.focus();},{once:true});
     d.querySelector('[data-reset]').onclick=()=>{if(type==='date'){d.querySelectorAll('input').forEach(i=>i.value='');}else d.querySelector('input[value=""]').checked=true;};
@@ -164,7 +166,7 @@ export async function openStudioBooking({
   id, trigger, api, call, manager, openLegacy, guestIdentityEnabled = false,
   initialSection = "overview", onChanged = () => {}, composeEmail,
 }) {
-    const d=document.createElement('dialog');d.className='booking-panel';d.setAttribute('data-dt-mask','');d.setAttribute('aria-label','Booking details');d.innerHTML='<div class="dialog-head"><h2>Opening booking…</h2><button data-close aria-label="Close booking details">×</button></div><p role="status">Loading…</p>';document.body.append(d);d.showModal();
+    const d=document.createElement('dialog');d.className='booking-panel';d.setAttribute('data-dt-mask','');d.setAttribute('aria-label','Booking details');d.innerHTML='<div class="dialog-head"><h2>Opening booking…</h2><button data-close aria-label="Close booking details">×</button></div><p role="status" data-studio-progress>Loading booking details…</p>';document.body.append(d);openStudioDialog(d);
     let b,section=initialSection,pending,working=false,uncertain=false,checkoutTimer;
     let checkoutTimingRejected = false;
     const needsEarlyCheckout = () => checkoutTimingRejected || Date.now() < checkoutOpensAt(b);
@@ -210,7 +212,7 @@ export async function openStudioBooking({
       }
       if(section==='payments')void mountStayPanel(body,{booking:b,manager,staff:true,call,onMutation:async()=>{await fetchBooking();await onChanged();}});
       if(section==='activity')body.innerHTML=bookingTimeline(b.history);
-      if(section==='messages'){body.textContent='Loading email updates…';void api('communications',{id}).then(p=>{if(!body.isConnected)return;const rows = (p.notifications || []).map((item) => `<article class="note-card"><strong>${e(item.channel.replace(/^guest_/,"").replaceAll("_"," "))}</strong><p>${e(item.status.replaceAll("_"," "))}</p></article>`).join("");
+      if(section==='messages'){body.innerHTML='<p role="status" data-studio-progress>Loading email updates…</p>';void api('communications',{id}).then(p=>{if(!body.isConnected)return;const rows = (p.notifications || []).map((item) => `<article class="note-card"><strong>${e(item.channel.replace(/^guest_/,"").replaceAll("_"," "))}</strong><p>${e(item.status.replaceAll("_"," "))}</p></article>`).join("");
         body.innerHTML = '<h3>Email updates</h3>' + (rows || '<p>No email updates yet.</p>') + (manager && composeEmail && b.owner ? '<button type="button" class="outline-button" data-compose-booking>Compose email</button>' : '');
         body.querySelector('[data-compose-booking]')?.addEventListener('click', () => { d.close(); composeEmail(b.owner, b.id); });}).catch(()=>{if(body.isConnected)body.textContent='Email updates could not load. Reopen Messages to retry.';});}
     }
@@ -241,7 +243,7 @@ export async function openStudioBooking({
       d.querySelector('[data-keep]').onclick=render;
     }
     async function submit(){
-      working=true;d.querySelectorAll('button').forEach(x=>x.disabled=true);d.querySelector('[data-action-status]').textContent='Saving…';
+      working=true;d.querySelectorAll('button').forEach(x=>x.disabled=true);studioStatus(d.querySelector('[data-action-status]'),'Saving booking…',true);
       try{await api('booking-action',pending.input,pending.key);await fetchBooking();pending=null;uncertain=false;working=false;render();void onChanged();d.querySelector('[data-action-status]').textContent='Booking updated. Check Messages for delivery status.';}
       catch (err) {
         working = false;
@@ -271,5 +273,5 @@ export async function openStudioBooking({
         }
       }
     }
-    try{await fetchBooking();if(d.isConnected)render();}catch{if(d.isConnected)d.querySelector('[role=status]').textContent='Booking could not load. Close and reopen to retry.';}
+    try{await fetchBooking();if(d.isConnected)render();}catch{if(d.isConnected)studioStatus(d.querySelector('[role=status]'),'Booking could not load. Close and reopen to retry.');}
   }

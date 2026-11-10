@@ -3,14 +3,15 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {JSDOM} from 'jsdom';
 import {deskFields} from '../functions/booking/desk.mjs';
-const code='const mountStayPanel=async()=>{};const mountGuestIdentity=async()=>{};\n'+(await readFile(new URL('../website/frontdesk.mjs',import.meta.url),'utf8')).replace(/^import .*;$/gm,'').replaceAll('export ','')+'\nwindow.desk={hostShell,mountFrontDesk,openStudioBooking};';
+const feedback = (await readFile(new URL('../website/studio-feedback.mjs',import.meta.url),'utf8')).replaceAll('export ', '');
+const code=feedback+'\nconst mountStayPanel=async()=>{};const mountGuestIdentity=async()=>{};\n'+(await readFile(new URL('../website/frontdesk.mjs',import.meta.url),'utf8')).replace(/^import .*;$/gm,'').replaceAll('export ','')+'\nwindow.desk={hostShell,mountFrontDesk,openStudioBooking};';
 const pause=()=>new Promise(r=>setTimeout(r,0));
-async function mount({manager=true,failAction=false,failRefresh=false,rejectAction,tab='overview'}={}){
+async function mount({manager=true,failAction=false,failRefresh=false,rejectAction,waitForAction,tab='overview'}={}){
  const dom=new JSDOM('<div id="app"></div>',{url:'https://example.test',runScripts:'outside-only'}),w=dom.window;w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;this.dispatchEvent(new w.Event('close'));};w.eval(code);
  const b={id:'synthetic',reference:'AR-TEST',guestName:'Synthetic guest',kind:'individual',status:'pending_approval',version:1,arrival:'2026-11-06',departure:'2026-11-08',adults:1,children:0,history:[],unitNames:[],total:700000,expiresAt:Date.now()+3600000};const calls=[],actions=[];
  w.document.querySelector('#app').innerHTML=w.desk.hostShell({tab,manager,content:''});
  const call=async(op,input)=>{calls.push({op,input});return{items:[{...b,...deskFields(b),attention:deskFields(b).deskAttention,totalPaise:b.total,childrenCount:0}],asOf:Date.now(),nextCursor:input.cursor?null:'12345678-1234-1234-1234-123456789012'};};
- let detailReads=0;const api=async(op,input,key)=>{if(op==='reservation-detail'){detailReads++;if(failRefresh&&detailReads===2)throw Error('read response lost');return structuredClone(b);}if(op==='booking-action'){actions.push({input,key});if(failAction&&actions.length===1)throw Error('network');if(rejectAction&&actions.length===1)throw rejectAction;b.status=({approve:'confirmed',checkin:'checked_in',complete:'completed'})[input.action]||'declined';b.version++;return b;}if(op==='communications')return{notifications:[]};throw Error(op);};
+ let detailReads=0;const api=async(op,input,key)=>{if(op==='reservation-detail'){detailReads++;if(failRefresh&&detailReads===2)throw Error('read response lost');return structuredClone(b);}if(op==='booking-action'){actions.push({input,key});if(waitForAction)await waitForAction;if(failAction&&actions.length===1)throw Error('network');if(rejectAction&&actions.length===1)throw rejectAction;b.status=({approve:'confirmed',checkin:'checked_in',complete:'completed'})[input.action]||'declined';b.version++;return b;}if(op==='communications')return{notifications:[]};throw Error(op);};
  await w.desk.mountFrontDesk(w.document.querySelector('[data-frontdesk]'),{tab,call,identity:'staff',openBooking:(id,trigger,initialSection,onChanged)=>w.desk.openStudioBooking({id,trigger,manager,call,api,openLegacy:()=>{},initialSection,onChanged})});
  return{w,d:w.document,b,calls,actions,close:()=>dom.window.close()};
 }
@@ -128,6 +129,27 @@ test("early checkout requires payment review and confirmation and retains its re
     });
     assert.equal(m.b.status, "completed");
   } finally {
+    m.close();
+  }
+});
+
+test("a pending booking action shows progress until its result is known", async () => {
+  const request = Promise.withResolvers();
+  const m = await mount({ waitForAction: request.promise, failAction: true });
+  try {
+    m.d.querySelector("[data-desk-open]").click();
+    await pause();
+    m.d.querySelector("[data-action=approve]").click();
+    const status = m.d.querySelector("[data-action-status]");
+    assert.equal(status.hasAttribute("data-studio-progress"), true);
+    assert.equal(status.textContent, "Saving booking…");
+    assert.equal(m.d.querySelector("[data-close]").disabled, true);
+    request.resolve();
+    await pause();
+    assert.equal(m.d.querySelector("[data-action-status]").hasAttribute("data-studio-progress"), false);
+    assert.ok(m.d.querySelector("[data-retry]"));
+  } finally {
+    request.resolve();
     m.close();
   }
 });

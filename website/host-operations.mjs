@@ -1,3 +1,4 @@
+import { openStudioDialog, studioStatus } from "./studio-feedback.mjs";
 import {chooseStudioDates} from './studio-date-range.mjs';
 import {visitDateLabel} from './booking-visit-label.mjs';
 import {calendarIcon,confirmMaterial} from './material-controls.mjs';
@@ -200,8 +201,8 @@ export async function mountHostOperations(
     target
       .querySelectorAll("[data-open]")
       .forEach((b) => (b.onclick = () => openBooking(b.dataset.open)));
-  const message = (t) => {
-    if (alive()) target.querySelector("[data-message]").textContent = t;
+  const message = (text, pending = false) => {
+    if (alive()) studioStatus(target.querySelector("[data-message]"), text, pending);
   };
   if (["guests", "loyalty"].includes(tab)) {
     target.innerHTML =
@@ -334,7 +335,7 @@ export async function mountHostOperations(
     (review ? '<form data-search class="ops-review-refresh"><button class="outline-button">Refresh requests</button></form>' : tab === "reservations"
       ? `<form data-search class="ops-filters"><label>Booking reference<input name="reference" maxlength="32" placeholder="AR-…"></label><label>Status<select name="status"><option value="">All statuses</option>${statuses.map((s) => `<option value="${s}">${esc(label(s))}</option>`).join("")}</select></label><button class="button">Apply filters</button></form><div class="ops-status-shortcuts" role="group" aria-label="Quick booking filters"><button type="button" data-status="">All bookings</button><button type="button" data-status="pending_approval">Needs review</button><button type="button" data-status="confirmed">Confirmed</button><button type="button" data-status="checked_in">Checked in</button></div>`
       : tab === "payments" ? `<div class="ledger-filters">${referenceForm()}</div>` : referenceForm()) +
-    '<p role="status" data-message></p><div data-results>Loading…</div><div data-pagination></div>';
+    '<p role="status" data-message></p><div data-results></div><div data-pagination></div>';
   const render = () => {
     if (!alive()) return;
     target.querySelector("[data-results]").innerHTML =
@@ -362,7 +363,7 @@ export async function mountHostOperations(
     if(nextIndex<0)return;
     const cursor=direction===true?page.nextCursor:direction==='previous'?cursors[nextIndex]:undefined;
     if(direction===true&&!cursor)return;
-    message('Loading…');
+    message('Loading results…', true);
     const results=target.querySelector('[data-results]');results.setAttribute('aria-busy','true');
     target.querySelectorAll('form button,[data-more],[data-previous],[data-open]').forEach(b=>b.disabled=true);
     try {
@@ -606,7 +607,7 @@ export function openManualBooking({ call, units, onBooked, identity, chooseGuest
     if (state.kind === "day") state.departure = new Date(Date.parse(state.arrival)+86400000).toISOString().slice(0,10);
     working=true;
     lock(true);
-    notice.textContent="Checking availability and price…";
+    studioStatus(notice, "Checking availability and price…", true);
     state.quote=null;
     drawQuote();
     try {
@@ -615,9 +616,9 @@ export function openManualBooking({ call, units, onBooked, identity, chooseGuest
         adults:state.adults,childrenAges:ages,units:state.kind==="private"?state.unitIds:[],
         promo:state.promo,redeemCredits:["day","event"].includes(state.kind)?0:state.credits,
       },crypto.randomUUID());
-      notice.textContent="Quote ready. Review the guest, dates and price.";
+      studioStatus(notice, "Quote ready. Review the guest, dates and price.");
     } catch (error) {
-      notice.textContent=bookingErrors[error.code] || "Could not check this visit. Check the dates, guest contact and your access.";
+      studioStatus(notice, bookingErrors[error.code] || "Could not check this visit. Check the dates, guest contact and your access.");
     } finally {
       working=false;
       drawQuote();
@@ -635,7 +636,7 @@ export function openManualBooking({ call, units, onBooked, identity, chooseGuest
     working=true;
     lock(true);
     confirmButton.disabled=true;
-    notice.textContent="Confirming booking…";
+    studioStatus(notice, "Confirming booking…", true);
     try {
       const booking=await call("createManualBooking",state.pending.input,state.pending.key);
       manualDrafts.delete(identity);
@@ -646,9 +647,9 @@ export function openManualBooking({ call, units, onBooked, identity, chooseGuest
       if (bookingErrors[error.code] || error.status >= 400 && error.status < 500 && error.status !== 429) {
         state.pending=null;
         state.quote=null;
-        notice.textContent=bookingErrors[error.code] || "The booking could not be confirmed. Review the details and try again.";
+        studioStatus(notice, bookingErrors[error.code] || "The booking could not be confirmed. Review the details and try again.");
       } else {
-        notice.textContent="The response is uncertain. Retry the same confirmation.";
+        studioStatus(notice, "The response is uncertain. Retry the same confirmation.");
       }
     } finally {
       working=false;
@@ -659,7 +660,7 @@ export function openManualBooking({ call, units, onBooked, identity, chooseGuest
   drawAges();
   drawVisit();
   drawQuote();
-  dialog.showModal();
+  openStudioDialog(dialog);
 }
 
 export async function mountHostSummary(target, { call }) {

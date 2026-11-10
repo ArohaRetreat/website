@@ -268,3 +268,26 @@
 @media (max-width: 760px) {
   .material-app .studio-table :is(th, td) { padding-inline: 10px; }
 }
+
+[data-studio-progress]::before {
+  content: "";
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-inline-end: .5em;
+  vertical-align: -.15em;
+  border: 2px solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: 50%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-studio-progress]::before {
+    opacity: 0;
+    animation: studio-progress 900ms linear 160ms infinite;
+  }
+  @keyframes studio-progress {
+    from { opacity: 1; transform: rotate(0deg); }
+    to { opacity: 1; transform: rotate(360deg); }
+  }
+}
