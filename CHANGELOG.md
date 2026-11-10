@@ -1,3 +1,7 @@
+## Website 0.32.4 — Host Studio checkout timing
+
+- Show when checkout opens and enable it at the scheduled time. Explain an early checkout rejection in the booking drawer.
+
 ## Website 0.32.3 — Natura media in Firebase Storage
 
 - Preserve Natura’s pinned design pages and download links while serving its media from immutable Storage objects. Avoid downloading design archives on each Hosting build.
