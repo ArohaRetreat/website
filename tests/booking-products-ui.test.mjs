@@ -67,9 +67,11 @@ async function mount(s, role = "guest", hash = "") {
     if (op === "create") s.lastContact = body.contact;
     return structuredClone(mutate(s, actor, op, body));
   };
+  const feedback = (await readFile(new URL("../website/studio-feedback.mjs", import.meta.url), "utf8")).replaceAll("export ", "");
   const source = (
     await readFile(new URL("../website/booking.mjs", import.meta.url), "utf8")
   )
+    .replace(/^import .*studio-feedback\.mjs.*;$/m, feedback)
     .replace(/import \{[^\n]+\} from ['"]\.\/material-controls.mjs['"];/, 'const installMaterialControls=()=>{},confirmMaterial=async()=>window.confirm();')
     .replace(/^import .* from ["']\.\/frontdesk\.mjs["'];$/m,`const hostShell=({content})=>'<button data-host-tab="calendar">Calendar</button>'+content,mountFrontDesk=async()=>{},hostTabAllowed=()=>true,hostDestinations=()=>[],openStudioBooking=({id})=>detail(id),mountStudioDashboard=async()=>{};`)
     .replace(/^import .* from ["']\.\/(?:studio-views|booking-documents|guest-dialogs)\.mjs["'];$/gm, "").replace("const hostShell=", "const applyStudioAppearance=()=>{},studioInitials=()=>'';const hostShell=").replace(/import \{mountHostOperations,openManualBooking\} from '\.\/host-operations.mjs';/, 'const mountHostOperations=async()=>{},openManualBooking=()=>{};').replace(/import \{auth\} from '\.\/firebase-auth.mjs';/, 'const auth={currentUser:null};').replace(/import \{mountStayPanel\} from '\.\/stay-panel.mjs';/, "").replace(

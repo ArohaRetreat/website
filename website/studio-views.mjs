@@ -1,3 +1,4 @@
+import { openStudioDialog, studioStatus } from "./studio-feedback.mjs";
 import { escape as e } from "./frontdesk.mjs";
 import { mountCreditWallet } from "./host-operations.mjs";
 import { mountBookingDocuments } from "./booking-documents.mjs";
@@ -30,7 +31,17 @@ const metric = (label, value, copy, name, tone = "") => `<article class="workspa
 
 export async function mountStudioDashboard(target, { call, manager, openBooking }) {
   async function load() {
-    target.innerHTML = heading("Dashboard", "Booking activity, arrivals and payments at a glance.") + '<p role="status">Loading your dashboard…</p>';
+    const refresh = target.querySelector("[data-dashboard-refresh]");
+    if (refresh?.disabled) return;
+    const hasResults = Boolean(target.querySelector(".workspace-metrics"));
+    const restoreFocus = refresh && target.ownerDocument.activeElement === refresh;
+    if (refresh) refresh.disabled = true;
+    if (!target.querySelector("[data-dashboard-status]")) {
+      target.innerHTML = heading("Dashboard", "Booking activity, arrivals and payments at a glance.") +
+        '<p data-dashboard-status role="status"></p>';
+    }
+    const status = target.querySelector("[data-dashboard-status]");
+    studioStatus(status, hasResults ? "Refreshing dashboard…" : "Loading your dashboard…", true);
     try {
       const data = await call("getStudioDashboard", {});
       if (!target.isConnected) return;
@@ -44,6 +55,7 @@ export async function mountStudioDashboard(target, { call, manager, openBooking 
       const chart = trend ? `<figure class="studio-trend"><figcaption>Verified payments recorded over the last 7 days, after reversals.</figcaption><div class="trend-grid">${trend.map((day) => `<div title="${e(date(day.date) + " · " + money(day.netPaise))}"><span class="sr-only">${e(date(day.date) + " · " + money(day.netPaise))}</span><i aria-hidden="true" class="${day.netPaise < 0 ? "negative" : ""}" style="--bar:${Math.max(3,Math.abs(day.netPaise) / max * 100)}%"></i><small aria-hidden="true">${e(date(day.date,{month:undefined}))}</small></div>`).join("")}</div></figure>` : '<p>Open the ledger to review the current payment activity.</p>';
       target.innerHTML = `<div class="workspace-page-head">${heading("Dashboard", "Booking activity, arrivals and payments at a glance.", date(data.today, { weekday: "long", month: "long", year: "numeric" }) + " · IST")}
         <div class="workspace-actions">${manager ? button("+ New booking", "data-new-booking", { className:"primary mobile-new" }) : ""}${button("Refresh", "data-dashboard-refresh", { className:"text-button" })}</div></div>
+        <p data-dashboard-status role="status">${refresh ? "Dashboard updated." : ""}</p>
         <div class="workspace-metrics">
           ${metric("Requests to review",data.requests,"New requests, offers and date changes","requests","amber")}
           ${metric("Arrivals today",data.arrivals,"Confirmed visits starting today","calendar")}
@@ -62,14 +74,25 @@ export async function mountStudioDashboard(target, { call, manager, openBooking 
             ${manager ? quick("Find a guest","Open their profile and visit history","guests",'data-host-tab="guests"') : ""}
           </div>`)}
         </div>`;
-      target.querySelector("[data-dashboard-refresh]").onclick = () => void load();
+      const nextRefresh = target.querySelector("[data-dashboard-refresh]");
+      nextRefresh.onclick = () => void load();
+      if (restoreFocus && target.ownerDocument.activeElement === target.ownerDocument.body)
+        nextRefresh.focus({ preventScroll:true });
       target.querySelectorAll("[data-agenda-id]").forEach((control) => {
         control.onclick = () => openBooking(control.dataset.agendaId, control, control.dataset.agendaAction === "departure" ? "payments" : "overview");
       });
     } catch {
       if (!target.isConnected) return;
-      target.innerHTML = heading("Dashboard","Today’s booking workspace.") + '<p role="status">The dashboard could not load.</p>' + button("Try again","data-dashboard-refresh");
-      target.querySelector("[data-dashboard-refresh]").onclick = () => void load();
+      if (refresh) {
+        refresh.disabled = false;
+        studioStatus(status, hasResults ? "The dashboard could not refresh. Showing the last loaded results." : "The dashboard could not load.");
+        if (restoreFocus && target.ownerDocument.activeElement === target.ownerDocument.body)
+          refresh.focus({ preventScroll:true });
+      } else {
+        studioStatus(status, "The dashboard could not load.");
+        target.insertAdjacentHTML("beforeend", button("Try again", "data-dashboard-refresh"));
+        target.querySelector("[data-dashboard-refresh]").onclick = () => void load();
+      }
     }
   }
   await load();
@@ -113,12 +136,12 @@ export function mountStudioGuestLookup(target, { call, onSelect, action = "Open 
     }
     submit.disabled = true;
     matches.replaceChildren();
-    status.textContent = "Searching…";
+    studioStatus(status, "Searching for guests…", true);
     try {
       const result = await call("lookupCustomers", { mode, search, limit: 10 });
       if (!target.isConnected) return;
       onSearch(search);
-      status.textContent = result.hasMore ? "More matches exist. Refine your search." : `${result.items.length} ${result.items.length === 1 ? "match" : "matches"}`;
+      studioStatus(status, result.hasMore ? "More matches exist. Refine your search." : `${result.items.length} ${result.items.length === 1 ? "match" : "matches"}`);
       matches.innerHTML = result.items.map((person, index) => `<article class="workspace-row">
         <span class="workspace-icon" aria-hidden="true">${e(studioInitials(person.name))}</span><div><strong>${e(person.name)}</strong><small>${e(person.email || "Email unavailable")}${person.guestNumber ? ` · Guest #${Number(person.guestNumber)}` : ""}</small></div>
         ${button(action, `data-guest-match="${index}"`, { extra: `aria-label="${e(action + " for " + person.name)}"` })}
@@ -127,7 +150,7 @@ export function mountStudioGuestLookup(target, { call, onSelect, action = "Open 
         control.onclick = () => onSelect(result.items[Number(control.dataset.guestMatch)]);
       });
     } catch {
-      if (target.isConnected) status.textContent = "Guest search could not complete. Check the search and try again.";
+      if (target.isConnected) studioStatus(status, "Guest search could not complete. Check the search and try again.");
     } finally {
       submit.disabled = false;
     }
@@ -152,7 +175,7 @@ export function chooseStudioGuest(call, onSelect) {
     dialog.close();
     onSelect(person);
   }});
-  dialog.showModal();
+  openStudioDialog(dialog);
   dialog.querySelector("[type=search]").focus();
 }
 
@@ -163,7 +186,7 @@ function mountStudioList(target, { fetchPage, renderRow, table, empty, onRows = 
   const pagination = target.querySelector("[data-studio-pagination]");
   const cursors = [undefined];
   async function load(position, cursor = cursors[position]) {
-    status.textContent = "Loading…";
+    studioStatus(status, "Loading records…", true);
     pagination.querySelectorAll("button").forEach((control) => control.disabled = true);
     try {
       const page = await fetchPage({ limit:15, ...(cursor ? { cursor } : {}) });
@@ -175,10 +198,10 @@ function mountStudioList(target, { fetchPage, renderRow, table, empty, onRows = 
       pagination.innerHTML = position || page.nextCursor ? `<button type="button" data-prev ${position ? "" : "disabled"}>Previous</button><span>Page ${position + 1} · ${page.items.length} records</span><button type="button" data-next ${page.nextCursor ? "" : "disabled"}>Next</button>` : "";
       pagination.querySelector("[data-prev]")?.addEventListener("click", () => void load(position - 1));
       pagination.querySelector("[data-next]")?.addEventListener("click", () => void load(position + 1, page.nextCursor));
-      status.textContent = "";
+      studioStatus(status, "");
     } catch (error) {
       if (!target.isConnected) return;
-      status.textContent = error.code === "CURSOR_EXPIRED" ? "This page expired. Refresh to start again." : "This list could not load.";
+      studioStatus(status, error.code === "CURSOR_EXPIRED" ? "This page expired. Refresh to start again." : "This list could not load.");
       pagination.innerHTML = button("Reload","data-reload");
       pagination.querySelector("[data-reload]").onclick = () => void load(0);
     }
@@ -325,7 +348,7 @@ export function mountStudioMail(target, { call, customer = null, bookingId, star
     const reader = document.createElement("section");
     reader.className = "mail-reader";
     reader.innerHTML = `${button("← Back to email history","data-mail-back",{className:"text-button"})}
-      <div data-mail-detail><p role="status">Loading email…</p></div>`;
+      <div data-mail-detail><p role="status" data-studio-progress>Loading email…</p></div>`;
     target.append(reader);
     const slot = reader.querySelector("[data-mail-detail]");
     const back = reader.querySelector("[data-mail-back]");
@@ -341,7 +364,7 @@ export function mountStudioMail(target, { call, customer = null, bookingId, star
     };
     back.focus();
     async function load() {
-      slot.innerHTML = '<p role="status">Loading email…</p>';
+      slot.innerHTML = '<p role="status" data-studio-progress>Loading email…</p>';
       try {
         const job = await call("getStudioEmail",{jobId:id});
         if (!slot.isConnected) return;
@@ -435,7 +458,7 @@ export function mountStudioMail(target, { call, customer = null, bookingId, star
       working = true;
       form.dataset.emailPending = "";
       for (const control of form.elements) control.disabled = true;
-      status.textContent = "Queuing email…";
+      studioStatus(status, "Queuing email…", true);
       try {
         const job = await call("sendStudioEmail",pending.input,pending.key);
         if (form.isConnected) void open(job.id);
@@ -446,12 +469,12 @@ export function mountStudioMail(target, { call, customer = null, bookingId, star
           delete form.dataset.emailPending;
           for (const control of form.elements) control.disabled = false;
           submit.textContent = "Send email";
-          status.textContent = mailError(error.code);
+          studioStatus(status, mailError(error.code));
           updateSend();
         } else {
           submit.disabled = false;
           submit.textContent = "Retry same email";
-          status.textContent = "The queue response could not be confirmed. Retry the same email.";
+          studioStatus(status, "The queue response could not be confirmed. Retry the same email.");
         }
       } finally {
         working = false;

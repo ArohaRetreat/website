@@ -1,3 +1,4 @@
+import { openStudioDialog, studioStatus } from "./studio-feedback.mjs";
 import {studioTable} from "./studio-table.mjs";
 
 const escape = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({
@@ -50,16 +51,16 @@ function showDocument(record, call, trigger) {
     dialog.remove();
     if (trigger.isConnected) trigger.focus();
   }, { once: true });
-  dialog.showModal();
+  openStudioDialog(dialog);
 }
 async function download(button, message, call, record) {
   button.disabled = true;
-  message.textContent = "Preparing your PDF…";
+  studioStatus(message, "Preparing your PDF…", button.ownerDocument.documentElement.classList.contains("frontdesk-v2"));
   try {
     await downloadBookingDocument(call, record.bookingId, record.id);
-    message.textContent = "PDF ready.";
+    studioStatus(message, "PDF ready.");
   } catch {
-    message.textContent = "This PDF could not be generated. Refresh the document list and try again.";
+    studioStatus(message, "This PDF could not be generated. Refresh the document list and try again.");
   } finally {
     button.disabled = false;
   }
@@ -127,7 +128,7 @@ export async function mountBookingDocuments(target, { call, staff = false, custo
   async function load(next, cursor = cursors[next]) {
     const request = ++generation;
     pagination.querySelectorAll("button").forEach((b) => b.disabled = true);
-    status.textContent = "Loading documents…";
+    studioStatus(status, "Loading documents…", staff);
     const id = guest?.id || customerId;
     try {
       const response = await call(operation, { ...(id ? { id } : {}), limit: 12, ...(cursor ? { cursor } : {}) });
@@ -135,11 +136,11 @@ export async function mountBookingDocuments(target, { call, staff = false, custo
       page = response;
       cursors[next] = cursor;
       position = next;
-      status.textContent = "";
+      studioStatus(status, "");
       draw();
     } catch (error) {
       if (!target.isConnected || request !== generation) return;
-      status.textContent = error.code === "CURSOR_EXPIRED" ? "This page expired. Reload the document list." : "Documents could not load.";
+      studioStatus(status, error.code === "CURSOR_EXPIRED" ? "This page expired. Reload the document list." : "Documents could not load.");
       const retry = document.createElement("button");
       retry.type = "button";
       retry.textContent = "Reload documents";
