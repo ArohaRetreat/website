@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Aroha external API",
-    "version": "1.4.0",
+    "version": "1.5.0",
     "description": "Versioned scoped CRUD surface using shared website and Studio business rules. Financial records use immutable receipts and reversals; media archive and profile erasure preserve required history. Source status is separate from deployment evidence."
   },
   "servers": [
@@ -28073,7 +28073,12 @@
       "completeReservationInput": {
         "type": "object",
         "additionalProperties": false,
-        "properties": {},
+        "properties": {
+          "earlyCheckout": {
+            "type": "boolean",
+            "description": "Set to true with complete to confirm that the checked-in guest is leaving before the scheduled checkout time."
+          }
+        },
         "required": []
       },
       "noShowReservationInput": {

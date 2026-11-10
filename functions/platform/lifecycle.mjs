@@ -9,6 +9,16 @@ import { mailSettings, validEmail, recipientMode } from "../email/config.mjs";
 import { environment } from "../environment.mjs";
 import { digest } from "./core.mjs";
 import { contextFields } from "../booking/observability.mjs";
+import { todayIST } from "../booking/domain.mjs";
+
+function checkoutWindow(booking) {
+  if (booking.history?.at(-1)?.earlyCheckout !== true) return booking;
+  return {
+    ...booking,
+    departure: todayIST(booking.checkedOutAt),
+    endsAt: booking.checkedOutAt,
+  };
+}
 export function queueLifecycle(
   tx,
   db,
@@ -38,15 +48,18 @@ export function queueLifecycle(
         booking.checkedInAt ||
         booking.version),
   );
+  const visit = ["guest_checkout", "guest_feedback"].includes(channel)
+    ? checkoutWindow(booking)
+    : booking;
   const snapshot = {
     reference: booking.reference || booking.id,
     guestName:
       booking.contact?.name || profile.contact?.name || profile.name || "Guest",
     kind: booking.kind || "legacy",
     arrival: booking.arrival,
-    departure: booking.departure,
+    departure: visit.departure,
     startsAt: booking.startsAt || 0,
-    endsAt: booking.endsAt || 0,
+    endsAt: visit.endsAt || 0,
     status: booking.status,
     bookingVersion: booking.version,
     ...(booking.source === "host_manual" ? { manualBooking: true } : {}),
@@ -118,7 +131,7 @@ export async function prepareStayLifecycle(
       ? await prepareDocument(
           tx,
           db,
-          { ...booking, checkedOutAt: now },
+          checkoutWindow(booking),
           summary,
           "checkout_statement",
           now,

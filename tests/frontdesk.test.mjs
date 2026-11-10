@@ -46,7 +46,7 @@ test("booking activity shows recorded events newest first", async () => {
   }
 });
 
-test("checkout shows the IST opening time and enables in the open drawer at the cutoff", async () => {
+test("checkout switches from early to scheduled in the open drawer at the cutoff", async () => {
   const m = await mount({ tab: "today" });
   try {
     const opens = Date.parse("2026-11-10T11:00:00+05:30");
@@ -58,15 +58,12 @@ test("checkout shows the IST opening time and enables in the open drawer at the 
     m.d.querySelector("[data-desk-open]").click();
     await pause();
     const button = () => m.d.querySelector('[data-action="complete"]');
-    assert.equal(button().disabled, true);
-    assert.match(m.d.querySelector("[data-action-hint]").textContent, /Checkout opens on 10 Nov 2026 at 11:00 am IST/i);
-    button().click();
-    assert.equal(m.d.querySelector("[data-confirm]"), null);
-    assert.equal(m.actions.length, 0);
+    assert.equal(button().textContent, "Review early checkout");
+    assert.match(m.d.querySelector("[data-action-hint]").textContent, /Scheduled checkout is on 10 Nov 2026 at 11:00 am IST/i);
 
     now = opens;
     wake();
-    assert.equal(button().disabled, false);
+    assert.equal(button().textContent, "Review checkout");
     button().click();
     assert.equal(m.d.querySelector('[data-section="payments"]').getAttribute("aria-pressed"), "true");
     button().click();
@@ -82,7 +79,7 @@ test("checkout shows the IST opening time and enables in the open drawer at the 
   }
 });
 
-test("checkout explains a server timing conflict and keeps the booking checked in", async () => {
+test("a server timing conflict keeps the booking checked in and offers early checkout", async () => {
   const m = await mount({
     tab: "today",
     rejectAction: { code: "STAY_NOT_STARTED_OR_FINISHED", status: 409 },
@@ -98,8 +95,38 @@ test("checkout explains a server timing conflict and keeps the booking checked i
     m.d.querySelector("[data-confirm]").click();
     await pause();
     assert.equal(m.b.status, "checked_in");
-    assert.match(m.d.querySelector("[data-action-status]").textContent, /Checkout opens on 10 Nov 2026 at 11:00 am IST/i);
+    assert.match(m.d.querySelector("[data-action-status]").textContent, /Scheduled checkout is on 10 Nov 2026 at 11:00 am IST/i);
+    assert.equal(m.d.querySelector('[data-action="complete"]').textContent, "Review early checkout");
     assert.equal(m.d.querySelector("[data-retry]"), null);
+  } finally {
+    m.close();
+  }
+});
+
+test("early checkout requires payment review and confirmation and retains its retry key", async () => {
+  const m = await mount({ tab: "today", failAction: true });
+  try {
+    const opens = Date.parse("2026-11-10T11:00:00+05:30");
+    m.w.Date.now = () => opens - 60_000;
+    Object.assign(m.b, { status: "checked_in", version: 5, departure: "2026-11-10", endsAt: opens });
+    m.d.querySelector("[data-desk-open]").click();
+    await pause();
+    const button = () => m.d.querySelector('[data-action="complete"]');
+    button().click();
+    assert.equal(m.d.querySelector('[data-section="payments"]').getAttribute("aria-pressed"), "true");
+    button().click();
+    assert.equal(m.d.querySelector("[data-confirm]").textContent, "Confirm early checkout");
+    assert.equal(m.actions.length, 0);
+
+    m.d.querySelector("[data-confirm]").click();
+    await pause();
+    m.d.querySelector("[data-retry]").click();
+    await pause();
+    assert.deepEqual(m.actions[0], m.actions[1]);
+    assert.deepEqual(JSON.parse(JSON.stringify(m.actions[0].input)), {
+      id: "synthetic", action: "complete", expectedVersion: 5, earlyCheckout: true,
+    });
+    assert.equal(m.b.status, "completed");
   } finally {
     m.close();
   }

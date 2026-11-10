@@ -192,6 +192,10 @@
           "withdraw_offer"
         ]
       },
+      "earlyCheckout": {
+        "type": "boolean",
+        "description": "Set to true with complete to confirm that the checked-in guest is leaving before the scheduled checkout time."
+      },
       "amount": {
         "type": "integer",
         "minimum": 10000,

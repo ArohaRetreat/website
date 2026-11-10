@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Aroha integration token management",
-  "contractVersion": "1.4.0",
+  "contractVersion": "1.5.0",
   "basePath": "/api/v1/integration-tokens",
   "authentication": "Verified Google Firebase ID token; integration credentials cannot mint other credentials.",
   "$defs": {

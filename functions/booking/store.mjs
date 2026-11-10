@@ -852,16 +852,16 @@ export async function bookingCommand(
       operation === "booking-action" && input.action === "approve_change"
         ? await ledgerRead(tx, db, target.id)
         : null;
-    const stayLifecycle = await prepareStayLifecycle(tx, db, {
-      booking: target,
-      operation,
-      input,
-      now,
-    });
     let result =
       operation === "availability"
         ? availability(s, input, now)
         : mutate(s, actor, operation, input, now);
+    const stayLifecycle = await prepareStayLifecycle(tx, db, {
+      booking: result,
+      operation,
+      input,
+      now,
+    });
     if (manualCreate) {
       if (!emailConfig.enabled) fail("MAIL_NOT_CONFIGURED", 409);
       result.source = "host_manual";
