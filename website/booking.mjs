@@ -1,3 +1,4 @@
+import { openStudioDialog, studioStatus } from "./studio-feedback.mjs";
 import {installMaterialControls, confirmMaterial} from './material-controls.mjs';
 installMaterialControls();
 import { hostShell, hostDestinations, hostTabAllowed, mountFrontDesk, openStudioBooking } from "./frontdesk.mjs";
@@ -202,6 +203,7 @@ window.addEventListener(
   "keydown",
   () => {
     keyboardInteraction = true;
+    document.documentElement.removeAttribute("data-studio-pointer");
   },
   { capture: true },
 );
@@ -209,6 +211,7 @@ window.addEventListener(
   "pointerdown",
   () => {
     keyboardInteraction = false;
+    if (hostRoute()) document.documentElement.setAttribute("data-studio-pointer", "");
   },
   { capture: true },
 );
@@ -755,21 +758,28 @@ function mountStudioWorkspace() {
   const documents = query("[data-studio-documents]");
   if (documents) void mountBookingDocuments(documents,{call,staff:true,chooseGuest:(select) => chooseStudioGuest(call,select)});
 
+  const searchStatus = query("[data-desk-search-status]");
   const search = async (raw, trigger) => {
     const term = raw.trim();
-    if (term.length < 2) return;
+    if (term.length < 2 || searchStatus.hasAttribute("data-studio-progress")) return;
+    if (manager && !/^ar-/i.test(term)) {
+      switchHostTab("guests", { search: term });
+      return;
+    }
+    if (!/^[a-z0-9-]{3,32}$/i.test(term)) {
+      toast("Enter the booking’s exact reference.", true);
+      return;
+    }
+    studioStatus(searchStatus, "Finding booking…", true);
     try {
-      if (!manager || /^ar-/i.test(term)) {
-        if (!/^[a-z0-9-]{3,32}$/i.test(term)) {
-          toast("Enter the booking’s exact reference.",true);
-          return;
-        }
-        const result = await call("searchHostReservations",{view:"all",reference:term.toUpperCase(),limit:1});
-        if (result.items.length) void openBooking(result.items[0].id,trigger);
-        else toast("No booking matched that reference.",true);
-      } else switchHostTab("guests",{search:term});
+      const result = await call("searchHostReservations", { view:"all", reference:term.toUpperCase(), limit:1 });
+      if (!searchStatus.isConnected) return;
+      if (result.items.length) void openBooking(result.items[0].id, trigger);
+      else toast("No booking matched that reference.", true);
     } catch {
-      toast("Search could not complete. Check your access and try again.",true);
+      if (searchStatus.isConnected) toast("Search could not complete. Check your access and try again.", true);
+    } finally {
+      studioStatus(searchStatus, "");
     }
   };
   const form = query("[data-desk-search]");
@@ -786,7 +796,7 @@ function mountStudioWorkspace() {
     document.body.append(panel);
     panel.querySelector("[data-dismiss]").onclick = () => panel.close();
     panel.addEventListener("close",()=>{panel.remove();if(trigger?.isConnected)trigger.focus();},{once:true});
-    panel.showModal();
+    openStudioDialog(panel);
     return panel;
   };
   const activateModule = (target) => {
@@ -930,9 +940,9 @@ function render() {
       ?.focus({ preventScroll: true });
   if (view !== renderedView) {
     playMotion("view", document.querySelector("#main"), [
-      { opacity: 0, transform: hostRoute() ? "none" : "translateY(6px)" },
+      { opacity: hostRoute() ? .76 : 0, transform: hostRoute() ? "translateY(4px)" : "translateY(6px)" },
       { opacity: 1, transform: "translateY(0)" },
-    ]);
+    ], hostRoute() ? 150 : 180);
     renderedView = view;
     if (hostRoute()) journeyStep("admin", "viewed");
     if (!hostRoute())
@@ -1832,6 +1842,7 @@ window.addEventListener("focus", () => {
         render();
     });
 });
+if (hostRoute()) app.innerHTML = '<main class="empty"><p role="status" data-studio-progress>Opening booking workspace…</p></main>';
 try {
   await refresh();
   render();

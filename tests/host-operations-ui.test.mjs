@@ -2,9 +2,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { JSDOM } from "jsdom";
-const helpers = (await Promise.all(["studio-date-range","booking-visit-label","studio-table"].map((name)=>
+const helpers = (await Promise.all(["studio-feedback","studio-date-range","booking-visit-label","studio-table"].map((name)=>
   readFile(new URL("../website/" + name + ".mjs", import.meta.url), "utf8")
-))).join("\n").replaceAll("export ", "");
+))).join("\n").replace(/^import .*;$/gm, "").replaceAll("export ", "");
 const source = (
   await readFile(
     new URL("../website/host-operations.mjs", import.meta.url),

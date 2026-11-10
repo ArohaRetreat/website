@@ -1,3 +1,15 @@
+## Website 0.33.1 — Host Studio interaction feedback
+
+Studio shows progress while searches, booking actions, quotes, payments, documents and email requests run. Dashboard refreshes keep the last results visible. Staff views and dialogs use short pointer transitions with a still progress indicator for reduced motion.
+
+## Website 0.33.0 / API 0.18.0 — early checkout
+
+Booking managers can review and confirm early checkout in Studio. The checkout transaction records the actual departure and runs the existing payment statement, room turnover, loyalty and email workflows. The scoped completion endpoint accepts an explicit early-checkout flag.
+
+## Website 0.32.4 — Host Studio checkout timing
+
+- Show when checkout opens and enable it at the scheduled time. Explain an early checkout rejection in the booking drawer.
+
 ## Website 0.32.3 — Natura media in Firebase Storage
 
 - Preserve Natura’s pinned design pages and download links while serving its media from immutable Storage objects. Avoid downloading design archives on each Hosting build.

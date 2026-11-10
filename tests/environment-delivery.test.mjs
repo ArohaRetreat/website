@@ -95,7 +95,9 @@ test("nightly credit UI requires its deployed policy and unknown future versions
 
 test("Host Studio releases require their compatible booking API versions",async()=>{
  const pkg=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8'));
- assert.equal(compatibleBookingApi(pkg.version,'0.17.0'),true);
+ assert.equal(compatibleBookingApi(pkg.version,'0.18.0'),true);
+ assert.equal(compatibleBookingApi(pkg.version,'0.17.0'),false);
+ assert.equal(compatibleBookingApi('0.32.4','0.18.0'),true);
  assert.equal(compatibleBookingApi(pkg.version,'0.16.2'),false);
  assert.equal(compatibleBookingApi('0.31.2','0.16.2'),true);
  assert.equal(compatibleBookingApi('0.31.2','0.16.1'),false);

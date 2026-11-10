@@ -134,6 +134,7 @@ test("scoped external HTTP contract: own/all, CRUD parity, read purity, revocati
       "runtime:read",
       "reservations:read",
       "reservations:approve",
+      "stays:operate",
       "contacts:read",
       "inventory:read",
       "inventory:write",
@@ -340,6 +341,26 @@ test("scoped external HTTP contract: own/all, CRUD parity, read purity, revocati
   });
   assert.equal(cancel.status, 200);
   assert.equal(cancel.data.status, "cancelled");
+  const earlyId = "synthetic-scoped-early-checkout", now = Date.now();
+  const earlyBooking = {
+    id: earlyId, reference: "AR-EXTERNAL-EARLY", owner: guest.localId, kind: "day",
+    status: "checked_in", version: 1, history: [], arrival: todayIST(now),
+    departure: addDays(todayIST(now), 1), startsAt: now - 60000, checkedInAt: now - 60000,
+    endsAt: now + 3600000, guests: 1, adults: 1, children: 0, units: [], allocations: [],
+    subtotal: 120000, discount: 0, total: 120000, createdAt: now - 60000,
+  };
+  await db.collection("aroha_preprod_bookings").doc(earlyId).set(earlyBooking);
+  const earlyPath = "/reservations/" + earlyId + "/actions/complete";
+  const earlyOptions = {
+    method: "POST", key: "early-checkout-0001", etag: '"reservation:' + earlyId + ':1"',
+    body: { earlyCheckout: true },
+  };
+  assert.equal((await call(read.token, earlyPath, earlyOptions)).status, 403);
+  assert.equal((await call(manager.token, earlyPath, { ...earlyOptions, body: {} })).status, 409);
+  const completedEarly = await call(manager.token, earlyPath, earlyOptions);
+  assert.equal(completedEarly.status, 200, JSON.stringify(completedEarly));
+  assert.equal(completedEarly.data.status, "completed");
+  assert.deepEqual(await call(manager.token, earlyPath, earlyOptions), completedEarly);
   const list = await call(read.token, "/reservations?limit=1");
   assert.equal(list.status, 200);
   assert.ok(
