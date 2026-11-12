@@ -2,6 +2,8 @@
 
 Shared boundaries: [safety](safety.md), [evidence](evidence.md), [service ownership](services.md).
 
+Apply [GitHub Project tracking](github-projects.md) at intake and review. Confirm the issue type, Project membership, and milestone. Use the issue's milestone for its implementing PR and verify both the relationship and Project membership.
+
 - Confirm repo owner/name/visibility, main branch, access, hosting/provider/project/region, environment names and deployment trigger.
 - Use existing connectors/CLI and official current docs; do not invent workflow action versions, checks, tokens or repo policy.
 - Pin third-party actions to verified commit SHAs, document updates, and use least-privilege job permissions.
