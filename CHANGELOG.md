@@ -1,3 +1,9 @@
+## Website 0.33.2 / API 0.18.1 — dependency maintenance
+
+- Update the Firebase web and Admin SDKs and the Resend client within their current major versions.
+- Update the OpenTelemetry SDK and OTLP exporters together within their supported release lines.
+- Update the Functions XML parser to 5.12.1 within Firebase Admin’s existing dependency range.
+
 ## Website 0.33.1 — Host Studio interaction feedback
 
 Studio shows progress while searches, booking actions, quotes, payments, documents and email requests run. Dashboard refreshes keep the last results visible. Staff views and dialogs use short pointer transitions with a still progress indicator for reduced motion.
