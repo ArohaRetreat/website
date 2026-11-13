@@ -1,6 +1,8 @@
 ---
 name: app-launchpad
 description: Build or enhance apps using the project template, issue-linked delivery and Dynatrace observability.
+metadata:
+  version: "1.13.2"
 ---
 
 # App Launchpad
@@ -25,6 +27,7 @@ description: Build or enhance apps using the project template, issue-linked deli
 | Test suites and real execution | [Testing](references/testing.md) |
 | Dynatrace RUM/OTel/events/SDLC | [Observability](references/observability.md) |
 | GitHub Project, issue types, milestones and sprints | [Project tracking](references/github-projects.md) |
+| Public roadmap and versioned release notes | [Product launch](references/product-launch.md) |
 | Firebase usage budgets, media, and recurring costs | [Firebase FinOps](../firebase-finops/SKILL.md) |
 | Issues, PRs, checks, merge, release, rollback | [Delivery](references/github-release.md) |
 | Trust, secrets, cost, authorization, delegation | [Safety](references/safety.md) |

@@ -37,6 +37,7 @@ Build the design export from the Natura revision in [config/natura-hosting.json]
 
 ## Source and delivery
 
+- [Public roadmap](docs/public/roadmap.md) and [website release notes](docs/public/releases.md).
 - [Website service](skills/service-aroha-website/SKILL.md): public journey, media, accessibility, motion and host UI.
 - [API service](skills/service-aroha-api/SKILL.md): content, publication, membership, media policy and observability.
 - [Migration issue](https://github.com/ArohaRetreat/website/issues/1) and [remaining acceptance](https://github.com/ArohaRetreat/website/issues/2).

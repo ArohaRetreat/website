@@ -8,7 +8,11 @@ Use the public [Aroha Retreat Project](https://github.com/orgs/ArohaRetreat/proj
 - Put prerequisite acceptance before the dependent pilot or rollout. Record hard gates through GitHub issue dependencies. When a gate moves, review the affected milestone and sprint dates together, then verify their order in Sprint planning and the Roadmap.
 - Website issues and PRs enter the Project automatically. Add issues and PRs from the other three repositories through the Projects field. Review Project membership, issue type, and milestone coverage at sprint review.
 
-This repository adopts the Project tracking guidance from [App Launchpad 1.13.1](https://github.com/theharithsa/app-launchpad-template/releases/tag/v1.13.1). Apply the [Firebase FinOps skill](../.agents/skills/firebase-finops/SKILL.md) when a change affects usage. Record estimated operations before implementation and link actual usage evidence after rollout.
+Apply the [Firebase FinOps skill](../.agents/skills/firebase-finops/SKILL.md) when a change affects usage. Record estimated operations before implementation and link actual usage evidence after rollout.
+
+## Public roadmap and release notes
+
+The [public roadmap](public/roadmap.md) summarizes outcomes, audiences and target windows from the Project. The [release notes](public/releases.md) record verified availability from Hosting receipts and the app changelog. Refresh them when a target window or release changes. Use the [product launch procedure](../.agents/skills/app-launchpad/references/product-launch.md) from [App Launchpad 1.13.2](https://github.com/theharithsa/app-launchpad-template/releases/tag/v1.13.2).
 
 - [GitHub Project tracking procedure](../.agents/skills/app-launchpad/references/github-projects.md)
 - [Issue-to-merge and release procedure](../.agents/skills/app-launchpad/references/github-release.md)
