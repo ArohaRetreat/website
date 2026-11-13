@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f8f0">
+  <meta name="description" content="Upcoming website and booking reviews at Aroha Retreat, and the plan for Hrudhi AI.">
+  <title>Roadmap · Aroha Retreat</title>
+  <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./assets/updates.css">
+
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="top-bar">
+    <div class="shell top-row">
+      <a href="./" class="brand" aria-label="Aroha Retreat updates"><img src="./assets/logo.svg" width="1000" height="340" alt=""></a>
+      <nav class="section-nav" aria-label="Aroha updates"><a href="./" aria-current="page">Roadmap</a><a href="./releases/">Release notes</a></nav>
+      <a class="visit-link" href="https://aroharetreat.com/">Retreat website <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 5h6v6m0-6-8 8m6 0v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h5"/></svg></a>
+    </div>
+  </header>
+  <main id="main" class="shell" tabindex="-1">
+
+      <section class="roadmap-hero" aria-labelledby="roadmap-title">
+        <div class="hero-copy">
+          <h1 id="roadmap-title">Roadmap</h1>
+          <p>See the website and booking improvements we’re preparing for guests and hosts.</p>
+          <a class="button light-button" href="./releases/">Read release notes <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
+        </div>
+        <div class="hero-photo">
+          <img src="https://firebasestorage.googleapis.com/v0/b/aroha-retreat.firebasestorage.app/o/media%2Fpreprod-finops-67a96464e860e5ab3263bf12256e2732105e08de086f2684a59a11c1b29ed9f2.webp?alt=media" width="1800" height="1200" alt="A green field bordered by coconut palms at Aroha Retreat" fetchpriority="high">
+        </div>
+      </section>
+      <div class="roadmap-layout">
+        <section aria-labelledby="review-title">
+          <div class="section-heading">
+            <h2 id="review-title">Scheduled reviews</h2>
+            <p>Target windows for testing and review. Schedule checked <time datetime="2026-11-13">13 November 2026</time>.</p>
+          </div>
+          <ol class="review-list"><li class="review">
+    <span class="review-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4.5 7v10L12 21l7.5-4V7L12 3Zm0 9 7.5-5M12 12 4.5 7M12 12v9"/></svg></span>
+    <article class="review-card">
+      <div class="review-meta">
+        <span class="window" aria-label="From 16 November 2026 to 29 November 2026">16–29 November 2026</span>
+        <span class="status audience">Hosts</span>
+      </div>
+      <h3>Prepare for staff review</h3>
+      <p>Check that hosts can edit test content safely, booking tests use independent fixtures, and the test site stays within its Firebase budget.</p>
+      <div class="card-links"><a href="https://github.com/ArohaRetreat/website/issues/93">Website changes <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 5h6v6m0-6-8 8m6 0v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h5"/></svg></a><a href="https://github.com/ArohaRetreat/website/issues/126">API test isolation <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 5h6v6m0-6-8 8m6 0v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h5"/></svg></a><a href="https://github.com/ArohaRetreat/website/issues/130">Firebase usage <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 5h6v6m0-6-8 8m6 0v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h5"/></svg></a></div>
+    </article>
+  </li><li class="review">
+    <span class="review-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="6" width="16" height="15" rx="2"/><path d="M8 3v6m8-6v6M4 11h16m-12 4h2m4 0h2"/></svg></span>
+    <article class="review-card">
+      <div class="review-meta">
+        <span class="window" aria-label="From 30 November 2026 to 13 December 2026">30 November–13 December 2026</span>
+        <span class="status audience">Hosts and guests</span>
+      </div>
+      <h3>Verify the full booking journey</h3>
+      <p>Walk through booking, arrival and checkout in pre-prod. Review emails, invoices and walk-in stays along the way.</p>
+      <div class="card-links"><a href="https://github.com/ArohaRetreat/website/issues/101">Booking acceptance <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 5h6v6m0-6-8 8m6 0v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h5"/></svg></a><a href="https://github.com/ArohaRetreat/website/issues/111">Host Studio <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 5h6v6m0-6-8 8m6 0v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h5"/></svg></a><a href="https://github.com/ArohaRetreat/website/issues/70">Booking lifecycle <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 5h6v6m0-6-8 8m6 0v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h5"/></svg></a></div>
+    </article>
+  </li><li class="review">
+    <span class="review-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg></span>
+    <article class="review-card">
+      <div class="review-meta">
+        <span class="window" aria-label="From 14 December 2026 to 27 December 2026">14–27 December 2026</span>
+        <span class="status audience">Hosts and guests</span>
+      </div>
+      <h3>Review the website and Living Map</h3>
+      <p>Review navigation, Google sign-in and the host content workflow on the phones and computers people use.</p>
+      <div class="card-links"><a href="https://github.com/ArohaRetreat/website/issues/2">Website acceptance <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 5h6v6m0-6-8 8m6 0v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h5"/></svg></a><a href="https://github.com/ArohaRetreat/website/issues/4">Living Map acceptance <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 5h6v6m0-6-8 8m6 0v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h5"/></svg></a></div>
+    </article>
+  </li></ol>
+          <a class="text-action" href="https://github.com/orgs/ArohaRetreat/projects/1/views/4">View the GitHub roadmap <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 5h6v6m0-6-8 8m6 0v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h5"/></svg></a>
+        </section>
+        <aside class="roadmap-aside" aria-labelledby="planning-title">
+          <div class="section-heading"><h2 id="planning-title">In planning</h2></div>
+          <article class="planning-card">
+            <div class="planning-meta">
+              <span class="planning-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a7 7 0 0 1-7 7H8l-4 3v-6a7 7 0 0 1-1-4 7 7 0 0 1 7-7h3a7 7 0 0 1 7 7Z"/><path d="M8 11h.01m4 0h.01m4 0h.01"/></svg></span>
+              <span class="status planning-status">Hrudhi AI</span>
+            </div>
+            <h3>Chat with Hrudhi</h3>
+            <p>A planned English text guide to help website visitors find answers about stays, day visits and the Living Map. The launch date is open.</p>
+            <h4>Before public rollout</h4>
+            <ol class="stages">
+              <li><strong><a href="https://github.com/ArohaRetreat/website/issues/157">Review the scope <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 5h6v6m0-6-8 8m6 0v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h5"/></svg></a></strong><p>Agree on public sources, privacy and the operating budget.</p></li><li><strong><a href="https://github.com/ArohaRetreat/website/issues/162">Verify in pre-prod <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 5h6v6m0-6-8 8m6 0v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h5"/></svg></a></strong><p>Check answer quality, navigation links and Dynatrace telemetry using synthetic questions.</p></li><li><strong><a href="https://github.com/ArohaRetreat/website/issues/162">Decide on public rollout <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 5h6v6m0-6-8 8m6 0v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h5"/></svg></a></strong><p>Review the pre-prod evidence before opening chat to website visitors.</p></li>
+            </ol>
+            <p class="follow-up">Arize evaluation follows Dynatrace acceptance. <a href="https://github.com/ArohaRetreat/website/issues/163">Follow-up <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 5h6v6m0-6-8 8m6 0v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h5"/></svg></a></p>
+          </article>
+          <a class="current-release" href="./releases/#production-0-33-1">
+            <span class="release-symbol"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13l-7 7a2 2 0 0 1-2.8 0L4 13.8V4h9.8l6.2 6.2a2 2 0 0 1 0 2.8ZM8 8h.01"/></svg></span>
+            <span><strong>Latest production release</strong><span>Website 0.33.1 · <time datetime="2026-11-10">10 November 2026</time></span></span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+          </a>
+        </aside>
+      </div>
+  </main>
+  <footer class="page-footer">
+    <div class="shell footer-row">
+      <span>© 2026 Aroha Retreat</span>
+      <nav aria-label="More from Aroha">
+        <a href="https://aroharetreat.com/book/">Book a stay</a>
+        <a href="https://aroharetreat.com/map/">Living Map</a>
+        <a href="https://github.com/orgs/ArohaRetreat/projects/1">GitHub Project <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 5h6v6m0-6-8 8m6 0v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h5"/></svg></a>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>
