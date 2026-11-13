@@ -2,7 +2,7 @@
 
 Open `/admin/` on the published Aroha site and continue with Google. Use an approved owner account or the exact verified Google email that was invited. Signing in alone does not grant editing access.
 
-See the [public roadmap](public/roadmap.md) for planned improvements and the [website release notes](public/releases.md) for updates available to hosts and guests.
+See the [public roadmap](https://aroharetreat.github.io/website/) for planned improvements and the [website release notes](https://aroharetreat.github.io/website/releases/) for updates available to hosts and guests.
 
 Choose a section in the studio to edit its text, photos, prices, contacts, FAQs or design settings. Page layout controls section order and visibility. The hero has separate desktop and mobile photo fields. Add, reorder or remove repeated items; keep stable IDs when changing existing items. Images should be web-ready JPEG, PNG, WebP or AVIF below 10 MB. Uploading makes the image public immediately; selecting it in a draft does not publish the draft.
 

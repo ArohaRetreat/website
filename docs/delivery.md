@@ -12,7 +12,9 @@ Apply the [Firebase FinOps skill](../.agents/skills/firebase-finops/SKILL.md) wh
 
 ## Public roadmap and release notes
 
-The [public roadmap](public/roadmap.md) summarizes outcomes, audiences and target windows from the Project. The [release notes](public/releases.md) record verified availability from Hosting receipts and the app changelog. Refresh them when a target window or release changes. Use the [product launch procedure](../.agents/skills/app-launchpad/references/product-launch.md) from [App Launchpad 1.13.2](https://github.com/theharithsa/app-launchpad-template/releases/tag/v1.13.2).
+The [public roadmap](https://aroharetreat.github.io/website/) summarizes outcomes, audiences and target windows from the Project. The [release notes](https://aroharetreat.github.io/website/releases/) record verified availability from Hosting receipts and the app changelog. Use the [product launch procedure](../.agents/skills/app-launchpad/references/product-launch.md) from [App Launchpad 1.13.2](https://github.com/theharithsa/app-launchpad-template/releases/tag/v1.13.2).
+
+Update [the public content](public/updates.json) when a target window or release changes. Run `node scripts/build-public-updates.mjs` and review the artifacts in `local/public-updates/`. Publish that directory at the root of the `gh-pages` branch, the repository's GitHub Pages source. Verify the Pages deployment and both routes. The release records are website publication dates in IST.
 
 - [GitHub Project tracking procedure](../.agents/skills/app-launchpad/references/github-projects.md)
 - [Issue-to-merge and release procedure](../.agents/skills/app-launchpad/references/github-release.md)
