@@ -2,6 +2,7 @@
 
 - Update the Firebase web and Admin SDKs and the Resend client within their current major versions.
 - Update the OpenTelemetry SDK and OTLP exporters together within their supported release lines.
+- Update the Functions XML parser to 5.12.1 within Firebase Admin’s existing dependency range.
 
 ## Website 0.33.1 — Host Studio interaction feedback
 
