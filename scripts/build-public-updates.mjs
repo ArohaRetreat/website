@@ -10,6 +10,7 @@ const photograph = "https://firebasestorage.googleapis.com/v0/b/aroha-retreat.fi
 
 const entities = {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"};
 const escape = value => String(value).replace(/[&<>"']/g, char => entities[char]);
+const tidyText = text => text.replace(/[^\S\n]+$/gm, "");
 const dateStyle = new Intl.DateTimeFormat("en-GB", { dateStyle: "long", timeZone: "UTC" });
 const time = date => `<time datetime="${escape(date)}">${dateStyle.format(new Date(date))}</time>`;
 const releaseId = release => `${release.environment}-${release.version.replaceAll(".", "-")}`;
@@ -231,10 +232,16 @@ const assets = [
   ["vendor/natura/fonts/SourceSans3/SourceSans3-Variable.woff2", "SourceSans3.woff2"],
   ["vendor/natura/fonts/SourceSans3/OFL.txt", "SourceSans3-OFL.txt"],
 ];
-await Promise.all(assets.map(([source, name]) =>
-  copyFile(new URL(source, root), new URL("assets/" + name, output)),
-));
-await writeFile(new URL("index.html", output), roadmap());
-await writeFile(new URL("releases/index.html", output), releaseNotes());
+await Promise.all(assets.map(async ([source, name]) => {
+  const from = new URL(source, root);
+  const to = new URL("assets/" + name, output);
+  if (name.endsWith(".txt")) {
+    await writeFile(to, tidyText(await readFile(from, "utf8")));
+  } else {
+    await copyFile(from, to);
+  }
+}));
+await writeFile(new URL("index.html", output), tidyText(roadmap()) + "\n");
+await writeFile(new URL("releases/index.html", output), tidyText(releaseNotes()) + "\n");
 await writeFile(new URL(".nojekyll", output), "");
 console.log("Built public updates in local/public-updates");
