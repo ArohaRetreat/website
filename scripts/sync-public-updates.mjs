@@ -1,5 +1,7 @@
+import { execFileSync } from "node:child_process";
 import { readFile, writeFile } from "node:fs/promises";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { github as readActions } from "./delivery/github.mjs";
 
 const repo = "ArohaRetreat/website";
 const workflow = ".github/workflows/deploy-environment.yml";
@@ -121,28 +123,23 @@ export function releaseCopy(changelog, version) {
   };
 }
 
-async function request(path, { api = true, token, allow404 = false, redirect = "follow" } = {}) {
+async function request(path, { api = true, allow404 = false } = {}) {
   const response = await fetch(api ? new URL(path, github) : path, {
     headers: {
       "Cache-Control": "no-cache",
       ...(api ? { Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2026-03-10" } : {}),
-      ...(token ? { Authorization: "Bearer " + token } : {}),
     },
-    redirect,
     signal: AbortSignal.timeout(15_000),
   });
   if (allow404 && response.status === 404) return null;
-  if (!response.ok && !(redirect === "manual" && response.status === 302)) {
-    throw Error("PUBLIC_UPDATES_HTTP_" + response.status);
-  }
+  if (!response.ok) throw Error("PUBLIC_UPDATES_HTTP_" + response.status);
   return response;
 }
 
 async function projectItems() {
   const rows = [];
   let path = `orgs/ArohaRetreat/projectsV2/1/items?per_page=100&fields=${iteration}`;
-  while (path) {
-    if (rows.length >= 2000) throw Error("PUBLIC_UPDATES_PROJECT_LIMIT");
+  for (let page = 0; path && page < 20; page++) {
     const response = await request(path);
     rows.push(...await response.json());
     const next = /<([^>]+)>; rel="next"/.exec(response.headers.get("link") ?? "")?.[1];
@@ -151,64 +148,46 @@ async function projectItems() {
     }
     path = next;
   }
+  if (path) throw Error("PUBLIC_UPDATES_PROJECT_LIMIT");
   if (!rows.some(item => item.fields?.some(field => field.id === iteration && field.value?.start_date))) {
     throw Error("PUBLIC_UPDATES_PROJECT_ITERATION_UNAVAILABLE");
   }
   return rows;
 }
 
-async function receiptFor(run, directory, token) {
-  const response = await request(`repos/${repo}/actions/runs/${run.id}/artifacts?per_page=100`, { token });
+async function receiptFor(run, token) {
+  const { artifacts } = await readActions(`/repos/${repo}/actions/runs/${run.id}/artifacts?per_page=100`, token);
   const name = `environment-delivery-${run.id}-${run.run_attempt}`;
-  const result = (await response.json()).artifacts.find(artifact => artifact.name === name && !artifact.expired);
+  const result = artifacts.find(artifact => artifact.name === name && !artifact.expired);
   if (!result) return null;
   if (!Number.isSafeInteger(result.id) || result.size_in_bytes > 200_000) {
     throw Error("PUBLIC_UPDATES_RECEIPT_LIMIT");
   }
-  const artifact = await request(`repos/${repo}/actions/artifacts/${result.id}/zip`, { token, redirect: "manual" });
-  const location = artifact.headers.get("location");
-  if (!location || !location.startsWith("https://")) throw Error("PUBLIC_UPDATES_RECEIPT_REDIRECT");
-  const zip = await request(location, { api: false });
-  const bytes = Buffer.from(await zip.arrayBuffer());
+  const bytes = await readActions(`/repos/${repo}/actions/artifacts/${result.id}/zip`, token, { binary: true });
   if (bytes.length > 200_000) throw Error("PUBLIC_UPDATES_RECEIPT_LIMIT");
-  await writeFile(directory + "/receipt.zip", bytes);
-  return readReceipt(directory);
-}
-
-async function readReceipt(directory) {
-  const { execFileSync } = await import("node:child_process");
   try {
-    return JSON.parse(execFileSync("python3", ["-c", `
-from zipfile import ZipFile
-import re, stat, sys
-with ZipFile(sys.argv[1]) as archive:
-    matches = [entry for entry in archive.infolist() if re.fullmatch(r"frontend-[0-9a-f-]+\\.json", entry.filename)]
-    if len(matches) != 1:
-        raise ValueError("INVALID_RECEIPT_ARCHIVE")
-    entry = matches[0]
-    if entry.file_size > 300_000 or stat.S_ISLNK(entry.external_attr >> 16):
-        raise ValueError("INVALID_RECEIPT_ENTRY")
-    sys.stdout.buffer.write(archive.read(entry))
-`, directory + "/receipt.zip"], { encoding: "utf8", maxBuffer: 400_000, stdio: ["ignore", "pipe", "pipe"] }));
+    return JSON.parse(execFileSync("python3", [fileURLToPath(new URL("delivery/read-hosting-receipt.py", import.meta.url))], {
+      input: bytes, encoding: "utf8", maxBuffer: 400_000, stdio: ["pipe", "pipe", "pipe"],
+    }));
   } catch {
     throw Error("PUBLIC_UPDATES_RECEIPT_INVALID");
   }
 }
 
-async function publishableReleases(known, token, directory) {
+async function publishableReleases(known, token) {
   const visited = new Set(known.map(release => release.evidence));
   const fresh = [];
   const cutoff = new Date(Date.now() - 14 * 86_400_000).toISOString();
   // Earlier releases are carried by the curated index. Reconcile recent runs from the start of this sync.
   const trackingStart = "2026-11-13T18:30:00.000Z";
   for (const branch of Object.keys(targets)) {
-    const url = `repos/${repo}/actions/workflows/deploy-environment.yml/runs?branch=${branch}&status=completed&per_page=100&created=${encodeURIComponent(">=" + [cutoff, trackingStart].sort().at(-1))}`;
-    const response = await request(url, { token });
-    const { total_count, workflow_runs: runs } = await response.json();
+    const since = cutoff > trackingStart ? cutoff : trackingStart;
+    const path = `/repos/${repo}/actions/workflows/deploy-environment.yml/runs?branch=${branch}&status=completed&per_page=100&created=${encodeURIComponent(">=" + since)}`;
+    const { total_count, workflow_runs: runs } = await readActions(path, token);
     if (total_count > runs.length) throw Error("PUBLIC_UPDATES_DEPLOYMENT_LIMIT");
     for (const run of runs.filter(run => trustedRun(run, branch))) {
       if (visited.has(`https://github.com/${repo}/actions/runs/${run.id}`)) continue;
-      const receipt = await receiptFor(run, directory, token);
+      const receipt = await receiptFor(run, token);
       if (!receipt) continue;
       const release = verifiedRelease(run, receipt);
       if (!release || known.some(saved => key(saved) === key(release))) continue;
@@ -221,23 +200,16 @@ async function publishableReleases(known, token, directory) {
 
 async function main([output]) {
   if (!output || !process.env.GH_TOKEN) throw Error("PUBLIC_UPDATES_OUTPUT_AND_TOKEN_REQUIRED");
-  const { mkdtemp, rm } = await import("node:fs/promises");
-  const { tmpdir } = await import("node:os");
-  const temp = await mkdtemp(tmpdir() + "/aroha-public-updates-");
-  try {
-    const curated = JSON.parse(await readFile(new URL("../docs/public/updates.json", import.meta.url), "utf8"));
-    const history = await request("https://aroharetreat.github.io/website/release-history.json", { api: false, allow404: true });
-    const published = history ? (await history.json()) : [];
-    if (!Array.isArray(published) || published.length > 500) throw Error("PUBLIC_UPDATES_HISTORY_INVALID");
-    const known = mergeReleaseIndex(curated.releases, published, []);
-    const [items, fresh] = await Promise.all([projectItems(), publishableReleases(known, process.env.GH_TOKEN, temp)]);
-    const reviews = syncReviewWindows(curated.reviews, items);
-    const releases = mergeReleaseIndex(curated.releases, published, fresh);
-    await writeFile(output, JSON.stringify({ ...curated, reviews, releases }, null, 2) + "\n");
-    console.log(JSON.stringify({ reviews: reviews.length, releases: releases.length, newlyVerified: fresh.length }));
-  } finally {
-    await rm(temp, { recursive: true, force: true });
-  }
+  const curated = JSON.parse(await readFile(new URL("../docs/public/updates.json", import.meta.url), "utf8"));
+  const history = await request("https://aroharetreat.github.io/website/release-history.json", { api: false, allow404: true });
+  const published = history ? (await history.json()) : [];
+  if (!Array.isArray(published) || published.length > 500) throw Error("PUBLIC_UPDATES_HISTORY_INVALID");
+  const known = mergeReleaseIndex(curated.releases, published, []);
+  const [items, fresh] = await Promise.all([projectItems(), publishableReleases(known, process.env.GH_TOKEN)]);
+  const reviews = syncReviewWindows(curated.reviews, items);
+  const releases = mergeReleaseIndex(curated.releases, published, fresh);
+  await writeFile(output, JSON.stringify({ ...curated, reviews, releases }, null, 2) + "\n");
+  console.log(JSON.stringify({ reviews: reviews.length, releases: releases.length, newlyVerified: fresh.length }));
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

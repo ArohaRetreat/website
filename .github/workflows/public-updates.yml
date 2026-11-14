@@ -14,6 +14,7 @@ on:
       - .github/workflows/public-updates.yml
       - docs/public/updates.json
       - scripts/build-public-updates.mjs
+      - scripts/delivery/read-hosting-receipt.py
       - scripts/sync-public-updates.mjs
       - site/**
 
