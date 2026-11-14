@@ -2,6 +2,17 @@ name: Deploy environment frontend
 on:
   push:
     branches: [main, preprod]
+    # CI and documentation changes can land without publishing a new application revision.
+    paths-ignore:
+      - '.agents/**'
+      - '.github/pull_request_template.md'
+      - '.github/workflows/deploy-environment.yml'
+      - '.github/workflows/foundation.yml'
+      - docs/**
+      - scripts/check.sh
+      - scripts/check_docs_impact.py
+      - tests/test_docs_impact.py
+      - tests/test_contracts.py
   workflow_dispatch:
 permissions:
   contents: read

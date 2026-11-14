@@ -81,11 +81,11 @@ class ContractTests(unittest.TestCase):
         env={**os.environ,'PATH':str(bin_dir)+os.pathsep+os.environ['PATH'],'CHECK_CALLS':str(calls),'AROHA_TEST_REPORTS':'0'}
         good=subprocess.run(['sh',str(ROOT/'scripts/check.sh')],env=env,capture_output=True)
         self.assertEqual(good.returncode,0)
-        self.assertEqual(calls.read_text().splitlines(),['scripts/check_foundation.py','scripts/check_links.py','-m unittest discover -s tests -v'])
+        self.assertEqual(calls.read_text().splitlines(),['scripts/check_foundation.py','scripts/check_links.py','scripts/check_docs_impact.py','-m unittest discover -s tests -v'])
         calls.write_text('');env['AROHA_TEST_REPORTS']='1'
         reported=subprocess.run(['sh',str(ROOT/'scripts/check.sh')],env=env,capture_output=True)
         self.assertEqual(reported.returncode,0)
-        self.assertEqual(calls.read_text().splitlines(),['scripts/check_foundation.py','scripts/check_links.py','scripts/delivery/run-foundation-tests.py'])
+        self.assertEqual(calls.read_text().splitlines(),['scripts/check_foundation.py','scripts/check_links.py','scripts/check_docs_impact.py','scripts/delivery/run-foundation-tests.py'])
         calls.write_text('');env['CHECK_LINK_EXIT']='3'
         bad=subprocess.run(['sh',str(ROOT/'scripts/check.sh')],env=env,capture_output=True)
         self.assertEqual(bad.returncode,3)
