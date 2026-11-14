@@ -14,9 +14,25 @@ on:
       - .github/workflows/public-updates.yml
       - docs/public/updates.json
       - scripts/build-public-updates.mjs
+      - scripts/delivery/contract.mjs
+      - scripts/delivery/github.mjs
       - scripts/delivery/read-hosting-receipt.py
       - scripts/sync-public-updates.mjs
       - site/**
+      - vendor/natura/brand/**
+      - vendor/natura/fonts/SourceSans3/**
+      - website/assets/fonts/GoogleSans-Latin.woff2
+      - website/assets/fonts/GoogleSans-OFL.txt
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/public-updates.yml
+      - docs/public/updates.json
+      - scripts/build-public-updates.mjs
+      - scripts/delivery/read-hosting-receipt.py
+      - scripts/sync-public-updates.mjs
+      - site/**
+      - tests/public-updates.test.mjs
 
 permissions: {}
 concurrency:
@@ -25,7 +41,7 @@ concurrency:
 
 jobs:
   build:
-    if: github.repository == 'ArohaRetreat/website' && github.ref == 'refs/heads/main'
+    if: github.repository == 'ArohaRetreat/website' && (github.ref == 'refs/heads/main' || github.event_name == 'pull_request')
     runs-on: ubuntu-latest
     timeout-minutes: 6
     permissions:
@@ -40,13 +56,20 @@ jobs:
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: '22'
+      - name: Test and build with curated content
+        if: github.event_name == 'pull_request'
+        run: |
+          node --test tests/public-updates.test.mjs
+          node scripts/build-public-updates.mjs
       - name: Read and render verified public updates
+        if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           node scripts/sync-public-updates.mjs "$RUNNER_TEMP/public-updates.json"
           node scripts/build-public-updates.mjs "$RUNNER_TEMP/public-updates.json"
       - name: Compare with published content
+        if: github.event_name != 'pull_request'
         id: compare
         shell: bash
         run: |
@@ -71,7 +94,7 @@ jobs:
           path: local/public-updates
 
   publish:
-    if: needs.build.outputs.changed == 'true'
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && needs.build.outputs.changed == 'true'
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 6
@@ -84,3 +107,14 @@ jobs:
     steps:
       - uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
         id: deploy
+      - name: Verify published routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          origin=https://aroharetreat.github.io/website
+          curl --fail --silent --show-error --retry 3 --retry-delay 3 --max-time 15 "$origin/" -o "$RUNNER_TEMP/roadmap"
+          curl --fail --silent --show-error --retry 3 --retry-delay 3 --max-time 15 "$origin/releases/" -o "$RUNNER_TEMP/releases"
+          curl --fail --silent --show-error --retry 3 --retry-delay 3 --max-time 15 "$origin/release-history.json" -o "$RUNNER_TEMP/history"
+          grep -Fq '<h1 id="roadmap-title">Roadmap</h1>' "$RUNNER_TEMP/roadmap"
+          grep -Fq '<h1 id="release-title">Release notes</h1>' "$RUNNER_TEMP/releases"
+          jq -e 'type == "array" and length > 0' "$RUNNER_TEMP/history" > /dev/null
