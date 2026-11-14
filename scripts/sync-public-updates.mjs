@@ -2,6 +2,12 @@ import { execFileSync } from "node:child_process";
 import { readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { github as readActions } from "./delivery/github.mjs";
+import {
+  commitPattern, istDate, mergeReleaseIndex, releaseCopy, releaseKey, validDate, versionPattern,
+} from "./public-release-index.mjs";
+import { externalReleases } from "./public-release-sources.mjs";
+
+export { mergeReleaseIndex, releaseCopy };
 
 const repo = "ArohaRetreat/website";
 const workflow = ".github/workflows/deploy-environment.yml";
@@ -11,18 +17,6 @@ const targets = {
   main: { environment: "production", profile: "production", site: "aroha-retreat" },
   preprod: { environment: "preprod", profile: "pre-prod", site: "aroha-retreat-preprod" },
 };
-const semver = /^\d+\.\d+\.\d+$/;
-const revision = /^[a-f0-9]{40}$/;
-const recordLink = /^https:\/\/github\.com\/ArohaRetreat\/website\/(?:actions\/runs\/\d+|blob\/[a-f0-9]{40}\/release-evidence\/[A-Za-z0-9._/-]+\.md)$/;
-const dateFormat = new Intl.DateTimeFormat("en-CA", {
-  year: "numeric", month: "2-digit", day: "2-digit", timeZone: "Asia/Kolkata",
-});
-
-function validDate(value) {
-  const date = new Date(value + "T00:00:00Z");
-  return /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(+date) && date.toISOString().slice(0, 10) === value;
-}
-
 export function syncReviewWindows(reviews, items) {
   const byIssue = new Map();
   for (const item of items) {
@@ -51,7 +45,7 @@ function trustedRun(run, branch) {
   return run.repository?.full_name === repo && run.head_repository?.full_name === repo &&
     run.head_branch === branch && run.path === workflow && run.status === "completed" &&
     ["push", "workflow_dispatch"].includes(run.event) &&
-    revision.test(run.head_sha) && Number.isSafeInteger(run.id) && Number.isSafeInteger(run.run_attempt);
+    commitPattern.test(run.head_sha) && Number.isSafeInteger(run.id) && Number.isSafeInteger(run.run_attempt);
 }
 
 export function verifiedRelease(run, receipt) {
@@ -62,7 +56,7 @@ export function verifiedRelease(run, receipt) {
     receipt.schemaVersion !== 1 || receipt.status !== "deployed" ||
     receipt.verification?.status !== "verified" || website?.emulators !== false ||
     website.revision !== run.head_sha || website.environment !== target.profile ||
-    !semver.test(website.version) || publication?.type !== "DEPLOY" ||
+    !versionPattern.test(website.version) || publication?.type !== "DEPLOY" ||
     !new RegExp(`^projects/aroha-retreat/sites/${target.site}/versions/[a-f0-9]+$`).test(publication.version)) {
     return null;
   }
@@ -71,55 +65,11 @@ export function verifiedRelease(run, receipt) {
   const finish = Date.parse(run.updated_at);
   if (![+releaseTime, start, finish].every(Number.isFinite) ||
     +releaseTime < start - 60_000 || +releaseTime > finish + 60_000) return null;
-  const date = Object.fromEntries(dateFormat.formatToParts(releaseTime).map(({ type, value }) => [type, value]));
   return {
     environment: target.environment,
     version: website.version,
-    date: `${date.year}-${date.month}-${date.day}`,
+    date: istDate(releaseTime),
     evidence: `https://github.com/${repo}/actions/runs/${run.id}`,
-  };
-}
-
-const key = release => `${release.environment}/${release.version}`;
-
-function safeRelease(release) {
-  if (!release || !Object.values(targets).some(value => value.environment === release.environment) ||
-    !semver.test(release.version) || !validDate(release.date) ||
-    (release.api !== undefined && !semver.test(release.api)) ||
-    !recordLink.test(release.evidence) ||
-    typeof release.title !== "string" || !release.title.trim() || release.title.length > 140 ||
-    typeof release.summary !== "string" || !release.summary.trim() || release.summary.length > 500) {
-    throw Error("PUBLIC_UPDATES_RELEASE_INVALID");
-  }
-  const { environment, version, date, title, summary, api, evidence } = release;
-  return { environment, version, date, title, summary, ...(api ? { api } : {}), evidence };
-}
-
-export function mergeReleaseIndex(curated, previous, fresh) {
-  const entries = new Map(previous.map(safeRelease).map(release => [key(release), release]));
-  for (const release of fresh.map(safeRelease)) {
-    const saved = entries.get(key(release));
-    if (!saved || release.date < saved.date) entries.set(key(release), release);
-  }
-  for (const release of curated.map(safeRelease)) entries.set(key(release), release);
-  return [...entries.values()].sort((a, b) => a.environment.localeCompare(b.environment) ||
-    b.date.localeCompare(a.date) || b.version.localeCompare(a.version, "en", { numeric: true }));
-}
-
-export function releaseCopy(changelog, version) {
-  const section = changelog.split(/^## /m).find(section =>
-    new RegExp(`^(?:Website )?${version.replaceAll(".", "\\.")}(?:\\s|$)`).test(section),
-  );
-  const heading = section?.split("\n")[0];
-  const sentence = section?.split("\n").slice(1).map(line => line.trim())
-    .find(line => /^[\p{L}\p{N}]|^[-*] /u.test(line));
-  const clean = value => value?.replace(/^[-*] /, "")
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/[`*]/g, "").trim();
-  const title = clean(heading?.split(" — ")[1]);
-  const summary = clean(sentence);
-  return {
-    title: title && title.length <= 140 ? title : `Website ${version}`,
-    summary: summary && summary.length <= 500 ? summary : "This website version is deployed and verified.",
   };
 }
 
@@ -189,7 +139,7 @@ async function publishableReleases(known, token) {
       const receipt = await receiptFor(run, token);
       if (!receipt) continue;
       const release = verifiedRelease(run, receipt);
-      if (!release || known.some(saved => key(saved) === key(release))) continue;
+      if (!release || known.some(saved => releaseKey(saved) === releaseKey(release))) continue;
       const changelog = await request(`https://raw.githubusercontent.com/${repo}/${run.head_sha}/CHANGELOG.md`, { api: false });
       fresh.push({ ...release, ...releaseCopy(await changelog.text(), release.version) });
     }
@@ -204,7 +154,13 @@ async function main([output]) {
   const published = await history.json();
   if (!Array.isArray(published) || published.length > 500) throw Error("PUBLIC_UPDATES_HISTORY_INVALID");
   const known = mergeReleaseIndex(curated.releases, published, []);
-  const [items, fresh] = await Promise.all([projectItems(), publishableReleases(known, process.env.GH_TOKEN)]);
+  const [items, website, external] = await Promise.all([
+    projectItems(), publishableReleases(known, process.env.GH_TOKEN), externalReleases(known),
+  ]);
+  const fresh = [...website, ...external.releases];
+  for (const source of external.unavailable) {
+    console.warn(`::warning::Public release source unavailable (${source}). Existing entries were retained.`);
+  }
   const reviews = syncReviewWindows(curated.reviews, items);
   const releases = mergeReleaseIndex(curated.releases, published, fresh);
   await writeFile(output, JSON.stringify({ ...curated, reviews, releases }, null, 2) + "\n");

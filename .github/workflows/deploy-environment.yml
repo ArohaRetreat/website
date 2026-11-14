@@ -15,6 +15,8 @@ on:
       - site/**
       - scripts/build-public-updates.mjs
       - scripts/delivery/read-hosting-receipt.py
+      - scripts/public-release-index.mjs
+      - scripts/public-release-sources.mjs
       - scripts/sync-public-updates.mjs
       - tests/public-updates.test.mjs
   workflow_dispatch:
