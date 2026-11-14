@@ -6,6 +6,10 @@ import { mergeReleaseIndex, newestFirst, releaseAnchor, releaseChannel } from ".
 const root = new URL("../", import.meta.url);
 const [dataFile, outputDirectory] = process.argv.slice(2);
 const output = outputDirectory ? pathToFileURL(resolve(outputDirectory) + sep) : new URL("local/public-updates/", root);
+const handbookRevision = process.env.AROHA_HANDBOOK_REVISION;
+if (handbookRevision && !/^[a-f0-9]{40}$/.test(handbookRevision)) {
+  throw new Error("Invalid handbook source revision.");
+}
 const updates = JSON.parse(await readFile(dataFile || new URL("docs/public/updates.json", root), "utf8"));
 const repository = "https://github.com/ArohaRetreat/website";
 const project = "https://github.com/orgs/ArohaRetreat/projects/1";
@@ -46,12 +50,27 @@ const symbols = {
 };
 const symbol = name => `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${symbols[name]}</svg>`;
 const issue = (label, number) => `<a href="${repository}/issues/${Number(number)}">${escape(label)} ${symbol("external")}</a>`;
+const guides = [
+  { id: "product", title: "Product handbook", path: "handbook/", description: "Plan a visit, manage your stay or use Host Studio.", icon: "calendar" },
+  { id: "technical", title: "Technical guide", path: "handbook/technical/", description: "Understand the website, Firebase, Resend, REST API and MCP.", icon: "tools" },
+  { id: "settings", title: "Settings reference", path: "handbook/settings/", description: "Find guest, host and integration settings and see who can change them.", icon: "check" },
+  { id: "sdlc", title: "SDLC guide", path: "sdlc/", description: "Follow a feature or bug from intake through live verification.", icon: "compass" },
+  { id: "pipeline", title: "CI/CD pipeline", path: "handbook/pipeline/", description: "See what runs in CI, what deploys and what Dynatrace observes.", icon: "tag" },
+];
 
-function page({ title, description, current, prefix, content }) {
+function handbookNav(current, prefix) {
+  const links = guides.map(({ id, title, path }) =>
+    `<a href="${prefix + path}"${id === current ? ' aria-current="page"' : ""}>${title}</a>`,
+  ).join("");
+  return `<nav class="handbook-nav" aria-label="Handbook guides">${links}</nav>`;
+}
+
+function page({ title, description, current, prefix, content, guide = false }) {
   const nav = [
     ["roadmap", "Roadmap", prefix],
     ["releases", "Release notes", prefix + "releases/"],
     ["sdlc", "SDLC", prefix + "sdlc/"],
+    ["handbook", "Handbook", prefix + "handbook/"],
   ].map(([id, label, href]) => `<a href="${href}"${id === current ? ' aria-current="page"' : ""}>${label}</a>`).join("");
 
   return `<!doctype html>
@@ -61,6 +80,7 @@ function page({ title, description, current, prefix, content }) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f7f8f0">
   <meta name="description" content="${escape(description)}">
+  ${guide && handbookRevision ? `<meta name="source-revision" content="${handbookRevision}">` : ""}
   <title>${escape(title)} · Aroha Retreat</title>
   <link rel="icon" href="${prefix}assets/icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="${prefix}assets/updates.css">
@@ -76,6 +96,7 @@ function page({ title, description, current, prefix, content }) {
     </div>
   </header>
   <main id="main" class="shell" tabindex="-1">
+    ${guide ? handbookNav(guide, prefix) : ""}
     ${content}
   </main>
   <footer class="page-footer">
@@ -108,6 +129,19 @@ function reviewCard(review) {
       <div class="card-links">${review.links.map(([label, number]) => issue(label, number)).join("")}</div>
     </article>
   </li>`;
+}
+
+function handbookDirectory(prefix) {
+  return `<section class="delivery-section" aria-labelledby="guides-title">
+    <h2 id="guides-title">Explore the handbook</h2>
+    <div class="guide-directory">
+      ${guides.filter(guide => guide.id !== "product").map(guide => `<a class="guide-card" href="${prefix + guide.path}">
+        <span class="latest-icon">${symbol(guide.icon)}</span>
+        <span><strong>${guide.title}</strong><span>${guide.description}</span></span>
+        ${symbol("arrow")}
+      </a>`).join("")}
+    </div>
+  </section>`;
 }
 
 function roadmap() {
@@ -261,9 +295,25 @@ const deliveryPage = page({
   description: "How Aroha Retreat plans, tests, releases and observes changes to its website and developer tools.",
   current: "sdlc",
   prefix: "../",
+  guide: "sdlc",
   content: await readFile(new URL("site/sdlc.html", root), "utf8"),
 });
 await writeFile(new URL("sdlc/index.html", output), tidyText(deliveryPage) + "\n");
+for (const guide of guides.filter(guide => guide.id !== "sdlc")) {
+  const prefix = guide.id === "product" ? "../" : "../../";
+  const content = await readFile(new URL(`site/handbook/${guide.id}.html`, root), "utf8");
+  const html = page({
+    title: guide.title,
+    description: guide.description,
+    current: "handbook",
+    guide: guide.id,
+    prefix,
+    content: content + (guide.id === "product" ? handbookDirectory(prefix) : ""),
+  });
+  const destination = new URL(guide.path, output);
+  await mkdir(destination, { recursive: true });
+  await writeFile(new URL("index.html", destination), tidyText(html) + "\n");
+}
 await writeFile(new URL("release-history.json", output), JSON.stringify(releases, null, 2) + "\n");
 await writeFile(new URL(".nojekyll", output), "");
 console.log("Built public updates in local/public-updates");

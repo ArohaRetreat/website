@@ -1,6 +1,6 @@
 # Foundation checks
 
-Python 3.11+ and a POSIX shell; standard library only:
+Python 3.11+, Node.js 22+ and a POSIX shell:
 
 ```sh
 sh scripts/check.sh
@@ -9,6 +9,8 @@ python3 scripts/check_foundation.py --ready --json
 ```
 
 The shared entrypoint runs metadata/version/skill validation, local Markdown links and unit tests. README, catalog and CI use that same entrypoint. JSON output has `ok`, deterministic `errors`, and `ready` (whether discovery checks were requested); failures exit nonzero in either mode.
+
+Foundation CI checks for a visible documentation decision on PRs and builds the public Pages artifact without installing npm dependencies. The build checks the seven route headings, relative asset links and section anchors. Run `python3 scripts/check_public_pages.py` to check the handbook locally.
 
 The [schemas](../schemas/README.md) own field shapes. The Python gate adds internal-path/reference/dependency checks and ready/active semantics. Tests cover multi-error diagnostics, malformed structures, schema/constant parity, SemVer, service generation and rollback, link failures, CI command agreement and ruleset dry-run behavior.
 

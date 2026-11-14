@@ -1,0 +1,39 @@
+<section class="guide-intro" aria-labelledby="technical-title">
+  <h1 id="technical-title">Technical guide</h1>
+  <p>See where the website, booking rules, identity, emails and developer tools run.</p>
+  <a class="button light-button" href="https://developer.aroharetreat.com/">Open developer docs <span aria-hidden="true">↗</span></a>
+</section>
+
+<section class="delivery-section" aria-labelledby="services-title">
+  <h2 id="services-title">Application services</h2>
+  <dl class="check-grid guide-grid">
+    <div><dt>Firebase Hosting</dt><dd>Serves the website and Host Studio. Developer documentation has its own Hosting site. The public handbook runs on GitHub Pages.</dd></div>
+    <div><dt>Firebase Authentication</dt><dd>Handles Google sign-in. The booking API checks membership and the allowed action for each authenticated request.</dd></div>
+    <div><dt>Cloud Functions</dt><dd>Runs the versioned API and background workers. Website, Studio, and scoped external requests use the same booking and payment rules.</dd></div>
+    <div><dt>Cloud Firestore</dt><dd>Stores reservations, pricing policy, payments, credits, notification jobs and audit records.</dd></div>
+    <div><dt>Cloud Storage for Firebase</dt><dd>Serves optimized public media. Private guest attachments require authorized access.</dd></div>
+    <div><dt>Resend</dt><dd>Accepts queued messages and reports delivery outcomes through signed webhooks. Studio shows the recorded status.</dd></div>
+  </dl>
+  <div class="card-links delivery-links"><a href="../../sdlc/#architecture">Booking and email flow</a></div>
+</section>
+
+<section class="delivery-section" aria-labelledby="integrations-title">
+  <h2 id="integrations-title">REST and MCP</h2>
+  <p class="delivery-note">Use the versioned OpenAPI contract for external clients. The local MCP server exposes typed tools over that API. Issue only the scopes the integration needs. Writes follow the same authorization, validation and concurrency rules as Studio.</p>
+  <div class="card-links delivery-links">
+    <a href="https://developer.aroharetreat.com/swagger/">Swagger UI <span aria-hidden="true">↗</span></a>
+    <a href="https://developer.aroharetreat.com/mcp/">MCP setup <span aria-hidden="true">↗</span></a>
+    <a href="https://www.npmjs.com/package/@theharithsa/aroha-mcp">npm package <span aria-hidden="true">↗</span></a>
+  </div>
+</section>
+
+<section class="delivery-section" aria-labelledby="source-title">
+  <h2 id="source-title">Source repositories</h2>
+  <p class="delivery-note">The website owns the booking rules and REST contract. Natura supplies the design assets pinned in website builds. MCP and developer docs have their own source and release checks.</p>
+  <div class="card-links delivery-links">
+    <a href="https://github.com/ArohaRetreat/website">Website and API <span aria-hidden="true">↗</span></a>
+    <a href="https://github.com/ArohaRetreat/natura">Natura <span aria-hidden="true">↗</span></a>
+    <a href="https://github.com/ArohaRetreat/mcp">MCP <span aria-hidden="true">↗</span></a>
+    <a href="https://github.com/ArohaRetreat/developer">Developer docs <span aria-hidden="true">↗</span></a>
+  </div>
+</section>
