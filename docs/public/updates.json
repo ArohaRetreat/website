@@ -1,10 +1,9 @@
 {
-  "reviewSnapshot": "2026-11-13",
   "reviews": [
     {
+      "scheduleIssue": 93,
       "start": "2026-11-16",
       "end": "2026-11-29",
-      "window": "16–29 November 2026",
       "icon": "tools",
       "title": "Prepare for staff review",
       "audience": "Hosts",
@@ -12,9 +11,9 @@
       "links": [["Website changes", 93], ["API test isolation", 126], ["Firebase usage", 130]]
     },
     {
+      "scheduleIssue": 101,
       "start": "2026-11-30",
       "end": "2026-12-13",
-      "window": "30 November–13 December 2026",
       "icon": "calendar",
       "title": "Verify the full booking journey",
       "audience": "Hosts and guests",
@@ -22,9 +21,9 @@
       "links": [["Booking acceptance", 101], ["Host Studio", 111], ["Booking lifecycle", 70]]
     },
     {
+      "scheduleIssue": 2,
       "start": "2026-12-14",
       "end": "2026-12-27",
-      "window": "14–27 December 2026",
       "icon": "compass",
       "title": "Review the website and Living Map",
       "audience": "Hosts and guests",

@@ -14,7 +14,13 @@ Apply the [Firebase FinOps skill](../.agents/skills/firebase-finops/SKILL.md) wh
 
 The [public roadmap](https://aroharetreat.github.io/website/) summarizes outcomes, audiences and target windows from the Project. The [release notes](https://aroharetreat.github.io/website/releases/) record verified availability from Hosting receipts and the app changelog. Use the [product launch procedure](../.agents/skills/app-launchpad/references/product-launch.md) from [App Launchpad 1.13.2](https://github.com/theharithsa/app-launchpad-template/releases/tag/v1.13.2).
 
-Update [the public content](public/updates.json) when a target window or release changes. Run `node scripts/build-public-updates.mjs` and review the artifacts in `local/public-updates/`. Publish that directory at the root of the `gh-pages` branch, the repository's GitHub Pages source. Verify the Pages deployment and both routes. The release records are website publication dates in IST.
+The [Pages workflow](https://github.com/ArohaRetreat/website/actions/workflows/public-updates.yml) checks the public Project for sprint changes hourly and refreshes after the Hosting workflow completes. It publishes only when the rendered site changes. Use **Run workflow** on `main` to refresh on demand.
+
+In [the public content](public/updates.json), `scheduleIssue` identifies the issue whose native sprint sets each review window. The companion issues provide context. Adjust sprint dates and assignments in the Project. Edit this file for public wording, new review cards, and curated historical release notes.
+
+The sync adds a version after the official Hosting run supplies a matching Firebase publication receipt and confirms live verification. It reads the public changelog at the deployed commit for the note and stores publication dates in IST. Recent runs are reconciled within the 14-day receipt retention window, and the published history keeps older entries. The same version may appear once per environment.
+
+Run `node scripts/build-public-updates.mjs` to preview curated content in `local/public-updates/`. With a GitHub token that has Actions read access, run `node scripts/sync-public-updates.mjs /tmp/aroha-updates.json` and build with that JSON as the first argument to preview the current sources. Verify the deployment and both public routes. Pages-only pushes skip Firebase Hosting.
 
 - [GitHub Project tracking procedure](../.agents/skills/app-launchpad/references/github-projects.md)
 - [Issue-to-merge and release procedure](../.agents/skills/app-launchpad/references/github-release.md)

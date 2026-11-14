@@ -1,8 +1,11 @@
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { resolve, sep } from "node:path";
+import { pathToFileURL } from "node:url";
 
 const root = new URL("../", import.meta.url);
-const output = new URL("local/public-updates/", root);
-const updates = JSON.parse(await readFile(new URL("docs/public/updates.json", root), "utf8"));
+const [dataFile, outputDirectory] = process.argv.slice(2);
+const output = outputDirectory ? pathToFileURL(resolve(outputDirectory) + sep) : new URL("local/public-updates/", root);
+const updates = JSON.parse(await readFile(dataFile || new URL("docs/public/updates.json", root), "utf8"));
 const repository = "https://github.com/ArohaRetreat/website";
 const project = "https://github.com/orgs/ArohaRetreat/projects/1";
 const retreat = "https://aroharetreat.com";
@@ -79,7 +82,7 @@ function page({ title, description, current, prefix, content }) {
   </main>
   <footer class="page-footer">
     <div class="shell footer-row">
-      <span>© ${escape(updates.reviewSnapshot.slice(0, 4))} Aroha Retreat</span>
+      <span>© ${new Date().getUTCFullYear()} Aroha Retreat</span>
       <nav aria-label="More from Aroha">
         <a href="${retreat}/book/">Book a stay</a>
         <a href="${retreat}/map/">Living Map</a>
@@ -92,11 +95,14 @@ function page({ title, description, current, prefix, content }) {
 }
 
 function reviewCard(review) {
+  const window = review.start
+    ? dateStyle.formatRange(new Date(review.start), new Date(review.end))
+    : "Scheduling pending";
   return `<li class="review">
     <span class="review-icon">${symbol(review.icon)}</span>
     <article class="review-card">
       <div class="review-meta">
-        <span class="window" aria-label="From ${dateStyle.format(new Date(review.start))} to ${dateStyle.format(new Date(review.end))}">${escape(review.window)}</span>
+        <span class="window">${escape(window)}</span>
         <span class="status audience">${escape(review.audience)}</span>
       </div>
       <h3>${escape(review.title)}</h3>
@@ -129,7 +135,7 @@ function roadmap() {
         <section aria-labelledby="review-title">
           <div class="section-heading">
             <h2 id="review-title">Scheduled reviews</h2>
-            <p>Target windows for testing and review. Schedule checked ${time(updates.reviewSnapshot)}.</p>
+            <p>Target windows for testing and review from the GitHub Project.</p>
           </div>
           <ol class="review-list">${updates.reviews.map(reviewCard).join("")}</ol>
           <a class="text-action" href="${project}/views/4">View the GitHub roadmap ${symbol("external")}</a>
@@ -243,5 +249,6 @@ await Promise.all(assets.map(async ([source, name]) => {
 }));
 await writeFile(new URL("index.html", output), tidyText(roadmap()) + "\n");
 await writeFile(new URL("releases/index.html", output), tidyText(releaseNotes()) + "\n");
+await writeFile(new URL("release-history.json", output), JSON.stringify(updates.releases, null, 2) + "\n");
 await writeFile(new URL(".nojekyll", output), "");
 console.log("Built public updates in local/public-updates");
