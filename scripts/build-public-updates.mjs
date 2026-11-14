@@ -1,6 +1,7 @@
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
+import { mergeReleaseIndex, newestFirst, releaseAnchor, releaseChannel } from "./public-release-index.mjs";
 
 const root = new URL("../", import.meta.url);
 const [dataFile, outputDirectory] = process.argv.slice(2);
@@ -16,25 +17,20 @@ const escape = value => String(value).replace(/[&<>"']/g, char => entities[char]
 const tidyText = text => text.replace(/[^\S\n]+$/gm, "");
 const dateStyle = new Intl.DateTimeFormat("en-GB", { dateStyle: "long", timeZone: "UTC" });
 const time = date => `<time datetime="${escape(date)}">${dateStyle.format(new Date(date))}</time>`;
-const releaseId = release => `${release.environment}-${release.version.replaceAll(".", "-")}`;
-const environments = [
-  { id: "production", title: "Production", description: "Updates available on aroharetreat.com", icon: "check" },
-  { id: "preprod", title: "Pre-production", description: "Updates available on the test site", icon: "flask" },
+const channels = [
+  { id: "production", title: "Production", description: "Website and Host Studio releases on aroharetreat.com.", icon: "check", product: "Website" },
+  { id: "preprod", title: "Pre-production", description: "Website and Host Studio builds available for testing.", icon: "flask", product: "Website" },
+  { id: "npm", title: "MCP", description: "Stable versions of @theharithsa/aroha-mcp on npm.", icon: "tools", product: "MCP" },
+  { id: "developer", title: "Developer docs", description: "Verified builds of developer.aroharetreat.com.", icon: "docs", product: "" },
 ];
-const releasesByEnvironment = new Map(environments.map(environment => [
-  environment.id,
-  updates.releases.filter(release => release.environment === environment.id)
-    .sort((a, b) => b.date.localeCompare(a.date) || b.version.localeCompare(a.version, "en", { numeric: true })),
-]));
-const releaseIds = updates.releases.map(releaseId);
-if (new Set(releaseIds).size !== releaseIds.length ||
-  environments.some(environment => !releasesByEnvironment.get(environment.id).length) ||
-  updates.releases.some(release =>
-    !releasesByEnvironment.has(release.environment) ||
-    !/^\d+\.\d+\.\d+$/.test(release.version) ||
-    !release.evidence.startsWith(repository + "/")
-  )
-) throw new Error("Invalid public release index.");
+const releases = mergeReleaseIndex(updates.releases, [], []);
+if (releases.length !== updates.releases.length) throw new Error("Duplicate public release entry.");
+const groups = channels.map(channel => ({
+  ...channel,
+  releases: releases.filter(release => releaseChannel(release) === channel.id).sort(newestFirst),
+})).filter(channel => channel.releases.length);
+const production = groups.find(group => group.id === "production")?.releases[0];
+if (!production) throw new Error("Missing production website releases.");
 
 const symbols = {
   arrow: '<path d="M5 12h14m-6-6 6 6-6 6"/>',
@@ -46,6 +42,7 @@ const symbols = {
   check: '<path d="m5 12 4 4L19 6"/>',
   flask: '<path d="M9 3h6m-5 0v6l-5 8a2.5 2.5 0 0 0 2 4h10a2.5 2.5 0 0 0 2-4l-5-8V3M8 14h8"/>',
   tag: '<path d="M20 13l-7 7a2 2 0 0 1-2.8 0L4 13.8V4h9.8l6.2 6.2a2 2 0 0 1 0 2.8ZM8 8h.01"/>',
+  docs: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6m-6 4h6m-6 4h4"/>',
 };
 const symbol = name => `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${symbols[name]}</svg>`;
 const issue = (label, number) => `<a href="${repository}/issues/${Number(number)}">${escape(label)} ${symbol("external")}</a>`;
@@ -54,6 +51,7 @@ function page({ title, description, current, prefix, content }) {
   const nav = [
     ["roadmap", "Roadmap", prefix],
     ["releases", "Release notes", prefix + "releases/"],
+    ["sdlc", "SDLC", prefix + "sdlc/"],
   ].map(([id, label, href]) => `<a href="${href}"${id === current ? ' aria-current="page"' : ""}>${label}</a>`).join("");
 
   return `<!doctype html>
@@ -114,7 +112,6 @@ function reviewCard(review) {
 
 function roadmap() {
   const chat = updates.hrudhi;
-  const production = releasesByEnvironment.get("production")[0];
   return page({
     title: "Roadmap",
     description: "Upcoming website and booking reviews at Aroha Retreat, and the plan for Hrudhi AI.",
@@ -155,7 +152,7 @@ function roadmap() {
             </ol>
             <p class="follow-up">Arize evaluation follows Dynatrace acceptance. ${issue("Follow-up", chat.followUp)}</p>
           </article>
-          <a class="current-release" href="./releases/#${releaseId(production)}">
+          <a class="current-release" href="./releases/#${releaseAnchor(production)}">
             <span class="release-symbol">${symbol("tag")}</span>
             <span><strong>Latest production release</strong><span>Website ${escape(production.version)} · ${time(production.date)}</span></span>
             ${symbol("arrow")}
@@ -166,60 +163,69 @@ function roadmap() {
 }
 
 function releaseCard(release) {
-  return `<li class="release-card" id="${releaseId(release)}" tabindex="-1">
+  const sourceLabel = { npm: "View on npm", developer: "Deployed source" }[release.channel] ?? "Publication record";
+  return `<li class="release-card" id="${releaseAnchor(release)}" tabindex="-1">
     <div class="release-meta">
       <span class="status version">v${escape(release.version)}</span>
-      ${time(release.date)}
+      ${release.dateSource === "live-check" ? '<span class="observed-label">Seen live</span>' : ""}${time(release.date)}
     </div>
     <h4>${escape(release.title)}</h4>
     <p>${escape(release.summary)}</p>
     ${release.api ? `<p class="api-version">Booking API ${escape(release.api)}</p>` : ""}
-    <div class="card-links"><a href="${escape(release.evidence)}">Publication record ${symbol("external")}</a></div>
+    <div class="card-links">
+      <a href="${escape(release.evidence)}">${sourceLabel} ${symbol("external")}</a>
+      ${release.notes ? `<a href="${escape(release.notes)}">GitHub release notes ${symbol("external")}</a>` : ""}
+    </div>
   </li>`;
 }
 
 function releaseNotes() {
   return page({
     title: "Release notes",
-    description: "Verified Aroha Retreat website and booking updates, with production and pre-production release history.",
+    description: "Verified releases for the Aroha Retreat website, MCP package and developer documentation.",
     current: "releases",
     prefix: "../",
     content: `
       <section class="release-intro" aria-labelledby="release-title">
         <h1 id="release-title">Release notes</h1>
-        <p>Find what’s changed on the Aroha website and what’s available for review on the test site.</p>
-        <div class="latest-grid">${environments.map(environment => {
-          const latest = releasesByEnvironment.get(environment.id)[0];
-          return `<a class="latest-card ${environment.id}" href="#${releaseId(latest)}">
-            <span class="latest-icon">${symbol(environment.icon)}</span>
-            <span><span class="latest-label">${environment.title}</span><strong>Website ${escape(latest.version)}</strong><span>${time(latest.date)}</span></span>
+        <p>See what shipped across the website, MCP package and developer docs.</p>
+        <div class="latest-grid">${groups.map(group => {
+          const latest = group.releases[0];
+          const version = group.product ? `${group.product} ${latest.version}` : `v${latest.version}`;
+          return `<a class="latest-card ${group.id}" href="#${releaseAnchor(latest)}">
+            <span class="latest-icon">${symbol(group.icon)}</span>
+            <span><span class="latest-label">${group.title}</span><strong>${escape(version)}</strong><span>${time(latest.date)}</span></span>
             ${symbol("arrow")}
           </a>`;
         }).join("")}</div>
       </section>
       <div class="archive-layout">
         <aside class="version-index" aria-labelledby="versions-title">
-          <h2 id="versions-title">Version index</h2>
-          <nav aria-label="Release versions">${environments.map(environment => `<h3>${environment.title}</h3>
-            <ul>${releasesByEnvironment.get(environment.id).map(release => `<li><a href="#${releaseId(release)}">v${escape(release.version)}</a></li>`).join("")}</ul>`).join("")}</nav>
-          <a class="text-action" href="${repository}/blob/main/CHANGELOG.md">Source changelog ${symbol("external")}</a>
+          <details id="version-index" open>
+            <summary><h2 id="versions-title">Version index</h2></summary>
+            <nav aria-label="Release versions">${groups.map(group => `<h3>${group.title}</h3>
+              <ul>${group.releases.map(release => {
+                const version = `v${release.version}${release.source && group.releases.some(item => item !== release && item.version === release.version) ? ` · ${release.source.slice(0, 7)}` : ""}`;
+                return `<li><a href="#${releaseAnchor(release)}">${escape(version)}</a></li>`;
+              }).join("")}</ul>`).join("")}</nav>
+            <a class="text-action" href="${repository}/blob/main/CHANGELOG.md">Website changelog ${symbol("external")}</a>
+          </details>
         </aside>
         <section id="release-archive" aria-labelledby="archive-title">
           <div class="section-heading">
             <h2 id="archive-title">Release archive</h2>
-            <p>Publication dates are verified and shown in IST.</p>
+            <p>Dates are shown in IST. Developer docs entries record builds verified live.</p>
           </div>
           <div class="filter-bar" id="release-filters" hidden>
-            <div class="filters" role="group" aria-label="Filter releases by environment">
+            <div class="filters" role="group" aria-label="Filter releases by channel">
               <button type="button" value="all" aria-pressed="true">All releases</button>
-              <button type="button" value="production" aria-pressed="false">Production</button>
-              <button type="button" value="preprod" aria-pressed="false">Pre-production</button>
+              ${groups.map(group => `<button type="button" value="${group.id}" aria-pressed="false">${group.title}</button>`).join("")}
             </div>
             <span id="release-count" role="status"></span>
           </div>
-          ${environments.map(environment => `<section class="release-group" data-environment="${environment.id}" aria-labelledby="group-${environment.id}">
-            <div class="group-heading"><h3 id="group-${environment.id}">${environment.title}</h3><p>${environment.description}</p></div>
-            <ol>${releasesByEnvironment.get(environment.id).map(releaseCard).join("")}</ol>
+          ${groups.map(group => `<section class="release-group" data-channel="${group.id}" aria-labelledby="group-${group.id}">
+            <div class="group-heading"><h3 id="group-${group.id}">${group.title}</h3><p>${group.description}</p></div>
+            <ol>${group.releases.map(releaseCard).join("")}</ol>
           </section>`).join("")}
         </section>
       </div>`,
@@ -228,6 +234,7 @@ function releaseNotes() {
 
 await mkdir(new URL("assets/", output), { recursive: true });
 await mkdir(new URL("releases/", output), { recursive: true });
+await mkdir(new URL("sdlc/", output), { recursive: true });
 const assets = [
   ["site/updates.css", "updates.css"],
   ["site/releases.js", "releases.js"],
@@ -249,6 +256,14 @@ await Promise.all(assets.map(async ([source, name]) => {
 }));
 await writeFile(new URL("index.html", output), tidyText(roadmap()) + "\n");
 await writeFile(new URL("releases/index.html", output), tidyText(releaseNotes()) + "\n");
-await writeFile(new URL("release-history.json", output), JSON.stringify(updates.releases, null, 2) + "\n");
+const deliveryPage = page({
+  title: "Software delivery lifecycle",
+  description: "How Aroha Retreat plans, tests, releases and observes changes to its website and developer tools.",
+  current: "sdlc",
+  prefix: "../",
+  content: await readFile(new URL("site/sdlc.html", root), "utf8"),
+});
+await writeFile(new URL("sdlc/index.html", output), tidyText(deliveryPage) + "\n");
+await writeFile(new URL("release-history.json", output), JSON.stringify(releases, null, 2) + "\n");
 await writeFile(new URL(".nojekyll", output), "");
 console.log("Built public updates in local/public-updates");

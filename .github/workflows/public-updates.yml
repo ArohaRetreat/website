@@ -2,7 +2,7 @@ name: Publish Aroha roadmap and release notes
 
 on:
   schedule:
-    - cron: '17 * * * *'
+    - cron: '51 * * * *'
   workflow_dispatch:
   workflow_run:
     workflows: [Deploy environment frontend]
@@ -17,6 +17,8 @@ on:
       - scripts/delivery/contract.mjs
       - scripts/delivery/github.mjs
       - scripts/delivery/read-hosting-receipt.py
+      - scripts/public-release-index.mjs
+      - scripts/public-release-sources.mjs
       - scripts/sync-public-updates.mjs
       - site/**
       - vendor/natura/brand/**
@@ -30,6 +32,8 @@ on:
       - docs/public/updates.json
       - scripts/build-public-updates.mjs
       - scripts/delivery/read-hosting-receipt.py
+      - scripts/public-release-index.mjs
+      - scripts/public-release-sources.mjs
       - scripts/sync-public-updates.mjs
       - site/**
       - tests/public-updates.test.mjs
@@ -76,7 +80,7 @@ jobs:
           set -euo pipefail
           origin=https://aroharetreat.github.io/website
           changed=false
-          for file in index.html releases/index.html release-history.json assets/updates.css assets/releases.js assets/logo.svg assets/icon.svg assets/GoogleSans.woff2 assets/SourceSans3.woff2 assets/GoogleSans-OFL.txt assets/SourceSans3-OFL.txt; do
+          while IFS= read -r file; do
             status=$(curl --silent --show-error --max-time 15 --output "$RUNNER_TEMP/published" --write-out '%{http_code}' "$origin/$file")
             if [[ "$status" == 404 ]] || { [[ "$status" == 200 ]] && ! cmp -s "local/public-updates/$file" "$RUNNER_TEMP/published"; }; then
               changed=true
@@ -86,7 +90,7 @@ jobs:
               echo "GitHub Pages returned HTTP $status."
               exit 1
             fi
-          done
+          done < <(find local/public-updates -type f ! -name .nojekyll | sed 's|^local/public-updates/||' | sort)
           echo "changed=$changed" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         if: steps.compare.outputs.changed == 'true'
@@ -114,7 +118,9 @@ jobs:
           origin=https://aroharetreat.github.io/website
           curl --fail --silent --show-error --retry 3 --retry-delay 3 --max-time 15 "$origin/" -o "$RUNNER_TEMP/roadmap"
           curl --fail --silent --show-error --retry 3 --retry-delay 3 --max-time 15 "$origin/releases/" -o "$RUNNER_TEMP/releases"
+          curl --fail --silent --show-error --retry 3 --retry-delay 3 --max-time 15 "$origin/sdlc/" -o "$RUNNER_TEMP/sdlc"
           curl --fail --silent --show-error --retry 3 --retry-delay 3 --max-time 15 "$origin/release-history.json" -o "$RUNNER_TEMP/history"
           grep -Fq '<h1 id="roadmap-title">Roadmap</h1>' "$RUNNER_TEMP/roadmap"
           grep -Fq '<h1 id="release-title">Release notes</h1>' "$RUNNER_TEMP/releases"
+          grep -Fq '<h1 id="sdlc-title">Software delivery lifecycle</h1>' "$RUNNER_TEMP/sdlc"
           jq -e 'type == "array" and length > 0' "$RUNNER_TEMP/history" > /dev/null

@@ -1,8 +1,9 @@
 const archive = document.querySelector("#release-archive");
 const toolbar = document.querySelector("#release-filters");
 const buttons = Array.from(toolbar.querySelectorAll("button"));
-const lists = Array.from(archive.querySelectorAll("[data-environment]"));
+const lists = Array.from(archive.querySelectorAll("[data-channel]"));
 const count = document.querySelector("#release-count");
+const versions = document.querySelector("#version-index");
 
 function applyFilter(filter) {
   for (const button of buttons) {
@@ -11,20 +12,24 @@ function applyFilter(filter) {
 
   let visible = 0;
   for (const list of lists) {
-    list.hidden = filter !== "all" && list.dataset.environment !== filter;
+    list.hidden = filter !== "all" && list.dataset.channel !== filter;
     if (!list.hidden) visible += list.querySelectorAll(".release-card").length;
   }
 
-  count.textContent = `${visible} releases`;
+  count.textContent = visible === 1 ? "1 release" : `${visible} releases`;
 }
 
 function showLinkedRelease(hash) {
   const release = document.getElementById(hash.slice(1));
-  const list = release?.closest("[data-environment]");
+  const list = release?.closest("[data-channel]");
   if (!list?.hidden) return;
 
   applyFilter("all");
   return release;
+}
+
+if (matchMedia("(max-width: 840px)").matches) {
+  versions.open = false;
 }
 
 for (const button of buttons) {

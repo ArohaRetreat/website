@@ -1,0 +1,160 @@
+<section class="delivery-hero" aria-labelledby="sdlc-title">
+  <div>
+    <h1 id="sdlc-title">Software delivery lifecycle</h1>
+    <p>Follow an Aroha change from the GitHub Project through review, deployment and live verification.</p>
+    <a class="button light-button" href="https://github.com/orgs/ArohaRetreat/projects/1">Open the GitHub Project <span aria-hidden="true">↗</span></a>
+  </div>
+  <nav class="delivery-nav" aria-label="On this page">
+    <a href="#development">Plan and build</a>
+    <a href="#ci">Continuous integration</a>
+    <a href="#release-paths">Release paths</a>
+    <a href="#observability">Observability</a>
+  </nav>
+</section>
+
+<section class="delivery-section" id="development" aria-labelledby="development-title">
+  <div class="section-heading">
+    <h2 id="development-title">From issue to verified release</h2>
+    <p>Each step leaves a record that the next person can check.</p>
+  </div>
+  <ol class="delivery-flow">
+    <li><h3>Plan</h3><p>Capture the outcome and acceptance criteria in an issue. Set its milestone and sprint in the Project.</p></li>
+    <li><h3>Build</h3><p>Work on an issue branch. Update the code, tests and docs together and open a linked pull request.</p></li>
+    <li><h3>Check</h3><p>GitHub Actions builds and tests the PR. Fix failed checks and resolve review comments before merging.</p></li>
+    <li><h3>Merge</h3><p>Integrate the reviewed source into the target branch. GitHub records the merge commit.</p></li>
+    <li><h3>Release and verify</h3><p>Publish through the owning release path and check the version and revision at its destination.</p></li>
+  </ol>
+  <div class="delivery-callout">
+    <h3>When a gate fails</h3>
+    <p>Use the failing check, deployment receipt or live probe to find the fault. Fix and rerun the affected gate. If a faulty build is already live, assess rollback to a known good, compatible release and verify the restored version.</p>
+  </div>
+  <div class="card-links delivery-links">
+    <a href="https://github.com/orgs/ArohaRetreat/projects/1/views/9">Sprint planning <span aria-hidden="true">↗</span></a>
+    <a href="https://github.com/ArohaRetreat/website/blob/main/docs/delivery.md">Delivery guide <span aria-hidden="true">↗</span></a>
+  </div>
+</section>
+
+<section class="delivery-section" id="ci" aria-labelledby="ci-title">
+  <div class="section-heading">
+    <h2 id="ci-title">What continuous integration checks</h2>
+    <p>The website PR needs four passing checks for its current revision. GitHub records each job and attempt.</p>
+  </div>
+  <dl class="check-grid">
+    <div><dt>Application</dt><dd>Tests the website and builds the frontend artifact.</dd></div>
+    <div><dt>Website integration</dt><dd>Runs API, booking, authorization and telemetry checks in isolated Firebase emulators.</dd></div>
+    <div><dt>Foundation</dt><dd>Validates repository contracts, documentation links and foundation tests.</dd></div>
+    <div><dt>Branch policy</dt><dd>Enforces the promotion route. Approved changes move from pre-prod through a release PR into main.</dd></div>
+  </dl>
+  <p class="delivery-note">MCP CI checks the adapter, runs protocol and telemetry tests and previews the npm package. Developer docs CI builds the static site and tests its generated references and Swagger setup.</p>
+  <div class="card-links delivery-links">
+    <a href="https://github.com/ArohaRetreat/website/actions">Website checks <span aria-hidden="true">↗</span></a>
+    <a href="https://github.com/ArohaRetreat/mcp/actions">MCP checks <span aria-hidden="true">↗</span></a>
+    <a href="https://github.com/ArohaRetreat/developer/actions">Developer docs checks <span aria-hidden="true">↗</span></a>
+  </div>
+</section>
+
+<section class="delivery-section" id="release-paths" aria-labelledby="release-paths-title">
+  <div class="section-heading">
+    <h2 id="release-paths-title">Where releases go</h2>
+    <p>The website’s delivery workflow checks the branch head and CI before deploying with a short-lived identity. Backend changes have their own reviewed release step.</p>
+  </div>
+  <div class="delivery-lanes">
+    <article class="delivery-lane">
+      <h3>Website and Studio</h3>
+      <ol class="lane-flow">
+        <li><strong>Checked branch</strong><span><code>preprod</code> for testing or <code>main</code> for production</span></li>
+        <li><strong>Firebase Hosting</strong><span>Build and deploy to the site assigned to that branch</span></li>
+        <li><strong>Verify live</strong><span>Match the Hosting receipt, source revision and live files</span></li>
+      </ol>
+    </article>
+    <article class="delivery-lane">
+      <h3>Booking API</h3>
+      <ol class="lane-flow">
+        <li><strong>Reviewed API change</strong><span>Validate contracts and rules in isolated tests</span></li>
+        <li><strong>Firebase Functions</strong><span>Release the affected backend to the approved environment</span></li>
+        <li><strong>Verify runtime</strong><span>Check API version, environment and protected routes</span></li>
+      </ol>
+    </article>
+    <article class="delivery-lane">
+      <h3>MCP package</h3>
+      <ol class="lane-flow">
+        <li><strong>Reviewed package</strong><span>Pass CLI, contract and packaging checks</span></li>
+        <li><strong>npm publication</strong><span>Publish the tested package version</span></li>
+        <li><strong>Verify availability</strong><span>Check registry metadata and smoke-test the published CLI</span></li>
+      </ol>
+    </article>
+    <article class="delivery-lane">
+      <h3>Developer docs</h3>
+      <ol class="lane-flow">
+        <li><strong>Reviewed docs</strong><span>Build the reference and test its API provenance</span></li>
+        <li><strong>Dedicated Hosting</strong><span>Publish to the developer documentation site</span></li>
+        <li><strong>Verify live</strong><span>Compare the release manifest on both public domains with the source commit</span></li>
+      </ol>
+    </article>
+  </div>
+  <div class="delivery-callout">
+    <h3>How the release archive updates</h3>
+    <p>GitHub Pages refreshes after website Hosting verifies a release. The hourly sync reads the sprint dates, npm registry and live developer docs manifest. Earlier entries keep their version links.</p>
+    <a class="text-action" href="../releases/">Open release notes <span aria-hidden="true">→</span></a>
+  </div>
+  <div class="card-links delivery-links">
+    <a href="https://github.com/ArohaRetreat/website/blob/main/docs/environment-delivery.md">Environment delivery <span aria-hidden="true">↗</span></a>
+    <a href="https://github.com/ArohaRetreat/website/actions/workflows/public-updates.yml">Pages automation <span aria-hidden="true">↗</span></a>
+  </div>
+</section>
+
+<section class="delivery-section" id="observability" aria-labelledby="observability-title">
+  <div class="section-heading">
+    <h2 id="observability-title">How we observe delivery and runtime</h2>
+    <p>Check the delivery record to confirm what shipped. Use runtime signals to see how that version behaves.</p>
+  </div>
+  <div class="delivery-lanes">
+    <article class="delivery-lane">
+      <h3>CI execution</h3>
+      <ol class="lane-flow">
+        <li><strong>GitHub Actions</strong><span>Workflow, job and step outcomes plus runner test reports</span></li>
+        <li><strong>Delivery observer</strong><span>Reads the website’s allowed runs and uses the source run ID, attempt and commit</span></li>
+        <li><strong>Dynatrace</strong><span>Delivery events and OpenTelemetry traces, metrics and logs</span></li>
+      </ol>
+    </article>
+    <article class="delivery-lane">
+      <h3>Hosting releases</h3>
+      <ol class="lane-flow">
+        <li><strong>Firebase Hosting</strong><span>Provider release ID, website version, commit and environment</span></li>
+        <li><strong>Live probes</strong><span>Confirm the release files and check protected-route denial</span></li>
+        <li><strong>Delivery receipts</strong><span>Record deployment and verification outcomes and report a Dynatrace deployment marker for confirmed releases.</span></li>
+      </ol>
+    </article>
+    <article class="delivery-lane">
+      <h3>Live application</h3>
+      <ol class="lane-flow">
+        <li><strong>Browser, API and MCP</strong><span>Collect browser experience after consent. Measure API requests and MCP tool attempts.</span></li>
+        <li><strong>Instrumented signals</strong><span>Measure latency and error rates. Use trace context and request IDs to investigate individual requests.</span></li>
+        <li><strong>Export and inspect</strong><span>Browser RUM and configured API exports reach Dynatrace. MCP sends OTLP to the operator’s configured endpoint.</span></li>
+      </ol>
+    </article>
+  </div>
+  <dl class="check-grid evidence-grid">
+    <div><dt>Find the change</dt><dd>Use the issue, PR and commit to trace the decision and reviewed source.</dd></div>
+    <div><dt>Verify the deployment</dt><dd>Match the run ID and attempt to the provider release, build version and environment.</dd></div>
+    <div><dt>Confirm observability</dt><dd>Check export acceptance and search for the expected event or signal in the tenant. Trace joins require real trace context.</dd></div>
+    <div><dt>Confirm a business outcome</dt><dd>Use the committed booking or audit record. Browser RUM describes what the guest experienced.</dd></div>
+  </dl>
+  <p class="delivery-note">Telemetry uses bounded operation, status and environment fields. Guest details, tokens and request bodies stay out of exports.</p>
+  <details class="delivery-callout signal-details">
+    <summary>Signal names used in investigations</summary>
+    <dl class="signal-list">
+      <dt>CI and deployments</dt>
+      <dd>Filter <code>aroha.sdlc</code> by workflow, attempt and commit. Look for <code>sdlc.check.completed</code>, <code>sdlc.deployment.completed</code> and <code>sdlc.runtime.verified</code>.</dd>
+      <dt>Booking API</dt>
+      <dd>Use <code>aroha.api.requests</code> and <code>aroha.api.duration</code> to investigate request volume, latency and errors.</dd>
+      <dt>MCP</dt>
+      <dd>Use <code>aroha.mcp.tool.calls</code> and <code>aroha.mcp.tool.duration</code> for tool activity. Follow the trace and completion log for a specific attempt.</dd>
+    </dl>
+  </details>
+  <div class="card-links delivery-links">
+    <a href="https://github.com/ArohaRetreat/website/blob/main/docs/delivery-observability.md">Delivery telemetry <span aria-hidden="true">↗</span></a>
+    <a href="https://github.com/ArohaRetreat/website/blob/main/docs/website-observability.md">Website and API telemetry <span aria-hidden="true">↗</span></a>
+    <a href="https://github.com/ArohaRetreat/mcp/blob/main/docs/observability.md">MCP telemetry <span aria-hidden="true">↗</span></a>
+  </div>
+</section>
