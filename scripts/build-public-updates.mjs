@@ -188,7 +188,7 @@ function releaseNotes() {
     content: `
       <section class="release-intro" aria-labelledby="release-title">
         <h1 id="release-title">Release notes</h1>
-        <p>See what’s live across the website, MCP package and developer docs.</p>
+        <p>See what shipped across the website, MCP package and developer docs.</p>
         <div class="latest-grid">${groups.map(group => {
           const latest = group.releases[0];
           const version = group.product ? `${group.product} ${latest.version}` : `v${latest.version}`;

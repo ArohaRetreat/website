@@ -3,7 +3,7 @@ export const commitPattern = /^[a-f0-9]{40}$/;
 export const npmPackage = "@theharithsa/aroha-mcp";
 export const developerRepo = "https://github.com/ArohaRetreat/developer";
 export const mcpRepo = "https://github.com/ArohaRetreat/mcp";
-export const websiteEvidence = /^https:\/\/github\.com\/ArohaRetreat\/website\/(?:actions\/runs\/\d+|blob\/[a-f0-9]{40}\/release-evidence\/[A-Za-z0-9._/-]+\.md)$/;
+const websiteEvidence = /^https:\/\/github\.com\/ArohaRetreat\/website\/(?:actions\/runs\/\d+|blob\/[a-f0-9]{40}\/release-evidence\/[A-Za-z0-9._/-]+\.md)$/;
 export const npmVersionUrl = version => `https://www.npmjs.com/package/${npmPackage}/v/${version}`;
 export const mcpNotesUrl = version => `${mcpRepo}/releases/tag/v${version}`;
 
