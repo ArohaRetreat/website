@@ -1,6 +1,8 @@
 ---
 name: app-launchpad
 description: Build or enhance apps using the project template, issue-linked delivery and Dynatrace observability.
+metadata:
+  version: "1.13.2"
 ---
 
 # App Launchpad
@@ -12,8 +14,9 @@ description: Build or enhance apps using the project template, issue-linked deli
 3. For new repositories use [app-launchpad-template](https://github.com/theharithsa/app-launchpad-template) by default after confirming owner/name/visibility and empty local destination. Inspect its README/revision, generate through GitHub, and record source version/commit in project metadata.
 4. For existing apps adopt applicable files through a reviewed PR, preserving project instructions/history. GitHub templates copy files, not settings or later updates; bring upgrades through PRs. Explicit user-selected alternatives take precedence.
 5. If GitHub is unavailable or local-only, continue authorized discovery and record template adoption pending. The partial planning bootstrap has been removed; never claim equivalent adoption from incomplete copies.
-6. Select the task's [owning references](#task-routing). In template projects read `skills/catalog.json`, use the documented discovery gate, then build one real vertical slice with actual stack-specific checks.
-7. Apply [completion](references/completion.md); use existing authorization to finish delivery or report the concrete remaining dependency.
+6. Use the [Aroha Retreat Project](../../../docs/delivery.md) and apply [project tracking](references/github-projects.md) to issues, PRs, milestones, and sprints.
+7. Select the task's [owning references](#task-routing). In template projects read `skills/catalog.json`, use the documented discovery gate, then build one real vertical slice with actual stack-specific checks.
+8. Apply [completion](references/completion.md); use existing authorization to finish delivery or report the concrete remaining dependency.
 
 ## Task routing
 
@@ -23,6 +26,9 @@ description: Build or enhance apps using the project template, issue-linked deli
 | UI, API, auth, data and dependencies | [Build](references/build.md) |
 | Test suites and real execution | [Testing](references/testing.md) |
 | Dynatrace RUM/OTel/events/SDLC | [Observability](references/observability.md) |
+| GitHub Project, issue types, milestones and sprints | [Project tracking](references/github-projects.md) |
+| Public roadmap and versioned release notes | [Product launch](references/product-launch.md) |
+| Firebase usage budgets, media, and recurring costs | [Firebase FinOps](../firebase-finops/SKILL.md) |
 | Issues, PRs, checks, merge, release, rollback | [Delivery](references/github-release.md) |
 | Trust, secrets, cost, authorization, delegation | [Safety](references/safety.md) |
 | Evidence states and signal authority | [Evidence](references/evidence.md) |

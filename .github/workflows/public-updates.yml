@@ -1,0 +1,120 @@
+name: Publish Aroha roadmap and release notes
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+  workflow_run:
+    workflows: [Deploy environment frontend]
+    branches: [main, preprod]
+    types: [completed]
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/public-updates.yml
+      - docs/public/updates.json
+      - scripts/build-public-updates.mjs
+      - scripts/delivery/contract.mjs
+      - scripts/delivery/github.mjs
+      - scripts/delivery/read-hosting-receipt.py
+      - scripts/sync-public-updates.mjs
+      - site/**
+      - vendor/natura/brand/**
+      - vendor/natura/fonts/SourceSans3/**
+      - website/assets/fonts/GoogleSans-Latin.woff2
+      - website/assets/fonts/GoogleSans-OFL.txt
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/public-updates.yml
+      - docs/public/updates.json
+      - scripts/build-public-updates.mjs
+      - scripts/delivery/read-hosting-receipt.py
+      - scripts/sync-public-updates.mjs
+      - site/**
+      - tests/public-updates.test.mjs
+
+permissions: {}
+concurrency:
+  group: aroha-public-updates
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.repository == 'ArohaRetreat/website' && (github.ref == 'refs/heads/main' || github.event_name == 'pull_request')
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      changed: ${{ steps.compare.outputs.changed }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22'
+      - name: Test and build with curated content
+        if: github.event_name == 'pull_request'
+        run: |
+          node --test tests/public-updates.test.mjs
+          node scripts/build-public-updates.mjs
+      - name: Read and render verified public updates
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node scripts/sync-public-updates.mjs "$RUNNER_TEMP/public-updates.json"
+          node scripts/build-public-updates.mjs "$RUNNER_TEMP/public-updates.json"
+      - name: Compare with published content
+        if: github.event_name != 'pull_request'
+        id: compare
+        shell: bash
+        run: |
+          set -euo pipefail
+          origin=https://aroharetreat.github.io/website
+          changed=false
+          for file in index.html releases/index.html release-history.json assets/updates.css assets/releases.js assets/logo.svg assets/icon.svg assets/GoogleSans.woff2 assets/SourceSans3.woff2 assets/GoogleSans-OFL.txt assets/SourceSans3-OFL.txt; do
+            status=$(curl --silent --show-error --max-time 15 --output "$RUNNER_TEMP/published" --write-out '%{http_code}' "$origin/$file")
+            if [[ "$status" == 404 ]] || { [[ "$status" == 200 ]] && ! cmp -s "local/public-updates/$file" "$RUNNER_TEMP/published"; }; then
+              changed=true
+              break
+            fi
+            if [[ "$status" != 200 ]]; then
+              echo "GitHub Pages returned HTTP $status."
+              exit 1
+            fi
+          done
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        if: steps.compare.outputs.changed == 'true'
+        with:
+          path: local/public-updates
+
+  publish:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && needs.build.outputs.changed == 'true'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+        id: deploy
+      - name: Verify published routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          origin=https://aroharetreat.github.io/website
+          curl --fail --silent --show-error --retry 3 --retry-delay 3 --max-time 15 "$origin/" -o "$RUNNER_TEMP/roadmap"
+          curl --fail --silent --show-error --retry 3 --retry-delay 3 --max-time 15 "$origin/releases/" -o "$RUNNER_TEMP/releases"
+          curl --fail --silent --show-error --retry 3 --retry-delay 3 --max-time 15 "$origin/release-history.json" -o "$RUNNER_TEMP/history"
+          grep -Fq '<h1 id="roadmap-title">Roadmap</h1>' "$RUNNER_TEMP/roadmap"
+          grep -Fq '<h1 id="release-title">Release notes</h1>' "$RUNNER_TEMP/releases"
+          jq -e 'type == "array" and length > 0' "$RUNNER_TEMP/history" > /dev/null

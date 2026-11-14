@@ -2,6 +2,21 @@ name: Deploy environment frontend
 on:
   push:
     branches: [main, preprod]
+    # Documentation and GitHub Pages have their own publication path.
+    paths-ignore:
+      - '.agents/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/pull_request_template.md'
+      - '.github/workflows/deploy-environment.yml'
+      - '.github/workflows/project-milestones.yml'
+      - '.github/workflows/public-updates.yml'
+      - README.md
+      - docs/**
+      - site/**
+      - scripts/build-public-updates.mjs
+      - scripts/delivery/read-hosting-receipt.py
+      - scripts/sync-public-updates.mjs
+      - tests/public-updates.test.mjs
   workflow_dispatch:
 permissions:
   contents: read
