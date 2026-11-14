@@ -11,6 +11,7 @@ import {
   id,
 } from "../scripts/delivery/contract.mjs";
 import { runEvents, collectRun } from "../scripts/delivery/github.mjs";
+import { instrumentRun } from "../scripts/delivery/report-run.mjs";
 import { deploymentEvents } from "../scripts/delivery/deployment.mjs";
 import { telemetry } from "../scripts/delivery/otlp.mjs";
 import { request, exportDelivery } from "../scripts/delivery/transport.mjs";
@@ -110,7 +111,7 @@ test("workflow failure, skipped steps and passed/failed/skipped/missing test res
         x["event.type"] === "sdlc.test.report" &&
         x["sdlc.status"] === "missing",
     ).length,
-    2,
+    4,
   );
 });
 test("foreign forks, unknown workflow and incomplete source runs are refused", () => {
@@ -152,15 +153,21 @@ test("untrusted test reports are bounded, deduplicated and stripped of names and
     parseReport("x".repeat(1024 * 1024 + 1), "application.jsonl"),
   );
 });
+function zipEntries(entries) {
+  const code = `import sys,zipfile,io,stat,json
+b=io.BytesIO()
+with zipfile.ZipFile(b,'w') as z:
+ for name, content, *options in json.load(sys.stdin):
+  i=zipfile.ZipInfo(name)
+  i.external_attr=(stat.S_IFLNK | 0o777)<<16 if options and options[0] else 0
+  z.writestr(i,content,compress_type=zipfile.ZIP_DEFLATED)
+sys.stdout.buffer.write(b.getvalue())`;
+  const result = spawnSync("python3", ["-c", code], { input: JSON.stringify(entries) });
+  assert.equal(result.status, 0);
+  return result.stdout;
+}
 function zip(name, content = "{}", symlink = false) {
-  const code = `import sys,zipfile,io,stat\nb=io.BytesIO()\nwith zipfile.ZipFile(b,'w') as z:\n i=zipfile.ZipInfo(sys.argv[1])\n i.external_attr=(stat.S_IFLNK | 0o777)<<16 if sys.argv[3]=='yes' else 0\n z.writestr(i,sys.argv[2])\nsys.stdout.buffer.write(b.getvalue())`;
-  return spawnSync("python3", [
-    "-c",
-    code,
-    name,
-    content,
-    symlink ? "yes" : "no",
-  ]).stdout;
+  return zipEntries([[name, content, symlink]]);
 }
 test("artifact reader refuses traversal, symlinks and oversized archives without extraction", () => {
   const reader = (input) =>
@@ -179,6 +186,8 @@ test("artifact reader refuses traversal, symlinks and oversized archives without
     assert.notEqual(reader(zip(name)).status, 0);
   assert.notEqual(reader(zip("application.jsonl", "target", true)).status, 0);
   assert.notEqual(reader(Buffer.alloc(2 * 1024 * 1024 + 1)).status, 0);
+  assert.notEqual(reader(zipEntries([["api-external.jsonl", "{}"], ["api-external.jsonl", "{}"]])).status, 0);
+  assert.notEqual(reader(zip("api-loyalty.jsonl", "x".repeat(200_000))).status, 0);
 });
 test("collector requests original attempt-specific jobs and artifact name, never executes artifact input", async () => {
   const calls = [];
@@ -203,6 +212,70 @@ test("collector requests original attempt-specific jobs and artifact name, never
   const result = await collectRun("42", "2", "synthetic", { get });
   assert.equal(result.reports["application.jsonl"].length, 3);
   assert.ok(calls.some((x) => x.includes("/attempts/2/jobs?")));
+});
+test("actual external API and loyalty records survive the full artifact-to-event path", async () => {
+  const external = "api-external.jsonl";
+  const loyalty = "api-loyalty.jsonl";
+  const content = JSON.stringify({
+    ...cases[0],
+    completedAt: now,
+    name: "PRIVATE-NAME",
+    command: "PRIVATE-COMMAND",
+    fixture: "PRIVATE-FIXTURE",
+  });
+  const archive = zipEntries([[external, content], [loyalty, content]]);
+  const get = async (path) => {
+    if (path.includes("/jobs?")) return { jobs: [job] };
+    if (path.includes("/artifacts?")) return {
+      artifacts: [{
+        id: 10,
+        name: "delivery-reports-website-integration-2",
+        size_in_bytes: archive.length,
+        expired: false,
+      }],
+    };
+    if (path.endsWith("/zip")) return archive;
+    return run;
+  };
+  const collected = await collectRun("42", "2", "synthetic", { get });
+  const events = runEvents(collected, 3, "81");
+  const reports = events.filter(item => [external, loyalty].includes(item["test.suite"]));
+  const completed = reports.filter(item => item["event.type"] === "sdlc.test.completed");
+  assert.equal(reports.length, 4);
+  assert.equal(completed.length, 2);
+  assert.notEqual(completed[0]["sdlc.event.id"], completed[1]["sdlc.event.id"]);
+  for (const item of completed) {
+    assert.equal(item["sdlc.status"], "passed");
+    assert.equal(item["sdlc.authority"], "runner-reported");
+    assert.equal(item["sdlc.occurred_at"], new Date(now).toISOString());
+    assert.equal(item["workflow.execution.attempt"], 2);
+    assert.equal(item["workflow.reporting.run.id"], "81");
+  }
+  assert.deepEqual(
+    completed.map(item => item["sdlc.event.id"]),
+    runEvents(collected, 4, "81").filter(item => item["event.type"] === "sdlc.test.completed")
+      .map(item => item["sdlc.event.id"]),
+  );
+  assert.ok(!JSON.stringify(events).includes("PRIVATE-"));
+});
+test("historical CI replay keeps source event time and exports the current observer span", async () => {
+  const events = runEvents(snapshot, 1, "80");
+  for (const [hour, expected] of [["00", true], ["02", false]]) {
+    const { otel, sourceSpans } = instrumentRun(snapshot, events, {
+      startedAt: `2026-11-02T${hour}:05:00Z`,
+      observedAt: `2026-11-02T${hour}:05:01Z`,
+    });
+    try {
+      const batches = await otel.batches();
+      const traceBatch = Buffer.from(batches.find(batch => batch.signal === "traces").body);
+      assert.equal(sourceSpans, expected);
+      assert.equal(traceBatch.includes("github.workflow"), expected);
+      assert.ok(traceBatch.includes("delivery.report"));
+    } finally {
+      await otel.shutdown();
+    }
+  }
+  assert.equal(events[0]["sdlc.occurred_at"], "2026-11-02T00:01:00.000Z");
 });
 test("HTTP retries are bounded, preserve payload identity and never retry permission rejection", async () => {
   const bodies = [];

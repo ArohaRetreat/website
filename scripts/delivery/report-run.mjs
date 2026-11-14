@@ -7,18 +7,37 @@ import { telemetry } from "./otlp.mjs";
 import { exportDelivery } from "./transport.mjs";
 import { deliveryToken, configureGitHubSecret } from "./credentials.mjs";
 const root = fileURLToPath(new URL("../../", import.meta.url));
-export function instrumentRun(snapshot, events, reportingAttempt) {
+const sourceSpanWindowMs = 55 * 60_000;
+
+export function instrumentRun(snapshot, events, { startedAt, observedAt }) {
   const otel = telemetry("aroha-ci-observer", "1.0.0", "ci");
   const { run, jobs } = snapshot;
   const rootEvent = events[0];
-  const parent = otel.span(
-    "github.workflow",
-    { ...rootEvent, "workflow.reporting.attempt": Number(reportingAttempt) },
-    run.run_started_at || run.created_at,
-    completionTime(run, jobs),
+  const sourceStart = run.run_started_at || run.created_at;
+  const sourceSpans = Date.parse(sourceStart) >= Date.parse(observedAt) - sourceSpanWindowMs;
+  const reporter = otel.span(
+    "delivery.report",
+    {
+      operation: "github-report",
+      "sdlc.authority": "observer-executed",
+      "workflow.run.id": rootEvent["workflow.run.id"],
+      "workflow.execution.attempt": rootEvent["workflow.execution.attempt"],
+      "workflow.reporting.run.id": rootEvent["workflow.reporting.run.id"],
+      "workflow.reporting.attempt": rootEvent["workflow.reporting.attempt"],
+      "git.commit.sha": rootEvent["git.commit.sha"],
+      "workflow.source.spans": sourceSpans ? "included" : "outside-ingest-window",
+    },
+    startedAt,
+    observedAt,
   );
+  const parent = sourceSpans ? otel.span(
+    "github.workflow",
+    rootEvent,
+    sourceStart,
+    completionTime(run, jobs),
+  ) : reporter;
   const jobContexts = new Map();
-  for (const job of jobs) {
+  for (const job of sourceSpans ? jobs : []) {
     const item = events.find(
       (e) =>
         e["event.type"] === "sdlc.check.completed" &&
@@ -59,13 +78,14 @@ export function instrumentRun(snapshot, events, reportingAttempt) {
       Number(item["duration.ms"] || 0) / 1000,
     );
   }
-  return otel;
+  return { otel, sourceSpans };
 }
 async function main() {
   if (process.argv.includes("--configure-github-secret")) {
     await configureGitHubSecret();
     return;
   }
+  const startedAt = new Date().toISOString();
   const payload = process.env.GITHUB_EVENT_PATH
     ? JSON.parse(await readFile(process.env.GITHUB_EVENT_PATH, "utf8"))
     : {};
@@ -102,14 +122,11 @@ async function main() {
   };
   await writeFile(filename, JSON.stringify(outbox, null, 2));
   const token = await deliveryToken();
-  const start = new Date().toISOString();
-  const otel = instrumentRun(snapshot, events, reportingAttempt);
-  otel.span(
-    "delivery.report",
-    { operation: "github-report", "sdlc.authority": "observer-executed" },
-    start,
-    new Date().toISOString(),
-  );
+  const { otel, sourceSpans } = instrumentRun(snapshot, events, {
+    startedAt,
+    observedAt: new Date().toISOString(),
+  });
+  outbox.sourceSpans = sourceSpans ? "included" : "outside-ingest-window";
   outbox.delivery = await exportDelivery(events, otel, token);
   await writeFile(filename, JSON.stringify(outbox, null, 2));
   console.log(
@@ -117,6 +134,7 @@ async function main() {
       sourceRun: outbox.sourceRun,
       executionAttempt: outbox.executionAttempt,
       events: events.length,
+      sourceSpans: outbox.sourceSpans,
       delivery: outbox.delivery,
     }),
   );

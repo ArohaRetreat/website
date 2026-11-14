@@ -2,7 +2,7 @@ name: Deploy environment frontend
 on:
   push:
     branches: [main, preprod]
-    # Documentation and GitHub Pages have their own publication path.
+    # Documentation, GitHub Pages and CI reporting do not require a Hosting release.
     paths-ignore:
       - '.agents/**'
       - '.github/ISSUE_TEMPLATE/**'
@@ -14,10 +14,15 @@ on:
       - docs/**
       - site/**
       - scripts/build-public-updates.mjs
+      - scripts/delivery/contract.mjs
+      - scripts/delivery/github.mjs
+      - scripts/delivery/read-archive.py
       - scripts/delivery/read-hosting-receipt.py
+      - scripts/delivery/report-run.mjs
       - scripts/public-release-index.mjs
       - scripts/public-release-sources.mjs
       - scripts/sync-public-updates.mjs
+      - tests/delivery-observability.test.mjs
       - tests/public-updates.test.mjs
   workflow_dispatch:
 permissions:
