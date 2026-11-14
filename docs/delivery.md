@@ -14,7 +14,7 @@ Apply the [Firebase FinOps skill](../.agents/skills/firebase-finops/SKILL.md) wh
 
 The [public roadmap](https://aroharetreat.github.io/website/) summarizes outcomes, audiences and target windows from the Project. The [release notes](https://aroharetreat.github.io/website/releases/) track verified website, npm and developer docs releases. The [SDLC page](https://aroharetreat.github.io/website/sdlc/) diagrams CI checks, each release path and the evidence used to observe them. Use the [product launch procedure](../.agents/skills/app-launchpad/references/product-launch.md) from [App Launchpad 1.13.2](https://github.com/theharithsa/app-launchpad-template/releases/tag/v1.13.2).
 
-The [Pages workflow](https://github.com/ArohaRetreat/website/actions/workflows/public-updates.yml) checks the public Project, npm and developer docs hourly and refreshes after the website Hosting workflow completes. It publishes only when the rendered site changes. Use **Run workflow** on `main` to refresh on demand.
+The [Pages workflow](https://github.com/ArohaRetreat/website/actions/workflows/public-updates.yml) is scheduled hourly at :45 IST and refreshes after the website Hosting workflow completes. It checks the public Project, npm and developer docs and publishes only when the rendered site changes. Check for `schedule` runs in the workflow history to verify the clock trigger. Use **Run workflow** on `main` to refresh on demand.
 
 In [the public content](public/updates.json), `scheduleIssue` identifies the issue whose native sprint sets each review window. The companion issues provide context. Adjust sprint dates and assignments in the Project. Edit this file for public wording, new review cards, and curated historical release notes.
 

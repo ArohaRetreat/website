@@ -2,7 +2,8 @@ name: Publish Aroha roadmap and release notes
 
 on:
   schedule:
-    - cron: '51 * * * *'
+    - cron: '45 * * * *'
+      timezone: Asia/Kolkata
   workflow_dispatch:
   workflow_run:
     workflows: [Deploy environment frontend]
