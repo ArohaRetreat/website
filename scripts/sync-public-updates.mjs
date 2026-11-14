@@ -123,7 +123,7 @@ export function releaseCopy(changelog, version) {
   };
 }
 
-async function request(path, { api = true, allow404 = false } = {}) {
+async function request(path, { api = true } = {}) {
   const response = await fetch(api ? new URL(path, github) : path, {
     headers: {
       "Cache-Control": "no-cache",
@@ -131,7 +131,6 @@ async function request(path, { api = true, allow404 = false } = {}) {
     },
     signal: AbortSignal.timeout(15_000),
   });
-  if (allow404 && response.status === 404) return null;
   if (!response.ok) throw Error("PUBLIC_UPDATES_HTTP_" + response.status);
   return response;
 }
@@ -149,7 +148,7 @@ async function projectItems() {
     path = next;
   }
   if (path) throw Error("PUBLIC_UPDATES_PROJECT_LIMIT");
-  if (!rows.some(item => item.fields?.some(field => field.id === iteration && field.value?.start_date))) {
+  if (!rows.some(item => item.fields?.some(field => field.id === iteration && field.data_type === "iteration"))) {
     throw Error("PUBLIC_UPDATES_PROJECT_ITERATION_UNAVAILABLE");
   }
   return rows;
@@ -201,8 +200,8 @@ async function publishableReleases(known, token) {
 async function main([output]) {
   if (!output || !process.env.GH_TOKEN) throw Error("PUBLIC_UPDATES_OUTPUT_AND_TOKEN_REQUIRED");
   const curated = JSON.parse(await readFile(new URL("../docs/public/updates.json", import.meta.url), "utf8"));
-  const history = await request("https://aroharetreat.github.io/website/release-history.json", { api: false, allow404: true });
-  const published = history ? (await history.json()) : [];
+  const history = await request("https://aroharetreat.github.io/website/release-history.json", { api: false });
+  const published = await history.json();
   if (!Array.isArray(published) || published.length > 500) throw Error("PUBLIC_UPDATES_HISTORY_INVALID");
   const known = mergeReleaseIndex(curated.releases, published, []);
   const [items, fresh] = await Promise.all([projectItems(), publishableReleases(known, process.env.GH_TOKEN)]);

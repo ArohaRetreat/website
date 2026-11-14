@@ -18,7 +18,7 @@ The [Pages workflow](https://github.com/ArohaRetreat/website/actions/workflows/p
 
 In [the public content](public/updates.json), `scheduleIssue` identifies the issue whose native sprint sets each review window. The companion issues provide context. Adjust sprint dates and assignments in the Project. Edit this file for public wording, new review cards, and curated historical release notes.
 
-The sync adds a version after the official Hosting run supplies a matching Firebase publication receipt and confirms live verification. It reads the public changelog at the deployed commit for the note and stores publication dates in IST. Recent runs are reconciled within the 14-day receipt retention window, and the published history keeps older entries. The same version may appear once per environment.
+The sync adds a version after the official Hosting run supplies a matching Firebase publication receipt and confirms live verification. It reads the public changelog at the deployed commit for the note and stores publication dates in IST. Recent runs are reconciled within the 14-day receipt retention window, and the published history keeps older entries. If the history cannot be read, publishing stops so the archive is preserved. The same version may appear once per environment.
 
 Run `node scripts/build-public-updates.mjs` to preview curated content in `local/public-updates/`. With a GitHub token that has Actions read access, run `node scripts/sync-public-updates.mjs /tmp/aroha-updates.json` and build with that JSON as the first argument to preview the current sources. Verify the deployment and both public routes. Pages-only pushes skip Firebase Hosting.
 
