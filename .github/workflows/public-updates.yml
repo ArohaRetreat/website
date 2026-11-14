@@ -15,6 +15,7 @@ on:
       - .github/workflows/public-updates.yml
       - docs/public/updates.json
       - scripts/build-public-updates.mjs
+      - scripts/check_public_pages.py
       - scripts/delivery/contract.mjs
       - scripts/delivery/github.mjs
       - scripts/delivery/read-hosting-receipt.py
@@ -32,6 +33,7 @@ on:
       - .github/workflows/public-updates.yml
       - docs/public/updates.json
       - scripts/build-public-updates.mjs
+      - scripts/check_public_pages.py
       - scripts/delivery/read-hosting-receipt.py
       - scripts/public-release-index.mjs
       - scripts/public-release-sources.mjs
@@ -65,7 +67,7 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           node --test tests/public-updates.test.mjs
-          node scripts/build-public-updates.mjs
+          python3 scripts/check_public_pages.py
       - name: Read and render verified public updates
         if: github.event_name != 'pull_request'
         env:
@@ -83,7 +85,7 @@ jobs:
           changed=false
           while IFS= read -r file; do
             status=$(curl --silent --show-error --max-time 15 --output "$RUNNER_TEMP/published" --write-out '%{http_code}' "$origin/$file")
-            if [[ "$status" == 404 ]] || { [[ "$status" == 200 ]] && ! cmp -s "local/public-updates/$file" "$RUNNER_TEMP/published"; }; then
+            if [[ "$status" == 404 ]]; then
               changed=true
               break
             fi
@@ -91,8 +93,25 @@ jobs:
               echo "GitHub Pages returned HTTP $status."
               exit 1
             fi
+            if [[ "$file" == sdlc/index.html || "$file" == handbook/*/index.html || "$file" == handbook/index.html ]]; then
+              # Compare handbook content independently of the revision stamped at the last publish.
+              sed -E 's/^[[:blank:]]*<meta name="source-revision" content="[0-9a-f]{40}">$//' "$RUNNER_TEMP/published" > "$RUNNER_TEMP/comparable"
+            else
+              cp "$RUNNER_TEMP/published" "$RUNNER_TEMP/comparable"
+            fi
+            if ! cmp -s "local/public-updates/$file" "$RUNNER_TEMP/comparable"; then
+              changed=true
+              break
+            fi
           done < <(find local/public-updates -type f ! -name .nojekyll | sed 's|^local/public-updates/||' | sort)
           echo "changed=$changed" >> "$GITHUB_OUTPUT"
+      - name: Stamp and verify the handbook to publish
+        if: steps.compare.outputs.changed == 'true'
+        env:
+          AROHA_HANDBOOK_REVISION: ${{ github.sha }}
+        run: |
+          node scripts/build-public-updates.mjs "$RUNNER_TEMP/public-updates.json"
+          python3 scripts/check_public_pages.py --output local/public-updates
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         if: steps.compare.outputs.changed == 'true'
         with:
@@ -124,4 +143,8 @@ jobs:
           grep -Fq '<h1 id="roadmap-title">Roadmap</h1>' "$RUNNER_TEMP/roadmap"
           grep -Fq '<h1 id="release-title">Release notes</h1>' "$RUNNER_TEMP/releases"
           grep -Fq '<h1 id="sdlc-title">Software delivery lifecycle</h1>' "$RUNNER_TEMP/sdlc"
+          for route in sdlc handbook handbook/technical handbook/settings handbook/pipeline; do
+            curl --fail --silent --show-error --retry 3 --retry-delay 3 --max-time 15 "$origin/$route/" -o "$RUNNER_TEMP/guide"
+            grep -Fq "<meta name=\"source-revision\" content=\"$GITHUB_SHA\">" "$RUNNER_TEMP/guide"
+          done
           jq -e 'type == "array" and length > 0' "$RUNNER_TEMP/history" > /dev/null

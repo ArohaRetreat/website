@@ -10,9 +10,26 @@ Use the public [Aroha Retreat Project](https://github.com/orgs/ArohaRetreat/proj
 
 Apply the [Firebase FinOps skill](../.agents/skills/firebase-finops/SKILL.md) when a change affects usage. Record estimated operations before implementation and link actual usage evidence after rollout.
 
-## Public roadmap, releases and delivery lifecycle
+## Delivery paths
 
-The [public roadmap](https://aroharetreat.github.io/website/) summarizes outcomes, audiences and target windows from the Project. The [release notes](https://aroharetreat.github.io/website/releases/) track verified website, npm and developer docs releases. The [SDLC page](https://aroharetreat.github.io/website/sdlc/) diagrams CI checks, each release path and the evidence used to observe them. Use the [product launch procedure](../.agents/skills/app-launchpad/references/product-launch.md) from [App Launchpad 1.13.2](https://github.com/theharithsa/app-launchpad-template/releases/tag/v1.13.2).
+Website changes use a PR to `preprod`, isolated acceptance, then an independent promotion PR to `main` when approved. The four existing website checks apply to both branches. MCP, developer docs and Natura use issue-linked PRs to their own `main` branches, with package publication, documentation Hosting and pinned design promotion verified separately. Release timing follows the approved work.
+
+## Documentation review
+
+Every PR records a visible decision under **Documentation impact**. Use one of these lines.
+
+```text
+Updated: <affected guides or links>
+No change: <reason the guides still apply>
+```
+
+Foundation CI checks for the entry. The PR review checks the accuracy and scope of the decision, including for Dependabot. Use the [Aroha handbook](https://aroharetreat.github.io/website/handbook/) for public instructions and keep private operational details in the owning service's documentation.
+
+These practices and the bundled skill were adopted from [App Launchpad 1.14.0](https://github.com/theharithsa/app-launchpad-template/releases/tag/v1.14.0), source `97aff26610feed99e9d0329c8eab4ea33794c1ed`. The template metadata records the original scaffold.
+
+## Public handbook, roadmap and releases
+
+The [public roadmap](https://aroharetreat.github.io/website/) summarizes outcomes, audiences and target windows from the Project. The [release notes](https://aroharetreat.github.io/website/releases/) track verified website, npm and developer docs releases. The [SDLC page](https://aroharetreat.github.io/website/sdlc/) diagrams CI checks, each release path and the evidence used to observe them. The handbook also links to the product, technical, settings and CI/CD guides. Use the [documentation and launch procedure](../.agents/skills/app-launchpad/references/product-launch.md) when updating them.
 
 The [Pages workflow](https://github.com/ArohaRetreat/website/actions/workflows/public-updates.yml) is scheduled hourly at :45 IST and refreshes after the website Hosting workflow completes. It checks the public Project, npm and developer docs and publishes only when the rendered site changes. Check for `schedule` runs in the workflow history to verify the clock trigger. Use **Run workflow** on `main` to refresh on demand.
 
@@ -26,7 +43,7 @@ Each release source has its own evidence.
 
 Dates are displayed in IST. The published history keeps earlier entries when a source is temporarily unavailable. If the archive itself cannot be read, publishing stops. The external sync usually adds one public npm metadata read and two static manifest reads per run. At one run per hour that is about 720 npm reads and 1,440 manifest reads in 30 days, plus bounded requests for new release copy. There are no new Firebase Functions, database reads, Storage objects or paid services for this sync.
 
-Run `node scripts/build-public-updates.mjs` to preview curated content in `local/public-updates/`. With a GitHub token that has Actions read access, run `node scripts/sync-public-updates.mjs /tmp/aroha-updates.json` and build with that JSON as the first argument to preview the current sources. Verify the deployment and all three public routes. Pages-only pushes skip Firebase Hosting.
+Run `node scripts/build-public-updates.mjs` to preview curated content in `local/public-updates/`. With a GitHub token that has Actions read access, run `node scripts/sync-public-updates.mjs /tmp/aroha-updates.json` and build with that JSON as the first argument to preview the current sources. Run `python3 scripts/check_public_pages.py` to validate the generated pages and local links. Live verification checks the handbook revision and all seven public routes. Pages-only pushes skip Firebase Hosting.
 
 - [GitHub Project tracking procedure](../.agents/skills/app-launchpad/references/github-projects.md)
 - [Issue-to-merge and release procedure](../.agents/skills/app-launchpad/references/github-release.md)
