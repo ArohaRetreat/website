@@ -24,6 +24,8 @@ The upstream [OTel CI/CD action](https://github.com/dash0hq/otel-cicd-action) wa
 
 Node reports come from actual native runner events alongside normal console output. Python reports come from unittest result callbacks. No PASS-string scraping is used. `if: always()` uploads JSONL reports even after failed tests; artifact names include execution attempt. Artifacts expire after 14 days. The trusted parser never extracts ZIPs: it rejects unexpected paths, symlinks, duplicate entries, >8 entries, >2 MiB archive/expanded total, >1 MiB per file, compression ratios >200, >2500 cases, duplicate case IDs and invalid fields/status/durations. Unknown private fields are stripped.
 
+Website integration includes `api-integration.jsonl`, `api-telemetry.jsonl`, `api-external.jsonl` and `api-loyalty.jsonl`. If an expected suite has no report, its evidence records that it is missing.
+
 GitHub APIs provide actual job/step outcomes, including failure/cancellation/skip. The observer has independent status: a failed exporter does not alter the original workflow result. Sanitized outbox/receipt JSON is retained as an observer artifact for 14 days. Operator outboxes under ignored `local/delivery-outbox/` remain available until explicitly removed. This is finite retention, not a permanent queue. Report-only recovery never reruns source tests or a deployment:
 
 ```sh
@@ -33,6 +35,8 @@ npm run deploy -- --replay-telemetry /absolute/path/to/local/delivery-outbox/dep
 ```
 
 Local commands require authenticated `gh`, installed functions dependencies and `FIREBASE_CLI_PATH` pointing to the installed `firebase-tools/lib/bin/firebase.js`. HTTP 429/5xx/network retries are bounded to three attempts with the same payload; persistent 4xx and partial rejection need correction and replay. Repeated OTLP export may duplicate spans/logs/metrics; do not sum replayed metrics as an exactly-once ledger.
+
+For a replay when the original run started more than 55 minutes ago, the receipt records `sourceSpans: outside-ingest-window` and the observer exports its current `delivery.report` span. Dynatrace accepts original spans only within its 60-minute ingest window. Replayed case and workflow events keep their original occurrence times, statuses, source IDs and execution attempt. The observing span and reporting IDs identify the recovery. [Dynatrace trace ingestion limits](https://docs.dynatrace.com/docs/ingest-from/opentelemetry/otlp-api/ingest-traces)
 
 ## Deployment and verification
 
