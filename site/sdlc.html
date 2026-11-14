@@ -1,51 +1,123 @@
 <section class="delivery-hero" aria-labelledby="sdlc-title">
   <div>
     <h1 id="sdlc-title">Software delivery lifecycle</h1>
-    <p>Follow an Aroha change from the GitHub Project through review, deployment and live verification.</p>
+    <p>Follow a feature or bug from the GitHub Project to release. See where Firebase, Resend and Dynatrace fit along the way.</p>
     <a class="button light-button" href="https://github.com/orgs/ArohaRetreat/projects/1">Open the GitHub Project <span aria-hidden="true">↗</span></a>
   </div>
   <nav class="delivery-nav" aria-label="On this page">
-    <a href="#development">Plan and build</a>
-    <a href="#ci">Continuous integration</a>
-    <a href="#release-paths">Release paths</a>
+    <a href="#development">Feature workflow</a>
+    <a href="#bug-workflow">Bug workflow</a>
+    <a href="#ci">Checks and deployment</a>
+    <a href="#architecture">Firebase and email</a>
     <a href="#observability">Observability</a>
   </nav>
 </section>
 
 <section class="delivery-section" id="development" aria-labelledby="development-title">
   <div class="section-heading">
-    <h2 id="development-title">From issue to verified release</h2>
-    <p>Each step leaves a record that the next person can check.</p>
+    <h2 id="development-title">Feature workflow</h2>
+    <p>Example: let hosts confirm an early checkout while applying the existing payment, room and loyalty rules.</p>
   </div>
-  <ol class="delivery-flow">
-    <li><h3>Plan</h3><p>Capture the outcome and acceptance criteria in an issue. Set its milestone and sprint in the Project.</p></li>
-    <li><h3>Build</h3><p>Work on an issue branch. Update the code, tests and docs together and open a linked pull request.</p></li>
-    <li><h3>Check</h3><p>GitHub Actions builds and tests the PR. Fix failed checks and resolve review comments before merging.</p></li>
-    <li><h3>Merge</h3><p>Integrate the reviewed source into the target branch. GitHub records the merge commit.</p></li>
-    <li><h3>Release and verify</h3><p>Publish through the owning release path and check the version and revision at its destination.</p></li>
+  <ol class="workflow-timeline" role="list" aria-label="Feature from intake to verified production">
+    <li class="workflow-phase">
+      <h3>Plan the work</h3>
+      <ol class="workflow-nodes" role="list">
+        <li class="workflow-node"><strong>1. Request a feature</strong><p>Open a Feature issue in the owning repository and add it to the Aroha Retreat Project.</p></li>
+        <li class="workflow-node"><strong>2. Validate and schedule</strong><p>Agree on the user outcome, acceptance criteria, dependencies and cost. Assign a milestone and plan the story in a sprint when ready.</p></li>
+        <li class="workflow-node"><strong>3. Implement</strong><p>Branch from <code>preprod</code> for website changes. Update shared rules, interfaces and tests. Use synthetic booking data.</p></li>
+      </ol>
+    </li>
+    <li class="workflow-phase">
+      <h3>Review and test in pre-production</h3>
+      <ol class="workflow-nodes" role="list">
+        <li class="workflow-node"><strong>4. Open and review the PR</strong><p>Link the issue. Review the code, test evidence and rollout impact. Put the intended version and changelog in the release diff when packaging a new version.</p></li>
+        <li class="workflow-node workflow-gate"><strong>5. Pass CI on the current revision</strong><p>GitHub Actions builds and tests the change. Resolve review comments and rerun required checks after any fix.</p></li>
+        <li class="workflow-node"><strong>6. Merge and verify pre-prod</strong><p>Merge to <code>preprod</code>. Release any required backend first, then Hosting. Check the live revision and run the feature acceptance flow.</p></li>
+      </ol>
+    </li>
+    <li class="workflow-phase">
+      <h3>Release and verify production</h3>
+      <ol class="workflow-nodes" role="list">
+        <li class="workflow-node"><strong>7. Open a release PR into main</strong><p>Bring approved commits onto a branch from current <code>main</code>. Review the release version, changelog and any backend prerequisites. Merge after checks and authorization.</p></li>
+        <li class="workflow-node workflow-gate"><strong>8. Pass deploy gates and publish</strong><p>Check CI on the merged revision, target, artifact and compatible API. GitHub Actions uses a short-lived identity to deploy the matching Firebase Hosting site.</p></li>
+        <li class="workflow-node workflow-result"><strong>9. Verify and announce</strong><p>Check live version, files, protected routes and the critical user journey. Review delivery telemetry. Pages adds the release after verification, then the issue records the evidence.</p></li>
+      </ol>
+    </li>
   </ol>
-  <div class="delivery-callout">
-    <h3>When a gate fails</h3>
-    <p>Use the failing check, deployment receipt or live probe to find the fault. Fix and rerun the affected gate. If a faulty build is already live, assess rollback to a known good, compatible release and verify the restored version.</p>
-  </div>
   <div class="card-links delivery-links">
+    <a href="https://github.com/ArohaRetreat/website/issues/149">Early checkout example <span aria-hidden="true">↗</span></a>
     <a href="https://github.com/orgs/ArohaRetreat/projects/1/views/9">Sprint planning <span aria-hidden="true">↗</span></a>
-    <a href="https://github.com/ArohaRetreat/website/blob/main/docs/delivery.md">Delivery guide <span aria-hidden="true">↗</span></a>
+  </div>
+</section>
+
+<section class="delivery-section" id="bug-workflow" aria-labelledby="bug-title">
+  <div class="section-heading">
+    <h2 id="bug-title">Bug workflow</h2>
+    <p>Example: a website integration run passed in GitHub, but its report was missing in Dynatrace.</p>
+  </div>
+  <ol class="workflow-timeline" role="list" aria-label="Bug from triage through verification and recovery">
+    <li class="workflow-phase">
+      <h3>Triage and contain</h3>
+      <ol class="workflow-nodes" role="list">
+        <li class="workflow-node"><strong>1. Capture the failure</strong><p>Open a Bug issue with reproduction steps, affected versions, impact and safe evidence.</p></li>
+        <li class="workflow-node workflow-gate"><strong>2. Choose urgency</strong><p>For active production impact, assess mitigation or a compatible rollback and verify recovery. Schedule a lower-impact fix in the Project.</p></li>
+        <li class="workflow-node"><strong>3. Locate the fault</strong><p>Compare the original test run, observer receipt and tenant records. The observer’s archive reader was rejecting two expected suite files.</p></li>
+      </ol>
+    </li>
+    <li class="workflow-phase">
+      <h3>Fix and prove the regression</h3>
+      <ol class="workflow-nodes" role="list">
+        <li class="workflow-node"><strong>4. Add a regression test</strong><p>Make the missing suites reproducible in a test. Update the reader and preserve its file, size and privacy controls.</p></li>
+        <li class="workflow-node workflow-gate"><strong>5. Review the linked PR</strong><p>Run the affected tests and the required GitHub checks. Retest a failing case before merge. Use an app version bump and changelog for a shipped app fix.</p></li>
+        <li class="workflow-node"><strong>6. Merge at the affected layer</strong><p>App fixes go through pre-prod and a main release PR. The observer fix goes to the trusted default branch because it is CI tooling.</p></li>
+      </ol>
+    </li>
+    <li class="workflow-phase">
+      <h3>Recover and verify</h3>
+      <ol class="workflow-nodes" role="list">
+        <li class="workflow-node"><strong>7. Apply the recovery</strong><p>Deploy an app fix through its Hosting or backend release gates. For the observer, replay the original CI run and attempt using the retained report.</p></li>
+        <li class="workflow-node workflow-gate"><strong>8. Verify the outcome</strong><p>For an app release, check the live revision and repeat the failing action. For reporting, match the receipt and find the expected suites in Dynatrace.</p></li>
+        <li class="workflow-node workflow-result"><strong>9. Close with evidence</strong><p>Record fix, run and live-check links. Public notes follow verified releases. Reopen if the failure returns.</p></li>
+      </ol>
+    </li>
+  </ol>
+  <div class="card-links delivery-links">
+    <a href="https://github.com/ArohaRetreat/website/issues/167">CI report example <span aria-hidden="true">↗</span></a>
+    <a href="https://github.com/ArohaRetreat/website/blob/main/docs/delivery-observability.md#test-reports-and-recovery">Replay procedure <span aria-hidden="true">↗</span></a>
   </div>
 </section>
 
 <section class="delivery-section" id="ci" aria-labelledby="ci-title">
   <div class="section-heading">
-    <h2 id="ci-title">What continuous integration checks</h2>
-    <p>The website PR needs four passing checks for its current revision. GitHub records each job and attempt.</p>
+    <h2 id="ci-title">CI and deployment gates</h2>
+    <p>The website PR and its merged revision are checked separately. A release version and changelog are reviewed source. The pipeline publishes the chosen version and Pages reads the verified release.</p>
   </div>
+  <h3 class="gate-heading">Before merge</h3>
   <dl class="check-grid">
     <div><dt>Application</dt><dd>Tests the website and builds the frontend artifact.</dd></div>
     <div><dt>Website integration</dt><dd>Runs API, booking, authorization and telemetry checks in isolated Firebase emulators.</dd></div>
     <div><dt>Foundation</dt><dd>Validates repository contracts, documentation links and foundation tests.</dd></div>
     <div><dt>Branch policy</dt><dd>Enforces the promotion route. Approved changes move from pre-prod through a release PR into main.</dd></div>
   </dl>
-  <p class="delivery-note">MCP CI checks the adapter, runs protocol and telemetry tests and previews the npm package. Developer docs CI builds the static site and tests its generated references and Swagger setup.</p>
+  <div class="deployment-gates">
+    <article class="delivery-lane">
+      <h3>Before Firebase Hosting</h3>
+      <ul class="verification-list">
+        <li>Match the latest branch commit to passing push checks, then recheck it after building.</li>
+        <li>Validate the versioned artifact, environment, site and pinned Natura assets. Check the Hosting size budget and Storage media metadata.</li>
+        <li>Confirm the backend version and environment are compatible. Use branch-bound identity to publish to the allowed site.</li>
+      </ul>
+    </article>
+    <article class="delivery-lane">
+      <h3>After Firebase Hosting</h3>
+      <ul class="verification-list">
+        <li>Check the provider release ID, live version and commit. Compare selected HTML, scripts, styles and media with the expected build.</li>
+        <li>Verify protected-route denial and the other environment’s release. Run the authorized acceptance checks in the target environment.</li>
+        <li>Keep the deployment and live-check receipts. Verify the Dynatrace events and deployment marker separately.</li>
+      </ul>
+    </article>
+  </div>
+  <p class="delivery-note">MCP CI tests the adapter, its protocol and telemetry, and the npm package contents. Developer docs CI builds the static site and tests the generated API reference and Swagger setup.</p>
   <div class="card-links delivery-links">
     <a href="https://github.com/ArohaRetreat/website/actions">Website checks <span aria-hidden="true">↗</span></a>
     <a href="https://github.com/ArohaRetreat/mcp/actions">MCP checks <span aria-hidden="true">↗</span></a>
@@ -103,6 +175,41 @@
   </div>
 </section>
 
+<section class="delivery-section" id="architecture" aria-labelledby="architecture-title">
+  <div class="section-heading">
+    <h2 id="architecture-title">Firebase and booking emails</h2>
+    <p>A browser or MCP client asks the same booking API to apply Aroha’s rules. Resend handles email delivery after a booking change has committed.</p>
+  </div>
+  <div class="service-map">
+    <article class="delivery-lane">
+      <h3>How a booking reaches the backend</h3>
+      <ol class="lane-flow" role="list">
+        <li><strong>Firebase Hosting</strong><span>Serves the website and Studio, and routes their API requests to Functions. Developer docs use their own Hosting site.</span></li>
+        <li><strong>Firebase Authentication</strong><span>Signs guests and staff in with Google. MCP and integrations present scoped API tokens.</span></li>
+        <li><strong>Cloud Functions</strong><span>Checks permissions and applies booking, inventory, payment and loyalty rules.</span></li>
+      </ol>
+    </article>
+    <dl class="check-grid">
+      <div><dt>Cloud Firestore</dt><dd>Stores bookings, availability, CMS, payment and loyalty records, audit history and queued email jobs.</dd></div>
+      <div><dt>Cloud Storage for Firebase</dt><dd>Serves public media. Private files such as guest identity documents require authorized access.</dd></div>
+    </dl>
+  </div>
+  <article class="delivery-lane email-flow">
+    <h3>What happens after a confirmation</h3>
+    <ol class="lane-flow" role="list">
+      <li><strong>Firestore commits</strong><span>The booking transaction writes the notification job with the verified recipient.</span></li>
+      <li><strong>Functions dispatches</strong><span>A worker sends the queued message. The scheduled retry handles eligible delivery failures.</span></li>
+      <li><strong>Resend accepts</strong><span>The provider accepts the send and reports delivery to the recipient’s mail server or failure through a signed webhook.</span></li>
+      <li><strong>Studio shows status</strong><span>The API validates the callback and stores the delivery update. Staff can check it from the portal.</span></li>
+    </ol>
+  </article>
+  <p class="delivery-note">Keep booking status, provider acceptance and recipient delivery separate when investigating a missing email.</p>
+  <div class="card-links delivery-links">
+    <a href="https://github.com/ArohaRetreat/website/blob/main/docs/guest-mail-parity-v1.md">Email and recipient policy <span aria-hidden="true">↗</span></a>
+    <a href="https://resend.com/docs/webhooks/event-types">Resend delivery events <span aria-hidden="true">↗</span></a>
+  </div>
+</section>
+
 <section class="delivery-section" id="observability" aria-labelledby="observability-title">
   <div class="section-heading">
     <h2 id="observability-title">How we observe delivery and runtime</h2>
@@ -113,8 +220,8 @@
       <h3>CI execution</h3>
       <ol class="lane-flow">
         <li><strong>GitHub Actions</strong><span>Workflow, job and step outcomes plus runner test reports</span></li>
-        <li><strong>Delivery observer</strong><span>Reads the website’s allowed runs and uses the source run ID, attempt and commit</span></li>
-        <li><strong>Dynatrace</strong><span>Delivery events and OpenTelemetry traces, metrics and logs</span></li>
+        <li><strong>Delivery observer</strong><span>Reads approved runs and structured reports. Keeps the original run ID, attempt, commit and test outcome.</span></li>
+        <li><strong>Dynatrace</strong><span>Stores delivery events and OpenTelemetry spans, outcome counts, durations and sanitized logs.</span></li>
       </ol>
     </article>
     <article class="delivery-lane">
@@ -137,7 +244,7 @@
   <dl class="check-grid evidence-grid">
     <div><dt>Find the change</dt><dd>Use the issue, PR and commit to trace the decision and reviewed source.</dd></div>
     <div><dt>Verify the deployment</dt><dd>Match the run ID and attempt to the provider release, build version and environment.</dd></div>
-    <div><dt>Confirm observability</dt><dd>Check export acceptance and search for the expected event or signal in the tenant. Trace joins require real trace context.</dd></div>
+    <div><dt>Confirm observability</dt><dd>Check the export receipt and find the expected suites and outcomes in Grail by original run and attempt. A late replay keeps source timestamps on its events and traces the current reporting attempt.</dd></div>
     <div><dt>Confirm a business outcome</dt><dd>Use the committed booking or audit record. Browser RUM describes what the guest experienced.</dd></div>
   </dl>
   <p class="delivery-note">Telemetry uses bounded operation, status and environment fields. Guest details, tokens and request bodies stay out of exports.</p>
