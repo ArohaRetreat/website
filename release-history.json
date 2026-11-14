@@ -1,0 +1,92 @@
+[
+  {
+    "version": "0.33.1",
+    "environment": "production",
+    "date": "2026-11-10",
+    "title": "Clearer feedback at the front desk",
+    "summary": "Hosts see progress during booking actions and can keep reading the dashboard as it refreshes. Host Studio also supports early checkout.",
+    "api": "0.18.0",
+    "evidence": "https://github.com/ArohaRetreat/website/actions/runs/42769452901"
+  },
+  {
+    "version": "0.32.3",
+    "environment": "production",
+    "date": "2026-11-10",
+    "title": "Natura media moves to Firebase Storage",
+    "summary": "The Natura design pages keep their original links while photos and other media load from Firebase Storage.",
+    "evidence": "https://github.com/ArohaRetreat/website/actions/runs/42672062980"
+  },
+  {
+    "version": "0.32.2",
+    "environment": "production",
+    "date": "2026-11-09",
+    "title": "Aroha branding in Host Studio",
+    "summary": "Host Studio shows the Aroha Retreat logo and keeps legal links visible at the bottom of the workspace.",
+    "evidence": "https://github.com/ArohaRetreat/website/actions/runs/42612277802"
+  },
+  {
+    "version": "0.32.1",
+    "environment": "production",
+    "date": "2026-11-09",
+    "title": "A dashboard for the day’s work",
+    "summary": "Studio opens on arrivals, departures and booking requests. Hosts can find guest profiles and review payments, invoices and sent emails. Guests can download issued invoices and receipts.",
+    "evidence": "https://github.com/ArohaRetreat/website/actions/runs/42583428948"
+  },
+  {
+    "version": "0.31.2",
+    "environment": "production",
+    "date": "2026-11-09",
+    "title": "Saved IDs for future check-ins",
+    "summary": "Guests can keep a newly saved ID photo for use on later visits.",
+    "evidence": "https://github.com/ArohaRetreat/website/actions/runs/42558355224"
+  },
+  {
+    "version": "0.31.1",
+    "environment": "production",
+    "date": "2026-11-09",
+    "title": "Private identity review and guest numbers",
+    "summary": "Guests can manage private ID photos, and booking managers can review them from active bookings. The release adds guest numbering and improves booking details on smaller screens.",
+    "evidence": "https://github.com/ArohaRetreat/website/actions/runs/42524656912"
+  },
+  {
+    "version": "0.30.3",
+    "environment": "production",
+    "date": "2026-11-08",
+    "title": "A lighter website download",
+    "summary": "Public retreat media moved to Firebase Storage, reducing the size of the files shipped with the website.",
+    "evidence": "https://github.com/ArohaRetreat/website/actions/runs/42503353224"
+  },
+  {
+    "version": "0.9.0",
+    "environment": "production",
+    "date": "2026-11-02",
+    "title": "Explore the Living Map",
+    "summary": "The Living Map introduced an illustrated farm route with eleven places to explore and a Reading View.",
+    "evidence": "https://github.com/ArohaRetreat/website/blob/a0f751b981b408b3dd5442c7c9466abfc06436ec/release-evidence/aroha-0.9.0/deployment.md"
+  },
+  {
+    "version": "0.33.2",
+    "environment": "preprod",
+    "date": "2026-11-13",
+    "title": "Core library updates",
+    "summary": "Compatible updates to Firebase, Resend and OpenTelemetry are available on the test site.",
+    "api": "0.18.1",
+    "evidence": "https://github.com/ArohaRetreat/website/actions/runs/43418614235"
+  },
+  {
+    "version": "0.33.0",
+    "environment": "preprod",
+    "date": "2026-11-10",
+    "title": "Review early checkout",
+    "summary": "Hosts can review an early departure before confirming checkout. The booking records the actual checkout time.",
+    "evidence": "https://github.com/ArohaRetreat/website/actions/runs/42765380160"
+  },
+  {
+    "version": "0.32.4",
+    "environment": "preprod",
+    "date": "2026-11-10",
+    "title": "Clearer checkout timing",
+    "summary": "The booking drawer shows when checkout opens and explains why the action is unavailable before that time.",
+    "evidence": "https://github.com/ArohaRetreat/website/actions/runs/42761928743"
+  }
+]
