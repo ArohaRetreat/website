@@ -1,5 +1,11 @@
 # Delivery
 
+## Weekly production release
+
+Merge and verify changes in pre-production as they are ready. Every Sunday (Asia/Kolkata), the Aroha maintainer reviews the accepted changes in the release milestone and approves one production promotion. Keep the candidate version stable across pre-production builds, identified by source revision and CI run. Use minor releases for compatible features and patch releases for fixes. Release approval and the checked promotion PR control publication. Skip an empty or unready release window. Critical outages and urgent fixes can use a separately approved, tested patch.
+
+The [Aroha Retreat Project](https://github.com/orgs/ArohaRetreat/projects/1) tracks the planned release milestone separately from the two-week sprint.
+
 ## Documentation review
 
 Every PR records a visible decision under **Documentation impact**. Use one of these lines.

@@ -1287,3 +1287,27 @@ html[data-booking-keyboard] .reveal {
 
 .website-return{padding:4px 5vw;background:var(--paper);border-bottom:1px solid var(--line);font-size:14px;line-height:1.5}.website-return a{display:inline-flex;align-items:center;min-height:44px;font-weight:600;text-decoration:underline;text-underline-offset:4px}.website-return a:focus-visible{outline-offset:3px}
 @media(max-width:700px){.website-return{padding:4px 22px}}
+
+.resume-stay {
+  width: min(100%, 640px);
+  margin: clamp(26px, 7vw, 96px) auto;
+  padding: clamp(18px, 5vw, 44px);
+  border: 1px solid var(--md-line, #cbd8ca);
+  border-radius: 24px;
+  background: var(--md-surface, #fffdf8);
+}
+.resume-stay h1 { margin: 0 0 12px; font-size: clamp(29px, 5vw, 44px); }
+.resume-stay-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  align-items: baseline;
+  margin-block: 20px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--md-surface-2, #eaf0e7);
+}
+.resume-stay .inline-actions { align-items: stretch; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 540px) {
+  .resume-stay .inline-actions > button { width: 100%; }
+}

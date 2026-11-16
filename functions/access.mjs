@@ -19,6 +19,11 @@ export function studioAccess(member) {
     access: active && ["superadmin", "admin"].includes(m.role),
   };
 }
+export function canReadAuthAccounts(member) {
+  const access = studioAccess(member);
+  return access.access && access.bookings === "manager";
+}
+
 export function validModuleAccess(body) {
   return (
     (body.websiteAccess === undefined ||

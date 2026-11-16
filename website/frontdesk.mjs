@@ -65,10 +65,11 @@ export const hostDestinations = (manager) => [
 const groups = {
   reservations:"calendar", "calendar-month":"calendar", feedback:"calendar",
   settings:"inventory", facilities:"inventory", blocks:"inventory", offers:"overview",
-  documents:"payments", loyalty:"payments",
+  documents:"payments", loyalty:"payments", accounts:"guests",
 };
 const activeGroup = (tab) => groups[tab] || tab;
-export const hostTabAllowed = (tab, manager) =>
+export const hostTabAllowed = (tab, manager, accountDirectory = false) =>
+  (tab !== "accounts" || accountDirectory) &&
   hostDestinations(manager).some(([id]) => id === activeGroup(tab)) &&
   (manager || !["documents","loyalty","feedback"].includes(tab));
 export function hostShell({ tab, manager, content, modules = {}, initials = "AR" }) {

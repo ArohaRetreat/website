@@ -162,6 +162,8 @@ function route(req) {
   if(req.path.startsWith('/api/v1/integration-tokens'))return 'integration.tokens';
   const p = req.path.replace(/^\/api\/v1/, "");
   if (p.startsWith("/guest-identity/")) return "guest-identity";
+  if (/^\/studio\/accounts\/?$/.test(p)) return "studio/accounts";
+  if (/^\/studio\/accounts\/export\/?$/.test(p)) return "studio/accounts/export";
   const booking = p.match(/^\/booking\/([a-z-]+)\/?$/);
   if (
     booking &&
