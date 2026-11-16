@@ -6,6 +6,7 @@ on:
     paths-ignore:
       - '.agents/**'
       - '.github/pull_request_template.md'
+      - .github/workflows/application.yml
       - '.github/workflows/deploy-environment.yml'
       - '.github/workflows/foundation.yml'
       - docs/**
