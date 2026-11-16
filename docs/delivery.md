@@ -14,6 +14,12 @@ Apply the [Firebase FinOps skill](../.agents/skills/firebase-finops/SKILL.md) wh
 
 Website changes use a PR to `preprod`, isolated acceptance, then an independent promotion PR to `main` when approved. The four existing website checks apply to both branches. MCP, developer docs and Natura use issue-linked PRs to their own `main` branches, with package publication, documentation Hosting and pinned design promotion verified separately. Release timing follows the approved work.
 
+## Weekly production release
+
+Merge and verify changes in pre-production as they are ready. Every Sunday (Asia/Kolkata), the Aroha maintainer reviews the accepted changes in the release milestone and approves one production promotion. Keep the candidate version stable across pre-production builds, identified by source revision and CI run. Use minor releases for compatible features and patch releases for fixes. Release approval and the checked promotion PR control publication. Skip an empty or unready release window. Critical outages and urgent fixes can use a separately approved, tested patch.
+
+The [Aroha Retreat Project](https://github.com/orgs/ArohaRetreat/projects/1) tracks the planned release milestone separately from the two-week sprint.
+
 ## Documentation review
 
 Every PR records a visible decision under **Documentation impact**. Use one of these lines.

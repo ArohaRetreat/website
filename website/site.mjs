@@ -1,3 +1,4 @@
+import { bindHomepageStay } from "./homepage-stay.mjs";
 import { createFaqMotion } from "./faq-motion.mjs";
 import { placePhoto } from "./place-photos.mjs";
 import { atmospherePreference } from "./atmosphere.mjs";
@@ -45,7 +46,10 @@ function render() {
   guestAccount?.destroy();
   guide?.destroy();
   locationMap?.destroy();
+  const previousStayForm = root.querySelector(".home-stay-form");
+  const previousStay = previousStayForm ? new FormData(previousStayForm) : null;
   root.innerHTML = renderSite(content);
+  bindHomepageStay(root.querySelector(".home-stay-form"), previousStay);
   for (const key of ["forest", "ivory", "leaf", "bronze"])
     document.documentElement.style.setProperty("--" + key, content.theme[key]);
   document.body.classList.toggle("simple", simple || !content.theme.motion);

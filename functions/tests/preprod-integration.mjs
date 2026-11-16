@@ -669,3 +669,64 @@ test("Studio dashboard, guest summaries, issued documents and manual email use s
     await new Promise((resolve) => collector.close(resolve));
   }
 });
+
+test("Studio account page, lookup and CSV remain scoped to the approved tester directory", async () => {
+  const admin = await google("owner@example.test");
+  const guest = await google("guest@example.test");
+  const other = await google("other@example.test");
+  const outside = await google("outside-studio@example.test");
+  const members = db.collection("aroha_members");
+  await members.doc(admin.localId).set({ role: "admin", active: true, email: "owner@example.test" });
+  await members.doc(other.localId).set({ role: "editor", active: true, bookingAccess: "manager" });
+  await members.doc(outside.localId).set({ role: "admin", active: true });
+
+  assert.equal((await call(null, "/studio/accounts", {})).httpStatus, 401);
+  assert.equal((await call(guest, "/studio/accounts", {})).httpStatus, 403);
+  assert.equal((await call(other, "/studio/accounts/export", {})).httpStatus, 403);
+  assert.equal((await call(outside, "/studio/accounts", {})).error.code, "PREPROD_TESTER_REQUIRED");
+  assert.equal((await call(admin, "/booking/state", undefined, { admin: true })).actor.accountDirectory, true);
+
+  const rows = [];
+  let cursor;
+  do {
+    const page = await call(admin, "/studio/accounts", { limit: 1, ...(cursor ? { cursor } : {}) });
+    assert.equal(page.httpStatus, 200);
+    assert.equal(page.items.length, 1);
+    rows.push(...page.items);
+    cursor = page.nextCursor;
+    assert.ok(rows.length <= 3);
+  } while (cursor);
+  assert.deepEqual(rows.map((row) => row.email).sort(),
+    ["guest@example.test", "other@example.test", "owner@example.test"]);
+  assert.deepEqual(Object.keys(rows[0]).sort(),
+    ["createdAt", "disabled", "email", "lastSignInAt", "name", "providers", "uid"]);
+  assert.equal((await call(admin, "/studio/accounts", { query: guest.localId })).items[0].uid, guest.localId);
+  assert.equal((await call(admin, "/studio/accounts", { query: "GUEST@example.test" })).items[0].uid, guest.localId);
+  assert.deepEqual((await call(admin, "/studio/accounts", { query: outside.localId })).items, []);
+  assert.deepEqual((await call(admin, "/studio/accounts", { query: "outside-studio@example.test" })).items, []);
+  assert.equal((await call(admin, "/studio/accounts", { cursor: "auth.invalid" })).error.code, "CURSOR_EXPIRED");
+  assert.equal((await call(admin, "/studio/accounts", { limit: 51 })).httpStatus, 422);
+
+  const csv = await fetch(base + "/studio/accounts/export", {
+    method: "POST",
+    headers: { Authorization: "Bearer " + admin.idToken, "Content-Type": "application/json" },
+    body: "{}",
+    signal: AbortSignal.timeout(22_000),
+  });
+  assert.equal(csv.status, 200);
+  assert.match(csv.headers.get("content-type"), /^text\/csv/);
+  assert.equal(csv.headers.get("cache-control"), "no-store");
+  assert.match(csv.headers.get("content-disposition"), /attachment.*aroha-sign-in-accounts.csv/);
+  const data = await csv.text();
+  assert.match(data, /User UID/);
+  assert.match(data, /"guest@example.test"/);
+  assert.ok(!data.includes("outside-studio@example.test"));
+  const audit = await db.collection("aroha_preprod_audit").where("operation", "==", "studio.accounts.export").get();
+  assert.ok(audit.docs.some((doc) => doc.data().actor === admin.localId &&
+    doc.data().requestId === csv.headers.get("x-request-id") && doc.data().count === 3));
+
+  await members.doc(admin.localId).update({ bookingAccess: "viewer" });
+  assert.equal((await call(admin, "/studio/accounts", {})).httpStatus, 403);
+  assert.equal((await call(admin, "/studio/accounts/export", {})).httpStatus, 403);
+  await members.doc(admin.localId).update({ bookingAccess: "manager" });
+});

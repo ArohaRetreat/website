@@ -140,3 +140,14 @@ html[data-atmosphere="sunset"] .public-header.on-paper { color: #fff; }
 html[data-atmosphere="sunset"] .public-header.on-paper .field-brand img { filter: none; }
 
 html[data-atmosphere="sunset"] :is(.public-header.field-header,.public-header.map-header).is-transparent { background: transparent; }
+
+html[data-atmosphere="sunset"] .home-stay { background: var(--dusk-ground); color: var(--dusk-ink); }
+html[data-atmosphere="sunset"] .home-stay-inner { background: var(--dusk-card); border-color: var(--dusk-line); }
+html[data-atmosphere="sunset"] .home-stay-inner > p { color: var(--dusk-muted); }
+html[data-atmosphere="sunset"] .home-stay-form :is(input:not([type=hidden]), select) {
+  background: var(--dusk-ground);
+  color: var(--dusk-ink);
+  border-color: var(--dusk-line);
+}
+html[data-atmosphere="sunset"] .home-stay-form button { background: var(--dusk-accent); color: var(--dusk-ground); }
+html[data-atmosphere="sunset"] .home-stay-form :is(input, select, button):focus-visible { outline-color: var(--dusk-accent); }

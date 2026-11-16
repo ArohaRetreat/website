@@ -8,10 +8,12 @@ import {
   setAtmosphere,
   watchAtmosphere,
 } from "./atmosphere.mjs";
+import { readHomepageStay } from "./homepage-stay.mjs";
 import { startConcierge } from "./booking-concierge.mjs";
 try {
   const portal = await startConcierge({
     api: bookingApi,
+    homepageStay: readHomepageStay(new URLSearchParams(location.search)),
     onEnquire: async show => {
       const [{openEnquiry},{readPublishedSite}] = await Promise.all([import('./guest-dialogs.mjs'),import('./firebase-public.mjs')]);
       const content=await readPublishedSite();

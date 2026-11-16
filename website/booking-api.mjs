@@ -11,7 +11,7 @@ export async function bookingApi(
   operation,
   body,
   key,
-  { admin = false, start, cursor, workspace = false } = {},
+  { admin = false, start, cursor, workspace = false, continueBooking = false } = {},
 ) {
   await ready;
   if (operation === "session") {
@@ -40,7 +40,7 @@ export async function bookingApi(
       if (!session.ok)
         throw Error("This Google account does not have Host Studio access.");
     }
-    if (!admin) return finishGuestSignIn();
+    if (!admin) return continueBooking ? { redirecting: false } : finishGuestSignIn();
     return request("state", undefined, undefined, { admin, start });
   }
   if (operation === "logout") {
@@ -119,7 +119,7 @@ async function request(
   const response = await fetch(
     operation === "platform"
       ? "/api/v1/platform"
-      : operation.startsWith("guest-identity/")
+      : operation.startsWith("guest-identity/") || ["studio/accounts", "studio/accounts/export"].includes(operation)
         ? "/api/v1/" + operation
         : "/api/v1/booking/" + operation + (query.size ? "?" + query : ""),
     {
@@ -145,6 +145,11 @@ async function request(
     if (stage) journeyStep(stage, "failed");
     throw e;
   });
+  if (operation === "studio/accounts/export" && response.ok) {
+    if (!response.headers.get("content-type")?.startsWith("text/csv"))
+      throw Error("The account export returned an unexpected format.");
+    return response.blob();
+  }
   let result;
   try {
     result = await response.json();
