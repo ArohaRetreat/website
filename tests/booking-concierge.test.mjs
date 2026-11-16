@@ -88,6 +88,8 @@ async function mount({
   anonymous = false,
   sessionRedirect = false,
   authEvent = false,
+  homepageStay,
+  cancelFirstSignIn = false,
   failCreate = false,
   failStatus = 0,
   quoteStale = false,
@@ -110,7 +112,8 @@ async function mount({
     detailRelease, calendarRelease,
     createCalls = [];
   const dom = new JSDOM('<div id="app" data-dt-mask></div>', {
-      url: "https://aroha-retreat-preprod.web.app/book/",
+      url: "https://aroha-retreat-preprod.web.app/book/" + (homepageStay
+        ? "?" + new URLSearchParams({ start: "stay", ...homepageStay }) : ""),
       runScripts: "outside-only",
     }),
     w = dom.window;
@@ -128,6 +131,7 @@ async function mount({
   let creates = 0,
     firstBody;
   const operations=[];
+  const availabilityInputs = [];
   const api = async (op, body, key, opts = {}) => {
     operations.push(op);
     if (op === "state") {
@@ -145,9 +149,13 @@ async function mount({
       return snapshot;
     }
     if (op === "session") {
+      if (cancelFirstSignIn) {
+        cancelFirstSignIn = false;
+        throw { code: "auth/popup-closed-by-user" };
+      }
       signed = true;
       if (authEvent) await portal.identity({ uid: actor.id });
-      return sessionRedirect ? {redirecting:true} : {};
+      return sessionRedirect && !opts.continueBooking ? {redirecting:true} : {};
     }
     if (op === "logout") {
       signed = false;
@@ -160,7 +168,10 @@ async function mount({
       return result;
     }
     if (!signed) throw { code: "SIGN_IN_REQUIRED" };
-    if (op === "availability") return structuredClone(availability(s, body));
+    if (op === "availability") {
+      availabilityInputs.push(structuredClone(body));
+      return structuredClone(availability(s, body));
+    }
     if (op === "profile") {
       assert.equal(body.expectedVersion, profile.version);
       profile = { ...profile, ...body, version: profile.version + 1 };
@@ -190,6 +201,7 @@ async function mount({
   let portal;
   try { portal = await w.Concierge.startConcierge({
     api,
+    homepageStay,
     journeyStep: (...a) => steps.push(a),
     expectedEnvironment: environment,
   }); } catch(error) { dom.window.close(); throw error; }
@@ -252,6 +264,7 @@ async function mount({
     terms,
     createCalls,
     operations,
+    availabilityInputs,
     releaseCalendar:()=>calendarRelease?.(),
     setSigned: (v) => (signed = v),
     releaseDetail: () => detailRelease?.(),
@@ -568,4 +581,36 @@ test("homepage return link is visible and a completed sign-in redirect stops boo
   await ui.wait(()=>ui.operations.includes('session'));
   assert(!ui.operations.includes('availability'));assert(!ui.operations.includes('quote'));assert.equal(ui.s.bookings.length,0);
  }finally{ui.close();}
+});
+
+test("homepage stay survives a cancelled Google popup and continues to availability after sign-in", async () => {
+  const draft = { arrival: from, departure: until, adults: 3 };
+  const ui = await mount({
+    anonymous: true, homepageStay: draft, sessionRedirect: true,
+    authEvent: true, cancelFirstSignIn: true,
+  });
+  try {
+    assert.equal(ui.d.querySelector("h1").textContent, "Sign in to continue");
+    assert.equal(ui.operations.includes("availability"), false);
+    ui.click('[data-act="search"]');
+    await ui.wait(() => ui.d.querySelector(".form-error")?.textContent.includes("still selected"));
+    assert.equal(new URL(ui.w.location.href).searchParams.get("arrival"), from);
+    assert.match(ui.d.querySelector(".resume-stay-summary").textContent, /3 adults/);
+    ui.click('[data-act="search"]');
+    await ui.wait(() => ui.d.querySelector(".offer"));
+    assert.equal(ui.w.location.search, "");
+    assert.ok(ui.availabilityInputs.length > 0);
+    for (const input of ui.availabilityInputs)
+      assert.deepEqual({ arrival: input.arrival, departure: input.departure, adults: input.adults }, draft);
+    assert.equal(ui.operations.includes("create"), false);
+  } finally { ui.close(); }
+});
+
+test("signed-in guests reach booking options directly from the homepage draft", async () => {
+  const ui = await mount({ homepageStay: { arrival: from, departure: until, adults: 2 } });
+  try {
+    await ui.wait(() => ui.d.querySelector(".offer"));
+    assert.equal(ui.operations.includes("session"), false);
+    assert.ok(ui.availabilityInputs.every((record) => record.arrival === from && record.adults === 2));
+  } finally { ui.close(); }
 });

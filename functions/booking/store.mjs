@@ -32,7 +32,7 @@ import {
   environment,
 } from "../environment.mjs";
 import { bookingEvent, queueCommitted } from "./observability.mjs";
-import { studioAccess } from "../access.mjs";
+import { canReadAuthAccounts, studioAccess } from "../access.mjs";
 import { contactDetails, ownContact, withoutContact } from "./contact.mjs";
 import {
   availabilityCalendar,
@@ -244,7 +244,10 @@ export async function bookingState(
         id: token.uid,
         name: String(token.name || "Guest").slice(0, 80),
         role: admin ? "host" : "guest",
-        ...(admin ? { bookingAccess: studioAccess(ms.data()).bookings } : {}),
+        ...(admin ? {
+          bookingAccess: studioAccess(ms.data()).bookings,
+          accountDirectory: canReadAuthAccounts(ms.data()),
+        } : {}),
       };
       const profile = ps.exists
         ? ps.data()

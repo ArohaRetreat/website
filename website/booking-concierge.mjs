@@ -7,6 +7,7 @@ import { recommendPrivate } from "./booking-options.mjs";
 export async function startConcierge({
   api,
   onEnquire,
+  homepageStay,
   journeyStep = () => {},
   getAtmosphere = () => "day",
   setAtmosphere = () => {},
@@ -56,6 +57,9 @@ export async function startConcierge({
     requestBody: null,
     submitting: false,
   };
+  let pendingHomepageStay = Boolean(homepageStay);
+  let showHomepageSignIn = pendingHomepageStay;
+  if (homepageStay) Object.assign(S, homepageStay, { hasDates: true });
   let identityGeneration = 0;
   const transport = api;
   api = async (...args) => {
@@ -173,6 +177,18 @@ export async function startConcierge({
     return `<nav class="progress" aria-label="Booking progress"><button data-act="find" ${n === 0 ? 'aria-current="step"' : ""}>01 · Dates & guests</button><i></i><button data-act="options" ${n === 1 ? 'aria-current="step"' : ""} ${n < 1 ? "disabled" : ""}>02 · Your visit</button><i></i><span ${n === 2 ? 'aria-current="step"' : ""}>03 · Review request</span></nav>`;
   }
   function find() {
+    if (showHomepageSignIn && !S.account?.actor) {
+      return `<section class="resume-stay reveal" aria-labelledby="resume-stay-title">
+        <h1 id="resume-stay-title">Sign in to continue</h1>
+        <p>Continue with Google to check availability for your stay.</p>
+        <div class="resume-stay-summary"><strong>${tripDates()}</strong><span>${party()}</span></div>
+        ${S.error ? `<p class="form-error" role="alert">${esc(S.error)}</p>` : ""}
+        <div class="inline-actions">
+          ${primary(S.authBusy ? "Opening Google…" : "Continue with Google", "search", S.authBusy)}
+          <button class="secondary" data-act="edit-homepage-stay" ${S.authBusy ? "disabled" : ""}>Edit dates and guests</button>
+        </div>
+      </section>`;
+    }
     return `<section class="landing reveal"><div class="welcome"><div class="welcome-copy"><span class="eyebrow">YOUR TIME AT AROHA</span><h1>Make time<br>for yourself.</h1><p>Start with the people and the dates. We’ll help you find the right way to stay.</p>${S.account?.settings.paused ? '<p class="disabled-notice">Your hosts have paused new requests. Your existing visits remain accessible.</p>' : ""}${S.error ? '<p class="form-error" role="alert">' + esc(S.error) + "</p>" : ""}<div class="planner"><div class="intent" aria-label="Kind of visit">${[
       ["stay", "Stay overnight"],
       ["day", "Visit for the day"],
@@ -429,21 +445,38 @@ export async function startConcierge({
     S.departure = add(today(), 4);
     S.lastDay = S.departure;
   }
-  async function signIn() {
-    if (S.authBusy) return;
+  async function signIn(continueBooking = false) {
+    if (S.authBusy) return false;
     S.authBusy = true;
+    if (continueBooking) {
+      S.error = "";
+      render();
+    }
     try {
-      const session=await api("session", {});
-      if(session?.redirecting) return false;
+      const session = await api("session", {}, undefined, { continueBooking });
+      if (session?.redirecting) return false;
       await refresh();
       render();
-      return true;
+      return Boolean(S.account?.actor);
     } catch (e) {
-      toast(message(e));
+      if (continueBooking) {
+        S.error = e.code === "auth/popup-closed-by-user"
+          ? "Sign-in was closed. Your dates and guests are still selected."
+          : message(e);
+      } else toast(message(e));
       return false;
     } finally {
       S.authBusy = false;
+      if (continueBooking && !S.account?.actor) render();
     }
+  }
+  function consumeHomepageStay() {
+    if (!pendingHomepageStay) return;
+    pendingHomepageStay = false;
+    showHomepageSignIn = false;
+    const url = new URL(window.location.href);
+    for (const key of ["start", "arrival", "departure", "adults"]) url.searchParams.delete(key);
+    window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
   }
   async function search(units) {
     syncContact();
@@ -451,7 +484,9 @@ export async function startConcierge({
       openDates();
       return;
     }
-    if (!S.account?.actor && !(await signIn())) return;
+    const alreadySignedIn = Boolean(S.account?.actor);
+    if (!alreadySignedIn && !(await signIn(pendingHomepageStay))) return;
+    consumeHomepageStay();
     const version = ++requestVersion;
     S.busy = true;
     S.error = "";
@@ -461,7 +496,7 @@ export async function startConcierge({
     journeyStep("dates", "attempted", apiKind());
     render();
     try {
-      await refresh();
+      if (alreadySignedIn) await refresh();
       if (version !== requestVersion) return;
       let data;
       if (S.kind === "stay") {
@@ -778,6 +813,12 @@ export async function startConcierge({
     if (a === "retrycalendar") { dateDraft.calendarKey=null; drawDates(); }
     if (a === "dates" && !S.submissionUnknown) openDates();
     if (a === "guests" && !S.submissionUnknown) openGuests();
+    if (a === "edit-homepage-stay") {
+      showHomepageSignIn = false;
+      S.error = "";
+      view("find");
+      return;
+    }
     if (a === "search") await search();
     if (a === "options") {
       if (S.data && !S.promo) view("options");
@@ -894,6 +935,7 @@ export async function startConcierge({
       view("profile");
     }
     if (a === "account") {
+      if (pendingHomepageStay && !S.account.actor) return await search();
       if (!S.account.actor && !(await signIn())) return;
       modal("<h2>Your Aroha account.</h2><p>" + esc(S.account.actor.name) + "</p><p>" + esc(S.account.profile?.email) + '</p><div class="account-choices"><button class="reviewpanel" data-act="enquire"><strong>Enquire on WhatsApp ↗</strong><span>A conversation with your hosts. No dates reserved.</span></button><button class="reviewpanel" data-act="find"><strong>Book a visit →</strong><span>Choose dates and a clear price. Your host approves availability.</span></button></div><div class="inline-actions"><button class="secondary" data-act="profile">Guest profile</button><button class="textbutton" data-act="logout">Sign out</button></div>');
     }
@@ -1400,8 +1442,11 @@ export async function startConcierge({
   S.view = initialView();
   render();
   journeyStep(S.view === "find" ? "plan" : S.view, "viewed", apiKind());
+  if (pendingHomepageStay && S.account.actor && S.view === "find") void search();
   return {
     async identity(user) {
+      // The booking sign-in owns the refresh while its Google popup is open.
+      if (S.authBusy && pendingHomepageStay && user) return;
       if ((S.account.actor?.id || null) === (user?.uid || null)) return;
       if (S.account.actor) clearPrivate();
       else { identityGeneration++; requestVersion++; }
@@ -1409,6 +1454,7 @@ export async function startConcierge({
       try {
         await refresh();
         render();
+        if (pendingHomepageStay && S.account.actor && S.view === "find") void search();
       } catch (e) {
         toast(message(e));
       }

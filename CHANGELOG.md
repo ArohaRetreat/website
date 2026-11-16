@@ -1,3 +1,8 @@
+## Website 0.34.0 / API 0.19.0 — booking entry and sign-in accounts
+
+- Start an overnight booking on the homepage and carry the dates and adult count through Google sign-in to the booking options.
+- Give active Host Studio admins a paged sign-in account table, exact lookup and an audit-recorded CSV export.
+
 ## Website 0.33.2 / API 0.18.1 — dependency maintenance
 
 - Update the Firebase web and Admin SDKs and the Resend client within their current major versions.

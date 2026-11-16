@@ -201,12 +201,98 @@ function mountStudioList(target, { fetchPage, renderRow, table, empty, onRows = 
       studioStatus(status, "");
     } catch (error) {
       if (!target.isConnected) return;
+      if (error.status === 401 || error.status === 403) list.replaceChildren();
       studioStatus(status, error.code === "CURSOR_EXPIRED" ? "This page expired. Refresh to start again." : "This list could not load.");
       pagination.innerHTML = button("Reload","data-reload");
       pagination.querySelector("[data-reload]").onclick = () => void load(0);
     }
   }
   void load(0);
+}
+
+export function mountStudioAccounts(target, { call, testersOnly }) {
+  const copy = testersOnly ? "Accounts on the pre-production tester list."
+    : "Accounts registered through Firebase Authentication.";
+  target.innerHTML = heading("Sign-in accounts", copy) + `
+    <section class="workspace-card account-directory" aria-label="Authentication accounts">
+      <div class="account-directory-controls">
+        <form data-account-search>
+          <label for="account-query">Email or user UID</label>
+          <div class="account-search-row">
+            <input id="account-query" name="query" type="search" maxlength="254" autocomplete="off" required>
+            <button type="submit" class="tonal">Search</button>
+            <button type="button" class="text-button" data-show-accounts hidden>Show all</button>
+          </div>
+        </form>
+        <button type="button" class="outline-button" data-export-accounts>Export all (CSV)</button>
+      </div>
+      <p role="status" data-account-export-status></p>
+      <p class="account-scroll-note">Scroll the table to see all columns.</p>
+      <div data-account-results></div>
+    </section>`;
+  const search = target.querySelector("[data-account-search]");
+  const clear = target.querySelector("[data-show-accounts]");
+  const results = target.querySelector("[data-account-results]");
+  const exportButton = target.querySelector("[data-export-accounts]");
+  const status = target.querySelector("[data-account-export-status]");
+  const providerName = (value) => ({ "google.com": "Google", password: "Email", phone: "Phone" })[value] || value;
+  const formatted = (value) => dateTime(value ? Date.parse(value) : undefined);
+  function show(query) {
+    const slot = target.ownerDocument.createElement("div");
+    results.replaceChildren(slot);
+    clear.hidden = !query;
+    mountStudioList(slot, {
+      fetchPage: (page) => call("studio/accounts", query ? { query } : page),
+      table: ["Sign-in accounts", [["Account"], ["Providers"], ["Created (IST)"], ["Last sign-in (IST)"], ["User UID"], ["Status"]]],
+      empty: query ? "No account matched that email or UID." : "No accounts on this page.",
+      renderRow: (row) => `<tr>
+        <th scope="row">${e(row.name || row.email || "Unnamed account")}${row.name && row.email ? `<small>${e(row.email)}</small>` : ""}</th>
+        <td>${e(row.providers?.map(providerName).join(", ") || "—")}</td>
+        <td>${formatted(row.createdAt)}</td>
+        <td>${row.lastSignInAt ? formatted(row.lastSignInAt) : "Never"}</td>
+        <td class="account-uid">${e(row.uid)}</td>
+        <td><span class="table-status${row.disabled ? "" : " current"}">${row.disabled ? "Disabled" : "Active"}</span></td>
+      </tr>`,
+    });
+  }
+  search.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const query = search.elements.query.value.trim();
+    if (query) show(query);
+  });
+  clear.onclick = () => {
+    search.reset();
+    show();
+    search.elements.query.focus();
+  };
+  exportButton.onclick = async () => {
+    exportButton.disabled = true;
+    studioStatus(status, "Preparing the CSV…", true);
+    try {
+      const blob = await call("studio/accounts/export", {});
+      if (!target.isConnected) return;
+      const url = URL.createObjectURL(blob);
+      const link = target.ownerDocument.createElement("a");
+      link.href = url;
+      link.download = "aroha-sign-in-accounts.csv";
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 3000);
+      studioStatus(status, "CSV download started.");
+    } catch (error) {
+      if (!target.isConnected) return;
+      const message = {
+        ACCOUNT_EXPORT_TOO_LARGE: "The directory exceeds the size of one CSV export.",
+        ACCOUNT_EXPORT_TIMEOUT: "The export took too long. Try again.",
+        RATE_LIMIT: "Please wait a minute before exporting again.",
+        FORBIDDEN: "Your account no longer has permission to export.",
+      };
+      if (error.status === 401 || error.status === 403) results.replaceChildren();
+      studioStatus(status, message[error.code] || "The CSV could not download. Try again.");
+    } finally {
+      exportButton.disabled = false;
+    }
+  };
+  show();
 }
 
 const visitRow = (visit) => `<tr>

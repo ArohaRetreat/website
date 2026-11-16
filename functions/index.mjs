@@ -2,6 +2,7 @@ import { guestIdentity, drainGuestIdentity, isIdentityAction, MAX_ID_REQUEST } f
 import {invoicePdf} from './email/documents.mjs';
 import {legacyPlatform} from './platform/legacy.mjs';
 import {platformOperation} from './platform/service.mjs';
+import { authAccountDirectory, exportAuthAccounts, listAuthAccounts } from "./platform/accounts.mjs";
 import {externalApi} from './external/api.mjs';
 import {tokenManagement} from './external/access.mjs';
 import { apiVersion } from "./version.mjs";
@@ -24,6 +25,7 @@ import {
   collectionName,
   sharedCollectionName,
   isTester,
+  preprodTesterEmails,
   environmentFields,
   serviceName,
 } from "./environment.mjs";
@@ -37,7 +39,7 @@ import {
   drainEvents,
   OPERATIONS,
 } from "./booking/observability.mjs";
-import { studioAccess } from "./access.mjs";
+import { canReadAuthAccounts, studioAccess } from "./access.mjs";
 import {
   traceRequest,
   recordSummary,
@@ -221,6 +223,7 @@ export const arohaApi = onRequest(
   },
   async (req, res) => {
     await refreshTelemetryConfig(db);
+    let accountCsv;
     const payload = await traceRequest(req, res, async () => {
       const requestId = randomUUID(),
         started = Date.now();
@@ -357,6 +360,29 @@ export const arohaApi = onRequest(
         if(path==='/integration-tokens'||path.startsWith('/integration-tokens/')){operation='integration.tokens';await throttleBooking(db,token.uid);if(req.method==='POST'&&!req.is('application/json'))throw new DomainError('JSON_REQUIRED',415);return await tokenManagement(db,token,req.method,path.split('/')[2],b,req.get('Idempotency-Key'));}
         if (req.method === "POST" && !req.is("application/json"))
           throw new DomainError("JSON_REQUIRED", 415);
+        if (path === "/studio/accounts" || path === "/studio/accounts/export") {
+          const exporting = path.endsWith("/export");
+          operation = exporting ? "studio.accounts.export" : "studio.accounts.list";
+          if (req.method !== "POST") throw new DomainError("NOT_FOUND", 404);
+          if (req.rawBody?.length > 4096) throw new DomainError("PAYLOAD_TOO_LARGE", 413);
+          if (token.email_verified !== true || token.firebase?.sign_in_provider !== "google.com")
+            throw new DomainError("VERIFIED_GOOGLE_ACCOUNT_REQUIRED", 403);
+          const member = (await collection("members").doc(token.uid).get()).data();
+          if (!canReadAuthAccounts(member)) throw new DomainError("FORBIDDEN", 403);
+          await throttleBooking(db, token.uid, { lane: operation, limit: exporting ? 2 : 30 });
+          const directory = authAccountDirectory(getAuth(), {
+            testerEmails: environment.preprod ? preprodTesterEmails() : undefined,
+          });
+          if (!exporting) return await listAuthAccounts(directory, b);
+          if (!b || typeof b !== "object" || Array.isArray(b) || Object.keys(b).length)
+            throw new DomainError("INVALID_FIELDS", 422);
+          const result = await exportAuthAccounts(directory);
+          await db.runTransaction(async (tx) =>
+            audit(tx, token, operation, "auth-directory", { count: result.count, requestId }),
+          );
+          accountCsv = result.csv;
+          return null;
+        }
         if (identityAction) {
           if (!environment.preprod || req.method !== "POST" || !isIdentityAction(identityAction))
             throw new DomainError("NOT_FOUND", 404);
@@ -596,6 +622,10 @@ export const arohaApi = onRequest(
     });
     // Finish bounded telemetry exports while request CPU is still allocated.
     if(res.headersSent)return;
+    if (accountCsv !== undefined) {
+      res.attachment("aroha-sign-in-accounts.csv");
+      return res.type("text/csv").send(accountCsv);
+    }
     return res.json(payload);
   },
 );
