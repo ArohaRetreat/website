@@ -7,6 +7,7 @@ on:
       - '.agents/**'
       - '.github/ISSUE_TEMPLATE/**'
       - '.github/pull_request_template.md'
+      - .github/workflows/application.yml
       - '.github/workflows/deploy-environment.yml'
       - .github/workflows/foundation.yml
       - '.github/workflows/project-milestones.yml'
