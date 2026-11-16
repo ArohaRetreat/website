@@ -184,7 +184,13 @@ export function runEvents(
   const expected =
     run.name === "Foundation checks"
       ? ["foundation.jsonl"]
-      : ["application.jsonl", "api-integration.jsonl", "api-telemetry.jsonl"];
+      : [
+          "application.jsonl",
+          "api-integration.jsonl",
+          "api-telemetry.jsonl",
+          "api-external.jsonl",
+          "api-loyalty.jsonl",
+        ];
   if (run.name !== "Foundation checks" && reports["preprod-integration.jsonl"])
     expected.push("preprod-integration.jsonl");
   if (

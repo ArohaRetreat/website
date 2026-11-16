@@ -2,6 +2,35 @@ name: Deploy environment frontend
 on:
   push:
     branches: [main, preprod]
+    # Documentation, GitHub Pages and CI reporting do not require a Hosting release.
+    paths-ignore:
+      - '.agents/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/pull_request_template.md'
+      - .github/workflows/application.yml
+      - '.github/workflows/deploy-environment.yml'
+      - .github/workflows/foundation.yml
+      - '.github/workflows/project-milestones.yml'
+      - '.github/workflows/public-updates.yml'
+      - README.md
+      - docs/**
+      - site/**
+      - scripts/build-public-updates.mjs
+      - scripts/check.sh
+      - scripts/check_docs_impact.py
+      - scripts/check_public_pages.py
+      - scripts/delivery/contract.mjs
+      - scripts/delivery/github.mjs
+      - scripts/delivery/read-archive.py
+      - scripts/delivery/read-hosting-receipt.py
+      - scripts/delivery/report-run.mjs
+      - scripts/public-release-index.mjs
+      - scripts/public-release-sources.mjs
+      - scripts/sync-public-updates.mjs
+      - tests/delivery-observability.test.mjs
+      - tests/public-updates.test.mjs
+      - tests/test_docs_impact.py
+      - tests/test_contracts.py
   workflow_dispatch:
 permissions:
   contents: read

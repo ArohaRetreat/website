@@ -28,6 +28,8 @@ export const REPORTS = new Set([
   "foundation.jsonl",
   "api-integration.jsonl",
   "api-telemetry.jsonl",
+  "api-external.jsonl",
+  "api-loyalty.jsonl",
   "preprod-integration.jsonl",
   "api-preprod-telemetry.jsonl",
 ]);

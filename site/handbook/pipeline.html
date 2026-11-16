@@ -1,0 +1,30 @@
+<section class="guide-intro" aria-labelledby="pipeline-title">
+  <h1 id="pipeline-title">CI/CD pipeline</h1>
+  <p>Follow the website’s GitHub Actions gates, Firebase publication and independent observability checks.</p>
+  <a class="button light-button" href="https://github.com/ArohaRetreat/website/actions">Open GitHub Actions <span aria-hidden="true">↗</span></a>
+</section>
+
+<section class="delivery-section" aria-labelledby="pipeline-gates-title">
+  <h2 id="pipeline-gates-title">Website from pull request to live</h2>
+  <ol class="lane-flow guide-steps" role="list">
+    <li><strong>1. Check the pull request</strong><span>Run application, emulator integration, foundation and branch policy checks on the current revision. Foundation validates the documentation decision and, on main, builds the handbook and checks its links.</span></li>
+    <li><strong>2. Check the merged revision</strong><span>Verify CI on the current <code>preprod</code> or <code>main</code> commit. Validate the version, target, pinned assets, Hosting size budget and compatible backend before publication.</span></li>
+    <li><strong>3. Deploy Hosting and verify</strong><span>Publish to the branch’s Firebase Hosting site. Compare the live release, files and protected-route behavior with the expected build. Keep the deployment and live-check receipts.</span></li>
+  </ol>
+  <div class="card-links delivery-links"><a href="../../sdlc/#ci">Detailed deployment gates</a></div>
+</section>
+
+<section class="delivery-section" aria-labelledby="pipeline-evidence-title">
+  <h2 id="pipeline-evidence-title">Reporting and public updates</h2>
+  <dl class="check-grid guide-grid">
+    <div><dt>Delivery observer</dt><dd>Reads eligible GitHub runs and sanitized test results after CI completes. It sends workflow and test events and OpenTelemetry signals to Dynatrace. Verify tenant records by source run and attempt.</dd></div>
+    <div><dt>GitHub Pages</dt><dd>The workflow checks sprint dates, verified Hosting receipts, npm and live developer docs. It publishes when public content changes. Check the run’s trigger in GitHub Actions to verify whether a scheduled refresh fired.</dd></div>
+    <div><dt>MCP and developer docs</dt><dd>Each runs its own source checks. Registry metadata confirms a stable MCP publication. A validated live manifest confirms a docs deployment.</dd></div>
+    <div><dt>Backend changes</dt><dd>Functions, rules and index changes have their own release step. When required by a frontend change, verify the compatible backend first.</dd></div>
+  </dl>
+  <div class="card-links delivery-links">
+    <a href="../../sdlc/#observability">Observability evidence</a>
+    <a href="../../releases/">Verified release notes</a>
+    <a href="https://github.com/ArohaRetreat/website/actions/workflows/public-updates.yml">Pages refresh history <span aria-hidden="true">↗</span></a>
+  </div>
+</section>
