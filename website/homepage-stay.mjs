@@ -63,5 +63,6 @@ export function bindHomepageStay(form, previous) {
     departure.max = dateAfter(start, 31);
   }
   form.addEventListener("input", updateBounds);
+  form.addEventListener("change", updateBounds);
   updateBounds();
 }

@@ -90,7 +90,7 @@ export async function listAuthAccounts(directory, input) {
 
 function csvCell(value) {
   const text = String(value ?? "");
-  const safe = /^(?:\s*[=+\-@]|[\t\r\n])/.test(text) ? "'" + text : text;
+  const safe = /^(?:\s*[=+\-@＝＋－＠]|[\t\r\n])/.test(text) ? "'" + text : text;
   return '"' + safe.replaceAll('"', '""') + '"';
 }
 

@@ -377,7 +377,7 @@ export const arohaApi = onRequest(
           if (!b || typeof b !== "object" || Array.isArray(b) || Object.keys(b).length)
             throw new DomainError("INVALID_FIELDS", 422);
           const result = await exportAuthAccounts(directory);
-          await db.runTransaction((tx) =>
+          await db.runTransaction(async (tx) =>
             audit(tx, token, operation, "auth-directory", { count: result.count, requestId }),
           );
           accountCsv = result.csv;
