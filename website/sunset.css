@@ -126,8 +126,6 @@ html[data-atmosphere="sunset"] .aroha-welcome { color: var(--dusk-ink); }
 html[data-atmosphere="sunset"] .welcome-paper { fill: var(--dusk-ground); }
 html[data-atmosphere="sunset"] .welcome-orbit { border-color: #a1b58b22; }
 html[data-atmosphere="sunset"] .aroha-welcome > [lang="kn"] { color: var(--dusk-accent); }
-html[data-atmosphere="sunset"] #welcome-skip { color: var(--dusk-ink); border-color: var(--dusk-line); }
-html[data-atmosphere="sunset"] #welcome-skip { background: var(--dusk-card); }
 html[data-atmosphere="sunset"] .welcome-botany :is(.seed-root, .seed-shoot) { stroke: #bdcda2; }
 html[data-atmosphere="sunset"] .album-toolbar { background: var(--dusk-ground); }
 
