@@ -25,13 +25,9 @@
   transform: scale(0.015) rotate(-28deg);
   transform-origin: 0 0;
 }
-.welcome-copy,
-.aroha-welcome > button {
+.welcome-copy {
   position: relative;
   z-index: 2;
-}
-.aroha-welcome > button {
-  position: absolute;
 }
 .welcome-botany {
   transform-origin: 50% 37%;
@@ -39,13 +35,6 @@
 .welcome-botany,
 .welcome-copy {
   pointer-events: none;
-}
-.arrival-opening #welcome-skip {
-  color: var(--forest);
-  background: var(--ivory);
-  border-radius: 30px;
-  padding: 8px 20px;
-  border: 1px solid #163e2d33;
 }
 /* A single photographic landscape, with room to breathe around the invitation. */
 /* Keep the invitation, appearance switch and footer in document flow so text
