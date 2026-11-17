@@ -64,17 +64,6 @@
 .welcome-orbit:after {
   inset: -10%;
 }
-.aroha-welcome > button {
-  position: absolute;
-  bottom: 35px;
-  border: 0;
-  background: none;
-  border-bottom: 1px solid #163e2d44;
-  padding: 10px 0;
-  font: 16px Source;
-  color: var(--forest);
-  min-height: 44px;
-}
 .aroha-welcome.is-finished {
   opacity: 0;
   visibility: hidden;
@@ -692,10 +681,6 @@
   }
   .aroha-welcome > [lang="kn"] {
     font-size: 24px;
-  }
-  .aroha-welcome > button {
-    bottom: 25px;
-    font-size: 14px;
   }
   .field-hero-content {
     left: 7vw;

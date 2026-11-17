@@ -76,24 +76,27 @@ export function startWelcome(
     phase = "growing",
     growthDeadline,
     deadline;
-  const skip = welcome.querySelector("#welcome-skip");
   function finish() {
     if (phase === "done") return;
     phase = "done";
     clearTimeout(growthDeadline);
     clearTimeout(deadline);
     document.removeEventListener("visibilitychange", visibility);
+    document.removeEventListener("keydown", dismiss);
     opening?.cancel();
     player?.dispose();
     root.inert = false;
     html.classList.remove("arrival-opening");
     html.classList.add("welcome-complete");
-    if (document.activeElement === skip)
-      root.querySelector("#start-journey")?.focus({ preventScroll: true });
     welcome.classList.add("is-finished");
     welcome.setAttribute("aria-hidden", "true");
     welcome.inert = true;
     setTimeout(() => welcome.remove(), 200);
+  }
+  function dismiss(event) {
+    if (event.key !== "Escape") return;
+    finish();
+    root.querySelector("#start-journey")?.focus({ preventScroll: true });
   }
   function visibility() {
     if (document.hidden) finish();
@@ -123,7 +126,7 @@ export function startWelcome(
     return () => {};
   }
   root.inert = true;
-  skip.onclick = finish;
+  document.addEventListener("keydown", dismiss);
   document.addEventListener("visibilitychange", visibility);
   growthDeadline = setTimeout(open, 3200);
   deadline = setTimeout(finish, 6100);
