@@ -2,7 +2,7 @@
 
 - Start an overnight booking on the homepage and carry the dates and adult count through Google sign-in to the booking options.
 - Select check-in and checkout in one responsive calendar and choose adults from a menu aligned to the field.
-- Keep the hero journey button and daylight switch spaced apart when text wraps or the screen is short.
+- Keep the hero journey button and daylight switch spaced apart when text wraps or the screen is short, and center the hero footer text and booking link.
 - Give active Host Studio admins a paged sign-in account table, exact lookup and an audit-recorded CSV export.
 
 ## Website 0.33.2 / API 0.18.1 — dependency maintenance
