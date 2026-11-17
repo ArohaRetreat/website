@@ -48,8 +48,15 @@
   border: 1px solid #163e2d33;
 }
 /* A single photographic landscape, with room to breathe around the invitation. */
+/* Keep the invitation, appearance switch and footer in document flow so text
+   wrapping and short screens increase the hero height instead of covering actions. */
 .field-hero {
-  min-height: 760px;
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+  height: auto;
+  min-height: max(760px, 100svh);
+  padding: 160px 5vw 28px;
   isolation: isolate;
   background: #102d22;
 }
@@ -83,14 +90,17 @@
     radial-gradient(ellipse at 50% 45%, #061f1b99 5%, #102b1a38 65%, #06271b33);
 }
 .field-hero-content {
-  left: 7vw;
-  right: 7vw;
-  top: 21%;
+  position: relative;
+  inset: auto;
+  flex: 1;
+  min-width: 0;
+  padding-inline: 2vw;
   max-width: none;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
 }
 .field-hero-content > .eyebrow {
   font-size: 12px;
@@ -200,20 +210,22 @@
   z-index: 3;
 }
 .hero-moments {
-  position: absolute;
-  bottom: 115px;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
   display: flex;
+  flex: none;
+  width: max-content;
+  max-width: 100%;
+  margin-top: 24px;
   gap: 4px;
   padding: 5px;
   border: 1px solid #ffffff50;
   border-radius: 40px;
   background: #08271b88;
   backdrop-filter: blur(8px);
-  white-space: nowrap;
 }
 .hero-moments button {
+  flex: 0 1 auto;
+  min-width: 0;
   min-height: 44px;
   padding: 9px 17px;
   background: transparent;
@@ -225,12 +237,16 @@
     sans-serif;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  text-wrap: balance;
+  touch-action: manipulation;
   transition:
     background 0.2s ease,
     color 0.2s ease;
 }
 .hero-moments button > span {
+  flex: none;
   font-size: 22px;
   line-height: 1;
 }
@@ -243,9 +259,9 @@
   text-underline-offset: 5px;
 }
 .field-hero-foot {
-  left: 5vw;
-  right: 5vw;
-  bottom: 28px;
+  position: relative;
+  inset: auto;
+  flex: none;
 }
 .field-hero-foot > span:nth-child(2) {
   letter-spacing: 0.09em;
@@ -311,20 +327,6 @@
     transform: translateY(0);
   }
 }
-/* Preserve the moment switch's centering while its entrance moves. */
-.arrival-opening .hero-moments {
-  animation-name: arrival-moments;
-}
-@keyframes arrival-moments {
-  from {
-    opacity: 0;
-    transform: translate(-50%, 12px);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
-}
 @media (hover: hover) and (pointer: fine) {
   .field-hero .field-enter:hover {
     background: #f0ead8;
@@ -341,10 +343,6 @@
   .field-hero h1 {
     font-size: clamp(62px, 7.5vw, 88px);
   }
-  .field-hero-content {
-    top: 23%;
-    max-width: none;
-  }
   .field-hero-content > p:not(.eyebrow) {
     max-width: 550px;
     font-size: 19px;
@@ -360,15 +358,15 @@
 }
 @media (max-width: 700px) {
   .field-hero {
-    min-height: 780px;
+    gap: 40px;
+    min-height: max(780px, 100svh);
+    padding: 132px 7vw 25px;
   }
   .field-header {
     border-bottom: 0;
   }
   .field-hero-content {
-    left: 7vw;
-    right: 7vw;
-    top: 23%;
+    padding-inline: 0;
   }
   .field-hero-content > .eyebrow {
     font-size: 10px;
@@ -414,18 +412,10 @@
   .hero-canopy-lines {
     opacity: 0.5;
   }
-  .hero-moments {
-    bottom: 117px;
-  }
   .hero-moments button {
     font-size: 14px;
     padding: 8px 13px;
     gap: 6px;
-  }
-  .field-hero-foot {
-    left: 7vw;
-    right: 7vw;
-    bottom: 25px;
   }
   .field-hero-foot [lang="kn"] {
     max-width: 100%;
@@ -448,16 +438,10 @@
 }
 @media (max-width: 360px) {
   .field-hero {
-    min-height: 800px;
-  }
-  .field-hero-content {
-    top: 21%;
+    min-height: max(800px, 100svh);
   }
   .field-hero-content > p:not(.eyebrow) {
     font-size: 16px;
-  }
-  .hero-moments {
-    bottom: 122px;
   }
   .hero-moments button {
     font-size: 13px;
