@@ -35,6 +35,16 @@ const root = document.getElementById("site"),
   motion = matchMedia("(prefers-reduced-motion: reduce)"),
   preview = new URLSearchParams(location.search).has("preview");
 let simple = motion.matches;
+const hasOpenContentControl = () => root.querySelector('dialog[open], #home-adult-trigger[aria-expanded="true"]') ||
+  root.querySelector(".home-stay-form")?.contains(document.activeElement);
+function applyPendingStayContent() {
+  if (!pendingContent || hasOpenContentControl()) return;
+  const focusId = document.activeElement?.id;
+  content = pendingContent;
+  pendingContent = null;
+  render();
+  if (focusId) document.getElementById(focusId)?.focus({ preventScroll: true });
+}
 function render() {
   const y = scrollY;
   const albumState = album?.state;
@@ -49,7 +59,7 @@ function render() {
   const previousStayForm = root.querySelector(".home-stay-form");
   const previousStay = previousStayForm ? new FormData(previousStayForm) : null;
   root.innerHTML = renderSite(content);
-  bindHomepageStay(root.querySelector(".home-stay-form"), previousStay);
+  bindHomepageStay(root.querySelector(".home-stay-form"), previousStay, applyPendingStayContent);
   for (const key of ["forest", "ivory", "leaf", "bronze"])
     document.documentElement.style.setProperty("--" + key, content.theme[key]);
   document.body.classList.toggle("simple", simple || !content.theme.motion);
@@ -283,6 +293,9 @@ function bind() {
   };
   root.querySelector("#privacy-settings").onclick = () => openPrivacy(show);
 }
+root.addEventListener("focusout", (event) => {
+  if (pendingContent && event.target.closest(".home-stay-form")) requestAnimationFrame(applyPendingStayContent);
+});
 render();
 // The gate's sticky travel is added during enhancement. Resolve a fresh deep
 // link against the final geometry; restored/reloaded documents keep native scroll.
@@ -334,12 +347,16 @@ async function watchContent() {
     (data) => {
       try {
         const next = validateContent(data.content);
-        if (JSON.stringify(next) === JSON.stringify(content)) return;
-        if (root.querySelector("dialog[open]")) {
+        if (JSON.stringify(next) === JSON.stringify(content)) {
+          pendingContent = null;
+          return;
+        }
+        if (hasOpenContentControl()) {
           pendingContent = next;
           return;
         }
         content = next;
+        pendingContent = null;
         render();
       } catch {
         reportError("INVALID_PUBLISHED_CONTENT");

@@ -141,13 +141,18 @@ html[data-atmosphere="sunset"] .public-header.on-paper .field-brand img { filter
 
 html[data-atmosphere="sunset"] :is(.public-header.field-header,.public-header.map-header).is-transparent { background: transparent; }
 
-html[data-atmosphere="sunset"] .home-stay { background: var(--dusk-ground); color: var(--dusk-ink); }
-html[data-atmosphere="sunset"] .home-stay-inner { background: var(--dusk-card); border-color: var(--dusk-line); }
-html[data-atmosphere="sunset"] .home-stay-inner > p { color: var(--dusk-muted); }
-html[data-atmosphere="sunset"] .home-stay-form :is(input:not([type=hidden]), select) {
-  background: var(--dusk-ground);
-  color: var(--dusk-ink);
-  border-color: var(--dusk-line);
+html[data-atmosphere="sunset"] .home-stay {
+  --stay-ground: var(--dusk-ground);
+  --stay-panel: var(--dusk-card);
+  --stay-field: #10291f;
+  --stay-ink: var(--dusk-ink);
+  --stay-muted: var(--dusk-muted);
+  --stay-line: var(--dusk-line);
+  --stay-outline: #708c78;
+  --stay-hover: var(--dusk-raised);
+  --stay-range: #344d3a;
+  --stay-accent: var(--dusk-accent);
+  --stay-on-accent: #14281e;
+  --stay-error: #ffc4ae;
+  color-scheme: dark;
 }
-html[data-atmosphere="sunset"] .home-stay-form button { background: var(--dusk-accent); color: var(--dusk-ground); }
-html[data-atmosphere="sunset"] .home-stay-form :is(input, select, button):focus-visible { outline-color: var(--dusk-accent); }
