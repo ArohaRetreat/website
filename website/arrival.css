@@ -262,6 +262,22 @@
   position: relative;
   inset: auto;
   flex: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+}
+.field-hero-foot > span {
+  max-width: 100%;
+  text-wrap: balance;
+}
+.field-hero-foot a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
 }
 .field-hero-foot > span:nth-child(2) {
   letter-spacing: 0.09em;
@@ -420,9 +436,6 @@
   .field-hero-foot [lang="kn"] {
     max-width: 100%;
   }
-  .field-hero-foot > span:nth-child(2) {
-    display: none;
-  }
   .field-hero-foot a {
     font-size: 9px;
   }
@@ -471,7 +484,6 @@
   .field-hero-foot {
     align-items: center;
     text-align: center;
-    gap: 12px;
   }
   .field-hero-foot a {
     position: static;
