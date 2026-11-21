@@ -17,6 +17,20 @@
   <div class="card-links delivery-links"><a href="../../sdlc/#architecture">Booking and email flow</a></div>
 </section>
 
+<section class="delivery-section" id="booking-and-account-access" aria-labelledby="booking-access-title">
+  <h2 id="booking-access-title">Booking and account access</h2>
+  <dl class="check-grid guide-grid">
+    <div><dt>Homepage handoff</dt><dd>The static form carries check-in, checkout and adult count into the booking portal. The portal retains selections through Google sign-in, then asks the booking API for availability and prices.</dd></div>
+    <div><dt>Studio account directory</dt><dd>The API rechecks the verified Google session and booking-manager admin membership on each request. The pre-production directory reads approved tester accounts. Pages are bounded and responses use no-store.</dd></div>
+    <div><dt>CSV exports</dt><dd>Export checks the same access, protects spreadsheet formula cells and records the actor, request ID and row count. The export is generated on demand.</dd></div>
+    <div><dt>Scoped REST clients</dt><dd>External contract 1.5.0 includes staff reservation search and explicit early checkout. Discover the available operations with the permissions of the active integration token.</dd></div>
+  </dl>
+  <div class="card-links delivery-links">
+    <a href="https://github.com/ArohaRetreat/website/blob/main/docs/api/studio-account-directory-v1.md">Studio account contract <span aria-hidden="true">↗</span></a>
+    <a href="https://developer.aroharetreat.com/api/">External API reference <span aria-hidden="true">↗</span></a>
+  </div>
+</section>
+
 <section class="delivery-section" aria-labelledby="integrations-title">
   <h2 id="integrations-title">REST and MCP</h2>
   <p class="delivery-note">Use the versioned OpenAPI contract for external clients. The local MCP server exposes typed tools over that API. Issue only the scopes the integration needs. Writes follow the same authorization, validation and concurrency rules as Studio.</p>

@@ -489,6 +489,25 @@ a { color: var(--primary); }
 .guide-intro p { max-width: 53ch; margin-top: 12px; color: #deece0; font-size: 1.1875rem; }
 .guide-intro .button { margin-top: 20px; }
 .guide-grid, .guide-steps { margin-top: 14px; }
+.guide-screenshots {
+  display: grid;
+  grid-template-columns: minmax(0, 2.15fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  margin-top: 18px;
+}
+.guide-screenshots figure { margin: 0; }
+.guide-screenshots a { display: block; }
+.guide-screenshots img {
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--outline-variant);
+  border-radius: 16px;
+}
+.guide-screenshots figcaption { margin-top: 6px; color: var(--on-surface-variant); }
+@media (max-width: 620px) {
+  .guide-screenshots { grid-template-columns: minmax(0, 1fr); }
+}
 .guide-directory {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
