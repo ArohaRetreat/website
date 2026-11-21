@@ -126,8 +126,6 @@ html[data-atmosphere="sunset"] .aroha-welcome { color: var(--dusk-ink); }
 html[data-atmosphere="sunset"] .welcome-paper { fill: var(--dusk-ground); }
 html[data-atmosphere="sunset"] .welcome-orbit { border-color: #a1b58b22; }
 html[data-atmosphere="sunset"] .aroha-welcome > [lang="kn"] { color: var(--dusk-accent); }
-html[data-atmosphere="sunset"] #welcome-skip { color: var(--dusk-ink); border-color: var(--dusk-line); }
-html[data-atmosphere="sunset"] #welcome-skip { background: var(--dusk-card); }
 html[data-atmosphere="sunset"] .welcome-botany :is(.seed-root, .seed-shoot) { stroke: #bdcda2; }
 html[data-atmosphere="sunset"] .album-toolbar { background: var(--dusk-ground); }
 
@@ -140,3 +138,19 @@ html[data-atmosphere="sunset"] .public-header.on-paper { color: #fff; }
 html[data-atmosphere="sunset"] .public-header.on-paper .field-brand img { filter: none; }
 
 html[data-atmosphere="sunset"] :is(.public-header.field-header,.public-header.map-header).is-transparent { background: transparent; }
+
+html[data-atmosphere="sunset"] .home-stay {
+  --stay-ground: var(--dusk-ground);
+  --stay-panel: var(--dusk-card);
+  --stay-field: #10291f;
+  --stay-ink: var(--dusk-ink);
+  --stay-muted: var(--dusk-muted);
+  --stay-line: var(--dusk-line);
+  --stay-outline: #708c78;
+  --stay-hover: var(--dusk-raised);
+  --stay-range: #344d3a;
+  --stay-accent: var(--dusk-accent);
+  --stay-on-accent: #14281e;
+  --stay-error: #ffc4ae;
+  color-scheme: dark;
+}

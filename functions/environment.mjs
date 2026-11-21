@@ -26,16 +26,18 @@ export function isTester(token) {
     return false;
   return isTesterEmail(token.email);
 }
-export function isTesterEmail(email) {
-  if (!environment.preprod) return true;
-  const allow = new Set(
+export function preprodTesterEmails() {
+  return new Set(
     (process.env.PREPROD_TESTER_EMAILS || process.env.SUPER_ADMIN_EMAILS || "")
       .toLowerCase()
       .split(",")
       .map((x) => x.trim())
       .filter(Boolean),
   );
-  return allow.has(String(email || "").toLowerCase());
+}
+
+export function isTesterEmail(email) {
+  return !environment.preprod || preprodTesterEmails().has(String(email || "").toLowerCase());
 }
 
 export function runtimeServiceName(target = process.env.FUNCTION_TARGET || "") {

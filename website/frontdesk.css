@@ -705,3 +705,31 @@
 @media (prefers-reduced-motion: reduce) {
   .frontdesk-v2 button:active:not(:disabled) { transform: none; }
 }
+
+.frontdesk-v2 .account-directory-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: end;
+  gap: 16px;
+}
+.frontdesk-v2 .account-directory-controls form { flex: 1 1 340px; min-width: 0; }
+.frontdesk-v2 .account-directory-controls form label { display: block; margin: 0 0 6px; }
+.frontdesk-v2 .account-search-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.frontdesk-v2 .account-search-row input { flex: 1 1 190px; width: auto; min-width: 0; }
+.frontdesk-v2 .account-directory .studio-table { min-width: 790px; }
+.frontdesk-v2 .account-directory .studio-table th[scope=row] { min-width: 175px; max-width: 260px; }
+.frontdesk-v2 .account-directory .account-uid { overflow-wrap: anywhere; min-width: 130px; max-width: 185px; }
+.frontdesk-v2 .account-scroll-note { display: none; color: var(--md-muted); font-size: 13px; }
+@media (max-width: 850px) {
+  .frontdesk-v2 .account-scroll-note { display: block; }
+}
+@media (max-width: 490px) {
+  .frontdesk-v2 .account-directory-controls { align-items: stretch; }
+  .frontdesk-v2 .account-directory-controls > button { width: 100%; }
+}

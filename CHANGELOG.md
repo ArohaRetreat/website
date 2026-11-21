@@ -1,3 +1,17 @@
+## Website 0.34.0 / API 0.19.0 — booking entry and sign-in accounts
+
+- Start an overnight booking on the homepage and carry the dates and adult count through Google sign-in to the booking options.
+- Select check-in and checkout in one responsive calendar and choose adults from a menu aligned to the field.
+- Keep the hero journey button and daylight switch spaced apart when text wraps or the screen is short, and center the hero footer text and booking link.
+- Remove the visible Skip welcome button. The welcome completes automatically and accepts Escape for early dismissal.
+- Give active Host Studio admins a paged sign-in account table, exact lookup and an audit-recorded CSV export.
+
+## Website 0.33.2 / API 0.18.1 — dependency maintenance
+
+- Update the Firebase web and Admin SDKs and the Resend client within their current major versions.
+- Update the OpenTelemetry SDK and OTLP exporters together within their supported release lines.
+- Update the Functions XML parser to 5.12.1 within Firebase Admin’s existing dependency range.
+
 ## Website 0.33.1 — Host Studio interaction feedback
 
 Studio shows progress while searches, booking actions, quotes, payments, documents and email requests run. Dashboard refreshes keep the last results visible. Staff views and dialogs use short pointer transitions with a still progress indicator for reduced motion.

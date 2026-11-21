@@ -554,10 +554,6 @@ html[data-atmosphere="sunset"] .consent-garden { background:#1c3b2d; color:#f4f0
 .consent-garden[popover] p { margin: 0; text-align: left; text-wrap: pretty; }
 .consent-garden[popover] h2 { margin: 8px 0 14px; }
 .consent-garden[popover] .consent-garden-actions { min-width: 0; width: 100%; padding-top: 12px; }
-@media(min-width:701px) {
-  .field-hero { min-height: 1000px; }
-  .field-hero-content { top: max(310px, 28%); }
-}
 @media(max-width:700px) {
   .consent-garden[popover] { grid-template-columns: 1fr; padding: 24px; gap: 8px; }
   .consent-garden[popover] .consent-garden-actions { padding-top: 0; }
@@ -568,7 +564,6 @@ html[data-atmosphere="sunset"] .consent-garden { background:#1c3b2d; color:#f4f0
 .consent-garden[popover] :is(p,h2) { text-align: center; }
 .consent-garden[popover] .consent-garden-actions { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; width: 100%; padding: 0; gap: 12px 22px; }
 .consent-garden[popover] [data-consent-choose] { grid-column: auto; }
-@media(min-width:701px) { .field-hero { min-height: 1120px; } .field-hero-content { top: max(410px, 32%); } }
 @media(max-width:700px) { .consent-garden[popover] { inset-block-start: 94px; padding: 24px; gap: 12px; max-height: calc(100svh - 110px); } .consent-garden[popover] .consent-garden-actions { gap: 10px 16px; } }
 
 /* Personal photographs come from Google Auth; initials remain a network fallback. */

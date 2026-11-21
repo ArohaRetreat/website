@@ -2,7 +2,7 @@ import { openStudioDialog, studioStatus } from "./studio-feedback.mjs";
 import {installMaterialControls, confirmMaterial} from './material-controls.mjs';
 installMaterialControls();
 import { hostShell, hostDestinations, hostTabAllowed, mountFrontDesk, openStudioBooking } from "./frontdesk.mjs";
-import { applyStudioAppearance, chooseStudioGuest, mountStudioAppearance, mountStudioDashboard, mountStudioGuests, mountStudioMail, studioInitials } from "./studio-views.mjs";
+import { applyStudioAppearance, chooseStudioGuest, mountStudioAccounts, mountStudioAppearance, mountStudioDashboard, mountStudioGuests, mountStudioMail, studioInitials } from "./studio-views.mjs";
 import { mountBookingDocuments } from "./booking-documents.mjs";
 import {mountHostOperations,openManualBooking} from './host-operations.mjs';
 import {auth} from './firebase-auth.mjs';
@@ -488,12 +488,13 @@ function bookingCard(b, host = false) {
 const studioModules = { website:false, access:false };
 let hostOptions = {};
 const managesBookings = () => state.actor?.bookingAccess === "manager";
+const managesAccounts = () => state.actor?.accountDirectory === true;
 function switchHostTab(tab, options = {}) {
   if (app.querySelector("[data-email-pending]")) {
     toast("Resolve the queued email before switching views.",true);
     return;
   }
-  if (!hostTabAllowed(tab, managesBookings())) return;
+  if (!hostTabAllowed(tab, managesBookings(), managesAccounts())) return;
   hostTab = tab;
   if (tab === "calendar-month") studioMonth = calendarStart.slice(0,7) + "-01";
   hostOptions = options;
@@ -511,7 +512,7 @@ const spaceTabs = () => studioTabs([["inventory","Cottages"],["facilities","Faci
 const paymentTabs = () => studioTabs([["payments","Ledger"],...(managesBookings() ? [["documents","Documents"],["loyalty","Credits"]] : [])]);
 const hostName = () => state.actor.name && state.actor.name !== "Guest" ? state.actor.name : "Aroha host";
 function hostPage() {
-  if (!hostTabAllowed(hostTab,managesBookings())) hostTab = "dashboard";
+  if (!hostTabAllowed(hostTab,managesBookings(),managesAccounts())) hostTab = "dashboard";
   if (state.actor?.role !== "host")
     return `<div class="host-welcome"><img src="/assets/brand/logo-forest.svg" width="200" alt="Aroha Retreat"><p class="eyebrow">HOST STUDIO</p><h1>A thoughtful stay<br>starts with you.</h1><p>Explore your reservation desk with a host account.<br>Guest sessions do not have access to host booking controls.</p><button class="button" id="host-login">Sign in to Host Studio ↗</button><a class="text-button" href="/book/">← Back to guest experience</a></div>`;
   return hostShell({ tab:hostTab, manager:managesBookings(), content:hostContent(), modules:studioModules, initials:studioInitials(hostName()) });
@@ -519,7 +520,10 @@ function hostPage() {
 function hostContent() {
   if (hostTab === "dashboard") return '<div data-studio-dashboard></div>';
   if (hostTab === "appearance") return '<div data-studio-appearance></div>';
-  if (hostTab === "guests") return '<div data-studio-guests></div>';
+  if (hostTab === "guests" || hostTab === "accounts") {
+    const tabs = managesAccounts() ? studioTabs([["guests","Guest search"],["accounts","Sign-in accounts"]]) : "";
+    return tabs + (hostTab === "accounts" ? '<div data-studio-accounts></div>' : '<div data-studio-guests></div>');
+  }
   if (hostTab === "mail") return '<div data-studio-mail></div>';
   if (hostTab === "reservations") return calendarTabs();
   if (hostTab === "overview") return "";
@@ -743,6 +747,11 @@ function mountStudioWorkspace() {
   if (appearance) mountStudioAppearance(appearance,identity);
   const guests = query("[data-studio-guests]");
   if (guests) mountStudioGuests(guests,{call,openBooking,openManual,initial:hostOptions.search,initialCustomerId:hostOptions.customerId,tab:hostTab === "loyalty" ? "Credits" : "Overview"});
+  const accounts = query("[data-studio-accounts]");
+  if (accounts) mountStudioAccounts(accounts, {
+    call: (op, input) => guard(() => bookingApi(op, input)),
+    testersOnly: studioIdentityEnabled(),
+  });
   const mail = query("[data-studio-mail]");
   if (mail) {
     if (hostOptions.customerId) {

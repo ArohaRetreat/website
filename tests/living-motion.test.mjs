@@ -66,11 +66,10 @@ test("nature settings are additive, escaped, bounded and restricted to allowed m
 function welcomeFixture(t, reduced = false) {
   const handlers = new Map(),
     classes = new Set();
-  const skip = {};
   const welcome = {
     removed: false,
     inert: false,
-    querySelector: () => skip,
+    querySelector: () => null,
     classList: {
       add: (name) => classes.add(name),
       remove: (name) => classes.delete(name),
@@ -81,7 +80,13 @@ function welcomeFixture(t, reduced = false) {
       this.removed = true;
     },
   };
-  const root = { inert: false, querySelector: () => ({ focus() {} }) };
+  const journey = {
+    focused: false,
+    focus() {
+      this.focused = true;
+    },
+  };
+  const root = { inert: false, querySelector: () => journey };
   const doc = {
     hidden: false,
     activeElement: null,
@@ -112,7 +117,7 @@ function welcomeFixture(t, reduced = false) {
     if (oldMedia) Object.defineProperty(globalThis, "matchMedia", oldMedia);
     else delete globalThis.matchMedia;
   });
-  return { root, welcome, skip, doc, handlers, classes };
+  return { root, welcome, journey, doc, handlers, classes };
 }
 
 test("welcome keeps the grown plant through the reveal, then releases reading exactly once", async (t) => {
@@ -167,10 +172,10 @@ test("welcome keeps the grown plant through the reveal, then releases reading ex
   assert.equal(f.welcome.removed, true);
 });
 
-test("welcome fail-open, Skip, tab hiding and reveal failure cannot leave the page inert", async (t) => {
+test("welcome Escape, tab hiding and animation failures release the page without a skip button", async (t) => {
   for (const cause of [
-    "skip",
-    "opening-skip",
+    "escape",
+    "opening-escape",
     "timeout",
     "hidden",
     "player-failure",
@@ -190,9 +195,14 @@ test("welcome fail-open, Skip, tab hiding and reveal failure cannot leave the pa
           return { finished: new Promise(() => {}), cancel() {} };
         },
       });
-      if (cause === "opening-skip" || cause === "reveal-failure")
+      if (cause === "opening-escape" || cause === "reveal-failure")
         update({ state: "complete" });
-      if (cause === "skip" || cause === "opening-skip") f.skip.onclick();
+      if (cause === "escape" || cause === "opening-escape") {
+        f.handlers.get("keydown")({ key: "Tab" });
+        assert.equal(f.root.inert, true);
+        f.handlers.get("keydown")({ key: "Escape" });
+        assert.equal(f.journey.focused, true);
+      }
       if (cause === "timeout") {
         t.mock.timers.tick(3200);
         assert.equal(f.root.inert, true);
