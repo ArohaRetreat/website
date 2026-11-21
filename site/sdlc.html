@@ -39,7 +39,7 @@
       <h3>Release and verify production</h3>
       <ol class="workflow-nodes" role="list">
         <li class="workflow-node"><strong>7. Open a release PR into main</strong><p>Bring approved commits onto a branch from current <code>main</code>. Review the release version, changelog and any backend prerequisites. Merge after checks and authorization.</p></li>
-        <li class="workflow-node workflow-gate"><strong>8. Pass deploy gates and publish</strong><p>Check CI on the merged revision, target, artifact and compatible API. GitHub Actions uses a short-lived identity to deploy the matching Firebase Hosting site.</p></li>
+        <li class="workflow-node workflow-gate"><strong>8. Pass deploy gates and publish</strong><p>Check CI on the merged revision, target and artifact. Deploy any required API change first and verify the compatible version before Hosting. GitHub Actions uses a short-lived identity to deploy the matching Firebase Hosting site.</p></li>
         <li class="workflow-node workflow-result"><strong>9. Verify and announce</strong><p>Check live version, files, protected routes and the critical user journey. Review delivery telemetry. Pages adds the release after verification, then the issue records the evidence.</p></li>
       </ol>
     </li>

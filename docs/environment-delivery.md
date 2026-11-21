@@ -1,5 +1,11 @@
 # Production and pre-production delivery
 
+## Current production backend and Hosting order
+
+After the checked production promotion merges, verify CI on the exact main revision. Prepare that source with the existing production settings, then update the three production Functions in the `aroha-website` codebase. The API handles HTTP requests, the dispatch worker handles new queued mail, and the scheduled worker handles mail retries, telemetry and identity maintenance.
+
+Verify the production API version and protected routes before Hosting. Website 0.34.0 requires API 0.19.x. If the automatic Hosting run reaches its compatibility check during the backend rollout, dispatch the normal Hosting workflow on the same revision after the API check passes. The previous website version 0.33.1 can serve with API 0.19.0 during the transition or after a Hosting rollback.
+
 Issue72; website0.21.5, API0.7.1. One repository, two long-lived branches: `main` is production and `preprod` is pre-production. This replaces the earlier recommendation against permanent environment branches. Environment selection is configuration, never a fork of booking policy or content. Host CMS, reservations, identities and original assets are not branch state.
 
 Work through short-lived issue branches and PRs. Both environment branches require current checks (`application`, `website-integration`, `foundation`, `branch-policy`), resolved conversations and linear history. Direct pushes, force pushes and deletion are blocked, including administrators. Required review count is zero for this single-maintainer repository; passing checks and a PR are still mandatory. The trusted `pull_request_target` policy executes inline code only, with no checkout, secrets or write permissions, and rejects direct PRs between main and preprod in either direction. Do not bypass that check. For promotion, create an independent release branch from current main, cherry-pick only approved commits, resolve and review the diff, then submit a normal main PR. A common initial revision does not imply future branches are automatically merged. Administrators can change repository policy deliberately; these controls prevent routine mistakes, not a malicious administrator.

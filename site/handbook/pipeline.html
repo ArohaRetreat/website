@@ -9,7 +9,7 @@
   <ol class="lane-flow guide-steps" role="list">
     <li><strong>1. Check the pull request</strong><span>Run application, emulator integration, foundation and branch policy checks on the current revision. Foundation validates the documentation decision and, on main, builds the handbook and checks its links.</span></li>
     <li><strong>2. Check the merged revision</strong><span>Verify CI on the current <code>preprod</code> or <code>main</code> commit. Validate the version, target, pinned assets, Hosting size budget and compatible backend before publication.</span></li>
-    <li><strong>3. Deploy Hosting and verify</strong><span>Publish to the branch’s Firebase Hosting site. Compare the live release, files and protected-route behavior with the expected build. Keep the deployment and live-check receipts.</span></li>
+    <li><strong>3. Deploy Hosting and verify</strong><span>Verify the compatible API before publishing to the branch’s Firebase Hosting site. Compare the live release, files and protected-route behavior with the expected build. Keep the deployment and live-check receipts.</span></li>
   </ol>
   <div class="card-links delivery-links"><a href="../../sdlc/#ci">Detailed deployment gates</a></div>
 </section>

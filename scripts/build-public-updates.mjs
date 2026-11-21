@@ -272,6 +272,10 @@ await mkdir(new URL("sdlc/", output), { recursive: true });
 const assets = [
   ["site/updates.css", "updates.css"],
   ["site/releases.js", "releases.js"],
+  ["site/release-images/0.34.0-booking-desktop.webp", "website-0.34.0-booking-desktop.webp"],
+  ["site/release-images/0.34.0-booking-mobile.webp", "website-0.34.0-booking-mobile.webp"],
+  ["site/release-images/0.34.0-studio-desktop.webp", "website-0.34.0-studio-desktop.webp"],
+  ["site/release-images/0.34.0-studio-mobile.webp", "website-0.34.0-studio-mobile.webp"],
   ["vendor/natura/brand/logo-forest.svg", "logo.svg"],
   ["vendor/natura/brand/icon.svg", "icon.svg"],
   ["website/assets/fonts/GoogleSans-Latin.woff2", "GoogleSans.woff2"],
