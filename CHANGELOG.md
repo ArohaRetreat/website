@@ -1,3 +1,8 @@
+## Website 0.34.1 / API 0.19.1 — dependency maintenance
+
+- Update the Firebase Web SDK to 13.4.0 and the Resend SDK to 6.40.0.
+- Run the Firebase integration suites with the same Java setup action version in both environment branches.
+
 ## Website 0.34.0 / API 0.19.0 — booking entry and sign-in accounts
 
 - Start an overnight booking on the homepage and carry the dates and adult count through Google sign-in to the booking options.
